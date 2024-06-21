@@ -4,17 +4,15 @@
  * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
  */
 
-"use client"
 import type { AppProps } from "next/app"
-import Layout from "../app/[locale]/layout"
 
-interface Props extends AppProps {
-  locale: string
-}
-export default function App({ Component, locale }: Props) {
+import Layout from "./layout"
+
+export default function App({ Component, pageProps }: AppProps) {
+  console.log({ pageProps })
   return (
     <Layout>
-      <Component locale={locale} />
+      <Component {...pageProps} />
     </Layout>
   )
 }

@@ -3,15 +3,15 @@ import translations from "./translations"
 import { useId } from "react"
 
 export const navItems = (locale: Record<string, Record<string, string>>) => [
-  { href: "", title: locale.header.tours },
-  { href: "", title: locale.header.accommodations },
+  { href: "/tours", title: locale.header.tours },
+  { href: "/cabins", title: locale.header.accommodations },
   {
-    href: "",
+    href: "/activities",
     title: locale.header.activities,
   },
-  { href: "", title: locale.header.salsa },
-  { href: "", title: locale.header.about },
-  { href: "", title: locale.header.contact },
+  { href: "/salsa", title: locale.header.salsa },
+  { href: "/about", title: locale.header.about },
+  { href: "/contact", title: locale.header.contact },
 ]
 
 const MainNav = ({ locale }: { locale: string }) => {

@@ -1,11 +1,4 @@
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-
+"use client"
 import {
   Select,
   SelectContent,
@@ -37,14 +30,8 @@ const languages = [
   },
 ]
 
-const LanguageSelector = ({
-  locale,
-  setLocale,
-}: {
-  locale: string
-  setLocale: (locale: string) => void
-}) => (
-  <Select defaultValue={locale} onValueChange={val => setLocale(val)}>
+const LanguageSelector = ({ locale }: { locale: string }) => (
+  <Select defaultValue={locale} onValueChange={val => console.log(val)}>
     <SelectTrigger className="w-[180px]">
       <SelectValue placeholder="Choose language" />
     </SelectTrigger>

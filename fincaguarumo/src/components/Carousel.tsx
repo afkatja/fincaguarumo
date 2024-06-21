@@ -8,7 +8,11 @@ import {
 import Image from "next/image"
 import { useId } from "react"
 
-const images = [{ src: "placeholder.svg", alt: "" }]
+const images = [
+  { src: "https://picsum.photos/1920/1080?random=1", alt: "" },
+  { src: "https://picsum.photos/1920/1080?random=2", alt: "" },
+  { src: "https://picsum.photos/1920/1080?random=3", alt: "" },
+]
 
 const ImgSlider = () => {
   const id = useId()
