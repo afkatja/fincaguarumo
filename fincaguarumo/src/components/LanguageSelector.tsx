@@ -1,4 +1,5 @@
 "use client"
+
 import {
   Select,
   SelectContent,
@@ -6,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { usePathname, useRouter } from "next/navigation"
 
 const languages = [
   {
@@ -30,20 +32,24 @@ const languages = [
   },
 ]
 
-const LanguageSelector = ({ locale }: { locale: string }) => (
-  <Select defaultValue={locale} onValueChange={val => console.log(val)}>
-    <SelectTrigger className="w-[180px]">
-      <SelectValue placeholder="Choose language" />
-    </SelectTrigger>
-    <SelectContent>
-      {languages.map((lang, i) => (
-        <SelectItem key={i} value={lang.value}>
-          {lang.flag}
-          {lang.title}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-)
+const LanguageSelector = ({ locale }: { locale: string }) => {
+  const router = useRouter()
+  const changeLocale = (locale: string) => router.replace(locale)
+  return (
+    <Select defaultValue={locale} onValueChange={val => changeLocale(val)}>
+      <SelectTrigger className="w-[180px]">
+        <SelectValue placeholder="Choose language" />
+      </SelectTrigger>
+      <SelectContent>
+        {languages.map((lang, i) => (
+          <SelectItem key={i} value={lang.value}>
+            {lang.flag}
+            {lang.title}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
 
 export default LanguageSelector

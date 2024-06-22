@@ -5,6 +5,7 @@ import Logo from "@/components/icons/Logo"
 import MainNav from "@/components/MainNav"
 import LanguageSelector from "@/components/LanguageSelector"
 import MobileNav from "@/components/MobileNav"
+
 export default function Component({
   params: { locale },
 }: {

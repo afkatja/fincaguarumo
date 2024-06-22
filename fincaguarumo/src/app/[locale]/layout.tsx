@@ -40,7 +40,7 @@ export default function Layout({
   children: React.ReactNode
   params?: any
 }>) {
-  console.log({ params })
+  console.log("LAYOUT", { params })
   return (
     <html lang={params.locale}>
       <body className={poppins.variable + " " + cabin.variable}>
