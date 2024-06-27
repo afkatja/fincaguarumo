@@ -1,29 +1,27 @@
 import Link from "next/link"
-import translations from "./translations"
-import { useId } from "react"
+import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 
-export const navItems = (locale: Record<string, Record<string, string>>) => [
-  { href: "/tours", title: locale.header.tours },
-  { href: "/cabins", title: locale.header.accommodations },
+export const navItems = (t: (arg0: string) => string) => [
+  { href: "/tours", title: t("tours") },
+  { href: "/cabins", title: t("accommodations") },
   {
     href: "/activities",
-    title: locale.header.activities,
+    title: t("activities"),
   },
-  { href: "/salsa", title: locale.header.salsa },
-  { href: "/about", title: locale.header.about },
-  { href: "/contact", title: locale.header.contact },
+  { href: "/salsa", title: t("salsa") },
+  { href: "/about", title: t("about") },
+  { href: "/contact", title: t("contact") },
 ]
 
-const MainNav = ({ locale }: { locale: string }) => {
-  const id = useId()
+const MainNav = async ({ locale }: { locale: string }) => {
+  unstable_setRequestLocale(locale)
 
-  return !locale || !translations[locale] ? (
-    "loading"
-  ) : (
+  const t = await getTranslations("header")
+  return (
     <nav className="hidden md:flex items-center gap-6">
-      {navItems(translations[locale]).map((navItem, i) => (
+      {navItems(t).map(navItem => (
         <Link
-          key={id + i}
+          key={crypto.randomUUID()}
           href={navItem.href}
           className="text-sm font-medium hover:underline underline-offset-4"
           prefetch={false}

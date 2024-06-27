@@ -1,0 +1,27 @@
+{
+  "header": {
+    "tours": "Tours",
+    "accommodations": "Accommodations",
+    "activities": "Activities",
+    "salsa": "Salsa",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "hero": {
+    "title": "Discover Our Retreats",
+    "description": "Explore our collection of curated retreats, each offering a unique blend of natural beauty, adventure, and relaxation."
+  },
+  "upcoming": {
+    "title": "Upcoming Retreats",
+    "description": "Check out our upcoming retreats and plan your next getaway."
+  },
+  "about": {
+    "title": "About Us",
+    "description1": "Acme Retreats is a family-owned business that has been providing exceptional retreat experiences for over 20 years. Our mission is to help our guests reconnect with nature, rejuvenate their minds and bodies, and create lasting memories.",
+    "description2": "We are passionate about sustainable tourism and strive to minimize our environmental impact while offering world-class accommodations and activities. Our team of experienced guides and hospitality professionals are dedicated to ensuring that every guest has an unforgettable stay."
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "Have a question or want to learn more about our retreats? Get in touch with us."
+  }
+}

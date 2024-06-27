@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from "next/server"
-import { match } from "@formatjs/intl-localematcher"
+// import { NextRequest, NextResponse } from "next/server"
+// import { match } from "@formatjs/intl-localematcher"
+import createMiddleware from "next-intl/middleware"
 //@ts-ignore-line
-import Negotiator from "negotiator"
+// import Negotiator from "negotiator"
 
 let locales = ["en", "nl", "es", "ru"]
 
-function getLocale(request: NextRequest) {
+/*function getLocale(request: NextRequest) {
   let headers = { "accept-language": "en-US,en;q=0.5" }
   let languages = new Negotiator({ headers }).languages()
   let defaultLocale = "en"
@@ -23,17 +24,24 @@ export function middleware(request: NextRequest) {
 
   // Redirect if there is no locale
   const locale = getLocale(request)
+  console.log({ pathname, locale })
 
   request.nextUrl.pathname = `/${locale}${pathname}`
 
   return NextResponse.redirect(request.nextUrl)
-}
+}*/
+
+export default createMiddleware({
+  locales,
+  defaultLocale: "en",
+  // localePrefix: "never",
+})
 
 export const config = {
+  // Match only internationalized pathnames
   matcher: [
-    // Skip all internal paths (_next)
+    "/",
+    // "/(nl|en|es|ru)/:path*",
     "/((?!_next).*)",
-    // Optional: only run on root (/) URL
-    // '/'
   ],
 }

@@ -12,7 +12,6 @@ interface Props extends AppProps {
   locale: string
 }
 export default function App({ Component, locale }: Props) {
-  console.log("COMPONENTS APP")
   return (
     <Layout>
       <Component locale={locale} />

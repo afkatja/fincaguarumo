@@ -9,8 +9,17 @@ import { Poppins } from "next/font/google"
 import { Cabin } from "next/font/google"
 import "../globals.css"
 import "../styles.css"
+import { locales } from "../../config"
 
 import React from "react"
+import { NextIntlClientProvider } from "next-intl"
+import { getMessages, unstable_setRequestLocale } from "next-intl/server"
+
+import Link from "next/link"
+import Logo from "@/components/icons/Logo"
+import MainNav from "@/components/MainNav"
+import LanguageSelector from "@/components/LanguageSelector"
+import MobileNav from "@/components/MobileNav"
 
 const poppins = Poppins({
   weight: "300",
@@ -23,28 +32,44 @@ const cabin = Cabin({
   display: "swap",
   variable: "--font-cabin",
 })
-
-export async function generateStaticParams() {
-  return [
-    { locale: "en" },
-    { locale: "nl" },
-    { locale: "es" },
-    { locale: "ru" },
-  ]
+export function generateStaticParams() {
+  return locales.map(locale => ({ locale }))
 }
 
-export default function Layout({
+export default async function Layout({
   children,
-  params,
+  params: { locale },
 }: Readonly<{
   children: React.ReactNode
   params?: any
 }>) {
-  console.log("LAYOUT", { params })
+  const messages = await getMessages()
+  unstable_setRequestLocale(locale)
+
   return (
-    <html lang={params.locale}>
+    <html lang={locale}>
       <body className={poppins.variable + " " + cabin.variable}>
-        <div className="flex flex-col min-h-[100dvh]">{children}</div>
+        <NextIntlClientProvider messages={messages}>
+          <div className="flex flex-col min-h-[100dvh]">
+            <header className="bg-background/80 backdrop-blur-sm fixed top-0 left-0 right-0 z-50 border-b border-muted">
+              <div className="container flex items-center justify-between h-16 px-4 md:px-6">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2"
+                  prefetch={false}
+                >
+                  <Logo />
+                </Link>
+                <MainNav locale={locale} />
+                <div className="flex items-center gap-2 place-self-end">
+                  <LanguageSelector locale={locale} />
+                  <MobileNav locale={locale} />
+                </div>
+              </div>
+            </header>
+            <main className="flex-1">{children}</main>
+          </div>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

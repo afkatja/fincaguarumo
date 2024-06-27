@@ -1,0 +1,27 @@
+{
+  "header": {
+    "tours": "Recorridos",
+    "accommodations": "Alojamiento",
+    "activities": "Actividades",
+    "salsa": "Salsa",
+    "about": "Sobre nosotros",
+    "contact": "Contacto"
+  },
+  "hero": {
+    "title": "Descubre nuestros retiros",
+    "description": "Explora nuestra colección de retiros exclusivos, cada uno con una mezcla única de belleza natural, aventura y relajación."
+  },
+  "upcoming": {
+    "title": "Próximos retiros",
+    "description": "Echa un vistazo a nuestros próximos retiros y planifica tu próxima escapada."
+  },
+  "about": {
+    "title": "Sobre nosotros",
+    "description1": "Acme Retreats es una empresa familiar que ha estado ofreciendo experiencias de retiro excepcionales durante más de 20 años. Nuestra misión es ayudar a nuestros huéspedes a reconectarse con la naturaleza, rejuvenecer su mente y cuerpo, y crear recuerdos duraderos.",
+    "description2": "Estamos apasionados por el turismo sostenible y nos esforzamos por minimizar nuestro impacto ambiental mientras ofrecemos alojamiento y actividades de clase mundial. Nuestro equipo de guías experimentados y profesionales de la hospitalidad se dedica a garantizar que cada huésped tenga una estancia inolvidable."
+  },
+  "contact": {
+    "title": "Contáctanos",
+    "description": "¿Tienes alguna pregunta o quieres saber más sobre nuestros retiros? Ponte en contacto con nosotros."
+  }
+}

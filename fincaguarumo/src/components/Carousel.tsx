@@ -5,8 +5,8 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@/components/ui/carousel"
+import { randomUUID } from "crypto"
 import Image from "next/image"
-import { useId } from "react"
 
 const images = [
   { src: "https://picsum.photos/1920/1080?random=1", alt: "" },
@@ -15,12 +15,11 @@ const images = [
 ]
 
 const ImgSlider = () => {
-  const id = useId()
   return (
     <Carousel className="w-full h-[80vh]">
       <CarouselContent>
         {images.map(img => (
-          <CarouselItem key={id}>
+          <CarouselItem key={randomUUID()}>
             <Image
               src={img.src}
               alt={img.alt}

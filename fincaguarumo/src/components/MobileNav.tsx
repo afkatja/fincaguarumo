@@ -4,14 +4,14 @@ import MenuIcon from "./icons/MenuIcon"
 
 import { navItems } from "./MainNav"
 import Link from "next/link"
-import { useId } from "react"
-import translations from "./translations"
+import { randomUUID } from "crypto"
+import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 
-const MobileNav = ({ locale }: { locale: string }) => {
-  const id = useId()
-  return !locale || !translations[locale] ? (
-    "loading"
-  ) : (
+const MobileNav = async ({ locale }: { locale: string }) => {
+  unstable_setRequestLocale(locale)
+
+  const t = await getTranslations("header")
+  return (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="md:hidden">
@@ -21,9 +21,9 @@ const MobileNav = ({ locale }: { locale: string }) => {
       </SheetTrigger>
       <SheetContent side="left">
         <div className="grid gap-6 p-6">
-          {navItems(translations[locale]).map((navItem, i) => (
+          {navItems(t).map(navItem => (
             <Link
-              key={id + i}
+              key={randomUUID()}
               href={navItem.href}
               className="flex items-center gap-2 text-lg font-semibold"
               prefetch={false}

@@ -1,0 +1,27 @@
+{
+  "header": {
+    "tours": "Rondleidingen",
+    "accommodations": "Accommodatie",
+    "activities": "Activiteiten",
+    "salsa": "Salsa",
+    "about": "Over ons",
+    "contact": "Contact"
+  },
+  "hero": {
+    "title": "Ontdek onze retraites",
+    "description": "Verken onze collectie van samengestelde retraites, elk met een unieke mix van natuurlijke schoonheid, avontuur en ontspanning."
+  },
+  "upcoming": {
+    "title": "Aankomende retraites",
+    "description": "Bekijk onze aankomende retraites en plan je volgende uitje."
+  },
+  "about": {
+    "title": "Over ons",
+    "description1": "Acme Retreats is een familiebedrijf dat al meer dan 20 jaar uitzonderlijke retraite-ervaringen biedt. Onze missie is om onze gasten te helpen om opnieuw in contact te komen met de natuur, hun geest en lichaam te verjongen en blijvende herinneringen te creëren.",
+    "description2": "We zijn gepassioneerd over duurzaam toerisme en streven ernaar om onze ecologische voetafdruk te minimaliseren, terwijl we toch wereldklasse accommodaties en activiteiten bieden. Ons team van ervaren gidsen en gastvrijheidsprofessionals is toegewijd aan het verzekeren dat elke gast een onvergetelijk verblijf heeft."
+  },
+  "contact": {
+    "title": "Neem contact met ons op",
+    "description": "Heb je een vraag of wil je meer weten over onze retraites? Neem contact met ons op."
+  }
+}

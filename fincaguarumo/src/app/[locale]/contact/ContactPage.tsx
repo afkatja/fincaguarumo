@@ -2,18 +2,22 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import PhoneIcon from "@/components/icons/PhoneIcon"
 import MailIcon from "@/components/icons/MailIcon"
+import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 
-export default function Contact() {
+export default async function Contact({ locale }: { locale: string }) {
+  console.log("CONTACT", { locale })
+  unstable_setRequestLocale(locale)
+
+  const t = await getTranslations("contact")
   return (
     <section className="py-12 md:py-24 lg:py-32">
       <div className="container grid gap-8 px-4 md:px-6">
         <div className="grid gap-4 text-center md:text-left">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-            Contact Us
+            {t("title")}
           </h2>
           <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            Have a question or want to learn more about our retreats? Get in
-            touch with us.
+            {t("description")}
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
