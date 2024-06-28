@@ -5,7 +5,6 @@ import MailIcon from "@/components/icons/MailIcon"
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 
 export default async function Contact({ locale }: { locale: string }) {
-  console.log("CONTACT", { locale })
   unstable_setRequestLocale(locale)
 
   const t = await getTranslations("contact")

@@ -13,12 +13,18 @@ export const navItems = (t: (arg0: string) => string) => [
   { href: "/contact", title: t("contact") },
 ]
 
-const MainNav = async ({ locale }: { locale: string }) => {
+const MainNav = async ({
+  locale,
+  className,
+}: {
+  locale: string
+  className?: string
+}) => {
   unstable_setRequestLocale(locale)
 
   const t = await getTranslations("header")
   return (
-    <nav className="hidden md:flex items-center gap-6">
+    <nav className={`hidden md:flex items-center gap-5 ${className}`}>
       {navItems(t).map(navItem => (
         <Link
           key={crypto.randomUUID()}

@@ -8,35 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
 import { useRouter, usePathname } from "../navigation"
+import { languages } from "../config"
 
 interface Params {
   [key: string]: string | string[]
 }
-
-const languages = [
-  {
-    value: "en",
-    flag: "",
-    title: "English",
-  },
-  {
-    value: "nl",
-    flag: "",
-    title: "Nederlands",
-  },
-  {
-    value: "ru",
-    flag: "",
-    title: "Русский",
-  },
-  {
-    value: "es",
-    flag: "",
-    title: "Español",
-  },
-]
 
 function onSelectChange({
   val,
@@ -47,12 +24,10 @@ function onSelectChange({
 }: {
   val: string
   startTransition: (scope: TransitionFunction) => void
-  router: AppRouterInstance
+  router: any
   pathname: string
   params: Params
 }) {
-  console.log({ val })
-
   startTransition(() => {
     router.replace(
       // @ts-expect-error -- TypeScript will validate that only known `params`
