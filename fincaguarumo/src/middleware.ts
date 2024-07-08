@@ -42,6 +42,7 @@ export const config = {
   matcher: [
     "/",
     // "/(nl|en|es|ru)/:path*",
-    "/((?!_next).*)",
+    // "/((?!_next).*)",
+    "/((?!api|_next/static|_next/image|images).*)",
   ],
 }

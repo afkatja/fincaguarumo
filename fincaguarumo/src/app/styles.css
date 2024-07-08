@@ -10,3 +10,25 @@ h5,
 h6 {
   font-family: var(--font-poppins), sans-serif;
 }
+
+.parallax-container {
+  min-height: 100vh;
+  z-index: 1;
+}
+
+.parallax-bg {
+  min-height: 100vh;
+  background-size: cover !important;
+  background-repeat: no-repeat;
+  /* background-attachment: fixed; */
+}
+.parallax-layer {
+  background-size: contain !important;
+  background-repeat: no-repeat;
+}
+
+.parallax-footer {
+  background-size: contain !important;
+  background-repeat: no-repeat;
+  z-index: 2;
+}

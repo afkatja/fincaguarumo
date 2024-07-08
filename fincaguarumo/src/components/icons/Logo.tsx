@@ -1,7 +1,13 @@
 import Image from "next/image"
-import LogoImg from "../../../public/logo.svg"
 
 const Logo = () => {
-  return <Image alt="Finca Guarumo" src={LogoImg} />
+  return (
+    <Image
+      alt="Finca Guarumo"
+      src="/images/logo.svg"
+      width={100}
+      height={50}
+    />
+  )
 }
 export default Logo
