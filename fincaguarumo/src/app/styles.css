@@ -12,15 +12,15 @@ h6 {
 }
 
 .parallax-container {
-  min-height: 100vh;
+  /* min-height: calc(100vh - var(--header-height)); */
   z-index: 1;
 }
 
 .parallax-bg {
-  min-height: 100vh;
+  max-height: calc(100vh - var(--header-height));
   background-size: cover !important;
   background-repeat: no-repeat;
-  /* background-attachment: fixed; */
+  background-attachment: fixed;
 }
 .parallax-layer {
   background-size: contain !important;
@@ -31,4 +31,6 @@ h6 {
   background-size: contain !important;
   background-repeat: no-repeat;
   z-index: 2;
+  bottom: calc(100vh + var(--header-height)) !important;
+  top: auto !important;
 }

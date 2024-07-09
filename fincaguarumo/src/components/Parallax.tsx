@@ -9,7 +9,7 @@ interface IParallax {
   parallaxImage:
     | string
     | {
-        src: string
+        src?: string
         offset?: number
         factor?: number
         speed?: number
@@ -29,17 +29,26 @@ const Parallax: React.FC<IParallax> = ({
       className={`parallax-container ${props.className}`}
     >
       {Array.isArray(parallaxImage) ? (
-        parallaxImage.map(img => (
-          <ParallaxLayer
-            {...img}
-            style={{ backgroundImage: `url(${img.src})`, ...img.style }}
-            key={crypto.randomUUID()}
-            offset={img.offset ?? 0}
-            factor={img.factor ?? 1}
-            speed={img.speed ?? 1}
-            className={img.className ?? `parallax-layer`}
-          />
-        ))
+        parallaxImage.map(img => {
+          const src = img.src ? { backgroundImage: `url(${img.src})` } : {}
+          const style = {
+            ...src,
+            ...img.style,
+          }
+          return (
+            <ParallaxLayer
+              {...img}
+              style={style}
+              key={crypto.randomUUID()}
+              offset={img.offset ?? 0}
+              factor={img.factor ?? 1}
+              speed={img.speed ?? 1}
+              className={img.className ?? `parallax-layer`}
+            >
+              {img.children ?? children}
+            </ParallaxLayer>
+          )
+        })
       ) : (
         <ParallaxLayer
           offset={0}
@@ -50,9 +59,11 @@ const Parallax: React.FC<IParallax> = ({
           {children}
         </ParallaxLayer>
       )}
-      <ParallaxLayer offset={1} speed={1}>
-        {children}
-      </ParallaxLayer>
+      {children ?? (
+        <ParallaxLayer offset={1} speed={1}>
+          {children}
+        </ParallaxLayer>
+      )}
     </ParallaxContainer>
   )
 }

@@ -12,6 +12,10 @@
 
   --popover: 0 0 100;
   --radius: 6px;
+
+  --sunrise-color: #f9f2d8;
+
+  --header-height: 65px;
 }
 
 @media (prefers-color-scheme: dark) {
