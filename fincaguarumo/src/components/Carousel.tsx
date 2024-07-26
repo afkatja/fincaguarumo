@@ -16,7 +16,7 @@ const images = [
 
 const ImgSlider = () => {
   return (
-    <Carousel className="w-full h-[100vh]">
+    <Carousel className="w-11/12 h-[100vh] mx-auto">
       <CarouselContent>
         {images.map(img => (
           <CarouselItem key={randomUUID()}>

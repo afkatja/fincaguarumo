@@ -1,6 +1,6 @@
-// import Carousel from "@/components/Carousel"
+import Carousel from "@/components/Carousel"
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
-import Parallax from "../../components/Parallax"
+// import Parallax from "../../components/Parallax"
 
 export default async function Component({
   params: { locale },
@@ -12,7 +12,7 @@ export default async function Component({
   const t = await getTranslations("hero")
   return (
     <>
-      <Parallax
+      {/* <Parallax
         className="w-full"
         parallaxImage={[
           {
@@ -75,7 +75,9 @@ export default async function Component({
             ),
           },
         ]}
-      ></Parallax>
+      ></Parallax> */}
+      <div className="parallax-bg sunburst">Animate</div>
+      <Carousel />
     </>
   )
 }

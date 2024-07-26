@@ -1,0 +1,42 @@
+.parallax-container {
+  /* min-height: calc(100vh - var(--header-height)); */
+  z-index: 1;
+}
+
+.parallax-bg {
+  height: calc(100vh - var(--header-height));
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* background-attachment: fixed; */
+}
+.parallax-layer {
+  background-size: contain !important;
+  background-repeat: no-repeat;
+}
+
+.parallax-footer {
+  background-size: contain !important;
+  background-repeat: no-repeat;
+  z-index: 2;
+  bottom: calc(100vh + var(--header-height)) !important;
+  top: auto !important;
+}
+
+.sunburst {
+  background-image: url(/images/hero-bg.jpg);
+}
+@supports (animation-timeline: scroll()) {
+  .sunburst {
+    background-size: 100%;
+    animation: sunburst 1s linear both;
+    animation-timeline: scroll();
+    transition: background-size 1s linear;
+  }
+}
+
+@keyframes sunburst {
+  to {
+    background-size: 150%;
+    opacity: 0.5;
+  }
+}

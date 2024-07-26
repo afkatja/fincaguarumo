@@ -7,8 +7,8 @@
 
 import { Poppins } from "next/font/google"
 import { Cabin } from "next/font/google"
-import "../globals.css"
-import "../styles.css"
+import "../styles/globals.css"
+import "../styles/styles.css"
 import { locales } from "../../config"
 
 import React from "react"

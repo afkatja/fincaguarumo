@@ -7,10 +7,10 @@ import MobileNav from "./MobileNav"
 
 const Header = ({ locale }: { locale: string }) => {
   return (
-    <header className="bg-background/80 backdrop-blur-sm sticky top-0 left-0 right-0 z-50 border-b border-muted">
-      <div className="flex items-center justify-between h-16 px-4 md:px-6">
-        <Link href="/" className="flex items-center gap-2" prefetch={false}>
-          <Logo />
+    <header className="main-header bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+      <div className="flex items-center justify-between nav w-11/12 mx-auto">
+        <Link href="/" className="block py-3 h-full logo-link" prefetch={false}>
+          <Logo className="logo" />
         </Link>
         <MainNav locale={locale} className="mx-5" />
         <div className="flex items-center gap-2 ml-auto">
