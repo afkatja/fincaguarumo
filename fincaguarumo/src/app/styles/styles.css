@@ -13,3 +13,11 @@ h5,
 h6 {
   font-family: var(--font-poppins), sans-serif;
 }
+
+.carousel {
+  height: calc(100vh - var(--header-height));
+}
+
+.carousel-content {
+  height: 100%;
+}

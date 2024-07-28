@@ -23,5 +23,9 @@
   "contact": {
     "title": "Contact Us",
     "description": "Have a question or want to learn more about our retreats? Get in touch with us."
+  },
+  "tours": {
+    "title": "Tours",
+    "description": "Get off the beaten path and discover Osa Peninsula from within, lead by the locals, on the following tours"
   }
 }

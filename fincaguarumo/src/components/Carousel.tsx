@@ -16,15 +16,15 @@ const images = [
 
 const ImgSlider = () => {
   return (
-    <Carousel className="w-11/12 h-[100vh] mx-auto">
+    <Carousel className="w-11/12 h-[100vh] mx-auto carousel">
       <CarouselContent>
         {images.map(img => (
           <CarouselItem key={randomUUID()}>
             <Image
               src={img.src}
               alt={img.alt}
-              width={1920}
-              height={1080}
+              width={2016}
+              height={1134}
               className="w-full h-full object-cover"
             />
           </CarouselItem>
