@@ -5,8 +5,8 @@ export const navItems = (t: (arg0: string) => string) => [
   { href: "/tours", title: t("tours") },
   { href: "/cabins", title: t("accommodations") },
   {
-    href: "/activities",
-    title: t("activities"),
+    href: "/camping",
+    title: t("camping"),
   },
   { href: "/salsa", title: t("salsa") },
   { href: "/about", title: t("about") },

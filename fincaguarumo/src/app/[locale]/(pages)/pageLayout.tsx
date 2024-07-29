@@ -12,7 +12,6 @@ export default async function PageLayout({
   [props: string]: any
 }) {
   unstable_setRequestLocale(locale)
-  console.log({ locale, pageName })
 
   if (!pageName) return "loading"
   const t = await getTranslations(pageName)
