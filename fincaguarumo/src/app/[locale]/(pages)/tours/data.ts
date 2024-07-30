@@ -138,6 +138,125 @@ const tours = [
       },
     ],
   },
+  {
+    title: "Birdwatching",
+    description:
+      "Get up early and embark on a photography tour in search of the beautiful birds living in the jungle. During some months, you can get a chance to witness the migratory birds, even - if you're lucky! - the three-watted bellbird",
+    url: "tours/farm-lunch",
+    dateAdded: new Date().toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    images: [
+      {
+        src: "https://upload.wikimedia.org/wikipedia/commons/f/fc/Procnias_tricarunculatus_Monteverde_03.jpg",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+      {
+        src: "https://en.wikipedia.org/wiki/Summer_tanager#/media/File:Summer_tanager_(Piranga_rubra)_male_Copan_3.jpg",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+      {
+        src: "https://en.wikipedia.org/wiki/Chuck-will%27s-widow#/media/File:Chuck-wills-widow_RWD7.jpg",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+    ],
+  },
+  {
+    title: "Visit the local farm",
+    description:
+      "Depending on the season, see the cows being milked (the artesanal way) or even the calves being born and enjoy an organic locally grown typical Tico lunch together with the family",
+    url: "tours/farm-lunch",
+    dateAdded: new Date().toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    images: [
+      {
+        src: "https://picsum.photos/id/488/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+      {
+        src: "https://picsum.photos/id/490/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+      {
+        src: "https://picsum.photos/id/292/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+    ],
+  },
+  {
+    title: "Explore local jungle",
+    description:
+      "Marvel at the huge and tiny creatures of the jungle, like the giant strangle ficus tree, colonies of leaf-cutter ants, poisonous frogs around pools and rivers, snakes, and - with some luck - catch a glimpse of one of the feline predators or stand eye in eye with one of other mammals",
+    url: "tours/jungle",
+    dateAdded: new Date().toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    images: [
+      {
+        src: "https://picsum.photos/id/498/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+      {
+        src: "https://picsum.photos/id/502/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+      {
+        src: "https://picsum.photos/id/543/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+    ],
+  },
+  {
+    title: "Hike to the top of the peninsula",
+    description:
+      "Hike to a place where you can see both Golfo Dulce and Pacific Ocean at the same time. See some animals on the way, like various kinds of monkeys, coatis, and lots of birds",
+    url: "tours/vista",
+    images: [
+      {
+        src: "https://picsum.photos/id/715/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+      {
+        src: "https://picsum.photos/id/770/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+      {
+        src: "https://picsum.photos/id/830/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+    ],
+  },
 ]
 
 export default tours

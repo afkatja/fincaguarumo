@@ -10,6 +10,21 @@ const nextConfig = {
         hostname: 'picsum.photos',
         port: '',
       },
+      {
+        protocol: 'http',
+        hostname: '**.wikipedia.org',
+        port: '',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.wikipedia.org',
+        port: '',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.wikimedia.org',
+        port: '',
+      },
     ],
   },
 };

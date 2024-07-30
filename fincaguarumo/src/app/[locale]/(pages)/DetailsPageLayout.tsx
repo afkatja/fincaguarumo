@@ -25,7 +25,7 @@ const DetailsPageLayout = ({
   location: string
   price: number
   slideshow?: React.ReactNode
-  parent?: string
+  parent?: {title: string, href: string}
 }) => {
   return (
     <div className="w-11/12 mx-auto py-8">
@@ -33,7 +33,7 @@ const DetailsPageLayout = ({
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/activities">{parent}</BreadcrumbLink>
+              <BreadcrumbLink href={`/${parent.href}`}>{parent.title}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>

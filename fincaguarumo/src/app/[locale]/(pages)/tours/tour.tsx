@@ -27,7 +27,7 @@ export default function Tour({
   isFeatured?: boolean
 }) {
   return (
-    <Link href={url} className="group" prefetch={false}>
+    <Link href={url} className="group tour" prefetch={false}>
       <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <CardContent className="flex h-full flex-col justify-between p-6">
           <div className="relative">
@@ -38,7 +38,7 @@ export default function Tour({
               alt={images[0].alt}
               width={images[0].width}
               height={images[0].height}
-              className="mb-3"
+              className="mb-3 max-h-52 object-cover"
             />
             <h3 className="text-xl font-semibold ">{title}</h3>
             <p className="mt-2 text-muted-foreground">{description}</p>

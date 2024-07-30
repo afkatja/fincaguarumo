@@ -22,4 +22,37 @@ h6 {
   height: 100%;
 }
 
+.columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4rem;
+  margin: 0 auto;
+  position: relative;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  padding: 4rem 0;
+}
 
+.tour {
+  margin: 4rem 0;
+}
+
+@supports (animation-timeline: scroll()) {
+  .column-reverse {
+    flex-direction: column-reverse;
+
+    animation: adjust-position linear forwards;
+    animation-timeline: scroll(root block);
+  }
+}
+
+@keyframes adjust-position {
+  0% {
+    transform: translateY(calc(-100% + 100vh));
+  }
+  100% {
+    transform: translateY(calc(100% - 100vh));
+  }
+}

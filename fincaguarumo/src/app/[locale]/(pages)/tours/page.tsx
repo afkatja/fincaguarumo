@@ -8,12 +8,28 @@ const Tours = async ({
 }: {
   params: { locale: string }
 }) => {
+  const part1 = tours.slice(0, tours.length / 3)
+  const part2 = tours.slice(tours.length / 3, (tours.length / 3) * 2)
+  const part3 = tours.slice((tours.length / 3) * 2, tours.length)
+
   return (
     <Layout locale={locale} pageName="tours">
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-12 py-5">
-        {tours.map(tour => {
-          return <Tour key={crypto.randomUUID()} {...tour} />
-        })}
+      <div className="overflow-y-hidden columns">
+        <div className="column column-reverse">
+          {part1.map(tour => {
+            return <Tour key={crypto.randomUUID()} {...tour} />
+          })}
+        </div>
+        <div className="column">
+          {part2.map(tour => {
+            return <Tour key={crypto.randomUUID()} {...tour} />
+          })}
+        </div>
+        <div className="column column-reverse">
+          {part3.map(tour => {
+            return <Tour key={crypto.randomUUID()} {...tour} />
+          })}
+        </div>
       </div>
     </Layout>
   )

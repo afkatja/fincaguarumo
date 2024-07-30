@@ -11,7 +11,7 @@ export default function HorseRiding() {
       price={39}
       location="La Balsa"
       duration="3 hours"
-      parent="Tours"
+      parent={{ title: "Tours", href: "tours" }}
     />
   )
 }

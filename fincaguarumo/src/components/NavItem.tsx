@@ -5,7 +5,6 @@ import React from "react"
 
 const NavItem = ({ navItem }: { navItem: { href: string; title: string } }) => {
   const pathname = usePathname()
-  console.log({ pathname })
 
   return (
     <Link
