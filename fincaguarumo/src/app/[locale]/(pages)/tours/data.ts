@@ -27,6 +27,33 @@ const tours = [
     ],
   },
   {
+    title: "sunset",
+    description:
+      "see the sun set behind Corcovado National Park and into the Pacific Ocean, while enjoying the breeze and the magnificent colors of the sky and the jungle around you",
+    url: "tours/sunset",
+    isFeatured: true,
+    images: [
+      {
+        src: "https://picsum.photos/id/53/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+      {
+        src: "https://picsum.photos/id/62/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+      {
+        src: "https://picsum.photos/id/368/1920/1080",
+        alt: "",
+        width: 1920,
+        height: 1080,
+      },
+    ],
+  },
+  {
     title: "horse back riding",
     description:
       "experience the top of the hill and the jungle around you from the back of the horse, your tempo, your level",

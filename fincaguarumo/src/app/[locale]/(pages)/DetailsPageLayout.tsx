@@ -1,6 +1,14 @@
 import React from "react"
 import { ClockIcon, Pin as MapPinIcon } from "@/components/icons"
 import BookingDialog from "./Dialog"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 
 const DetailsPageLayout = ({
   title,
@@ -9,6 +17,7 @@ const DetailsPageLayout = ({
   location,
   price,
   slideshow,
+  parent,
 }: {
   title: string
   description: string
@@ -16,9 +25,23 @@ const DetailsPageLayout = ({
   location: string
   price: number
   slideshow?: React.ReactNode
+  parent?: string
 }) => {
   return (
     <div className="w-11/12 mx-auto py-8">
+      {parent && (
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/activities">{parent}</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{title}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      )}
       <h1 className="text-3xl font-bold my-5">{title}</h1>
       <div className="relative">{slideshow && slideshow}</div>
       <div className="grid md:grid-cols-2 gap-8 mt-8 md:mt-12">

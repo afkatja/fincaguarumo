@@ -1,5 +1,5 @@
-import Link from "next/link"
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
+import NavItem from "./NavItem"
 
 export const navItems = (t: (arg0: string) => string) => [
   { href: "/tours", title: t("tours") },
@@ -23,17 +23,11 @@ const MainNav = async ({
   unstable_setRequestLocale(locale)
 
   const t = await getTranslations("header")
+
   return (
     <nav className={`hidden md:flex items-center gap-5 ${className}`}>
       {navItems(t).map(navItem => (
-        <Link
-          key={crypto.randomUUID()}
-          href={navItem.href}
-          className="text-sm font-medium hover:underline underline-offset-4"
-          prefetch={false}
-        >
-          {navItem.title}
-        </Link>
+        <NavItem key={crypto.randomUUID()} navItem={navItem} />
       ))}
     </nav>
   )
