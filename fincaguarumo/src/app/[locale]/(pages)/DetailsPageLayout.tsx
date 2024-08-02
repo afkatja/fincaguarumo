@@ -1,5 +1,5 @@
 import React from "react"
-import { ClockIcon, Pin as MapPinIcon } from "@/components/icons"
+
 import BookingDialog from "./Dialog"
 import {
   Breadcrumb,
@@ -9,6 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import Icon from "@/components/Icon"
 
 const DetailsPageLayout = ({
   title,
@@ -25,7 +26,7 @@ const DetailsPageLayout = ({
   location: string
   price: number
   slideshow?: React.ReactNode
-  parent?: {title: string, href: string}
+  parent?: { title: string; href: string }
 }) => {
   return (
     <div className="w-11/12 mx-auto py-8">
@@ -33,7 +34,9 @@ const DetailsPageLayout = ({
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href={`/${parent.href}`}>{parent.title}</BreadcrumbLink>
+              <BreadcrumbLink href={`/${parent.href}`}>
+                {parent.title}
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -49,11 +52,11 @@ const DetailsPageLayout = ({
           <p className="text-muted-foreground mt-2">{description}</p>
           <div className="flex items-center gap-4 mt-4">
             <div className="flex items-center gap-1">
-              <ClockIcon className="h-5 w-5 text-primary" />
+              <Icon icon="clock" className="h-5 w-5 text-primary" />
               <span>{duration}</span>
             </div>
             <div className="flex items-center gap-1">
-              <MapPinIcon className="h-5 w-5 text-primary" />
+              <Icon icon="Pin" className="h-5 w-5 text-primary" />
               <span>{location}</span>
             </div>
           </div>

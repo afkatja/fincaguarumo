@@ -1,27 +1,34 @@
-import ArrowRightIcon from "./ArrowIcon"
-import CalendarIcon from "./Calendar"
+import Arrow from "./ArrowIcon"
+import ArrowRight from "./ArrowIcon"
+import Calendar from "./Calendar"
 import Close from "./Close"
 import Logo from "./Logo"
-import MailIcon from "./MailIcon"
-import MenuIcon from "./MenuIcon"
-import PhoneIcon from "./PhoneIcon"
+import Mail from "./MailIcon"
+import Menu from "./MenuIcon"
+import Phone from "./PhoneIcon"
 import Pin from "./Pin"
-import ClockIcon from "./Clock"
-import CreditCardIcon from "./Credit"
-import ExpandIcon from "./Expand"
-import WalletCardsIcon from "./Wallet"
+import Clock from "./Clock"
+import CreditCard from "./Credit"
+import Expand from "./Expand"
+import WalletCards from "./Wallet"
+import Facebook from "./Facebook"
+import Instagram from "./Instagram"
 
-export {
-  ArrowRightIcon,
-  CalendarIcon,
+// @ts-ignore
+export default {
+  Arrow,
+  ArrowRight,
+  Calendar,
   Close,
   Logo,
-  MailIcon,
-  MenuIcon,
-  PhoneIcon,
+  Mail,
+  Menu,
+  Phone,
   Pin,
-  ClockIcon,
-  CreditCardIcon,
-  ExpandIcon,
-  WalletCardsIcon,
+  Clock,
+  CreditCard,
+  Expand,
+  WalletCards,
+  Facebook,
+  Instagram,
 }

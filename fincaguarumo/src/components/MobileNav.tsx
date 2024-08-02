@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
-import MenuIcon from "./icons/MenuIcon"
 
 import { navItems } from "./MainNav"
 import Link from "next/link"
 import { randomUUID } from "crypto"
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
+import Icon from "./Icon"
 
 const MobileNav = async ({ locale }: { locale: string }) => {
   unstable_setRequestLocale(locale)
@@ -15,7 +15,7 @@ const MobileNav = async ({ locale }: { locale: string }) => {
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="md:hidden">
-          <MenuIcon className="w-6 h-6" />
+          <Icon icon="Menu" className="w-6 h-6" />
           <span className="sr-only">Toggle navigation menu</span>
         </Button>
       </SheetTrigger>

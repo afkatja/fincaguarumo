@@ -8,7 +8,6 @@ const NavItem = ({ navItem }: { navItem: { href: string; title: string } }) => {
 
   return (
     <Link
-      key={crypto.randomUUID()}
       href={navItem.href}
       className={`text-sm hover:underline underline-offset-4 ${
         pathname.includes(navItem.href)

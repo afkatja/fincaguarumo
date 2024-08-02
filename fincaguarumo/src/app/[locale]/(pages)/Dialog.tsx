@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button"
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
-import { CreditCardIcon, WalletCardsIcon } from "../../../components/icons"
+import Icon from "@/components/Icon"
 
 const BookingDialog = ({
   title,
@@ -113,7 +113,7 @@ const BookingDialog = ({
                     className="flex items-center gap-2 cursor-pointer"
                   >
                     <RadioGroupItem id="card" value="card" />
-                    <CreditCardIcon className="h-6 w-6" />
+                    <Icon icon="Credit" className="h-6 w-6" />
                     Credit Card
                   </Label>
                   <Label
@@ -121,7 +121,7 @@ const BookingDialog = ({
                     className="flex items-center gap-2 cursor-pointer"
                   >
                     <RadioGroupItem id="paypal" value="paypal" />
-                    <WalletCardsIcon className="h-6 w-6" />
+                    <Icon icon="Wallet" className="h-6 w-6" />
                     PayPal
                   </Label>
                 </div>

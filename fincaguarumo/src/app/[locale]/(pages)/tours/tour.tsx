@@ -5,9 +5,9 @@
  */
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import { CalendarIcon, ArrowRightIcon } from "@/components/icons"
 import Image from "next/image"
 import Badge from "@/components/badge"
+import Icon from "../../../../components/Icon"
 
 export default function Tour({
   title,
@@ -46,14 +46,17 @@ export default function Tour({
           <div className="mt-4 flex items-center justify-between">
             {dateAdded && (
               <div className="flex items-center gap-2 text-sm font-medium">
-                <CalendarIcon className="h-4 w-4" />
+                <Icon icon="Calendar" className="h-4 w-4" />
                 <span>{dateAdded}</span>
               </div>
             )}
           </div>
           <p className="flex w-full group-hover:underline mt-3">
             Read more{" "}
-            <ArrowRightIcon className="ml-auto h-5 w-5 text-muted-foreground transition-all group-hover:translate-x-1" />
+            <Icon
+              icon="ArrowRight"
+              className="ml-auto h-5 w-5 text-muted-foreground transition-all group-hover:translate-x-1"
+            />
           </p>
         </CardContent>
       </Card>

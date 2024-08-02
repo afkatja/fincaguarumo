@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
-import ArrowIcon from "./icons/ArrowIcon"
+import Icon from "./Icon"
 
 const Cards = () => {
   return (
@@ -27,7 +27,7 @@ const Cards = () => {
               prefetch={false}
             >
               Explore Tours
-              <ArrowIcon className="w-4 h-4" />
+              <Icon icon="Arrow" className="w-4 h-4" />
             </Link>
           </div>
         </CardContent>

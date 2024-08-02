@@ -1,8 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import PhoneIcon from "@/components/icons/PhoneIcon"
-import MailIcon from "@/components/icons/MailIcon"
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
+import Icon from "../../../../components/Icon"
 
 export default async function Contact({ locale }: { locale: string }) {
   unstable_setRequestLocale(locale)
@@ -36,13 +35,16 @@ export default async function Contact({ locale }: { locale: string }) {
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center gap-2">
-                  <MailIcon className="w-5 h-5 text-muted-foreground" />
+                  <Icon icon="Mail" className="w-5 h-5 text-muted-foreground" />
                   <a href="#" className="text-sm font-medium hover:underline">
                     john@acmeretreats.com
                   </a>
                 </div>
                 <div className="flex items-center gap-2">
-                  <PhoneIcon className="w-5 h-5 text-muted-foreground" />
+                  <Icon
+                    icon="Phone"
+                    className="w-5 h-5 text-muted-foreground"
+                  />
                   <a href="#" className="text-sm font-medium hover:underline">
                     +1 (234) 567-890
                   </a>
@@ -66,13 +68,16 @@ export default async function Contact({ locale }: { locale: string }) {
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center gap-2">
-                  <MailIcon className="w-5 h-5 text-muted-foreground" />
+                  <Icon icon="Mail" className="w-5 h-5 text-muted-foreground" />
                   <a href="#" className="text-sm font-medium hover:underline">
                     jane@acmeretreats.com
                   </a>
                 </div>
                 <div className="flex items-center gap-2">
-                  <PhoneIcon className="w-5 h-5 text-muted-foreground" />
+                  <Icon
+                    icon="Phone"
+                    className="w-5 h-5 text-muted-foreground"
+                  />
                   <a href="#" className="text-sm font-medium hover:underline">
                     +0 (987) 654-321
                   </a>

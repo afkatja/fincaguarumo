@@ -6,9 +6,9 @@ import {
 } from "@/components/ui/carousel"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Close, ExpandIcon } from "@/components/icons"
 import Autoplay from "embla-carousel-autoplay"
 import tours from "../data"
+import Icon from "@/components/Icon"
 
 const Slideshow = () => {
   const images = tours.filter(tour => tour.title.includes("horse"))[0].images
@@ -43,7 +43,7 @@ const Slideshow = () => {
         className="absolute top-4 right-4 bg-background/50 hover:bg-background"
         onClick={() => setIsExpanded(true)}
       >
-        <ExpandIcon className="h-5 w-5" />
+        <Icon icon="Expand" className="h-5 w-5" />
         <span className="sr-only">Expand</span>
       </Button>
 
@@ -56,7 +56,7 @@ const Slideshow = () => {
               className="absolute top-4 right-4 bg-background/50 hover:bg-background z-10"
               onClick={() => setIsExpanded(false)}
             >
-              <Close className="h-5 w-5" />
+              <Icon icon="Close" className="h-5 w-5" />
               <span className="sr-only">Close</span>
             </Button>
             <Carousel
