@@ -14,6 +14,11 @@ const navItems = (t: (arg0: string) => string) => [
     href: "",
     icon: "Instagram",
   },
+  {
+    title: t("youtube"),
+    href: "",
+    icon: "Youtube",
+  },
 ]
 
 const SocialNav = async ({
