@@ -3,6 +3,9 @@
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig = {
+  experimental: {
+    taint: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -24,6 +27,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.wikimedia.org',
         port: '',
+      },
+
+      {
+        protocol: "https",
+        hostname: "cdn.sanity.io",
       },
     ],
   },

@@ -43,6 +43,6 @@ export const config = {
     "/",
     // "/(nl|en|es|ru)/:path*",
     // "/((?!_next).*)",
-    "/((?!api|_next/static|_next/image|images).*)",
+    "/((?!api|_next/static|_next/image|images|studio).*)",
   ],
 }
