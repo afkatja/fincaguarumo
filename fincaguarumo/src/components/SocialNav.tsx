@@ -1,7 +1,7 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 import Link from "next/link"
 import React from "react"
-import Icon from "./Icon"
+import Icon, { IconColor } from "./Icon"
 
 const navItems = (t: (arg0: string) => string) => [
   {
@@ -34,13 +34,14 @@ const SocialNav = async ({
   return (
     <nav className={`hidden md:flex items-center gap-5 mx-4 ${className}`}>
       {navItems(t).map(navItem => (
-        <Link
-          key={crypto.randomUUID()}
-          href={navItem.href}
-          className="text-sm hover:underline underline-offset-4"
-          prefetch={false}
-        >
-          <Icon icon={navItem.icon} alt={navItem.title} size={20} />
+        <Link key={crypto.randomUUID()} href={navItem.href} prefetch={false}>
+          <Icon
+            className="hover:fill-secondary"
+            icon={navItem.icon}
+            alt={navItem.title}
+            size={20}
+            color={IconColor.Primary}
+          />
         </Link>
       ))}
     </nav>

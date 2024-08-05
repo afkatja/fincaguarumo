@@ -10,6 +10,22 @@ const ICONS: any = Object.keys(icons).reduce(
   {}
 )
 
+export enum IconColor {
+  Primary = "primary",
+  Secondary = "secondary",
+}
+
+const colors = {
+  get icon() {
+    return {
+      primary: this.primary,
+      secondary: this.secondary,
+    } as any
+  },
+  primary: "#034924",
+  secondary: "#9e1f60",
+}
+
 const Icon = ({
   color,
   icon,
@@ -17,17 +33,22 @@ const Icon = ({
   className,
   size,
 }: {
-  color?: string
+  color?: IconColor | string
   icon: string
   alt?: string
   className?: string
   size?: number
 }) => {
   const Component = ICONS[icon]
+  const getColor = () => {
+    if (!color) return "#000000"
+    if (!Object.values(IconColor).includes(color)) return color
 
+    return colors.icon[color]
+  }
   return (
     <Component
-      color={color}
+      color={getColor()}
       title={alt}
       className={className}
       width={size}

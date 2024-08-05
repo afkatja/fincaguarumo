@@ -7,6 +7,7 @@ export default function FacebookIcon(props: any) {
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 310 310"
+      {...props}
     >
       <g id="XMLID_834_">
         <path

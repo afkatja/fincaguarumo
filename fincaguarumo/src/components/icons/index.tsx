@@ -13,6 +13,7 @@ import Expand from "./Expand"
 import WalletCards from "./Wallet"
 import Facebook from "./Facebook"
 import Instagram from "./Instagram"
+import Youtube from "./Youtube"
 
 // @ts-ignore
 export default {
@@ -31,4 +32,5 @@ export default {
   WalletCards,
   Facebook,
   Instagram,
+  Youtube,
 }
