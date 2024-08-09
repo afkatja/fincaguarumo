@@ -16,6 +16,8 @@ import { NextIntlClientProvider } from "next-intl"
 import { getMessages, unstable_setRequestLocale } from "next-intl/server"
 
 import Header from "../../components/header"
+import { VisualEditing } from "next-sanity"
+import { draftMode } from "next/headers"
 
 const poppins = Poppins({
   weight: "300",
@@ -48,7 +50,17 @@ export default async function Layout({
         <NextIntlClientProvider messages={messages}>
           <div className="flex flex-col min-h-[100dvh]">
             <Header locale={locale} />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1">
+              {draftMode().isEnabled && (
+                <a
+                  className="fixed right-0 bottom-0 bg-blue-500 text-white p-4 m-4"
+                  href="/api/draft-mode/disable"
+                >
+                  Disable preview mode
+                </a>
+              )}
+              {children} {draftMode().isEnabled && <VisualEditing />}
+            </main>
           </div>
         </NextIntlClientProvider>
       </body>

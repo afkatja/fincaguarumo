@@ -10,6 +10,7 @@ export const navItems = (t: (arg0: string) => string) => [
   },
   { href: "volunteer", title: t("volunteer") },
   { href: "/salsa", title: t("salsa") },
+  { href: "/blog", title: t("blog") },
 ]
 
 const MainNav = async ({
