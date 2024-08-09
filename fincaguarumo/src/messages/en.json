@@ -9,7 +9,8 @@
     "contact": "Contact",
     "facebook": "Facebook",
     "instagram": "Instagram",
-    "youtube": "Youtube"
+    "youtube": "Youtube",
+    "blog": "Blog"
   },
   "hero": {
     "title": "Discover Our Retreats",
@@ -21,8 +22,8 @@
   },
   "about": {
     "title": "About Us",
-    "description1": "Acme Retreats is a family-owned business that has been providing exceptional retreat experiences for over 20 years. Our mission is to help our guests reconnect with nature, rejuvenate their minds and bodies, and create lasting memories.",
-    "description2": "We are passionate about sustainable tourism and strive to minimize our environmental impact while offering world-class accommodations and activities. Our team of experienced guides and hospitality professionals are dedicated to ensuring that every guest has an unforgettable stay."
+    "description": "About Finca Guarumo",
+    "body": "<p>Welcome to Finca Guarumo, a slice of paradise nestled in the heart of Costa Rica's Osa Peninsula. We're Katja and Peter Hollaar, a Dutch couple who took a leap of faith in 2022, leaving behind our lives in the Netherlands to pursue a dream of sustainable living in one of the world's most biodiverse regions.</p> <p>Our journey began in August 2023 when we acquired this beautiful piece of land, driven by a vision to create a harmonious balance between nature and human habitation. Finca Guarumo isn't just an eco-retreat; it's our home, our passion project, and a testament to the challenges and rewards of off-grid living.</p><p>At Finca Guarumo, sustainability isn't just a buzzword—it's our way of life. We harness 100% of our electricity from solar energy, with panels adorning our multi-purpose rancho that also provides shade for our vehicle. Our water comes straight from a crystal-clear spring, free from chemicals and rich in minerals. We're committed to growing at least 70% of what we eat, composting organic waste, and using rainwater for non-drinking purposes. Our ongoing reforestation efforts focus on planting both fruit and native forest trees, enhancing the local ecosystem.</p><p>Living off-grid has been an eye-opening adventure, filled with challenges we never anticipated in Europe. From carrying heavy solar batteries through the jungle to battling rapidly growing vegetation that threatens to overshadow our solar panels, every day brings new lessons in resilience and ingenuity.</p><p>But the rewards are immeasurable. Imagine waking up to the sounds of the jungle, stepping onto your porch to see Carolina, our resident deer, grazing nearby, or watching squirrel monkeys play in the trees as toucans and macaws perch close by. This is the everyday magic of Finca Guarumo.</p><p>Our vision extends beyond our own slice of paradise. We're deeply committed to the local community, learning from our neighbors and giving back by promoting their services for tours and activities. In the future, we plan to open a dance deck, offering classes and parties that will bring together locals and visitors alike.</p><p>As we prepare to welcome our first guests in the high season of 2024, we're excited to share this unique experience with you. Whether you're staying in our eco-bungalow or camping under the stars, you'll be embraced not just by nature, but by our small, family-run ethos that treats every guest like a friend.</p><p>Finca Guarumo is more than just a place to stay—it's an immersive experience in sustainable living, a window into the raw beauty of Costa Rica's wildlife, and an opportunity to connect with nature in its purest form. We invite you to join us on this adventure, to learn, to explore, and to create memories that will last a lifetime.</p><p>Come, be part of our story. Welcome to Finca Guarumo—where every day is a new discovery in the heart of the jungle.</p>"
   },
   "contact": {
     "title": "Contact Us",
