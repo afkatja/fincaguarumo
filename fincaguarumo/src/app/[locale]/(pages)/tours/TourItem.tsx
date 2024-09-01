@@ -1,46 +1,49 @@
-/**
- * v0 by Vercel.
- * @see https://v0.dev/t/AkcBESAWecW
- * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
- */
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import Badge from "@/components/badge"
 import Icon from "../../../../components/Icon"
+import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import { urlFor } from "@/sanity/lib/image"
 
-export default function Tour({
-  title,
-  description,
-  images,
-  url,
-  dateAdded,
-  isNew,
-  isFeatured,
-}: {
+export type TourType = {
   title: string
   description: string
-  images: { src: string; alt: string; width: number; height: number }[]
-  url: string
+  mainImage: SanityImageObject & { alt: string }
+  slug: { current: string }
   dateAdded?: string
   isNew?: boolean
   isFeatured?: boolean
-}) {
+}
+
+const TourItem = ({
+  title,
+  description,
+  mainImage,
+  slug,
+  dateAdded,
+  isNew,
+  isFeatured,
+}: TourType) => {
   return (
-    <Link href={url} className="group tour" prefetch={false}>
+    <Link
+      href={`/tours/${slug.current}`}
+      className="group tour"
+      prefetch={false}
+    >
       <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <CardContent className="flex h-full flex-col justify-between p-6">
           <div className="relative">
             {isNew && <Badge text="New" />}
             {isFeatured && <Badge text="Featured" />}
             <Image
-              src={images[0].src}
-              alt={images[0].alt}
-              width={images[0].width}
-              height={images[0].height}
+              src={urlFor(mainImage).url()}
+              alt={mainImage.alt}
+              width={800}
+              height={800}
               className="mb-3 max-h-52 object-cover"
             />
-            <h3 className="text-xl font-semibold ">{title}</h3>
+            <h3 className="text-xl font-semibold">{title}</h3>
             <p className="mt-2 text-muted-foreground">{description}</p>
           </div>
           <div className="mt-4 flex items-center justify-between">
@@ -63,3 +66,5 @@ export default function Tour({
     </Link>
   )
 }
+
+export default TourItem

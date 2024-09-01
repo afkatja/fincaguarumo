@@ -1,3 +1,15 @@
+import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+
+export type TTour = {
+  title: string
+  slug?: string
+  description: string
+  images: SanityImageObject[]
+  price?: string
+  location?: string
+  duration?: string
+}
+
 const tours = [
   {
     title: "sunrise",

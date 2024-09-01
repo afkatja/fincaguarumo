@@ -9,7 +9,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+
 import Icon from "@/components/Icon"
+import { TTour } from "./tours/data"
 
 const DetailsPageLayout = ({
   title,
@@ -19,12 +21,7 @@ const DetailsPageLayout = ({
   price,
   slideshow,
   parent,
-}: {
-  title: string
-  description: string
-  duration: string
-  location: string
-  price: number
+}: Omit<TTour, "images"> & {
   slideshow?: React.ReactNode
   parent?: { title: string; href: string }
 }) => {
@@ -51,14 +48,18 @@ const DetailsPageLayout = ({
         <div>
           <p className="text-muted-foreground mt-2">{description}</p>
           <div className="flex items-center gap-4 mt-4">
-            <div className="flex items-center gap-1">
-              <Icon icon="clock" className="h-5 w-5 text-primary" />
-              <span>{duration}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Icon icon="Pin" className="h-5 w-5 text-primary" />
-              <span>{location}</span>
-            </div>
+            {duration && (
+              <div className="flex items-center gap-1">
+                <Icon icon="Clock" className="h-5 w-5 text-primary" />
+                <span>{duration}</span>
+              </div>
+            )}
+            {location && (
+              <div className="flex items-center gap-1">
+                <Icon icon="Pin" className="h-5 w-5 text-primary" />
+                <span>{location}</span>
+              </div>
+            )}
           </div>
         </div>
         <footer className="bg-muted rounded-lg p-6 md:p-8">
@@ -68,7 +69,7 @@ const DetailsPageLayout = ({
               <span className="text-muted-foreground text-sm">/person</span>
             </div>
             <BookingDialog
-              price={price}
+              price={Number(price)}
               title="Horse back riding tour"
               description="Reserve now to enjoy the tour"
             />

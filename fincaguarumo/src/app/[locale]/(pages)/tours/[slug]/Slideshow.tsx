@@ -1,18 +1,12 @@
 import React, { useState } from "react"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel"
-import Image from "next/image"
+import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import { Carousel } from "@/components/ui/carousel"
 import { Button } from "@/components/ui/button"
 import Autoplay from "embla-carousel-autoplay"
-import tours from "../data"
 import Icon from "@/components/Icon"
+import CarouselContent from "./CarouselContent"
 
-const Slideshow = () => {
-  const images = tours.filter(tour => tour.title.includes("horse"))[0].images
-
+const Slideshow = ({ images }: { images: SanityImageObject[] }) => {
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
@@ -23,19 +17,7 @@ const Slideshow = () => {
         interval={5000}
         className="rounded-lg overflow-hidden"
       >
-        <CarouselContent>
-          {images.map(image => (
-            <CarouselItem key={crypto.randomUUID()}>
-              <Image
-                src={image.src}
-                alt={image.alt}
-                className="w-full h-[400px] md:h-[500px] object-cover"
-                width={image.width}
-                height={image.height}
-              />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
+        <CarouselContent images={images} size={1200} />
       </Carousel>
       <Button
         variant="outline"
@@ -65,19 +47,7 @@ const Slideshow = () => {
               interval={5000}
               className="rounded-lg overflow-hidden"
             >
-              <CarouselContent>
-                {images.map(image => (
-                  <CarouselItem key={crypto.randomUUID()}>
-                    <Image
-                      src={image.src}
-                      alt={image.alt}
-                      className="w-full h-[400px] md:h-[500px] object-cover"
-                      width={image.width}
-                      height={image.height}
-                    />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
+              <CarouselContent images={images} size={1200} />
             </Carousel>
           </div>
         </div>
