@@ -1,5 +1,3 @@
-// ./src/sanity/lib/queries.ts
-
 import { groq } from "next-sanity"
 
 export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...12]{
@@ -9,3 +7,25 @@ export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...
 export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
   title, body, mainImage
 }`
+
+export const TOURS_QUERY = groq`*[_type == 'tour']{
+  title, 
+  mainImage,
+  description, 
+  dateAdded, 
+  slug
+}
+`
+
+export const TOUR_QUERY = groq`
+*[_type == 'tour' && slug.current == $slug][0]{
+  _id, 
+  title, 
+  slug, 
+  description, 
+  images, 
+  price, 
+  location, 
+  duration
+}
+`
