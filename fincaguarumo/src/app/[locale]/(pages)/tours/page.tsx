@@ -14,6 +14,7 @@ const Tours = async ({
 }) => {
   const tours = await sanityFetch<SanityDocument>({
     query: TOURS_QUERY,
+    revalidate: 0,
   })
 
   const part1 = tours.slice(0, tours.length / 3)

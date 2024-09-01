@@ -8,12 +8,12 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
   title, body, mainImage
 }`
 
-export const TOURS_QUERY = groq`*[_type == 'tour']{
+export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current)]{
+  slug,
   title, 
   mainImage,
   description, 
-  dateAdded, 
-  slug
+  dateAdded
 }
 `
 
