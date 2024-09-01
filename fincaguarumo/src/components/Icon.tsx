@@ -39,6 +39,8 @@ const Icon = ({
   className?: string
   size?: number
 }) => {
+  if (!ICONS[icon]) return `no such icon ${icon}`
+
   const Component = ICONS[icon]
   const getColor = () => {
     if (!color) return "#000000"

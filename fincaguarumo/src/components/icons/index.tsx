@@ -16,7 +16,7 @@ import Instagram from "./Instagram"
 import Youtube from "./Youtube"
 
 // @ts-ignore
-export default {
+const icons = {
   Arrow,
   ArrowRight,
   Calendar,
@@ -34,3 +34,4 @@ export default {
   Instagram,
   Youtube,
 }
+export default icons
