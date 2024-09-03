@@ -6,6 +6,12 @@ export const pageType = defineType({
   type: "document",
   fields: [
     defineField({
+      name: "language",
+      type: "string",
+      readOnly: true,
+      hidden: true,
+    }),
+    defineField({
       name: "title",
       type: "string",
     }),
@@ -24,6 +30,10 @@ export const pageType = defineType({
         source: "title",
         maxLength: 96,
       },
+      validation: rule =>
+        rule
+          .required()
+          .error("A slug is required to generate a page on the website"),
     }),
     defineField({
       name: "mainImage",
