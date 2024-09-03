@@ -5,7 +5,17 @@ export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...
 }`
 
 export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
-  title, body, mainImage
+  title, body, mainImage, language,
+  "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->{
+        language,
+        title,
+        slug
+      })
+    }
 }`
 
 export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current)]{
@@ -20,12 +30,39 @@ export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current)]{
 export const TOUR_QUERY = groq`
 *[_type == 'tour' && slug.current == $slug][0]{
   _id, 
+  language,
   title, 
   slug, 
   description, 
   images, 
   price, 
   location, 
-  duration
+  duration,
+  "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->{
+        language,
+        title,
+        slug
+      })
+    }
 }
+`
+
+export const ABOUT_QUERY = groq`
+  *[_type == 'page' && slug.current == 'about'][0] {
+    title, description, mainImage, body, language,
+    "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->{
+        language,
+        title,
+        slug
+      })
+    }
+  }
 `
