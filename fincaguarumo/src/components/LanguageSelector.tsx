@@ -1,5 +1,5 @@
 "use client"
-import { TransitionFunction, useTransition } from "react"
+import { TransitionFunction, useMemo, useTransition } from "react"
 import { useParams } from "next/navigation"
 import {
   Select,
@@ -9,10 +9,19 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useRouter, usePathname } from "../navigation"
-import { languages } from "../config"
+// import { languages } from "../config"
+import { i18n } from "../../languages"
 
 interface Params {
   [key: string]: string | string[]
+}
+
+type Translation = {
+  id: string
+  path: string
+  language: string
+  title: string
+  flag: string
 }
 
 function onSelectChange({
@@ -39,11 +48,29 @@ function onSelectChange({
   })
 }
 
-const LanguageSelector = ({ locale }: { locale: string }) => {
+const LanguageSelector = ({
+  locale,
+  translations,
+}: {
+  locale: string
+  translations?: Translation[]
+}) => {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const pathname = usePathname()
   const params = useParams()
+
+  const availableTranslations = useMemo<Translation[]>(
+    () =>
+      i18n.languages.reduce<Translation[]>((acc, cur) => {
+        const availableTranslation = translations?.find(
+          translation => translation.language === cur.id
+        )
+        return availableTranslation ? [...acc, availableTranslation] : acc
+      }, []),
+    [translations]
+  )
+
   return (
     <Select
       defaultValue={locale}
@@ -56,8 +83,8 @@ const LanguageSelector = ({ locale }: { locale: string }) => {
         <SelectValue placeholder="Choose language" />
       </SelectTrigger>
       <SelectContent>
-        {languages.map(lang => (
-          <SelectItem key={crypto.randomUUID()} value={lang.value}>
+        {availableTranslations.map(lang => (
+          <SelectItem key={crypto.randomUUID()} value={lang.id}>
             {lang.flag}
             {lang.title}
           </SelectItem>
