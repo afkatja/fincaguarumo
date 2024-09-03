@@ -12,6 +12,8 @@ import { presentationTool } from "sanity/presentation"
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
 import { apiVersion, dataset, projectId } from "./src/sanity/env"
 import { schema } from "./src/sanity/schema"
+import { documentInternationalization } from "@sanity/document-internationalization"
+import { i18n } from "./languages"
 
 export default defineConfig({
   basePath: "/studio",
@@ -30,6 +32,11 @@ export default defineConfig({
           enable: "/api/draft-mode/enable",
         },
       },
+    }),
+    documentInternationalization({
+      supportedLanguages: i18n.languages,
+      schemaTypes: ["page", "post"],
+      bulkPublish: true,
     }),
   ],
 })
