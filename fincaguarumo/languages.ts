@@ -1,9 +1,9 @@
 const languages = [
-  { id: "en", title: "English", flag: "", isDefault: true },
-  { id: "nl", flag: "", title: "Nederlands" },
-  { id: "es", flag: "", title: "Español" },
-  { id: "ru", flag: "", title: "Русский" },
-  { id: "de", flag: "", title: "Deutsch" },
+  { id: "en", title: "English", countryCode: "US", isDefault: true },
+  { id: "nl", countryCode: "NL", title: "Nederlands" },
+  { id: "es", countryCode: "CR", title: "Español" },
+  { id: "ru", countryCode: "RU", title: "Русский" },
+  { id: "de", countryCode: "DE", title: "Deutsch" },
 ]
 
 const i18n = {

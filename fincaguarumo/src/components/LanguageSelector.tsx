@@ -11,17 +11,17 @@ import {
 import { useRouter, usePathname } from "../navigation"
 // import { languages } from "../config"
 import { i18n } from "../../languages"
+import ReactCountryFlag from "react-country-flag"
 
 interface Params {
   [key: string]: string | string[]
 }
 
 type Translation = {
-  id: string
   path: string
   language: string
   title: string
-  flag: string
+  countryCode: string
 }
 
 function onSelectChange({
@@ -53,7 +53,7 @@ const LanguageSelector = ({
   translations,
 }: {
   locale: string
-  translations?: Translation[]
+  translations: Translation[]
 }) => {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -63,7 +63,7 @@ const LanguageSelector = ({
   const availableTranslations = useMemo<Translation[]>(
     () =>
       i18n.languages.reduce<Translation[]>((acc, cur) => {
-        const availableTranslation = translations?.find(
+        const availableTranslation = translations.find(
           translation => translation.language === cur.id
         )
         return availableTranslation ? [...acc, availableTranslation] : acc
@@ -83,10 +83,14 @@ const LanguageSelector = ({
         <SelectValue placeholder="Choose language" />
       </SelectTrigger>
       <SelectContent>
-        {availableTranslations.map(lang => (
-          <SelectItem key={crypto.randomUUID()} value={lang.id}>
-            {lang.flag}
-            {lang.title}
+        {availableTranslations.map(version => (
+          <SelectItem key={crypto.randomUUID()} value={version.language}>
+            <ReactCountryFlag
+              countryCode={version.countryCode.toUpperCase()}
+              svg
+              style={{ marginRight: 5, fontSize: "1.5rem" }}
+            />
+            {version.title}
           </SelectItem>
         ))}
       </SelectContent>
