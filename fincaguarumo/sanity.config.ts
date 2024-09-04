@@ -35,7 +35,7 @@ export default defineConfig({
     }),
     documentInternationalization({
       supportedLanguages: i18n.languages,
-      schemaTypes: ["page", "post"],
+      schemaTypes: ["page", "post", "tour"],
       bulkPublish: true,
     }),
   ],
