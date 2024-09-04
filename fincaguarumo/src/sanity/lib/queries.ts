@@ -52,7 +52,7 @@ export const TOUR_QUERY = groq`
 `
 
 export const ABOUT_QUERY = groq`
-  *[_type == 'page' && slug.current == 'about'][0] {
+  *[_type == 'page' && slug.current == 'about' && language == $language][0] {
     title, description, mainImage, body, language,
     "translations": *[
       _type == "translation.metadata" && 

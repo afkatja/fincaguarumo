@@ -18,7 +18,7 @@ const About = async ({
   params: { locale: string }
 }) => {
   const content: Content = await sanityFetch({
-    query: ABOUT_QUERY,
+    query: ABOUT_QUERY, params: {language: locale}
   })
 
   return (
