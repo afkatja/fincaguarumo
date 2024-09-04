@@ -1,0 +1,36 @@
+{
+  "header": {
+    "tours": "Tours",
+    "accommodations": "Accommodations",
+    "camping": "Camping",
+    "salsa": "Salsa",
+    "volunteer": "Volunteer",
+    "about": "About",
+    "contact": "Contact",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "youtube": "Youtube",
+    "blog": "Blog"
+  },
+  "hero": {
+    "title": "Discover Our Retreats",
+    "description": "Explore our collection of curated retreats, each offering a unique blend of natural beauty, adventure, and relaxation."
+  },
+  "upcoming": {
+    "title": "Upcoming Retreats",
+    "description": "Check out our upcoming retreats and plan your next getaway."
+  },
+  "about": {
+    "title": "Über uns",
+    "description": "Über Finca Guarumo",
+    "body": "blabla"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "Have a question or want to learn more about our retreats? Get in touch with us."
+  },
+  "tours": {
+    "title": "Tours",
+    "description": "Get off the beaten path and discover Osa Peninsula from within, lead by the locals, on the following tours"
+  }
+}

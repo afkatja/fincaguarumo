@@ -1,4 +1,4 @@
-const locales = ["en", "nl", "es", "ru"]
+const locales = ["en", "nl", "es", "ru", "de"]
 
 const languages = [
   {
@@ -20,6 +20,11 @@ const languages = [
     value: "es",
     flag: "",
     title: "Español",
+  },
+  {
+    value: "de",
+    flag: "",
+    title: "Deutsch",
   },
 ]
 
