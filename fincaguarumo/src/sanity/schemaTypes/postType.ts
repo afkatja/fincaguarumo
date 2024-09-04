@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity"
+import { isUniqueOtherThanLanguage } from "../../lib/utils"
 
 export const postType = defineType({
   name: "post",
@@ -21,6 +22,7 @@ export const postType = defineType({
       options: {
         source: "title",
         maxLength: 96,
+        isUnique: isUniqueOtherThanLanguage,
       },
       validation: rule =>
         rule

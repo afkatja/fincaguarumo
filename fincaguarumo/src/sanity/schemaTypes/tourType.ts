@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity"
+import { isUniqueOtherThanLanguage } from "../../lib/utils"
 
 export const tourType = defineType({
   name: "tour",
@@ -49,6 +50,7 @@ export const tourType = defineType({
       options: {
         source: "title",
         maxLength: 96,
+        isUnique: isUniqueOtherThanLanguage,
       },
       validation: rule =>
         rule
