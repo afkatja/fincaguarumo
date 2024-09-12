@@ -4,13 +4,13 @@ import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 import { navItems } from "./MainNav"
 import Link from "next/link"
 import { randomUUID } from "crypto"
-import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
+// import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 import Icon from "./Icon"
 
 const MobileNav = async ({ locale }: { locale: string }) => {
-  unstable_setRequestLocale(locale)
+  // unstable_setRequestLocale(locale)
 
-  const t = await getTranslations("header")
+  // const t = await getTranslations("header")
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -21,7 +21,7 @@ const MobileNav = async ({ locale }: { locale: string }) => {
       </SheetTrigger>
       <SheetContent side="left">
         <div className="grid gap-6 p-6">
-          {navItems(t).map(navItem => (
+          {navItems.map(navItem => (
             <Link
               key={randomUUID()}
               href={navItem.href}

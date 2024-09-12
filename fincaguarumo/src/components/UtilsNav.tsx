@@ -1,10 +1,10 @@
-import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
+// import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 import React from "react"
 import NavItem from "./NavItem"
 
-export const navItems = (t: (arg0: string) => string) => [
-  { href: "/about", title: t("about") },
-  { href: "/contact", title: t("contact") },
+export const navItems = [
+  { href: "/about", title: "about" },
+  { href: "/contact", title: "contact" },
 ]
 
 const UtilsNav = async ({
@@ -14,12 +14,12 @@ const UtilsNav = async ({
   locale: string
   className?: string
 }) => {
-  unstable_setRequestLocale(locale)
+  // unstable_setRequestLocale(locale)
 
-  const t = await getTranslations("header")
+  // const t = await getTranslations("header")
   return (
     <nav className={`hidden md:flex items-center gap-5 ${className}`}>
-      {navItems(t).map(navItem => (
+      {navItems.map(navItem => (
         <NavItem key={crypto.randomUUID()} navItem={navItem} />
       ))}
     </nav>

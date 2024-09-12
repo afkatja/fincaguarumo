@@ -26,6 +26,8 @@ const colors = {
   secondary: "#9e1f60",
 }
 
+const isType = (x: any): x is IconColor => Object.values(IconColor).includes(x)
+
 const Icon = ({
   color,
   icon,
@@ -44,7 +46,7 @@ const Icon = ({
   const Component = ICONS[icon]
   const getColor = () => {
     if (!color) return "#000000"
-    if (!Object.values(IconColor).includes(color)) return color
+    if (!isType(color)) return color
 
     return colors.icon[color]
   }

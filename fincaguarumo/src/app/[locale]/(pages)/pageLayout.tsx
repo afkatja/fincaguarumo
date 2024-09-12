@@ -1,4 +1,4 @@
-import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
+// import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 import Image from "next/image"
 import { urlFor } from "@/sanity/lib/image"
 
@@ -23,12 +23,14 @@ export default async function PageLayout({
 
   return (
     <section className="w-11/12 mx-auto py-12">
-      <Image
-        src={urlFor(mainImage).width(1600).height(700).url()}
-        alt=""
-        height={700}
-        width={1600}
-      />
+      {mainImage && (
+        <Image
+          src={urlFor(mainImage).width(1600).height(700).url()}
+          alt=""
+          height={700}
+          width={1600}
+        />
+      )}
       <div className="prose prose-lg mx-auto">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
           {title}

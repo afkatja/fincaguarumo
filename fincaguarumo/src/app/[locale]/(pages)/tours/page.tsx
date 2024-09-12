@@ -5,8 +5,6 @@ import Tour, { TourType } from "./TourItem"
 import { TOURS_QUERY } from "../../../../sanity/lib/queries"
 import { sanityFetch } from "../../../../sanity/lib/client"
 
-export const COMMON_PARAMS = {}
-
 const Tours = async ({
   params: { locale },
 }: {

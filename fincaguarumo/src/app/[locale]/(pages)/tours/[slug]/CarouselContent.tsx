@@ -16,13 +16,15 @@ const CarouselContentContent = ({
     <CarouselContent>
       {images.map(image => (
         <CarouselItem key={crypto.randomUUID()}>
-          <Image
-            src={urlFor(image).url()}
-            alt=""
-            className="w-full h-[400px] md:h-[500px] object-cover"
-            width={size}
-            height={size}
-          />
+          {image && (
+            <Image
+              src={urlFor(image).url()}
+              alt=""
+              className="w-full h-[400px] md:h-[500px] object-cover"
+              width={size}
+              height={size}
+            />
+          )}
         </CarouselItem>
       ))}
     </CarouselContent>

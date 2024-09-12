@@ -12,8 +12,8 @@ import "../styles/styles.css"
 import { locales } from "../../config"
 
 import React from "react"
-import { NextIntlClientProvider } from "next-intl"
-import { getMessages, unstable_setRequestLocale } from "next-intl/server"
+// import { NextIntlClientProvider } from "next-intl"
+// import { getMessages, unstable_setRequestLocale } from "next-intl/server"
 
 import Header from "../../components/header"
 import { VisualEditing } from "next-sanity"
@@ -41,28 +41,28 @@ export default async function Layout({
   children: React.ReactNode
   params?: any
 }>) {
-  const messages = await getMessages()
-  unstable_setRequestLocale(locale)
+  // const messages = await getMessages()
+  // unstable_setRequestLocale(locale)
 
   return (
     <html lang={locale}>
       <body className={poppins.variable + " " + cabin.variable}>
-        <NextIntlClientProvider messages={messages}>
-          <div className="flex flex-col min-h-[100dvh]">
-            <Header locale={locale} />
-            <main className="flex-1">
-              {draftMode().isEnabled && (
-                <a
-                  className="fixed right-0 bottom-0 bg-blue-500 text-white p-4 m-4"
-                  href="/api/draft-mode/disable"
-                >
-                  Disable preview mode
-                </a>
-              )}
-              {children} {draftMode().isEnabled && <VisualEditing />}
-            </main>
-          </div>
-        </NextIntlClientProvider>
+        {/* <NextIntlClientProvider messages={messages}> */}
+        <div className="flex flex-col min-h-[100dvh]">
+          <Header locale={locale} />
+          <main className="flex-1">
+            {draftMode().isEnabled && (
+              <a
+                className="fixed right-0 bottom-0 bg-blue-500 text-white p-4 m-4"
+                href="/api/draft-mode/disable"
+              >
+                Disable preview mode
+              </a>
+            )}
+            {children} {draftMode().isEnabled && <VisualEditing />}
+          </main>
+        </div>
+        {/* </NextIntlClientProvider> */}
       </body>
     </html>
   )

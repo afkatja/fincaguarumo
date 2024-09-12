@@ -1,4 +1,4 @@
-function MenuIcon(props) {
+function MenuIcon(props: any) {
   return (
     <svg
       {...props}
