@@ -1,9 +1,9 @@
 import React from "react"
 import { SanityDocument } from "next-sanity"
-import Layout from "../PageLayout"
 import Tour, { TourType } from "./TourItem"
 import { TOURS_QUERY } from "../../../../sanity/lib/queries"
 import { sanityFetch } from "../../../../sanity/lib/client"
+import Layout from "../PageLayout"
 
 const Tours = async ({
   params: { locale },

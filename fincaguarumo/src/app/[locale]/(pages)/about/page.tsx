@@ -1,10 +1,10 @@
 import React from "react"
-import Layout from "../PageLayout"
 // import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { ABOUT_QUERY } from "../../../../sanity/lib/queries"
 import { PortableText } from "next-sanity"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import Layout from "../PageLayout"
 
 type Content = {
   title: string
@@ -18,7 +18,8 @@ const About = async ({
   params: { locale: string }
 }) => {
   const content: Content = await sanityFetch({
-    query: ABOUT_QUERY, params: {language: locale}
+    query: ABOUT_QUERY,
+    params: { language: locale },
   })
 
   return (

@@ -12,9 +12,8 @@ const Slideshow = ({ images }: { images: SanityImageObject[] }) => {
   return (
     <>
       <Carousel
-        // @ts-ignore
         plugins={[Autoplay({})]}
-        interval={5000}
+        // interval={5000}
         className="rounded-lg overflow-hidden"
       >
         <CarouselContent images={images} size={1200} />
@@ -42,9 +41,8 @@ const Slideshow = ({ images }: { images: SanityImageObject[] }) => {
               <span className="sr-only">Close</span>
             </Button>
             <Carousel
-              // @ts-ignore
               plugins={[Autoplay({})]}
-              interval={5000}
+              // interval={5000}
               className="rounded-lg overflow-hidden"
             >
               <CarouselContent images={images} size={1200} />
