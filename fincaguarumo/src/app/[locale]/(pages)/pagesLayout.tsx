@@ -2,7 +2,7 @@
 import Image from "next/image"
 import { urlFor } from "@/sanity/lib/image"
 
-export default async function PageLayout({
+const PageLayout = async ({
   locale,
   pageName,
   title,
@@ -15,7 +15,7 @@ export default async function PageLayout({
   pageName: string
   children: React.ReactNode
   [props: string]: any
-}) {
+}) => {
   // unstable_setRequestLocale(locale)
 
   if (!pageName) return "loading"
@@ -43,3 +43,5 @@ export default async function PageLayout({
     </section>
   )
 }
+
+export default PageLayout

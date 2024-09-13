@@ -4,7 +4,7 @@ import { sanityFetch } from "../../../../sanity/lib/client"
 import { ABOUT_QUERY } from "../../../../sanity/lib/queries"
 import { PortableText } from "next-sanity"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
-import Layout from "../PageLayout"
+import Layout from "../pagesLayout"
 
 type Content = {
   title: string

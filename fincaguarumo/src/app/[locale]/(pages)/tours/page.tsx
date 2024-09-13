@@ -3,7 +3,7 @@ import { SanityDocument } from "next-sanity"
 import Tour, { TourType } from "./TourItem"
 import { TOURS_QUERY } from "../../../../sanity/lib/queries"
 import { sanityFetch } from "../../../../sanity/lib/client"
-import Layout from "../PageLayout"
+import Layout from "../pagesLayout"
 
 const Tours = async ({
   params: { locale },
