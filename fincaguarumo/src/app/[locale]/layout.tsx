@@ -1,9 +1,14 @@
-// import type { Metadata } from "next"
+import type { Metadata } from "next"
 
-// export const metadata: Metadata = {
-//   title: "Finca Guarumo",
-//   description: "Bosque de aves",
-// }
+export const metadata: Metadata = {
+  title: "Finca Guarumo",
+  description: "Bosque de aves",
+  icons: {
+    icon: "/favicon/favicon.ico",
+    apple: "/favicon/apple-touch-icon.png",
+    shortcut: "/favicon/safari-pinned-tab.svg",
+  },
+}
 
 import { Poppins } from "next/font/google"
 import { Cabin } from "next/font/google"
