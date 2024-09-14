@@ -1,4 +1,3 @@
-// import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 import Link from "next/link"
 import React from "react"
 import Icon, { IconColor } from "./Icon"
@@ -19,6 +18,7 @@ const navItems = [
     href: "",
     icon: "Youtube",
   },
+  { title: "whatsapp", href: "https://wa.me/50687495341", icon: "Whatsapp" },
 ]
 
 const SocialNav = async ({
@@ -28,13 +28,15 @@ const SocialNav = async ({
   locale: string
   className?: string
 }) => {
-  // unstable_setRequestLocale(locale)
-
-  // const t = await getTranslations("header")
   return (
     <nav className={`hidden md:flex items-center gap-5 mx-4 ${className}`}>
       {navItems.map(navItem => (
-        <Link key={crypto.randomUUID()} href={navItem.href} prefetch={false}>
+        <Link
+          key={crypto.randomUUID()}
+          href={navItem.href}
+          prefetch={false}
+          target="_blank"
+        >
           <Icon
             className="hover:fill-secondary"
             icon={navItem.icon}

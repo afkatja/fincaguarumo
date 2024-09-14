@@ -14,6 +14,7 @@ import WalletCards from "./Wallet"
 import Facebook from "./Facebook"
 import Instagram from "./Instagram"
 import Youtube from "./Youtube"
+import Whatsapp from "./Whatsapp"
 
 // @ts-ignore
 const icons = {
@@ -33,5 +34,6 @@ const icons = {
   Facebook,
   Instagram,
   Youtube,
+  Whatsapp,
 }
 export default icons
