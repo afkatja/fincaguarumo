@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.6.0",
+    "@netlify/plugin-nextjs": "^5.7.1",
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-collapsible": "^1.1.0",
     "@radix-ui/react-context-menu": "^2.2.0",
