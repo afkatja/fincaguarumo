@@ -1,5 +1,4 @@
 import React from "react"
-// import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { ABOUT_QUERY } from "../../../../sanity/lib/queries"
 import { PortableText } from "next-sanity"
