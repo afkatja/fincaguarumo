@@ -6,9 +6,11 @@ import { postType } from "./schemaTypes/postType"
 import { authorType } from "./schemaTypes/authorType"
 import { pageType } from "./schemaTypes/pageType"
 import { tourType } from "./schemaTypes/tourType"
+import { homeType } from "./schemaTypes/homeType"
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
+    homeType,
     blockContentType,
     categoryType,
     postType,
