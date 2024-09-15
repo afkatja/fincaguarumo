@@ -8,8 +8,8 @@ import { urlFor } from "@/sanity/lib/image"
 
 export type TourType = {
   title: string
-  description: string
-  mainImage: SanityImageObject & { alt: string }
+  description?: string
+  mainImage?: SanityImageObject & { alt: string }
   slug: { current: string }
   dateAdded?: string
   isNew?: boolean
@@ -36,13 +36,15 @@ const TourItem = ({
           <div className="relative">
             {isNew && <Badge text="New" />}
             {isFeatured && <Badge text="Featured" />}
-            {mainImage && <Image
-              src={urlFor(mainImage).url()}
-              alt={mainImage.alt}
-              width={800}
-              height={800}
-              className="mb-3 max-h-52 object-cover"
-            />}
+            {mainImage && (
+              <Image
+                src={urlFor(mainImage).url()}
+                alt={mainImage.alt}
+                width={800}
+                height={800}
+                className="mb-3 max-h-52 object-cover"
+              />
+            )}
             <h3 className="text-xl font-semibold">{title}</h3>
             <p className="mt-2 text-muted-foreground">{description}</p>
           </div>

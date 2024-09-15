@@ -28,6 +28,14 @@ export const homeType = defineType({
       name: "subtitle",
       type: "string",
     }),
+    defineField({
+      name: "featured_content_title",
+      type: "string",
+    }),
+    defineField({
+      name: "featured_blog_title",
+      type: "string",
+    }),
   ],
   preview: {
     select: {
