@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     apple: "/favicon/apple-touch-icon.png",
     shortcut: "/favicon/safari-pinned-tab.svg",
   },
+  viewport: { initialScale: 1, minimumScale: 1 },
 }
 
 import { Poppins } from "next/font/google"

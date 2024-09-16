@@ -49,17 +49,19 @@
   z-index: 10;
 }
 
-@supports (animation-timeline: scroll()) {
-  .featured-activities,
-  .featured-posts {
-    opacity: 0;
-    animation: fade-in 1s linear both;
-    animation-timeline: view();
+@media screen and (min-width: 1024px) {
+  @supports (animation-timeline: scroll()) {
+    .featured-activities,
+    .featured-posts {
+      opacity: 0;
+      animation: fade-in 1s linear both;
+      animation-timeline: view(block 100% 10%);
+    }
   }
 }
 
 @keyframes fade-in {
   to {
-    opacity: 100%;
+    opacity: 1;
   }
 }

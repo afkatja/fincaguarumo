@@ -79,7 +79,7 @@ const LanguageSelector = ({
       }
       disabled={isPending}
     >
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className="w-30 p-0 lg:w-[180px] focus:border-none active:border-none focus:ring-0 bg-transparent">
         <SelectValue placeholder="Choose language" />
       </SelectTrigger>
       <SelectContent>
@@ -90,7 +90,7 @@ const LanguageSelector = ({
               svg
               style={{ marginRight: 5, fontSize: "1.5rem" }}
             />
-            {version.title}
+            <span className="hidden lg:inline">{version.title}</span>
           </SelectItem>
         ))}
       </SelectContent>

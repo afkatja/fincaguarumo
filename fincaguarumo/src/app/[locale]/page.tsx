@@ -11,6 +11,7 @@ import Carousel from "@/components/Carousel"
 import Image from "next/image"
 import TourItem from "./(pages)/tours/TourItem"
 import Video from "../../components/Video"
+import FeaturedContent from "../../components/FeaturedContent"
 
 export default async function Home({
   params: { locale },
@@ -40,7 +41,7 @@ export default async function Home({
     revalidate: 0,
   })
 
-  const featuredPosts: {
+  const posts: {
     title: string
     slug: { current: string }
     mainImage?: SanityImageObject
@@ -50,6 +51,34 @@ export default async function Home({
     revalidate: 0,
   })
 
+  const featuredTours = tours.map(tour => ({
+    ...tour,
+    content: (
+      <TourItem
+        mainImage={tour.mainImage}
+        title={tour.title}
+        isFeatured
+        description={tour.description}
+        slug={tour.slug}
+      />
+    ),
+  }))
+  const featuredPosts = posts.map(post => ({
+    ...post,
+    content: (
+      <>
+        {post.mainImage && (
+          <Image
+            src={urlFor(post.mainImage).width(300).height(300).url()}
+            width={300}
+            height={300}
+            alt=""
+          />
+        )}
+        <h1 className="my-3">{post.title}</h1>
+      </>
+    ),
+  }))
   return (
     <>
       <div className="parallax-bg relative">
@@ -64,56 +93,17 @@ export default async function Home({
           <h3 className="text-xl leading-normal">{content?.subtitle}</h3>
         </div>
       </div>
-      <article className="featured-activities relative z-10 bg-white">
-        <div className="w-11/12 mx-auto py-5">
-          {content?.featured_content_title && (
-            <h1 className="text-3xl mt-5">{content?.featured_content_title}</h1>
-          )}
-          <ul className="tours-featured flex flex-wrap gap-2 -mx-10">
-            {tours.map(tour => (
-              <li
-                key={crypto.randomUUID()}
-                className="tour-featured flex-1 m-10"
-              >
-                <TourItem
-                  mainImage={tour.mainImage}
-                  title={tour.title}
-                  isFeatured
-                  description={tour.description}
-                  slug={tour.slug}
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
-      </article>
+      <FeaturedContent
+        featuredContentTitle={content?.featured_content_title}
+        items={featuredTours}
+      />
       {featuredPosts && (
-        <article className="featured-posts bg-white">
-          <div className="w-11/12 mx-auto p5">
-            {content?.featured_blog_title && (
-              <h1 className="text-3xl mt-5">{content?.featured_blog_title}</h1>
-            )}
-            <ul className="posts-featured flex flex-wrap gap-2 -mx-10">
-              {featuredPosts.map(post => (
-                <li
-                  key={crypto.randomUUID()}
-                  className="tour-featured flex-1 m-10"
-                >
-                  {post.mainImage && (
-                    <Image
-                      src={urlFor(post.mainImage).width(300).height(300).url()}
-                      width={300}
-                      height={300}
-                      alt=""
-                    />
-                  )}
-                  <h1 className="my-3">{post.title}</h1>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </article>
+        <FeaturedContent
+          featuredContentTitle={content?.featured_blog_title}
+          items={featuredPosts}
+        />
       )}
+
       {/* <Carousel /> */}
     </>
   )
