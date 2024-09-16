@@ -23,28 +23,24 @@ h6 {
 }
 
 .columns {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4rem;
+  /* grid-template-columns: repeat(3, 1fr); */
+  /* gap: 2rem; */
   margin: 0 auto;
   position: relative;
 }
-.column {
-  display: flex;
-  flex-direction: column;
-  padding: 4rem 0;
-}
 
 .tour {
-  margin: 4rem 0;
+  margin: 0.75rem 0;
 }
 
-@supports (animation-timeline: scroll()) {
-  .column-reverse {
-    flex-direction: column-reverse;
+@media screen and (min-width: 1024px) {
+  @supports (animation-timeline: scroll()) {
+    .column-reverse {
+      flex-direction: column-reverse;
 
-    animation: adjust-position linear forwards;
-    animation-timeline: scroll(root block);
+      animation: adjust-position linear forwards;
+      animation-timeline: scroll(root block);
+    }
   }
 }
 
