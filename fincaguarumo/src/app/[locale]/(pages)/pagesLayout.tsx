@@ -1,4 +1,3 @@
-// import { getTranslations, unstable_setRequestLocale } from "next-intl/server"
 import Image from "next/image"
 import { urlFor } from "@/sanity/lib/image"
 
@@ -16,10 +15,7 @@ const PageLayout = async ({
   children: React.ReactNode
   [props: string]: any
 }) => {
-  // unstable_setRequestLocale(locale)
-
   if (!pageName) return "loading"
-  // const t = await getTranslations(pageName)
 
   return (
     <section className="w-11/12 mx-auto py-12">
