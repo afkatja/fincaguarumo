@@ -7,6 +7,7 @@ import { authorType } from "./schemaTypes/authorType"
 import { pageType } from "./schemaTypes/pageType"
 import { tourType } from "./schemaTypes/tourType"
 import { homeType } from "./schemaTypes/homeType"
+import { dialogType } from "./schemaTypes/dialogType"
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -17,5 +18,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     authorType,
     pageType,
     tourType,
+    dialogType,
   ],
 }

@@ -80,6 +80,10 @@ export const tourType = defineType({
       name: "body",
       type: "blockContent",
     }),
+    defineField({
+      name: "dialog",
+      type: "dialog",
+    }),
   ],
   preview: {
     select: {

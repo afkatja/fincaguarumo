@@ -1,5 +1,3 @@
-import { SanityDocument } from "next-sanity"
-
 import { sanityFetch } from "../../../../../sanity/lib/client"
 import { TOUR_QUERY } from "../../../../../sanity/lib/queries"
 import TourPage from "./TourPage"

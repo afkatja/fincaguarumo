@@ -14,6 +14,7 @@ import { apiVersion, dataset, projectId } from "./src/sanity/env"
 import { schema } from "./src/sanity/schema"
 import { documentInternationalization } from "@sanity/document-internationalization"
 import { i18n } from "./languages"
+import { internationalizedArray } from "sanity-plugin-internationalized-array"
 
 export default defineConfig({
   basePath: "/studio",
@@ -37,6 +38,12 @@ export default defineConfig({
       supportedLanguages: i18n.languages,
       schemaTypes: ["page", "post", "tour", "home"],
       bulkPublish: true,
+    }),
+    internationalizedArray({
+      languages: i18n.languages,
+      defaultLanguages: [i18n.base ?? "en"],
+      fieldTypes: ["string"],
+      buttonAddAll: false,
     }),
   ],
 })
