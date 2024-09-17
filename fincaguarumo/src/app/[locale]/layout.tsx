@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 
 export const metadata: Metadata = {
   title: "Finca Guarumo",
@@ -8,7 +8,13 @@ export const metadata: Metadata = {
     apple: "/favicon/apple-touch-icon.png",
     shortcut: "/favicon/safari-pinned-tab.svg",
   },
-  viewport: { initialScale: 1, minimumScale: 1 },
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 import { Poppins } from "next/font/google"

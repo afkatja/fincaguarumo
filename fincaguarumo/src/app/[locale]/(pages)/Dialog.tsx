@@ -39,9 +39,10 @@ const BookingDialog = ({
   description: string
   price: number
 }) => {
+  const [open, setOpen] = useState(false)
   const [participants, setParticipants] = useState(1)
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="lg" className="ml-auto">
           Reserve Now
@@ -113,7 +114,7 @@ const BookingDialog = ({
                     className="flex items-center gap-2 cursor-pointer"
                   >
                     <RadioGroupItem id="card" value="card" />
-                    <Icon icon="Credit" className="h-6 w-6" />
+                    <Icon icon="CreditCard" className="h-6 w-6" />
                     Credit Card
                   </Label>
                   <Label
@@ -121,7 +122,7 @@ const BookingDialog = ({
                     className="flex items-center gap-2 cursor-pointer"
                   >
                     <RadioGroupItem id="paypal" value="paypal" />
-                    <Icon icon="Wallet" className="h-6 w-6" />
+                    <Icon icon="WalletCards" className="h-6 w-6" />
                     PayPal
                   </Label>
                 </div>
@@ -145,7 +146,9 @@ const BookingDialog = ({
           </div>
           <div className="mt-5 flex justify-end gap-2 w-full flex-none">
             <div>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
             </div>
             <Button>Reserve</Button>
           </div>

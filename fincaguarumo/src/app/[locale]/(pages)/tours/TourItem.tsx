@@ -28,7 +28,7 @@ const TourItem = ({
   return (
     <Link
       href={`/tours/${slug.current}`}
-      className="group tour"
+      className="group tour no-underline"
       prefetch={false}
     >
       <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -42,7 +42,7 @@ const TourItem = ({
                 alt={mainImage.alt}
                 width={800}
                 height={800}
-                className="mb-3 max-h-52 object-cover"
+                className="mt-0 mb-3 max-h-52 object-cover"
               />
             )}
             <h3 className="text-xl font-semibold">{title}</h3>
