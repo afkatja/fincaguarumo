@@ -70,8 +70,8 @@ const DetailsPageLayout = ({
             </div>
             <BookingDialog
               price={Number(price)}
-              title="Horse back riding tour"
-              description="Reserve now to enjoy the tour"
+              title={title}
+              description={description}
             />
           </div>
         </footer>
