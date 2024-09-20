@@ -288,6 +288,33 @@ export type POSTS_QUERYResult = Array<{
   title: string | null;
   slug: Slug | null;
 }>;
+// Variable: FEATURED_POSTS_QUERY
+// Query: *[_type == 'post' && defined(slug.current) && $category in categories[] -> title] {    title, slug, mainImage, 'category': *[_type == 'category' && title == $category]  }
+export type FEATURED_POSTS_QUERYResult = Array<{
+  title: string | null;
+  slug: Slug | null;
+  mainImage: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  } | null;
+  category: Array<{
+    _id: string;
+    _type: "category";
+    _createdAt: string;
+    _updatedAt: string;
+    _rev: string;
+    title?: string;
+    description?: string;
+  }>;
+}>;
 // Variable: POST_QUERY
 // Query: *[_type == "post" && slug.current == $slug][0]{  title, body, mainImage, language,  "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }}
 export type POST_QUERYResult = {
@@ -337,9 +364,15 @@ export type POST_QUERYResult = {
   language: null;
   translations: null;
 } | null;
+// Variable: PAGE_QUERY
+// Query: *[_type == 'page' && slug.current == $pageName && language == $language][0] {    title, description, mainImage, body, language,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
+export type PAGE_QUERYResult = null;
 // Variable: TOURS_QUERY
 // Query: *[_type == 'tour' && defined(slug.current)]{  slug,  title,   mainImage,  description,   dateAdded}
 export type TOURS_QUERYResult = Array<never>;
+// Variable: FEATURED_TOURS_QUERY
+// Query: *[_type == 'tour' && defined(slug.current) && isFeatured]{  slug,  title,   mainImage,  description}
+export type FEATURED_TOURS_QUERYResult = Array<never>;
 // Variable: TOUR_QUERY
 // Query: *[_type == 'tour' && slug.current == $slug][0]{  _id,   language,  title,   slug,   description,   images,   price,   location,   duration,  "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }}
 export type TOUR_QUERYResult = null;
@@ -347,7 +380,7 @@ export type TOUR_QUERYResult = null;
 // Query: *[_type == 'page' && slug.current == 'about' && language == $language][0] {    title, description, mainImage, body, language,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
 export type ABOUT_QUERYResult = null;
 // Variable: HOME_QUERY
-// Query: *[_type=='home' && language == $language][0] {    hero, subtitle, language,    'translations': *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        hero, subtitle, language      })    }  }
+// Query: *[_type=='home' && language == $language][0] {    hero_title, hero_slogan, subtitle, language, featured_content_title,    featured_blog_title, slug, intro_body,    'translations': *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        hero_title, hero_slogan, subtitle, language, featured_content_title, slug, featured_blog_title, intro_body      })    }  }
 export type HOME_QUERYResult = null;
 
 // Query TypeMap
@@ -355,10 +388,13 @@ import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
     "*[_type == \"post\" && defined(slug.current)][0...12]{\n  _id, title, slug\n}": POSTS_QUERYResult;
+    "\n  *[_type == 'post' && defined(slug.current) && $category in categories[] -> title] {\n    title, slug, mainImage, 'category': *[_type == 'category' && title == $category]\n  }\n": FEATURED_POSTS_QUERYResult;
     "*[_type == \"post\" && slug.current == $slug][0]{\n  title, body, mainImage, language,\n  \"translations\": *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n}": POST_QUERYResult;
+    "\n  *[_type == 'page' && slug.current == $pageName && language == $language][0] {\n    title, description, mainImage, body, language,\n    \"translations\": *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n  }\n": PAGE_QUERYResult;
     "*[_type == 'tour' && defined(slug.current)]{\n  slug,\n  title, \n  mainImage,\n  description, \n  dateAdded\n}\n": TOURS_QUERYResult;
+    "*[_type == 'tour' && defined(slug.current) && isFeatured]{\n  slug,\n  title, \n  mainImage,\n  description\n}\n": FEATURED_TOURS_QUERYResult;
     "\n*[_type == 'tour' && slug.current == $slug][0]{\n  _id, \n  language,\n  title, \n  slug, \n  description, \n  images, \n  price, \n  location, \n  duration,\n  \"translations\": *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n}\n": TOUR_QUERYResult;
     "\n  *[_type == 'page' && slug.current == 'about' && language == $language][0] {\n    title, description, mainImage, body, language,\n    \"translations\": *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n  }\n": ABOUT_QUERYResult;
-    "\n  *[_type=='home' && language == $language][0] {\n    hero, subtitle, language,\n    'translations': *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        hero, subtitle, language\n      })\n    }\n  }\n": HOME_QUERYResult;
+    "\n  *[_type=='home' && language == $language][0] {\n    hero_title, hero_slogan, subtitle, language, featured_content_title,\n    featured_blog_title, slug, intro_body,\n    'translations': *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        hero_title, hero_slogan, subtitle, language, featured_content_title, slug, featured_blog_title, intro_body\n      })\n    }\n  }\n": HOME_QUERYResult;
   }
 }

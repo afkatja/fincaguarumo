@@ -4,10 +4,13 @@ import * as React from "react"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react"
+import { EmblaCarouselType } from "embla-carousel"
+
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { ComponentPropsWithRef, useCallback, useEffect, useState } from "react"
 
 type CarouselApi = UseEmblaCarouselType[1]
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
@@ -28,6 +31,9 @@ type CarouselContextProps = {
   scrollNext: () => void
   canScrollPrev: boolean
   canScrollNext: boolean
+  onDotButtonClick: (index: number) => void
+  selectedIndex: number
+  scrollSnaps: number[]
 } & CarouselProps
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
@@ -68,6 +74,24 @@ const Carousel = React.forwardRef<
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
 
+    const [selectedIndex, setSelectedIndex] = useState(0)
+    const [scrollSnaps, setScrollSnaps] = useState<number[]>([])
+
+    const onDotButtonClick = useCallback(
+      (index: number) => {
+        if (!api) return
+        api.scrollTo(index)
+      },
+      [api]
+    )
+
+    const onInit = useCallback((api: CarouselApi) => {
+      if (!api) {
+        return
+      }
+      setScrollSnaps(api.scrollSnapList())
+    }, [])
+
     const onSelect = React.useCallback((api: CarouselApi) => {
       if (!api) {
         return
@@ -75,6 +99,7 @@ const Carousel = React.forwardRef<
 
       setCanScrollPrev(api.canScrollPrev())
       setCanScrollNext(api.canScrollNext())
+      setSelectedIndex(api.selectedScrollSnap())
     }, [])
 
     const scrollPrev = React.useCallback(() => {
@@ -110,7 +135,7 @@ const Carousel = React.forwardRef<
       if (!api) {
         return
       }
-
+      onInit(api)
       onSelect(api)
       api.on("reInit", onSelect)
       api.on("select", onSelect)
@@ -118,7 +143,7 @@ const Carousel = React.forwardRef<
       return () => {
         api?.off("select", onSelect)
       }
-    }, [api, onSelect])
+    }, [api, onSelect, onInit])
 
     return (
       <CarouselContext.Provider
@@ -132,6 +157,9 @@ const Carousel = React.forwardRef<
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          onDotButtonClick,
+          selectedIndex,
+          scrollSnaps,
         }}
       >
         <div
@@ -208,8 +236,8 @@ const CarouselPrevious = React.forwardRef<
       className={cn(
         "absolute  h-8 w-8 rounded-full",
         orientation === "horizontal"
-          ? "-left-12 top-1/2 -translate-y-1/2"
-          : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
+          ? "left-5 top-1/2 -translate-y-1/2"
+          : "-top-5 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}
       disabled={!canScrollPrev}
@@ -237,8 +265,8 @@ const CarouselNext = React.forwardRef<
       className={cn(
         "absolute h-8 w-8 rounded-full",
         orientation === "horizontal"
-          ? "-right-12 top-1/2 -translate-y-1/2"
-          : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
+          ? "right-5 top-1/2 -translate-y-1/2"
+          : "-bottom-5 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}
       disabled={!canScrollNext}
@@ -252,6 +280,29 @@ const CarouselNext = React.forwardRef<
 })
 CarouselNext.displayName = "CarouselNext"
 
+type PropType = ComponentPropsWithRef<"button">
+const DotButton: React.FC<PropType> = ({ children, ...restProps }) => {
+  const { scrollSnaps, onDotButtonClick, selectedIndex } = useCarousel()
+  return (
+    <div className="flex flex-wrap justify-center items-center -mt-10 relative z-10">
+      {scrollSnaps.map((_, index) => (
+        <button
+          key={index}
+          type="button"
+          onClick={() => onDotButtonClick(index)}
+          className={`border-0 flex justify-center rounded-full w-3 h-3 outline outline-2 m-2 
+            ${index === selectedIndex ? " outline-white drop-shadow-dots" : "outline-gray-500"}
+          `}
+          {...restProps}
+        >
+          {children}
+        </button>
+      ))}
+    </div>
+  )
+}
+DotButton.displayName = "CarouselDot"
+
 export {
   type CarouselApi,
   Carousel,
@@ -259,4 +310,5 @@ export {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
+  DotButton as CarouselDot,
 }

@@ -1,25 +1,35 @@
+"use client"
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
+  CarouselDot,
 } from "@/components/ui/carousel"
-import { randomUUID } from "crypto"
+import Autoplay from "embla-carousel-autoplay"
 import Image from "next/image"
 
-const images = [
-  { src: "/images/finca-guarumo.jpg", alt: "Finca Guarumo" },
-  { src: "https://picsum.photos/1920/1080?random=2", alt: "" },
-  { src: "https://picsum.photos/1920/1080?random=3", alt: "" },
-]
-
-const ImgSlider = () => {
+const ImgSlider = ({
+  images,
+  useArrows,
+  options,
+  ...props
+}: {
+  images: { src: string; alt: string }[]
+  useArrows?: boolean
+  options?: any
+  [prop: string]: any
+}) => {
   return (
-    <Carousel className="w-11/12 h-[100vh] mx-auto carousel">
+    <Carousel
+      plugins={[Autoplay({})]}
+      className={`w-11/12 h-[100vh] mx-auto carousel ${props.className}`}
+      {...props}
+    >
       <CarouselContent>
-        {images.map(img => (
-          <CarouselItem key={randomUUID()}>
+        {images.map((img, i) => (
+          <CarouselItem key={i}>
             <Image
               src={img.src}
               alt={img.alt}
@@ -30,8 +40,14 @@ const ImgSlider = () => {
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
+      {useArrows ? (
+        <>
+          <CarouselPrevious />
+          <CarouselNext />
+        </>
+      ) : (
+        <CarouselDot />
+      )}
     </Carousel>
   )
 }

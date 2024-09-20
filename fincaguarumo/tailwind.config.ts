@@ -68,7 +68,10 @@ const theme = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
-      dropShadow: { sharp: "2px 2px 0 rgba(0,0,0, .8)" },
+      dropShadow: {
+        sharp: "2px 2px 0 rgba(0,0,0, .8)",
+        dots: "1px 1px 0 rgba(0,0,0, .5)",
+      },
     },
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],

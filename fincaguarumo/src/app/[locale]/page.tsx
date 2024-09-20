@@ -12,6 +12,7 @@ import Image from "next/image"
 import TourItem from "./(pages)/tours/TourItem"
 import Video from "../../components/Video"
 import FeaturedContent from "../../components/FeaturedContent"
+import { PortableText } from "next-sanity"
 
 export default async function Home({
   params: { locale },
@@ -24,6 +25,7 @@ export default async function Home({
     subtitle?: string
     featured_content_title?: string
     featured_blog_title?: string
+    intro_body?: any
   } = await sanityFetch({
     query: HOME_QUERY,
     params: { language: locale },
@@ -79,6 +81,13 @@ export default async function Home({
       </>
     ),
   }))
+
+  const images = [
+    { src: "/images/finca-guarumo.jpg", alt: "Finca Guarumo" },
+    { src: "https://picsum.photos/1920/1080?random=2", alt: "" },
+    { src: "https://picsum.photos/1920/1080?random=3", alt: "" },
+  ]
+
   return (
     <>
       <div className="parallax-bg relative">
@@ -93,6 +102,19 @@ export default async function Home({
           <h3 className="text-xl leading-normal">{content?.subtitle}</h3>
         </div>
       </div>
+      <div className="bg-white py-5">
+        <div className="prose prose-lg w-11/12 mx-auto">
+          {content?.intro_body ? (
+            <PortableText value={content?.intro_body} />
+          ) : null}
+        </div>
+      </div>
+      <Carousel
+        useArrows={false}
+        images={images}
+        options={{ loop: true }}
+        className="bg-white py-5 overflow-hidden"
+      />
       <FeaturedContent
         featuredContentTitle={content?.featured_content_title}
         items={featuredTours}
@@ -103,8 +125,6 @@ export default async function Home({
           items={featuredPosts}
         />
       )}
-
-      {/* <Carousel /> */}
     </>
   )
 }
