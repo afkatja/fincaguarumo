@@ -9,6 +9,7 @@
   background-repeat: no-repeat;
   /* background-attachment: fixed; */
 }
+
 .parallax-layer {
   background-size: contain !important;
   background-repeat: no-repeat;
@@ -51,11 +52,16 @@
 
 @media screen and (min-width: 1024px) {
   @supports (animation-timeline: scroll()) {
-    .featured-activities,
-    .featured-posts {
+    .fade-in {
       opacity: 0;
       animation: fade-in 1s linear both;
       animation-timeline: view(block 100% 10%);
+    }
+
+    .fade-from-view {
+      opacity: 1;
+      animation: fade-out 1s linear both;
+      animation-timeline: view(block 50% 10%);
     }
   }
 }
@@ -63,5 +69,10 @@
 @keyframes fade-in {
   to {
     opacity: 1;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
   }
 }

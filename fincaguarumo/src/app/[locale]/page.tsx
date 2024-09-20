@@ -13,6 +13,7 @@ import TourItem from "./(pages)/tours/TourItem"
 import Video from "../../components/Video"
 import FeaturedContent from "../../components/FeaturedContent"
 import { PortableText } from "next-sanity"
+import { ArrowDown } from "lucide-react"
 
 export default async function Home({
   params: { locale },
@@ -91,7 +92,13 @@ export default async function Home({
   return (
     <>
       <div className="parallax-bg relative">
-        <Video src="/assets/sunrise.m4v" autoPlay loop muted />
+        <Video
+          src="/assets/sunrise.m4v"
+          autoPlay
+          loop
+          muted
+          className="object-cover w-full h-full"
+        />
         <div className="hero text-center text-white drop-shadow-sharp">
           <h1 className="text-6xl leading-normal font-black">
             {content?.hero_title}
@@ -100,6 +107,9 @@ export default async function Home({
             {content?.hero_slogan}
           </h2>
           <h3 className="text-xl leading-normal">{content?.subtitle}</h3>
+        </div>
+        <div className="fade-from-view absolute bottom-8 left-1/2 -translate-x-1/2">
+          <ArrowDown className="animate-bounce stroke-white " />
         </div>
       </div>
       <div className="bg-white py-5">

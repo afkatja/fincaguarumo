@@ -8,7 +8,7 @@ const FeaturedContent = ({
   items: { content: ReactNode }[]
 }) => {
   return (
-    <article className="featured-activities relative z-10 bg-white">
+    <article className="fade-in relative z-10 bg-white">
       <div className="w-11/12 mx-auto py-5">
         {featuredContentTitle && (
           <h1 className="text-3xl mt-5">{featuredContentTitle}</h1>
