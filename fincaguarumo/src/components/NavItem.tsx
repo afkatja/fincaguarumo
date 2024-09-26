@@ -11,7 +11,7 @@ const NavItem = ({ navItem }: { navItem: { href: string; title: string } }) => {
       href={navItem.href}
       className={`text-sm fancy-underline text-guarumo-primary hover:text-guarumo-accent ${
         pathname.includes(navItem.href)
-          ? "font-bold underline decoration-primary decoration-2"
+          ? "font-bold text-guarumo-accent active"
           : "font-medium"
       }`}
       prefetch={false}

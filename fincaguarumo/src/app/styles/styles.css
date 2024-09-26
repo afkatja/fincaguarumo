@@ -37,6 +37,13 @@ h6 {
   left: 0;
 }
 
+.fancy-underline.active:hover {
+  cursor: default;
+}
+.fancy-underline.active:hover::after {
+  display: none;
+}
+
 .carousel {
   height: calc(100vh - var(--header-height));
 }
