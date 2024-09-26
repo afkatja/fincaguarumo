@@ -23,7 +23,7 @@ const Cards = () => {
             </p>
             <Link
               href="#"
-              className="inline-flex items-center gap-2 font-medium hover:underline"
+              className="inline-flex items-center gap-2 font-medium fancy-underline"
               prefetch={false}
             >
               Explore Tours

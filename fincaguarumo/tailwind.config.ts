@@ -27,6 +27,11 @@ const theme = {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
+        guarumo: {
+          primary: "var(--guarumo-primary)",
+          secondary: "var(--guarumo-secondary)",
+          accent: "var(--guarumo-accent)",
+        },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",

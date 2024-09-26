@@ -14,6 +14,29 @@ h6 {
   font-family: var(--font-poppins), sans-serif;
 }
 
+.fancy-underline {
+  position: relative;
+}
+
+.fancy-underline::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  display: block;
+  height: 2px;
+  width: 0;
+  background: var(--guarumo-accent);
+  transition:
+    width 0.3s ease 0s,
+    left 0.3s ease 0s;
+}
+
+.fancy-underline:hover::after {
+  width: 100%;
+  left: 0;
+}
+
 .carousel {
   height: calc(100vh - var(--header-height));
 }

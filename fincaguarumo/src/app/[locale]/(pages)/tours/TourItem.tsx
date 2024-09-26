@@ -48,21 +48,21 @@ const TourItem = ({
             <h3 className="text-xl font-semibold">{title}</h3>
             <p className="mt-2 text-muted-foreground">{description}</p>
           </div>
-          <div className="mt-4 flex items-center justify-between">
-            {dateAdded && (
+          {dateAdded && (
+            <div className="mt-4 flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Icon icon="Calendar" className="h-4 w-4" />
                 <span>{dateAdded}</span>
               </div>
-            )}
-          </div>
-          <p className="flex w-full group-hover:underline mt-3">
-            Read more{" "}
+            </div>
+          )}
+          <div className="flex items-center mt-3">
+            <p className="fancy-underline">Read more</p>
             <Icon
               icon="ArrowRight"
               className="ml-auto h-5 w-5 text-muted-foreground transition-all group-hover:translate-x-1"
             />
-          </p>
+          </div>
         </CardContent>
       </Card>
     </Link>

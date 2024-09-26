@@ -9,7 +9,7 @@ const NavItem = ({ navItem }: { navItem: { href: string; title: string } }) => {
   return (
     <Link
       href={navItem.href}
-      className={`text-sm hover:underline underline-offset-4 ${
+      className={`text-sm fancy-underline text-guarumo-primary hover:text-guarumo-accent ${
         pathname.includes(navItem.href)
           ? "font-bold underline decoration-primary decoration-2"
           : "font-medium"
