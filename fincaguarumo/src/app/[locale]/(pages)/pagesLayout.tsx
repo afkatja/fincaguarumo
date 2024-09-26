@@ -1,5 +1,6 @@
 import Image from "next/image"
 import { urlFor } from "@/sanity/lib/image"
+import Icon from "../../../components/Icon"
 
 const PageLayout = async ({
   locale,
@@ -29,6 +30,11 @@ const PageLayout = async ({
       )}
       <div className="prose prose-lg mx-auto">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+          <Icon
+            icon="Aracari"
+            size={40}
+            className="fill-guarumo-secondary inline mr-2"
+          />
           {title}
         </h2>
         <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">

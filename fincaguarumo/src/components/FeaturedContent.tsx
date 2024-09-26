@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react"
+import Icon from "./Icon"
 
 const FeaturedContent = ({
   featuredContentTitle,
@@ -11,7 +12,14 @@ const FeaturedContent = ({
     <article className="fade-in relative z-10 bg-white">
       <div className="w-11/12 mx-auto py-5">
         {featuredContentTitle && (
-          <h1 className="text-3xl mt-5">{featuredContentTitle}</h1>
+          <h1 className="text-3xl mt-5">
+            <Icon
+              icon="Guarumo"
+              size={25}
+              className="inline fill-guarumo-secondary mr-3"
+            />
+            {featuredContentTitle}
+          </h1>
         )}
         <ul className="tours-featured flex flex-wrap gap-2 md:-mx-5">
           {items.map(item => (
