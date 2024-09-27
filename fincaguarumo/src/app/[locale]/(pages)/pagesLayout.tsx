@@ -9,11 +9,13 @@ const PageLayout = async ({
   description,
   mainImage,
   children,
+  icon,
   ...props
 }: {
   locale: string
   pageName: string
   children: React.ReactNode
+  icon?: string
   [props: string]: any
 }) => {
   if (!pageName) return "loading"
@@ -26,15 +28,18 @@ const PageLayout = async ({
           alt=""
           height={700}
           width={1600}
+          className="mb-5"
         />
       )}
       <div className="prose prose-lg mx-auto">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-          <Icon
-            icon="Aracari"
-            size={40}
-            className="fill-guarumo-secondary inline mr-2"
-          />
+          {icon && (
+            <Icon
+              icon={icon}
+              size={40}
+              className="fill-guarumo-secondary inline mr-2"
+            />
+          )}
           {title}
         </h2>
         <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
