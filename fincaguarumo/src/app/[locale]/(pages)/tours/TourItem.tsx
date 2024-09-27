@@ -56,11 +56,12 @@ const TourItem = ({
               </div>
             </div>
           )}
-          <div className="flex items-center mt-3">
+          <div className="flex items-center mt-3 text-guarumo-accent">
             <p className="fancy-underline">Read more</p>
             <Icon
               icon="ArrowRight"
-              className="ml-auto h-5 w-5 text-muted-foreground transition-all group-hover:translate-x-1"
+              className="ml-auto h-5 w-5 transition-all group-hover:translate-x-1"
+              color="currentColor"
             />
           </div>
         </CardContent>

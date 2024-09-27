@@ -1,9 +1,16 @@
-.main-header {
+@supports not (animation-timeline: scroll()) {
+  .main-header {
+    box-shadow: 1px 5px 5px -3px oklch(0 0 0 / 60%);
+  }
 }
 
 .logo {
   width: 100%;
   max-height: 100%;
+}
+.logo-link {
+  position: relative;
+  width: 150px;
 }
 
 @supports (animation-timeline: scroll()) {
@@ -24,7 +31,6 @@
     animation-range: 0 4rem;
   }
   .logo-link {
-    position: relative;
     &::before {
       content: "";
       background: url(/images/logo-single.svg) center center no-repeat;

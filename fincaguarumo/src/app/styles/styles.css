@@ -3,6 +3,10 @@
 
 body {
   font-family: var(--font-cabin), sans-serif;
+  font-smooth: antialiased;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 h1,
@@ -10,8 +14,16 @@ h2,
 h3,
 h4,
 h5,
-h6 {
+h6,
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
   font-family: var(--font-poppins), sans-serif;
+  color: var(--guarumo-primary);
+  text-shadow: rgba(0, 0, 0, 0.01) 0 0 1px;
 }
 
 .fancy-underline {
@@ -63,7 +75,7 @@ h6 {
   margin: 0.75rem 0;
 }
 
-@media screen and (min-width: 1024px) {
+/* @media screen and (min-width: 1024px) {
   @supports (animation-timeline: scroll()) {
     .column-reverse {
       flex-direction: column-reverse;
@@ -72,7 +84,7 @@ h6 {
       animation-timeline: scroll(root block);
     }
   }
-}
+} */
 
 @keyframes adjust-position {
   0% {

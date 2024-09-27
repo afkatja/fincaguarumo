@@ -32,7 +32,7 @@ import { VisualEditing } from "next-sanity"
 import { draftMode } from "next/headers"
 
 const poppins = Poppins({
-  weight: "300",
+  weight: "500",
   subsets: ["latin"],
   display: "swap",
   variable: "--font-poppins",
@@ -53,13 +53,9 @@ export default async function Layout({
   children: React.ReactNode
   params?: any
 }>) {
-  // const messages = await getMessages()
-  // unstable_setRequestLocale(locale)
-
   return (
     <html lang={locale}>
       <body className={poppins.variable + " " + cabin.variable}>
-        {/* <NextIntlClientProvider messages={messages}> */}
         <div className="flex flex-col min-h-[100dvh]">
           <Header locale={locale} />
           <main className="flex-1">
@@ -74,7 +70,6 @@ export default async function Layout({
             {children} {draftMode().isEnabled && <VisualEditing />}
           </main>
         </div>
-        {/* </NextIntlClientProvider> */}
       </body>
     </html>
   )

@@ -28,13 +28,19 @@ const CardItem = ({
         <div className="grid gap-2">
           <div className="flex items-center gap-2">
             <Icon icon="Mail" className="w-5 h-5 text-muted-foreground" />
-            <a href="#" className="text-sm font-medium hover:underline">
+            <a
+              href={`mailto:${email}`}
+              className="text-sm font-medium fancy-underline"
+            >
               {email}
             </a>
           </div>
           <div className="flex items-center gap-2">
             <Icon icon="Phone" className="w-5 h-5 text-muted-foreground" />
-            <a href="#" className="text-sm font-medium hover:underline">
+            <a
+              href={`tel:${phoneNumber}`}
+              className="text-sm font-medium fancy-underline"
+            >
               {phoneNumber}
             </a>
           </div>

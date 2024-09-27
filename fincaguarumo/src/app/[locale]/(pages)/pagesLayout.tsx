@@ -38,6 +38,7 @@ const PageLayout = async ({
               icon={icon}
               size={40}
               className="fill-guarumo-secondary inline mr-2"
+              color="currentColor"
             />
           )}
           {title}
