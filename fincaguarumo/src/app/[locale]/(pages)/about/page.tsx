@@ -28,11 +28,9 @@ const About = async ({
       title={content?.title}
       description={content?.description}
       mainImage={content?.mainImage}
+      icon="MacawFly"
     >
       <PortableText value={content?.body} />
-      {/* {t.rich("body", {
-          p: chunks => <p key={crypto.randomUUID()}>{chunks}</p>,
-        })} */}
     </Layout>
   )
 }

@@ -3,15 +3,21 @@ import Arrow from "./ArrowIcon"
 import ArrowRight from "./ArrowIcon"
 import Calendar from "./Calendar"
 import Close from "./Close"
+import Clock from "./Clock"
+import Colibri from "./Colibri"
+import CreditCard from "./Credit"
 import Guarumo from "./Guarumo"
 import Logo from "./Logo"
 import Mail from "./MailIcon"
 import Menu from "./MenuIcon"
+import Macaw from "./Macaw"
+import MacawFly from "./MacawFly"
+import Motmot from "./Motmot"
+import Tanager from "./Tanager"
+import Trogon from "./Trogon"
+import Owl from "./Owl"
 import Phone from "./PhoneIcon"
 import Pin from "./Pin"
-import Clock from "./Clock"
-import CreditCard from "./Credit"
-import Colibri from "./Colibri"
 import Expand from "./Expand"
 import WalletCards from "./Wallet"
 import Facebook from "./Facebook"
@@ -41,5 +47,11 @@ const icons = {
   Instagram,
   Youtube,
   Whatsapp,
+  Macaw,
+  MacawFly,
+  Motmot,
+  Tanager,
+  Trogon,
+  Owl,
 }
 export default icons
