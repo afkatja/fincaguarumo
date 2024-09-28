@@ -7,6 +7,8 @@ import Clock from "./Clock"
 import Colibri from "./Colibri"
 import CreditCard from "./Credit"
 import Guarumo from "./Guarumo"
+import Hawk from "./Hawk"
+import Heron from "./Heron"
 import Logo from "./Logo"
 import Mail from "./MailIcon"
 import Menu from "./MenuIcon"
@@ -34,6 +36,8 @@ const icons = {
   Close,
   Colibri,
   Guarumo,
+  Hawk,
+  Heron,
   Logo,
   Mail,
   Menu,
