@@ -60,6 +60,21 @@ export const pageType = defineType({
       name: "body",
       type: "blockContent",
     }),
+    defineField({
+      name: "gallery",
+      type: "array",
+      of: [
+        {
+          type: "image",
+          options: {
+            hotspot: true,
+          },
+        },
+      ],
+      options: {
+        layout: "grid",
+      },
+    }),
   ],
   preview: {
     select: {

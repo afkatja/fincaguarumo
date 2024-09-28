@@ -365,8 +365,11 @@ export type POST_QUERYResult = {
   translations: null;
 } | null;
 // Variable: PAGE_QUERY
-// Query: *[_type == 'page' && slug.current == $pageName && language == $language][0] {    title, description, mainImage, body, language,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
+// Query: *[_type == 'page' && slug.current == $pageName && language == $language][0] {    title, description, mainImage, body, language, gallery,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug,         body      })    }  }
 export type PAGE_QUERYResult = null;
+// Variable: NAV_QUERY
+// Query: *[_type == 'page' && language == $language && $category in categories[] -> title] {    title, slug, language,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
+export type NAV_QUERYResult = Array<never>;
 // Variable: TOURS_QUERY
 // Query: *[_type == 'tour' && defined(slug.current)]{  slug,  title,   mainImage,  description,   dateAdded}
 export type TOURS_QUERYResult = Array<never>;
@@ -390,7 +393,8 @@ declare module "@sanity/client" {
     "*[_type == \"post\" && defined(slug.current)][0...12]{\n  _id, title, slug\n}": POSTS_QUERYResult;
     "\n  *[_type == 'post' && defined(slug.current) && $category in categories[] -> title] {\n    title, slug, mainImage, 'category': *[_type == 'category' && title == $category]\n  }\n": FEATURED_POSTS_QUERYResult;
     "*[_type == \"post\" && slug.current == $slug][0]{\n  title, body, mainImage, language,\n  \"translations\": *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n}": POST_QUERYResult;
-    "\n  *[_type == 'page' && slug.current == $pageName && language == $language][0] {\n    title, description, mainImage, body, language,\n    \"translations\": *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n  }\n": PAGE_QUERYResult;
+    "\n  *[_type == 'page' && slug.current == $pageName && language == $language][0] {\n    title, description, mainImage, body, language, gallery,\n    \"translations\": *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug, \n        body\n      })\n    }\n  }\n": PAGE_QUERYResult;
+    "\n  *[_type == 'page' && language == $language && $category in categories[] -> title] {\n    title, slug, language,\n    \"translations\": *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n  }\n": NAV_QUERYResult;
     "*[_type == 'tour' && defined(slug.current)]{\n  slug,\n  title, \n  mainImage,\n  description, \n  dateAdded\n}\n": TOURS_QUERYResult;
     "*[_type == 'tour' && defined(slug.current) && isFeatured]{\n  slug,\n  title, \n  mainImage,\n  description\n}\n": FEATURED_TOURS_QUERYResult;
     "\n*[_type == 'tour' && slug.current == $slug][0]{\n  _id, \n  language,\n  title, \n  slug, \n  description, \n  images, \n  price, \n  location, \n  duration,\n  \"translations\": *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n}\n": TOUR_QUERYResult;

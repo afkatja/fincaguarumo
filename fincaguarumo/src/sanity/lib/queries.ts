@@ -26,7 +26,7 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
 
 export const PAGE_QUERY = groq`
   *[_type == 'page' && slug.current == $pageName && language == $language][0] {
-    title, description, mainImage, body, language,
+    title, description, mainImage, body, language, gallery,
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -34,7 +34,8 @@ export const PAGE_QUERY = groq`
       ...(value->{
         language,
         title,
-        slug
+        slug, 
+        body
       })
     }
   }

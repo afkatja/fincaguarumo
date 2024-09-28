@@ -75,6 +75,10 @@ h6,
   margin: 0.75rem 0;
 }
 
+.hover\:flex-5 {
+  flex: 5;
+}
+
 /* @media screen and (min-width: 1024px) {
   @supports (animation-timeline: scroll()) {
     .column-reverse {
