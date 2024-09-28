@@ -23,9 +23,7 @@ import "../styles/globals.css"
 import "../styles/styles.css"
 import { locales } from "../../config"
 
-import React from "react"
-// import { NextIntlClientProvider } from "next-intl"
-// import { getMessages, unstable_setRequestLocale } from "next-intl/server"
+import React, { Suspense } from "react"
 
 import Header from "../../components/header"
 import { VisualEditing } from "next-sanity"
@@ -57,7 +55,9 @@ export default async function Layout({
     <html lang={locale}>
       <body className={poppins.variable + " " + cabin.variable}>
         <div className="flex flex-col min-h-[100dvh]">
-          <Header locale={locale} />
+          <Suspense>
+            <Header locale={locale} />
+          </Suspense>
           <main className="flex-1">
             {draftMode().isEnabled && (
               <a

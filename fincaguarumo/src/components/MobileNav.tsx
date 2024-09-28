@@ -1,12 +1,16 @@
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 
-import { navItems } from "./MainNav"
 import Link from "next/link"
 import { randomUUID } from "crypto"
 import Icon from "./Icon"
 
-const MobileNav = async ({ locale }: { locale: string }) => {
+const MobileNav = async ({
+  navItems,
+}: {
+  navItems: { title: string; href: string }[]
+}) => {
+  if (!navItems || !navItems.length) return
   return (
     <Sheet>
       <SheetTrigger asChild>

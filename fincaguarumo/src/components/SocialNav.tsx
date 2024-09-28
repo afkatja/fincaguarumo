@@ -21,13 +21,7 @@ const navItems = [
   { title: "whatsapp", href: "https://wa.me/50687495341", icon: "Whatsapp" },
 ]
 
-const SocialNav = async ({
-  className,
-  locale,
-}: {
-  locale: string
-  className?: string
-}) => {
+const SocialNav = ({ className }: { className?: string }) => {
   return (
     <nav className={`hidden md:flex items-center gap-5 mx-4 ${className}`}>
       {navItems.map(navItem => (

@@ -39,6 +39,21 @@ export const PAGE_QUERY = groq`
     }
   }
 `
+export const NAV_QUERY = groq`
+  *[_type == 'page' && language == $language && $category in categories[] -> title] {
+    title, slug, language,
+    "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->{
+        language,
+        title,
+        slug
+      })
+    }
+  }
+`
 
 export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current)]{
   slug,
