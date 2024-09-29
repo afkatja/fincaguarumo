@@ -119,12 +119,7 @@ export default async function Home({
           ) : null}
         </div>
       </div>
-      <Carousel
-        useArrows={false}
-        images={images}
-        options={{ loop: true }}
-        className="bg-white py-5 overflow-hidden"
-      />
+
       <FeaturedContent
         featuredContentTitle={content?.featured_content_title}
         items={featuredTours}

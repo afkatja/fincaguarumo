@@ -4,7 +4,8 @@ import { PAGE_QUERY } from "../../../../sanity/lib/queries"
 import { PortableText } from "next-sanity"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import Layout from "../pagesLayout"
-import Image from "next/image"
+import Gallery from "./Gallery"
+import Carousel from "@/components/Carousel"
 import { urlFor } from "../../../../sanity/lib/image"
 
 type Content = {
@@ -14,7 +15,7 @@ type Content = {
   body: any
   gallery?: any[]
 }
-const Gallery = async ({
+const GalleryPage = async ({
   params: { locale },
 }: {
   params: { locale: string }
@@ -25,6 +26,10 @@ const Gallery = async ({
     params: { language: locale, pageName: "gallery" },
   })
   const gallery = content?.gallery || []
+  const images = gallery.map(item => ({
+    src: urlFor(item).height(700).url(),
+    ...item,
+  }))
   return (
     <Layout
       locale={locale}
@@ -35,15 +40,15 @@ const Gallery = async ({
       icon="Hawk"
     >
       {content?.body && <PortableText value={content?.body} />}
-      <section className="flex flex-wrap">
-        {gallery.map(item => (
-          <div className="flex-1 m-2 hover:flex-5" key={crypto.randomUUID()}>
-            <Image src={urlFor(item).url()} alt={""} width={600} height={600} />
-          </div>
-        ))}
-      </section>
+      {gallery && <Gallery gallery={gallery} />}
+      <Carousel
+        useArrows={false}
+        images={images}
+        options={{ loop: true }}
+        className="bg-white py-5 overflow-hidden"
+      />
     </Layout>
   )
 }
 
-export default Gallery
+export default GalleryPage

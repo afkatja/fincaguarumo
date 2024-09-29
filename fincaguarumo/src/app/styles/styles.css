@@ -75,7 +75,24 @@ h6,
   margin: 0.75rem 0;
 }
 
-.hover\:flex-5 {
+.gallery-item {
+  transform: translateY(0) skewX(-15deg);
+  backface-visibility: hidden;
+  transition: all 0.7s ease-in;
+  flex: 1;
+  cursor: pointer;
+  background: no-repeat center;
+  background-size: cover;
+}
+
+.gallery-item img {
+  transform: translateX(-15%) skew(15deg);
+  object-fit: cover;
+  height: 100%;
+  max-width: none;
+  object-position: center;
+}
+.gallery-item.active {
   flex: 5;
 }
 
