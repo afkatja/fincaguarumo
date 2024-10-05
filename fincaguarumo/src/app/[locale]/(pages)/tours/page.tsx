@@ -30,7 +30,6 @@ const Tours = async ({
       pageName="tours"
       title={pageContent?.title}
       description={pageContent?.description}
-      icon="Aracari"
     >
       <div className="overflow-y-hidden columns grid gap-5 grid-cols-1 md:grid-cols-3 items-start mx-auto relative">
         <div className="column column-reverse flex flex-col md:py-2">

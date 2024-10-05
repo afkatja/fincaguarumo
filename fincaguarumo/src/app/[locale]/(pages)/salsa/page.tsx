@@ -20,10 +20,9 @@ const Salsa = async ({
   return (
     <Layout
       locale={locale}
-      pageName="tours"
+      pageName="salsa"
       title={title}
       description={description}
-      icon="Owl"
     >
       {body && <PortableText value={body} />}
     </Layout>

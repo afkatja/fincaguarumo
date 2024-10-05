@@ -35,7 +35,6 @@ export default async function Contact({ locale }: { locale: string }) {
       title={content?.title}
       description={content?.description}
       mainImage={content?.mainImage}
-      icon="Motmot"
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {people.map(person => (

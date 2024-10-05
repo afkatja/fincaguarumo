@@ -2,7 +2,7 @@ import React from "react"
 
 import icons from "./icons"
 
-const ICONS: any = Object.keys(icons).reduce(
+export const ICONS: any = Object.keys(icons).reduce(
   (_icons, iconName) => ({
     ..._icons,
     [iconName]: (icons as any)[iconName],

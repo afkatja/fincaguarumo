@@ -37,7 +37,6 @@ const GalleryPage = async ({
       title={content?.title}
       description={content?.description}
       mainImage={content?.mainImage}
-      icon="Hawk"
     >
       {content?.body && <PortableText value={content?.body} />}
       {gallery && <Gallery gallery={gallery} />}

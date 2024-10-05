@@ -29,7 +29,6 @@ const Volunteer = async ({
       title={content?.title}
       description={content?.description}
       mainImage={content?.mainImage}
-      icon="Trogon"
     >
       <PortableText value={content?.body} />
     </Layout>

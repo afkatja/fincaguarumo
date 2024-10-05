@@ -25,7 +25,6 @@ export default async function Page({
       pageName="blog"
       title={pageContent?.title}
       description={pageContent?.description}
-      icon="Heron"
     >
       <Posts posts={posts} />
     </PagesLayout>

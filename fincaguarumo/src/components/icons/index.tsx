@@ -24,7 +24,6 @@ import Expand from "./Expand"
 import WalletCards from "./Wallet"
 import Facebook from "./Facebook"
 import Instagram from "./Instagram"
-import Youtube from "./Youtube"
 import Whatsapp from "./Whatsapp"
 
 // @ts-ignore
@@ -49,7 +48,6 @@ const icons = {
   WalletCards,
   Facebook,
   Instagram,
-  Youtube,
   Whatsapp,
   Macaw,
   MacawFly,
@@ -58,4 +56,19 @@ const icons = {
   Trogon,
   Owl,
 }
+
+const headerIcons = {
+  Aracari,
+  Colibri,
+  Guarumo,
+  Hawk,
+  Heron,
+  Macaw,
+  MacawFly,
+  Motmot,
+  Tanager,
+  Trogon,
+  Owl,
+}
 export default icons
+export { headerIcons }
