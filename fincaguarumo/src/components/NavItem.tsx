@@ -14,7 +14,7 @@ const NavItem = ({ navItem }: { navItem: { href: string; title: string } }) => {
           ? "font-bold text-guarumo-accent active"
           : "text-guarumo-primary font-medium"
       }`}
-      prefetch={false}
+      prefetch={true}
     >
       {navItem.title}
     </Link>

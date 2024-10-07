@@ -25,6 +25,7 @@ import WalletCards from "./Wallet"
 import Facebook from "./Facebook"
 import Instagram from "./Instagram"
 import Whatsapp from "./Whatsapp"
+import Youtube from "./Youtube"
 
 // @ts-ignore
 const icons = {
@@ -55,6 +56,7 @@ const icons = {
   Tanager,
   Trogon,
   Owl,
+  Youtube,
 }
 
 const headerIcons = {

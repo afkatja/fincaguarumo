@@ -15,7 +15,14 @@ const Title = ({
   const icon = icons[Math.floor(Math.random() * icons.length)]
   return (
     <h2 className={titleClassName}>
-      {icon && <Icon icon={icon} size={40} className={iconClassName} />}
+      {icon && (
+        <Icon
+          icon={icon}
+          size={40}
+          className={iconClassName}
+          color="currentColor"
+        />
+      )}
       {title}
     </h2>
   )

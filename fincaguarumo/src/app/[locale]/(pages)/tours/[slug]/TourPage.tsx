@@ -13,6 +13,7 @@ const TourPage = ({ tour }: { tour: TTour }) => {
       price={tour.price ?? "0"}
       location={tour.location ?? ""}
       duration={tour.duration ?? ""}
+      body={tour.body}
       parent={{ title: "Tours", href: "tours" }}
     />
   )

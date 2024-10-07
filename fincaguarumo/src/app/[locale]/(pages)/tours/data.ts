@@ -8,6 +8,7 @@ export type TTour = {
   price?: string
   location?: string
   duration?: string
+  body?: any
 }
 
 const tours = [
