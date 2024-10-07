@@ -4,6 +4,7 @@ import Tour, { TourType } from "./TourItem"
 import { PAGE_QUERY, TOURS_QUERY } from "../../../../sanity/lib/queries"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import Layout from "../pagesLayout"
+import { urlFor } from "../../../../sanity/lib/image"
 
 const Tours = async ({
   params: { locale },
@@ -24,12 +25,16 @@ const Tours = async ({
   const part2 = tours.slice(tours.length / 3, (tours.length / 3) * 2)
   const part3 = tours.slice((tours.length / 3) * 2, tours.length)
 
+  const headerImage = tours[Math.floor(Math.random() * tours.length)].images
+    ? tours[Math.floor(Math.random() * tours.length)].images[0]
+    : tours[Math.floor(Math.random() * tours.length)].mainImage
   return (
     <Layout
       locale={locale}
       pageName="tours"
       title={pageContent?.title}
       description={pageContent?.description}
+      mainImage={headerImage}
     >
       <div className="overflow-y-hidden columns grid gap-5 grid-cols-1 md:grid-cols-3 items-start mx-auto relative">
         <div className="column column-reverse flex flex-col md:py-2">
