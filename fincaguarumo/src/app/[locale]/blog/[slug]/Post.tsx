@@ -2,15 +2,9 @@ import Image from "next/image"
 import { PortableText } from "@portabletext/react"
 
 import { urlFor } from "@/sanity/lib/image"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+
 import { POST_QUERYResult } from "../../../../../sanity.types"
+import Breadcrumbs from "../../../../components/Breadcrumbs"
 
 export function Post({
   post,
@@ -25,19 +19,7 @@ export function Post({
     <div className="w-11/12 mx-auto py-8">
       {parent && (
         <div className="prose prose-lg mx-auto">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href={`/${parent.href}`}>
-                  {parent.title}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{title}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <Breadcrumbs title={title as string} parent={parent} />
         </div>
       )}
       <article className="prose prose-lg p-4 mx-auto">
