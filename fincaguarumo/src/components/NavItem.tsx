@@ -8,7 +8,7 @@ const NavItem = ({ navItem }: { navItem: { href: string; title: string } }) => {
 
   return (
     <Link
-      href={navItem.href}
+      href={`/${navItem.href}`}
       className={`lowercase text-sm fancy-underline hover:text-guarumo-accent ${
         pathname.includes(navItem.href)
           ? "font-bold text-guarumo-accent active"
