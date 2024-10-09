@@ -4,7 +4,6 @@ import Tour, { TourType } from "./TourItem"
 import { PAGE_QUERY, TOURS_QUERY } from "../../../../sanity/lib/queries"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import Layout from "../pagesLayout"
-import { urlFor } from "../../../../sanity/lib/image"
 
 const Tours = async ({
   params: { locale },
@@ -14,11 +13,13 @@ const Tours = async ({
   const tours = await sanityFetch<SanityDocument>({
     query: TOURS_QUERY,
     revalidate: 0,
+    params: { language: locale },
   })
 
   const pageContent = await sanityFetch<SanityDocument>({
     query: PAGE_QUERY,
     params: { pageName: "tours", language: locale },
+    revalidate: 0,
   })
 
   const part1 = tours.slice(0, tours.length / 3)

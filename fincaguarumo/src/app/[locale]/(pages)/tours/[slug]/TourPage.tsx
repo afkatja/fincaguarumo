@@ -5,6 +5,8 @@ import DetailsPageLayout from "../../DetailsPageLayout"
 import { TTour } from "../data"
 
 const TourPage = ({ tour }: { tour: TTour }) => {
+  if (!tour) return "TODO 404"
+
   return (
     <DetailsPageLayout
       title={tour.title}
