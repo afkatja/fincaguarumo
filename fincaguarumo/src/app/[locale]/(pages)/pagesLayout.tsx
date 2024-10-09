@@ -2,7 +2,7 @@ import Image from "next/image"
 import { urlFor } from "@/sanity/lib/image"
 import Title from "../../../components/Title"
 import { Suspense } from "react"
-import { Ellipsis } from "lucide-react"
+import Loading from "./loading"
 
 const PageLayout = async ({
   locale,
@@ -23,7 +23,7 @@ const PageLayout = async ({
   if (!pageName) return "loading"
 
   return (
-    <Suspense fallback={<Ellipsis />}>
+    <Suspense fallback={<Loading />}>
       <div className="prose prose-lg mx-auto pt-12">
         <Title
           titleClassName="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-5"

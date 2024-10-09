@@ -6,8 +6,8 @@ import Icon from "@/components/Icon"
 import { TTour } from "./tours/data"
 import Breadcrumbs from "../../../components/Breadcrumbs"
 import Title from "../../../components/Title"
-import { Ellipsis } from "lucide-react"
 import { PortableText } from "next-sanity"
+import Loading from "./loading"
 
 const DetailsPageLayout = ({
   title,
@@ -23,7 +23,7 @@ const DetailsPageLayout = ({
   parent?: { title: string; href: string }
 }) => {
   return (
-    <Suspense fallback={<Ellipsis />}>
+    <Suspense fallback={<Loading />}>
       <div className="w-11/12 mx-auto pt-8">
         {parent && <Breadcrumbs title={title} parent={parent} />}
         <Title
@@ -67,7 +67,7 @@ const DetailsPageLayout = ({
           </footer>
         </div>
         {body && (
-          <div className="prose prose-lg mt-5">
+          <div className="prose prose-lg mt-5 mx-auto">
             <PortableText value={body} />
           </div>
         )}
