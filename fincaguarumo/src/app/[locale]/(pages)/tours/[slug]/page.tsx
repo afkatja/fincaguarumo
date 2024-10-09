@@ -3,10 +3,14 @@ import { TOUR_QUERY } from "../../../../../sanity/lib/queries"
 import TourPage from "./TourPage"
 import { TTour } from "../data"
 
-const Page = async ({ params: { slug } }: { params: { slug: string } }) => {
+const Page = async ({
+  params: { slug, locale },
+}: {
+  params: { slug: string; locale: string }
+}) => {
   const tour = await sanityFetch<TTour>({
     query: TOUR_QUERY,
-    params: { slug },
+    params: { slug, language: locale },
   })
 
   return <TourPage tour={tour} />

@@ -56,12 +56,23 @@ export const NAV_QUERY = groq`
   }
 `
 
-export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current)]{
+export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && language == $language]{
   slug,
   title, 
   mainImage,
   description, 
-  dateAdded
+  dateAdded,
+  language,
+  "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->{
+        language,
+        title,
+        slug, description
+      })
+    }
 }
 `
 
@@ -74,7 +85,7 @@ export const FEATURED_TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.curre
 `
 
 export const TOUR_QUERY = groq`
-*[_type == 'tour' && slug.current == $slug][0]{
+*[_type == 'tour' && slug.current == $slug && language == $language][0]{
   _id, 
   language,
   title, 
