@@ -36,8 +36,8 @@
     "embla-carousel-react": "^8.1.5",
     "embla-carousel-reactive-utils": "^8.1.7",
     "lucide-react": "^0.395.0",
-    "next": "^14.2.11",
-    "next-sanity": "^9.4.3",
+    "next": "^14.2.15",
+    "next-sanity": "^9.5.0",
     "next-transition-router": "^0.2.1",
     "react": "^18.3.1",
     "react-country-flag": "^3.1.0",
@@ -45,8 +45,8 @@
     "react-dom": "^18",
     "react-hook-form": "^7.52.0",
     "react-loading-skeleton": "^3.5.0",
-    "sanity": "^3.52.4",
-    "sanity-plugin-internationalized-array": "^3.0.0",
+    "sanity": "^3.60.0",
+    "sanity-plugin-internationalized-array": "^3.0.1",
     "styled-components": "^6.1.12",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
@@ -65,9 +65,9 @@
     "next-intl": "^3.15.3",
     "postcss": "^8",
     "postcss-import": "^16.1.0",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^3.4.13",
     "tailwindcss-typography": "^3.1.0",
-    "typescript": "^5",
+    "typescript": "^5.6.3",
     "uuid": "^10.0.0"
   }
 }

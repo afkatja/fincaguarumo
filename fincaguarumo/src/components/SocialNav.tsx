@@ -10,12 +10,12 @@ const navItems = [
   },
   {
     title: "instagram",
-    href: "",
+    href: "https://www.instagram.com/fincaguarumo.osa",
     icon: "Instagram",
   },
   {
     title: "youtube",
-    href: "",
+    href: "https://www.youtube.com/@FincaGuarumo",
     icon: "Youtube",
   },
   { title: "whatsapp", href: "https://wa.me/50687495341", icon: "Whatsapp" },
