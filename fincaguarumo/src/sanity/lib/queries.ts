@@ -95,7 +95,8 @@ export const TOUR_QUERY = groq`
   price, 
   location, 
   duration,
-  body,
+  body, 
+  dialog,
   "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -105,7 +106,9 @@ export const TOUR_QUERY = groq`
         title,
         slug,
         description,
-        body
+        body,
+        dialog,
+        images
       })
     }
 }
