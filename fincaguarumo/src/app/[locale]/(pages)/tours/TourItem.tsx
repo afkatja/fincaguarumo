@@ -29,7 +29,7 @@ const TourItem = ({
     <Link
       href={`/tours/${slug.current}`}
       className="group tour no-underline"
-      prefetch={false}
+      prefetch
     >
       <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <CardContent className="flex h-full flex-col justify-between p-6">
