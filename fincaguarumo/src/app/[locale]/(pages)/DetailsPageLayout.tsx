@@ -24,7 +24,7 @@ const DetailsPageLayout = ({
 }) => {
   return (
     <Suspense fallback={<Loading />}>
-      <div className="w-11/12 mx-auto pt-8">
+      <div className="w-11/12 mx-auto py-5">
         {parent && <Breadcrumbs title={title} parent={parent} />}
         <Title
           title={title}
@@ -32,8 +32,8 @@ const DetailsPageLayout = ({
           iconClassName="fill-guarumo-secondary inline mr-2"
         />
       </div>
-      <div className="relative">{slideshow && slideshow}</div>
-      <div className="w-11/12 mx-auto py-8">
+      {slideshow}
+      <div className="prose prose-lg mt-5 mx-auto">
         <div className="grid md:grid-cols-2 gap-8 mt-8 md:mt-12">
           <div>
             <p className="text-muted-foreground mt-2">{description}</p>
@@ -67,7 +67,7 @@ const DetailsPageLayout = ({
           </footer>
         </div>
         {body && (
-          <div className="prose prose-lg mt-5 mx-auto">
+          <div className="prose prose-lg mt-8 mx-auto">
             <PortableText value={body} />
           </div>
         )}

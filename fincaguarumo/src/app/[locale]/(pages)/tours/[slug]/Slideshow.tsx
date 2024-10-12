@@ -1,23 +1,27 @@
-import React, { useState } from "react"
+import React, { Suspense, useState } from "react"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
-import { Carousel } from "@/components/ui/carousel"
+import Carousel from "@/components/Carousel"
 import { Button } from "@/components/ui/button"
 import Autoplay from "embla-carousel-autoplay"
 import Icon from "@/components/Icon"
-import CarouselContent from "./CarouselContent"
+import Loading from "../../loading"
+import { urlFor } from "../../../../../sanity/lib/image"
 
-const Slideshow = ({ images }: { images: SanityImageObject[] }) => {
+const Slideshow = ({ images: imagesProp }: { images: SanityImageObject[] }) => {
   const [isExpanded, setIsExpanded] = useState(false)
+  const images = imagesProp.map(img => ({
+    desktop: urlFor(img).height(700).width(1200).url(),
+    tablet: urlFor(img).height(400).width(768).url(),
+    mobile: urlFor(img).height(400).width(640).url(),
+    src: urlFor(img).url(),
+    alt: "",
+    height: 700,
+    width: 1200,
+  }))
 
   return (
-    <>
-      <Carousel
-        plugins={[Autoplay({})]}
-        // interval={5000}
-        className="overflow-hidden"
-      >
-        <CarouselContent images={images} size={1200} />
-      </Carousel>
+    <Suspense fallback={<Loading />}>
+      <Carousel images={images} useArrows={false} className="overflow-hidden" />
       <Button
         variant="outline"
         size="sm"
@@ -34,23 +38,21 @@ const Slideshow = ({ images }: { images: SanityImageObject[] }) => {
             <Button
               variant="outline"
               size="sm"
-              className="absolute top-4 right-4 bg-background/50 hover:bg-background z-10"
+              className="absolute top-2 right-4 bg-background/50 hover:bg-background z-10"
               onClick={() => setIsExpanded(false)}
             >
               <Icon icon="Close" className="h-5 w-5" />
               <span className="sr-only">Close</span>
             </Button>
             <Carousel
-              plugins={[Autoplay({})]}
-              // interval={5000}
-              className="overflow-hidden"
-            >
-              <CarouselContent images={images} size={1200} />
-            </Carousel>
+              images={images}
+              useArrows={false}
+              className="overflow-hidden carousel pt-14"
+            />
           </div>
         </div>
       )}
-    </>
+    </Suspense>
   )
 }
 

@@ -11,6 +11,7 @@ const Page = async ({
   const tour = await sanityFetch<TTour>({
     query: TOUR_QUERY,
     params: { slug, language: locale },
+    revalidate: 0,
   })
 
   return <TourPage tour={tour} />
