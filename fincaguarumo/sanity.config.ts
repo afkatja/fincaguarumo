@@ -15,6 +15,7 @@ import { schema } from "./src/sanity/schema"
 import { documentInternationalization } from "@sanity/document-internationalization"
 import { i18n } from "./languages"
 import { internationalizedArray } from "sanity-plugin-internationalized-array"
+import { media } from "sanity-plugin-media"
 
 export default defineConfig({
   basePath: "/studio",
@@ -45,5 +46,6 @@ export default defineConfig({
       fieldTypes: ["string"],
       buttonAddAll: false,
     }),
+    media(),
   ],
 })
