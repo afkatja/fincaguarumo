@@ -2,6 +2,20 @@
   .main-header {
     box-shadow: 1px 5px 5px -3px oklch(0 0 0 / 60%);
   }
+  .nav {
+    height: 3.5rem;
+  }
+  @media screen and (min-width: 1024px) {
+    .main-header .nav {
+      height: 6rem;
+    }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .main-header {
+    background-color: var(--guarumo-primary);
+  }
 }
 
 .logo {
