@@ -10,6 +10,8 @@ import { PortableText } from "next-sanity"
 import Loading from "./loading"
 import Image from "next/image"
 import { urlFor } from "../../../sanity/lib/image"
+import resolveConfig from "tailwindcss/resolveConfig"
+import theme from "../../../../tailwind.config"
 
 const DetailsPageLayout = ({
   title,
@@ -85,6 +87,7 @@ const DetailsPageLayout = ({
                         title={children}
                         iconClassName="inline mr-5"
                         icon="Cocoa"
+                        color={resolveConfig(theme).theme.colors.guarumo.accent}
                       />
                     ),
                   },

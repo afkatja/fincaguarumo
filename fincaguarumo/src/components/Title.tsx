@@ -7,11 +7,13 @@ const Title = ({
   titleClassName,
   iconClassName,
   icon: iconProp,
+  color,
 }: {
   title: React.ReactNode
   titleClassName?: string
   iconClassName?: string
   icon?: string
+  color?: string
 }) => {
   const icons = Object.keys(headerIcons)
   const icon = icons[Math.floor(Math.random() * icons.length)]
@@ -22,7 +24,7 @@ const Title = ({
           icon={iconProp ?? icon}
           size={40}
           className={iconClassName}
-          color="currentColor"
+          color={color ?? "currentColor"}
         />
       )}
       {title}

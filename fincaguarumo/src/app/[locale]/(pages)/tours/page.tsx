@@ -38,21 +38,27 @@ const Tours = async ({
       mainImage={headerImage}
     >
       <div className="overflow-y-hidden columns grid gap-5 grid-cols-1 md:grid-cols-3 items-start mx-auto relative">
-        <div className="column column-reverse flex flex-col md:py-2">
-          {part1.map((tour: TourType) => {
-            return <Tour key={crypto.randomUUID()} {...tour} />
-          })}
-        </div>
-        <div className="column flex flex-col md:py-2">
-          {part2.map((tour: TourType) => {
-            return <Tour key={crypto.randomUUID()} {...tour} />
-          })}
-        </div>
-        <div className="column column-reverse flex flex-col md:py-2">
-          {part3.map((tour: TourType) => {
-            return <Tour key={crypto.randomUUID()} {...tour} />
-          })}
-        </div>
+        {!!part1.length && (
+          <div className="column column-reverse flex flex-col md:py-2">
+            {part1.map((tour: TourType) => {
+              return <Tour key={crypto.randomUUID()} {...tour} />
+            })}
+          </div>
+        )}
+        {!!part2.length && (
+          <div className="column flex flex-col md:py-2">
+            {part2.map((tour: TourType) => {
+              return <Tour key={crypto.randomUUID()} {...tour} />
+            })}
+          </div>
+        )}
+        {!!part3.length && (
+          <div className="column column-reverse flex flex-col md:py-2">
+            {part3.map((tour: TourType) => {
+              return <Tour key={crypto.randomUUID()} {...tour} />
+            })}
+          </div>
+        )}
       </div>
     </Layout>
   )

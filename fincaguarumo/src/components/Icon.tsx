@@ -53,7 +53,7 @@ const Icon = ({
   return (
     <Component
       color={getColor()}
-      title={alt}
+      title={alt ?? icon}
       className={className}
       width={size}
       height={size}
