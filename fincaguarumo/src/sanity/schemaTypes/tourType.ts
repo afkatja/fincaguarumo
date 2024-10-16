@@ -85,6 +85,7 @@ export const tourType = defineType({
       options: {
         layout: "grid",
       },
+      validation: rule => rule.max(12),
     }),
     defineField({
       name: "body",

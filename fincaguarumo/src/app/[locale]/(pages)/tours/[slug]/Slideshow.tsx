@@ -2,7 +2,6 @@ import React, { Suspense, useState } from "react"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import Carousel from "@/components/Carousel"
 import { Button } from "@/components/ui/button"
-import Autoplay from "embla-carousel-autoplay"
 import Icon from "@/components/Icon"
 import Loading from "../../loading"
 import { urlFor } from "../../../../../sanity/lib/image"
@@ -10,10 +9,7 @@ import { urlFor } from "../../../../../sanity/lib/image"
 const Slideshow = ({ images: imagesProp }: { images: SanityImageObject[] }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const images = imagesProp.map(img => ({
-    desktop: urlFor(img).height(700).width(1200).url(),
-    tablet: urlFor(img).height(400).width(768).url(),
-    mobile: urlFor(img).height(400).width(640).url(),
-    src: urlFor(img).url(),
+    src: urlFor(img).height(700).width(1200).url(),
     alt: "",
     height: 700,
     width: 1200,
