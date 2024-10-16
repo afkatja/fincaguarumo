@@ -6,10 +6,12 @@ const Title = ({
   title,
   titleClassName,
   iconClassName,
+  icon: iconProp,
 }: {
-  title: string
-  titleClassName: string
-  iconClassName: string
+  title: React.ReactNode
+  titleClassName?: string
+  iconClassName?: string
+  icon?: string
 }) => {
   const icons = Object.keys(headerIcons)
   const icon = icons[Math.floor(Math.random() * icons.length)]
@@ -17,7 +19,7 @@ const Title = ({
     <h2 className={titleClassName}>
       {icon && (
         <Icon
-          icon={icon}
+          icon={iconProp ?? icon}
           size={40}
           className={iconClassName}
           color="currentColor"

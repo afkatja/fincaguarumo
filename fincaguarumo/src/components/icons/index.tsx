@@ -4,6 +4,7 @@ import ArrowRight from "./ArrowIcon"
 import Calendar from "./Calendar"
 import Close from "./Close"
 import Clock from "./Clock"
+import Cocoa from "./Cocoa"
 import Colibri from "./Colibri"
 import CreditCard from "./Credit"
 import Guarumo from "./Guarumo"
@@ -44,6 +45,7 @@ const icons = {
   Phone,
   Pin,
   Clock,
+  Cocoa,
   CreditCard,
   Expand,
   WalletCards,
