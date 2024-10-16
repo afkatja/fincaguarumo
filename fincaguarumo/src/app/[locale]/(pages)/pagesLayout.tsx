@@ -24,30 +24,30 @@ const PageLayout = async ({
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="prose prose-lg mx-auto pt-12">
-        <Title
-          titleClassName="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-5"
-          iconClassName="fill-guarumo-secondary inline mr-2"
-          title={title}
-        />
-      </div>
-      {mainImage && (
-        <Image
-          src={urlFor(mainImage).width(1600).height(500).url()}
-          alt=""
-          height={700}
-          width={1600}
-          className="mb-5"
-        />
-      )}
-      <section className="w-11/12 mx-auto py-12">
-        <div className="prose prose-lg mx-auto">
-          <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            {description}
-          </p>
-          {children}
+      <div className="bg-white dark:bg-slate-500">
+        <div className="prose w-11/12 lg:prose-lg mx-auto pt-5 lg:pt-12">
+          <Title
+            titleClassName="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-5"
+            iconClassName="fill-guarumo-secondary inline mr-2"
+            title={title}
+          />
         </div>
-      </section>
+        {mainImage && (
+          <Image
+            src={urlFor(mainImage).width(1600).height(500).url()}
+            alt=""
+            height={700}
+            width={1600}
+            className="mb-5"
+          />
+        )}
+        <section className="w-11/12 py-5 lg:py-12 prose lg:prose-lg mx-auto">
+          <h4 className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            {description}
+          </h4>
+          {children}
+        </section>
+      </div>
     </Suspense>
   )
 }
