@@ -21,6 +21,7 @@ import Trogon from "./Trogon"
 import Owl from "./Owl"
 import Phone from "./PhoneIcon"
 import Pin from "./Pin"
+import Salsa from "./Salsa"
 import Expand from "./Expand"
 import WalletCards from "./Wallet"
 import Facebook from "./Facebook"
@@ -45,7 +46,7 @@ const icons = {
   Phone,
   Pin,
   Clock,
-  Cocoa,
+  Cacao: Cocoa,
   CreditCard,
   Expand,
   WalletCards,
@@ -59,6 +60,7 @@ const icons = {
   Trogon,
   Owl,
   Youtube,
+  Salsa,
 }
 
 const headerIcons = {

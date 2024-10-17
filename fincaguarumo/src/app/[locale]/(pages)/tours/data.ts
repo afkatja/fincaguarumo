@@ -2,7 +2,7 @@ import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 
 export type TTour = {
   title: string
-  slug?: string
+  slug?: { current: string }
   description: string
   images: SanityImageObject[]
   price?: string

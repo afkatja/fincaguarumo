@@ -1,8 +1,9 @@
 import { sanityFetch } from "../../../../sanity/lib/client"
 import Layout from "../pagesLayout"
 import { PAGE_QUERY } from "../../../../sanity/lib/queries"
+import { PortableText } from "next-sanity"
 
-const Salsa = async ({
+const Accommodations = async ({
   params: { locale },
 }: {
   params: { locale: string }
@@ -11,7 +12,7 @@ const Salsa = async ({
     await sanityFetch({
       query: PAGE_QUERY,
       revalidate: 0,
-      params: { language: locale, pageName: "salsa" },
+      params: { language: locale, pageName: "stay" },
     })
 
   const { title, description, body } = pageContent || {}
@@ -19,12 +20,12 @@ const Salsa = async ({
   return (
     <Layout
       locale={locale}
-      pageName="salsa"
+      pageName="stay"
       title={title}
       description={description}
-      icon="Salsa"
+      icon="Owl"
       body={body}
     />
   )
 }
-export default Salsa
+export default Accommodations
