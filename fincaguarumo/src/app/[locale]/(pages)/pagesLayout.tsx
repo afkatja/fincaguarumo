@@ -3,6 +3,7 @@ import { urlFor } from "@/sanity/lib/image"
 import Title from "../../../components/Title"
 import { Suspense } from "react"
 import Loading from "./loading"
+import RichText from "../../../components/RichText"
 
 const PageLayout = async ({
   locale,
@@ -10,13 +11,13 @@ const PageLayout = async ({
   title,
   description,
   mainImage,
-  children,
+  body,
   icon: iconProp,
   ...props
 }: {
   locale: string
   pageName: string
-  children: React.ReactNode
+  body: any
   icon?: string
   [props: string]: any
 }) => {
@@ -27,7 +28,7 @@ const PageLayout = async ({
       <div className="bg-white dark:bg-slate-500">
         <div className="prose w-11/12 lg:prose-lg mx-auto pt-5 lg:pt-12">
           <Title
-            titleClassName="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-5"
+            titleClassName="text-3xl font-bold my-5"
             iconClassName="fill-guarumo-secondary inline mr-2"
             title={title}
           />
@@ -45,7 +46,7 @@ const PageLayout = async ({
           <h4 className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
             {description}
           </h4>
-          {children}
+          <RichText body={body} icon={iconProp} />
         </section>
       </div>
     </Suspense>

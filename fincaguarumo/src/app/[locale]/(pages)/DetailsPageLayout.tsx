@@ -12,6 +12,7 @@ import Image from "next/image"
 import { urlFor } from "../../../sanity/lib/image"
 import resolveConfig from "tailwindcss/resolveConfig"
 import theme from "../../../../tailwind.config"
+import RichText from "../../../components/RichText"
 
 const DetailsPageLayout = ({
   title,
@@ -22,9 +23,11 @@ const DetailsPageLayout = ({
   slideshow,
   parent,
   body,
+  icon,
 }: Omit<TTour, "images"> & {
   slideshow?: React.ReactNode
   parent?: { title: string; href: string }
+  icon?: string
 }) => {
   return (
     <Suspense fallback={<Loading />}>
@@ -71,41 +74,7 @@ const DetailsPageLayout = ({
               </div>
             </footer>
           </div>
-          {body && (
-            <div className="prose prose-lg mt-8 mx-auto grid md:grid-cols-2 gap-4">
-              <PortableText
-                value={body}
-                components={{
-                  block: {
-                    normal: ({ children }) => (
-                      <p className="portable-text-p">{children}</p>
-                    ),
-                    blockquote: ({ children }) => <p>{children}</p>,
-                    h2: ({ children }) => (
-                      <Title
-                        titleClassName="col-span-2"
-                        title={children}
-                        iconClassName="inline mr-5"
-                        icon="Cocoa"
-                        color={resolveConfig(theme).theme.colors.guarumo.accent}
-                      />
-                    ),
-                  },
-                  types: {
-                    image: ({ value }) => (
-                      <Image
-                        src={urlFor(value).url()}
-                        alt=""
-                        width={1024}
-                        height={700}
-                        className="mt-0"
-                      />
-                    ),
-                  },
-                }}
-              />
-            </div>
-          )}
+          <RichText body={body} icon={icon} />
         </section>
       </div>
     </Suspense>
