@@ -6,6 +6,7 @@ import Close from "./Close"
 import Clock from "./Clock"
 import Cocoa from "./Cocoa"
 import Colibri from "./Colibri"
+import Coati from "./Coati"
 import CreditCard from "./Credit"
 import Guarumo from "./Guarumo"
 import Hawk from "./Hawk"
@@ -47,6 +48,7 @@ const icons = {
   Pin,
   Clock,
   Cacao: Cocoa,
+  Coati,
   CreditCard,
   Expand,
   WalletCards,
