@@ -50,21 +50,21 @@
   z-index: 10;
 }
 
-@media screen and (min-width: 1024px) {
-  @supports (animation-timeline: scroll()) {
-    .fade-in {
-      opacity: 0;
-      animation: fade-in 1s linear both;
-      animation-timeline: view(block 100% 10%);
-    }
+/* @media screen and (min-width: 1024px) { */
+@supports (animation-timeline: scroll()) {
+  .fade-in {
+    opacity: 0;
+    animation: fade-in 1s linear both;
+    animation-timeline: view(block 80% 0%);
+  }
 
-    .fade-from-view {
-      opacity: 1;
-      animation: fade-out 1s linear both;
-      animation-timeline: view(block 50% 10%);
-    }
+  .fade-from-view {
+    opacity: 1;
+    animation: fade-out 1s linear both;
+    animation-timeline: view(block 50% 10%);
   }
 }
+/* } */
 
 @keyframes fade-in {
   to {

@@ -1,6 +1,9 @@
 @import "header.css";
 @import "parallax.css";
 
+html {
+  scroll-behavior: smooth !important;
+}
 body {
   font-family: var(--font-cabin), sans-serif;
   font-smooth: antialiased;
@@ -94,6 +97,16 @@ h6,
 }
 .gallery-item.active {
   flex: 5;
+}
+
+@media screen and (min-width: 768px) {
+  .portable-text-p,
+  .prose ul,
+  .prose ul li:first-child,
+  .prose ol,
+  .prose ol li:first-child {
+    margin-top: 0;
+  }
 }
 
 .portable-text-p:has(+ h2) {
