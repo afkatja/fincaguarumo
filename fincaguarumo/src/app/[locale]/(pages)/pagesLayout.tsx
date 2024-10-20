@@ -4,6 +4,8 @@ import Title from "../../../components/Title"
 import { Suspense } from "react"
 import Loading from "./loading"
 import RichText from "../../../components/RichText"
+import resolveConfig from "tailwindcss/resolveConfig"
+import theme from "../../../../tailwind.config"
 
 const PageLayout = async ({
   locale,
@@ -13,12 +15,14 @@ const PageLayout = async ({
   mainImage,
   body,
   icon: iconProp,
+  children,
   ...props
 }: {
   locale: string
   pageName: string
-  body: any
+  body?: any
   icon?: string
+  children?: React.ReactNode
   [props: string]: any
 }) => {
   if (!pageName) return "loading"
@@ -28,9 +32,12 @@ const PageLayout = async ({
       <div className="bg-white dark:bg-slate-500">
         <div className="prose w-11/12 lg:prose-lg mx-auto pt-5 lg:pt-12">
           <Title
-            titleClassName="text-3xl font-bold my-5"
-            iconClassName="fill-guarumo-secondary inline mr-2"
+            titleClassName="text-5xl font-bold my-5 text-guarumo-accent"
+            icon={{
+              color: resolveConfig(theme).theme.colors.guarumo.accent,
+            }}
             title={title}
+            Heading="h1"
           />
         </div>
         {mainImage && (
@@ -46,7 +53,8 @@ const PageLayout = async ({
           <h4 className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
             {description}
           </h4>
-          <RichText body={body} icon={iconProp} />
+          {body && <RichText body={body} icon={iconProp} />}
+          {children}
         </section>
       </div>
     </Suspense>
