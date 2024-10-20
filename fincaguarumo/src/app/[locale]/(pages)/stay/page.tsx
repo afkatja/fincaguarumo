@@ -23,7 +23,7 @@ const Accommodations = async ({
       pageName="stay"
       title={title}
       description={description}
-      icon="Owl"
+      icon="Coati"
       body={body}
     />
   )
