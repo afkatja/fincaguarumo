@@ -17,9 +17,10 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
         <Title
           titleClassName="col-span-2"
           title={children}
-          iconClassName="inline mr-5"
-          icon={icon}
-          color={resolveConfig(theme).theme.colors.guarumo.accent}
+          icon={{
+            title: icon,
+            color: resolveConfig(theme).theme.colors.guarumo.accent,
+          }}
         />
       ),
     },
@@ -37,7 +38,7 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
   }
 
   return (
-    <div className="prose prose-lg mt-8 mx-auto grid md:grid-cols-2 gap-4">
+    <div className="prose prose-lg mt-8 mx-auto md:grid md:grid-cols-2 gap-5">
       <PortableText value={body} components={components} />
     </div>
   )
