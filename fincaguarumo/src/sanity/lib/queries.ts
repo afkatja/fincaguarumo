@@ -5,8 +5,18 @@ export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...
 }`
 
 export const FEATURED_POSTS_QUERY = groq`
-  *[_type == 'post' && defined(slug.current) && $category in categories[] -> title] {
-    title, slug, mainImage, 'category': *[_type == 'category' && title == $category]
+  *[_type == 'post' && defined(slug.current) && $category in categories[] -> title && language == $language] {
+    title, slug, mainImage, 'category': *[_type == 'category' && title == $category],
+     "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->{
+        language,
+        title,
+        slug
+      })
+    }
   }
 `
 
@@ -76,11 +86,21 @@ export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && la
 }
 `
 
-export const FEATURED_TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && isFeatured]{
+export const FEATURED_TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && isFeatured && language == $language]{
   slug,
   title, 
   mainImage,
-  description
+  description,
+   "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->{
+        language,
+        title,
+        slug, description
+      })
+    }
 }
 `
 
