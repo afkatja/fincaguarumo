@@ -7,13 +7,16 @@ import {
   FEATURED_TOURS_QUERY,
   HOME_QUERY,
 } from "../../sanity/lib/queries"
-import Carousel from "@/components/Carousel"
+// import Carousel from "@/components/Carousel"
 import Image from "next/image"
 import TourItem from "./(pages)/tours/TourItem"
 import Video from "../../components/Video"
 import FeaturedContent from "../../components/FeaturedContent"
 import { PortableText } from "next-sanity"
+import ScrollButton from "../../components/ScrollButton"
+import ParrallaxContainer from "../../components/ParrallaxContainer"
 import { ArrowDown } from "lucide-react"
+import Link from "next/link"
 
 export default async function Home({
   params: { locale },
@@ -40,7 +43,7 @@ export default async function Home({
     slug: { current: string }
   }[] = await sanityFetch({
     query: FEATURED_TOURS_QUERY,
-    params: {},
+    params: { language: locale },
     revalidate: 0,
   })
 
@@ -50,7 +53,7 @@ export default async function Home({
     mainImage?: SanityImageObject
   }[] = await sanityFetch({
     query: FEATURED_POSTS_QUERY,
-    params: { category: "featured" },
+    params: { category: "featured", language: locale },
     revalidate: 0,
   })
 
@@ -102,11 +105,14 @@ export default async function Home({
           </h2>
           <h3 className="text-xl leading-normal">{content?.subtitle}</h3>
         </div>
-        <div className="fade-from-view absolute bottom-8 left-1/2 -translate-x-1/2">
+        <Link
+          href="#intro"
+          className="fade-from-view absolute bottom-8 left-1/2 -translate-x-1/2"
+        >
           <ArrowDown className="animate-bounce stroke-white " />
-        </div>
+        </Link>
       </div>
-      <div className="bg-white py-5">
+      <div className="bg-white py-5" id="intro">
         <div className="prose prose-lg w-11/12 mx-auto">
           {content?.intro_body ? (
             <PortableText value={content?.intro_body} />
