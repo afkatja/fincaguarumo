@@ -37,7 +37,7 @@ const DetailsPageLayout = ({
           <Title
             title={title}
             titleClassName="text-3xl font-bold my-5"
-            iconClassName="fill-guarumo-secondary inline mr-2"
+            icon={{ color: resolveConfig(theme).theme.colors.guarumo.accent }}
           />
         </div>
         {slideshow}
