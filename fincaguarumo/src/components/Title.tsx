@@ -2,33 +2,42 @@ import React from "react"
 import Icon from "./Icon"
 import { headerIcons } from "./icons"
 
+interface ITitle {
+  Heading?: React.ElementType<{ className?: string }>
+  title: React.ReactNode
+  titleClassName?: string
+  icon?: {
+    title?: string
+    iconClassName?: string
+    size?: number
+    color?: string
+  }
+}
+
 const Title = ({
   title,
   titleClassName,
-  iconClassName,
-  icon: iconProp,
-  color,
-}: {
-  title: React.ReactNode
-  titleClassName?: string
-  iconClassName?: string
-  icon?: string
-  color?: string
-}) => {
+  Heading = "h2",
+  icon: {
+    iconClassName = "",
+    size = 40,
+    title: iconTitle,
+    color = "currentColor",
+  } = {},
+}: ITitle) => {
   const icons = Object.keys(headerIcons)
   const icon = icons[Math.floor(Math.random() * icons.length)]
+
   return (
-    <h2 className={titleClassName}>
-      {icon && (
-        <Icon
-          icon={iconProp ?? icon}
-          size={40}
-          className={iconClassName}
-          color={color ?? "currentColor"}
-        />
-      )}
+    <Heading className={titleClassName}>
+      <Icon
+        icon={iconTitle ?? icon}
+        size={size}
+        className={`inline mr-4 ${iconClassName}`}
+        color={color}
+      />
       {title}
-    </h2>
+    </Heading>
   )
 }
 
