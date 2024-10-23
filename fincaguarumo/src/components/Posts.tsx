@@ -1,16 +1,28 @@
+import Link from "next/link"
+import Image from "next/image"
+
 import { POSTS_QUERYResult } from "../../sanity.types"
+import { urlFor } from "../sanity/lib/image"
 
 export function Posts({ posts }: { posts: POSTS_QUERYResult }) {
   return (
-    <ul className="container mx-auto grid grid-cols-1 divide-y divide-blue-100">
+    <ul className="flex gap-2 w-11/12 mx-auto flex-wrap">
       {posts.map(post => (
-        <li key={post._id}>
-          <a
-            className="block p-4 hover:bg-blue-50"
+        <li key={post._id} className="md:m-5 my-5 flex-initial md:w-56 w-full">
+          <Link
+            className="group no-underline"
             href={`/blog/${post?.slug?.current}`}
           >
-            {post?.title}
-          </a>
+            {post?.mainImage && (
+              <Image
+                src={urlFor(post.mainImage).width(300).height(300).url()}
+                width={300}
+                height={300}
+                alt=""
+              />
+            )}
+            <h1 className="my-3">{post?.title}</h1>
+          </Link>
         </li>
       ))}
     </ul>

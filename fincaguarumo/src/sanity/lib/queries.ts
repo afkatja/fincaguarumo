@@ -1,7 +1,7 @@
 import { groq } from "next-sanity"
 
 export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...12]{
-  _id, title, slug
+  _id, title, slug, mainImage
 }`
 
 export const FEATURED_POSTS_QUERY = groq`

@@ -5,6 +5,7 @@ import { urlFor } from "@/sanity/lib/image"
 
 import { POST_QUERYResult } from "../../../../../sanity.types"
 import Breadcrumbs from "../../../../components/Breadcrumbs"
+import Title from "../../../../components/Title"
 
 export function Post({
   post,
@@ -18,12 +19,14 @@ export function Post({
   return (
     <div className="w-11/12 mx-auto py-8">
       {parent && (
-        <div className="prose prose-lg mx-auto">
-          <Breadcrumbs title={title as string} parent={parent} />
-        </div>
+        <Breadcrumbs
+          className="max-w-[60rem] mx-auto"
+          title={title as string}
+          parent={parent}
+        />
       )}
-      <article className="prose prose-lg p-4 mx-auto">
-        {title ? <h1>{title}</h1> : null}
+      <article className="prose prose-lg py-4 mx-auto">
+        {title ? <Title title={title} Heading="h1" /> : null}
         {mainImage?.asset?._ref ? (
           <Image
             className="float-left m-0 w-1/3 mr-4 rounded-lg"

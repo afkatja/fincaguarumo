@@ -1,5 +1,4 @@
 import React, { ReactNode } from "react"
-import Icon from "./Icon"
 import Title from "./Title"
 
 const FeaturedContent = ({
@@ -15,11 +14,11 @@ const FeaturedContent = ({
         {featuredContentTitle && (
           <Title titleClassName="text-3xl mt-5" title={featuredContentTitle} />
         )}
-        <ul className="tours-featured flex flex-wrap gap-2 md:-mx-5">
+        <ul className="flex flex-wrap gap-2 md:-mx-5">
           {items.map(item => (
             <li
               key={crypto.randomUUID()}
-              className="tour-featured md:m-5 my-5 flex-initial md:w-56 w-full fade-in"
+              className="md:m-5 my-5 flex-initial md:w-56 w-full fade-in"
             >
               {item.content}
             </li>

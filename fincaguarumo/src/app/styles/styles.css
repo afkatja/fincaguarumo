@@ -29,6 +29,10 @@ h6,
   text-shadow: rgba(0, 0, 0, 0.01) 0 0 1px;
 }
 
+.prose {
+  max-width: 60rem;
+}
+
 .fancy-underline {
   position: relative;
 }

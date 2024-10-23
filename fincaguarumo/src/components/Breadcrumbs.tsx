@@ -11,12 +11,14 @@ import {
 const Breadcrumbs = ({
   title,
   parent,
+  className,
 }: {
   title: string
   parent: { title: string; href: string }
+  className?: string
 }) => {
   return (
-    <Breadcrumb>
+    <Breadcrumb className={className}>
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink href={`/${parent.href}`}>

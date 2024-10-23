@@ -17,6 +17,7 @@ export default async function Page({
   })
   const posts = await sanityFetch<POSTS_QUERYResult>({
     query: POSTS_QUERY,
+    revalidate: 0,
   })
 
   return (

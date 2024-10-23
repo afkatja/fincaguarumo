@@ -13,8 +13,6 @@ import TourItem from "./(pages)/tours/TourItem"
 import Video from "../../components/Video"
 import FeaturedContent from "../../components/FeaturedContent"
 import { PortableText } from "next-sanity"
-import ScrollButton from "../../components/ScrollButton"
-import ParrallaxContainer from "../../components/ParrallaxContainer"
 import { ArrowDown } from "lucide-react"
 import Link from "next/link"
 
@@ -72,7 +70,11 @@ export default async function Home({
   const featuredPosts = posts.map(post => ({
     ...post,
     content: (
-      <>
+      <Link
+        href={`/blog/${post.slug.current}`}
+        className="group tour no-underline"
+        prefetch
+      >
         {post.mainImage && (
           <Image
             src={urlFor(post.mainImage).width(300).height(300).url()}
@@ -82,7 +84,7 @@ export default async function Home({
           />
         )}
         <h1 className="my-3">{post.title}</h1>
-      </>
+      </Link>
     ),
   }))
 
