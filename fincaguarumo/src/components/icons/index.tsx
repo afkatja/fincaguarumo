@@ -27,6 +27,7 @@ import Expand from "./Expand"
 import WalletCards from "./Wallet"
 import Facebook from "./Facebook"
 import Instagram from "./Instagram"
+import Waze from "./Waze"
 import Whatsapp from "./Whatsapp"
 import Youtube from "./Youtube"
 
@@ -63,6 +64,7 @@ const icons = {
   Owl,
   Youtube,
   Salsa,
+  Waze,
 }
 
 const headerIcons = {

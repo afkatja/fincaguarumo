@@ -28,6 +28,7 @@ import React, { Suspense } from "react"
 import Header from "../../components/header"
 import { VisualEditing } from "next-sanity"
 import { draftMode } from "next/headers"
+import Footer from "../../components/Footer"
 
 const poppins = Poppins({
   weight: "500",
@@ -70,6 +71,7 @@ export default async function Layout({
             {children} {draftMode().isEnabled && <VisualEditing />}
           </main>
         </div>
+        <Footer />
       </body>
     </html>
   )
