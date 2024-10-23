@@ -26,9 +26,8 @@ const Tours = async ({
   const part2 = tours.slice(tours.length / 3, (tours.length / 3) * 2)
   const part3 = tours.slice((tours.length / 3) * 2, tours.length)
 
-  const headerImage = tours[Math.floor(Math.random() * tours.length)].images
-    ? tours[Math.floor(Math.random() * tours.length)].images[0]
-    : tours[Math.floor(Math.random() * tours.length)].mainImage
+  const headerImage = tours[Math.floor(Math.random() * tours.length)].mainImage
+
   return (
     <Layout
       locale={locale}
