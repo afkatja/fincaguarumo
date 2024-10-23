@@ -72,20 +72,9 @@ export const tourType = defineType({
       ],
     }),
     defineField({
-      name: "images",
-      type: "array",
-      of: [
-        {
-          type: "image",
-          options: {
-            hotspot: true,
-          },
-        },
-      ],
-      options: {
-        layout: "grid",
-      },
-      validation: rule => rule.max(12),
+      name: "slideshow",
+      type: "reference",
+      to: [{ type: "gallery" }],
     }),
     defineField({
       name: "body",

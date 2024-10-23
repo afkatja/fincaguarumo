@@ -36,7 +36,7 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
 
 export const PAGE_QUERY = groq`
   *[_type == 'page' && slug.current == $pageName && language == $language][0] {
-    title, description, mainImage, body, language, gallery,
+    title, description, mainImage, body, language, 
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -111,7 +111,9 @@ export const TOUR_QUERY = groq`
   title, 
   slug, 
   description, 
-  images, 
+  "gallery": {
+    images->{images}
+  }, 
   price, 
   location, 
   duration,
@@ -128,7 +130,6 @@ export const TOUR_QUERY = groq`
         description,
         body,
         dialog,
-        images
       })
     }
 }

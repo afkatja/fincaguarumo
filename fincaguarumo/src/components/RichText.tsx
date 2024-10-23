@@ -38,7 +38,7 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
   }
 
   return (
-    <div className="prose prose-lg mt-8 mx-auto md:grid md:grid-cols-2 gap-5">
+    <div className="prose lg:prose-lg mt-8 w-11/12 mx-auto md:grid md:grid-cols-2 gap-5">
       <PortableText value={body} components={components} />
     </div>
   )

@@ -14,7 +14,7 @@ const TourPage = ({ tour }: { tour: TTour }) => {
     <DetailsPageLayout
       title={tour.title}
       description={tour.description}
-      slideshow={<Slideshow images={tour.images} />}
+      slideshow={<Slideshow images={tour?.gallery?.images?.images ?? []} />}
       price={tour.price ?? "0"}
       location={tour.location ?? ""}
       duration={tour.duration ?? ""}

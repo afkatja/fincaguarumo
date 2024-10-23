@@ -50,12 +50,11 @@ const PageLayout = async ({
           />
         )}
         <section className="w-11/12 py-5 lg:py-12 prose lg:prose-lg mx-auto">
-          <h4 className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            {description}
-          </h4>
-          {body && <RichText body={body} icon={iconProp} />}
-          {children}
+          <h2>{description}</h2>
         </section>
+
+        {body && <RichText body={body} icon={iconProp} />}
+        {children}
       </div>
     </Suspense>
   )

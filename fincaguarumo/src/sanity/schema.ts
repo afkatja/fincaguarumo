@@ -8,6 +8,8 @@ import { pageType } from "./schemaTypes/pageType"
 import { tourType } from "./schemaTypes/tourType"
 import { homeType } from "./schemaTypes/homeType"
 import { dialogType } from "./schemaTypes/dialogType"
+import { richTextType } from "./schemaTypes/richTextType"
+import { galleryType } from "./schemaTypes/galleryType"
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -19,5 +21,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     pageType,
     tourType,
     dialogType,
+    richTextType,
+    galleryType,
   ],
 }
