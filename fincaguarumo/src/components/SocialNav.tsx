@@ -2,7 +2,7 @@ import Link from "next/link"
 import React from "react"
 import Icon, { IconColor } from "./Icon"
 
-const navItems = [
+export const navItems = [
   {
     title: "facebook",
     href: "https://www.facebook.com/fincaguarumoosa",

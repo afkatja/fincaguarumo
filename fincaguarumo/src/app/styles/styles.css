@@ -63,6 +63,17 @@ h6,
   display: none;
 }
 
+.footer-link,
+.footer-link svg {
+  transition: all 0.3s linear;
+}
+.footer-link {
+  text-shadow: #fff 1px 0 1px;
+}
+.footer-link:hover svg {
+  fill: var(--guarumo-accent);
+}
+
 .carousel {
   height: calc(100vh - var(--header-height));
 }
