@@ -30,6 +30,7 @@ import Instagram from "./Instagram"
 import Waze from "./Waze"
 import Whatsapp from "./Whatsapp"
 import Youtube from "./Youtube"
+import ExternalLink from "./ExternalLink"
 
 // @ts-ignore
 const icons = {
@@ -65,6 +66,7 @@ const icons = {
   Youtube,
   Salsa,
   Waze,
+  ExternalLink,
 }
 
 const headerIcons = {
