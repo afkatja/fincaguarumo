@@ -5,6 +5,7 @@ import Badge from "@/components/badge"
 import Icon from "../../../../components/Icon"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import { urlFor } from "@/sanity/lib/image"
+import { titleCase } from "../../../../lib/utils"
 
 export type TourType = {
   title: string
@@ -45,8 +46,14 @@ const TourItem = ({
                 className="mt-0 mb-3 max-h-52 object-cover"
               />
             )}
-            <h3 className="text-xl font-semibold">{title}</h3>
-            <p className="mt-2 text-muted-foreground">{description}</p>
+            <h3 className="text-xl font-semibold">
+              {titleCase(title.toLocaleLowerCase())}
+            </h3>
+            {description && (
+              <p className="mt-2 text-muted-foreground">
+                {titleCase(description.toLocaleLowerCase())}
+              </p>
+            )}
           </div>
           {dateAdded && (
             <div className="mt-4 flex items-center justify-between">

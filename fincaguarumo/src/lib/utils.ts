@@ -50,3 +50,6 @@ export async function isUniqueOtherThanLanguage(
   const result = await client.fetch(query, params)
   return result
 }
+
+export const titleCase = (str: string) =>
+  str.charAt(0).toUpperCase() + str.substring(1).toLowerCase()

@@ -11,6 +11,7 @@ const PageLayout = async ({
   locale,
   pageName,
   title,
+  subtitle,
   description,
   mainImage,
   body,
@@ -19,6 +20,7 @@ const PageLayout = async ({
   ...props
 }: {
   locale: string
+  subtitle?: string
   pageName: string
   body?: any
   icon?: string
@@ -39,6 +41,13 @@ const PageLayout = async ({
             title={title}
             Heading="h1"
           />
+          {subtitle && (
+            <Title
+              titleClassName="text-3xl font-bold my-3 text-guarumo-primary"
+              title={subtitle}
+              Heading="h2"
+            />
+          )}
         </div>
         {mainImage && (
           <Image
@@ -50,7 +59,7 @@ const PageLayout = async ({
           />
         )}
         <section className="w-11/12 py-5 lg:py-12 prose lg:prose-lg mx-auto">
-          <h2>{description}</h2>
+          <h3>{description}</h3>
         </section>
 
         {body && <RichText body={body} icon={iconProp} />}

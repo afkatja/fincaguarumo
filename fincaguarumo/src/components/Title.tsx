@@ -18,24 +18,27 @@ const Title = ({
   title,
   titleClassName,
   Heading = "h2",
-  icon: {
+  icon: iconProp = {},
+}: ITitle) => {
+  const {
     iconClassName = "",
     size = 40,
     title: iconTitle,
     color = "currentColor",
-  } = {},
-}: ITitle) => {
+  } = iconProp
   const icons = Object.keys(headerIcons)
   const icon = icons[Math.floor(Math.random() * icons.length)]
 
   return (
     <Heading className={titleClassName}>
-      <Icon
-        icon={iconTitle ?? icon}
-        size={size}
-        className={`inline mr-4 ${iconClassName}`}
-        color={color}
-      />
+      {!!Object.keys(iconProp).length && (
+        <Icon
+          icon={iconTitle ?? icon}
+          size={size}
+          className={`inline mr-4 ${iconClassName}`}
+          color={color}
+        />
+      )}
       {title}
     </Heading>
   )

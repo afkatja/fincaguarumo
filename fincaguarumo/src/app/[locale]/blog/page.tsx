@@ -20,14 +20,22 @@ export default async function Page({
     revalidate: 0,
   })
 
+  const postsOrdered = posts.sort((a, b) => {
+    if (a._createdAt < b._createdAt) return 1
+    if (a._createdAt > b._createdAt) return -1
+    return 0
+  })
+
   return (
     <PagesLayout
       locale={locale}
       pageName="blog"
       title={pageContent?.title}
+      subtitle={pageContent?.subtitle}
+      mainImage={pageContent?.mainImage}
       description={pageContent?.description}
     >
-      <Posts posts={posts} />
+      <Posts posts={postsOrdered} />
     </PagesLayout>
   )
 }

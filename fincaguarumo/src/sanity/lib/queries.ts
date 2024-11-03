@@ -1,7 +1,7 @@
 import { groq } from "next-sanity"
 
 export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...12]{
-  _id, title, slug, mainImage
+  _id, title, slug, mainImage, _createdAt
 }`
 
 export const FEATURED_POSTS_QUERY = groq`
@@ -36,7 +36,7 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
 
 export const PAGE_QUERY = groq`
   *[_type == 'page' && slug.current == $pageName && language == $language][0] {
-    title, description, mainImage, body, language, 
+    title, subtitle, description, mainImage, body, language, 
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -44,6 +44,8 @@ export const PAGE_QUERY = groq`
       ...(value->{
         language,
         title,
+        subtitle,
+        mainImage,
         slug, 
         body
       })
