@@ -17,8 +17,7 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
-import { Poppins } from "next/font/google"
-import { Cabin } from "next/font/google"
+import { Poppins, Comfortaa, Cabin, Didact_Gothic } from "next/font/google"
 import "../styles/globals.css"
 import "../styles/styles.css"
 import { locales } from "../../config"
@@ -36,10 +35,22 @@ const poppins = Poppins({
   display: "swap",
   variable: "--font-poppins",
 })
+const comfortaa = Comfortaa({
+  weight: "700",
+  subsets: ["cyrillic"],
+  display: "swap",
+  variable: "--font-comfortaa",
+})
 const cabin = Cabin({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-cabin",
+})
+const didact = Didact_Gothic({
+  subsets: ["cyrillic"],
+  display: "swap",
+  variable: "--font-didact",
+  weight: "400",
 })
 export function generateStaticParams() {
   return locales.map(locale => ({ locale }))
@@ -54,7 +65,13 @@ export default async function Layout({
 }>) {
   return (
     <html lang={locale}>
-      <body className={poppins.variable + " " + cabin.variable}>
+      <body
+        className={
+          locale === "ru"
+            ? `${comfortaa.variable} ${didact.variable}`
+            : `${poppins.variable} ${cabin.variable}`
+        }
+      >
         <div className="flex flex-col min-h-[100dvh]">
           <Suspense>
             <Header locale={locale} />
