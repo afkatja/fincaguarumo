@@ -40,7 +40,7 @@ const TourItem = ({
             {mainImage && (
               <Image
                 src={urlFor(mainImage).url()}
-                alt={mainImage.alt}
+                alt={mainImage.alt ?? ""}
                 width={800}
                 height={800}
                 className="mt-0 mb-3 max-h-52 object-cover"

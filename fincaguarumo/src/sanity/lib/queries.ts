@@ -156,7 +156,16 @@ export const ABOUT_QUERY = groq`
 export const HOME_QUERY = groq`
   *[_type=='home' && language == $language][0] {
     hero_title, hero_slogan, subtitle, language, featured_content_title,
-    featured_blog_title, slug, intro_body,
+    featured_blog_title, slug, intro_body[] {
+      ...,
+      markDefs[] {
+        ...,
+        _type == "internalLink" => {
+          ...,
+          "slug": @.reference-> slug
+        }
+      }
+    },
     'translations': *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref

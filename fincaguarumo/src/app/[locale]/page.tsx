@@ -12,9 +12,11 @@ import Image from "next/image"
 import TourItem from "./(pages)/tours/TourItem"
 import Video from "../../components/Video"
 import FeaturedContent from "../../components/FeaturedContent"
-import { PortableText } from "next-sanity"
 import { ArrowDown } from "lucide-react"
 import Link from "next/link"
+import { Suspense } from "react"
+import Loading from "./(pages)/loading"
+import RichText from "../../components/RichText"
 
 export default async function Home({
   params: { locale },
@@ -48,7 +50,7 @@ export default async function Home({
   const posts: {
     title: string
     slug: { current: string }
-    mainImage?: SanityImageObject
+    mainImage?: SanityImageObject & { alt: string }
   }[] = await sanityFetch({
     query: FEATURED_POSTS_QUERY,
     params: { category: "featured", language: locale },
@@ -67,29 +69,13 @@ export default async function Home({
       />
     ),
   }))
-  const featuredPosts = posts.map(post => ({
+  const featuredPosts = posts.map(({ title, mainImage, slug, ...post }) => ({
     ...post,
-    content: (
-      <Link
-        href={`/blog/${post.slug.current}`}
-        className="group tour no-underline"
-        prefetch
-      >
-        {post.mainImage && (
-          <Image
-            src={urlFor(post.mainImage).width(300).height(300).url()}
-            width={300}
-            height={300}
-            alt=""
-          />
-        )}
-        <h1 className="my-3">{post.title}</h1>
-      </Link>
-    ),
+    content: <TourItem mainImage={mainImage} title={title} slug={slug} />,
   }))
 
   return (
-    <>
+    <Suspense fallback={<Loading />}>
       <div className="parallax-bg relative">
         <Video
           src="/assets/sunrise.m4v"
@@ -116,22 +102,22 @@ export default async function Home({
       </div>
       <div className="bg-white py-5" id="intro">
         <div className="prose prose-lg w-11/12 mx-auto">
-          {content?.intro_body ? (
-            <PortableText value={content?.intro_body} />
-          ) : null}
+          {content?.intro_body ? <RichText body={content?.intro_body} /> : null}
         </div>
       </div>
 
       <FeaturedContent
+        href="tours"
         featuredContentTitle={content?.featured_content_title}
         items={featuredTours}
       />
       {featuredPosts && (
         <FeaturedContent
+          href="blog"
           featuredContentTitle={content?.featured_blog_title}
           items={featuredPosts}
         />
       )}
-    </>
+    </Suspense>
   )
 }

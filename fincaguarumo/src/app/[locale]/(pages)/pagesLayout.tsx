@@ -32,9 +32,9 @@ const PageLayout = async ({
   return (
     <Suspense fallback={<Loading />}>
       <div className="bg-white dark:bg-slate-500">
-        <div className="prose w-11/12 lg:prose-lg mx-auto pt-5 lg:pt-12">
+        <div className="prose w-11/12 lg:prose-lg mx-auto">
           <Title
-            titleClassName="text-5xl font-bold my-5 text-guarumo-accent"
+            titleClassName="text-5xl font-bold my-5 lg:my-8 text-guarumo-accent"
             icon={{
               color: resolveConfig(theme).theme.colors.guarumo.accent,
             }}
@@ -58,7 +58,7 @@ const PageLayout = async ({
             className="mb-5"
           />
         )}
-        <section className="w-11/12 py-5 lg:py-12 prose lg:prose-lg mx-auto">
+        <section className="w-11/12 py-5 lg:py-8 prose lg:prose-lg mx-auto">
           <h3>{description}</h3>
         </section>
 

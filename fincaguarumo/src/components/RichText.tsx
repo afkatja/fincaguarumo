@@ -6,6 +6,7 @@ import Title from "./Title"
 import resolveConfig from "tailwindcss/resolveConfig"
 import theme from "../../tailwind.config"
 import { urlFor } from "../sanity/lib/image"
+import Link from "next/link"
 
 const RichText = ({ body, icon }: { body: any; icon?: string }) => {
   if (!body) return
@@ -33,6 +34,13 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
           height={700}
           className="mt-0"
         />
+      ),
+    },
+    marks: {
+      internalLink: ({ value, children }) => (
+        <Link href={value.slug.current} className="fancy-underline">
+          {children}
+        </Link>
       ),
     },
   }

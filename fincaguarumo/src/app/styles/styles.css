@@ -65,11 +65,16 @@ h6,
   margin-top: 0;
 }
 
-.fancy-underline {
+.fancy-underline,
+.prose .fancy-underline {
   position: relative;
+  text-decoration: none;
+  color: var(--guarumo-primary);
+  font-weight: 600;
 }
 
-.fancy-underline::after {
+.fancy-underline::after,
+.prose .fancy-underline::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -83,7 +88,8 @@ h6,
     left 0.3s ease 0s;
 }
 
-.fancy-underline:hover::after {
+.fancy-underline:hover::after,
+.prose .fancy-underline:hover::after {
   width: 100%;
   left: 0;
 }
