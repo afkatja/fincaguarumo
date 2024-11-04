@@ -1,9 +1,9 @@
 import React from "react"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { ABOUT_QUERY } from "../../../../sanity/lib/queries"
-import { PortableText } from "next-sanity"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import Layout from "../pagesLayout"
+import RichText from "../../../../components/RichText"
 
 type Content = {
   title: string
@@ -29,7 +29,7 @@ const About = async ({
       description={content?.description}
       mainImage={content?.mainImage}
     >
-      <PortableText value={content?.body} />
+      <RichText body={content?.body} />
     </Layout>
   )
 }

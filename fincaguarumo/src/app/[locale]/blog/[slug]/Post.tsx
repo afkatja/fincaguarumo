@@ -1,11 +1,11 @@
 import Image from "next/image"
-import { PortableText } from "@portabletext/react"
 
 import { urlFor } from "@/sanity/lib/image"
 
 import { POST_QUERYResult } from "../../../../../sanity.types"
 import Breadcrumbs from "../../../../components/Breadcrumbs"
 import Title from "../../../../components/Title"
+import RichText from "../../../../components/RichText"
 
 export function Post({
   post,
@@ -36,7 +36,7 @@ export function Post({
             alt={title || ""}
           />
         ) : null}
-        {body ? <PortableText value={body} /> : null}
+        {body ? <RichText body={body} /> : null}
       </article>
     </div>
   )
