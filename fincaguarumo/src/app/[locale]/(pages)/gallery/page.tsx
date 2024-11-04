@@ -1,12 +1,12 @@
 import React from "react"
 import { sanityFetch } from "../../../../sanity/lib/client"
-import { PAGE_QUERY } from "../../../../sanity/lib/queries"
-import { PortableText } from "next-sanity"
+import { GALLERY_QUERY, PAGE_QUERY } from "../../../../sanity/lib/queries"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import Layout from "../pagesLayout"
-import Gallery from "./Gallery"
+// import Gallery from "./Gallery"
 import Carousel from "@/components/Carousel"
 import { urlFor } from "../../../../sanity/lib/image"
+// import RichText from "../../../../components/RichText"
 
 type Content = {
   title: string
@@ -25,9 +25,18 @@ const GalleryPage = async ({
     revalidate: 0,
     params: { language: locale, pageName: "gallery" },
   })
-  const gallery = content?.gallery || []
-  const images = gallery.map(item => ({
+
+  const gallery: { title: string; images: SanityImageObject[] } =
+    await sanityFetch({
+      query: GALLERY_QUERY,
+      revalidate: 0,
+      params: { category: "General" },
+    })
+
+  const images = gallery?.images.map(item => ({
     src: urlFor(item).height(700).url(),
+    item,
+    alt: "",
     ...item,
   }))
   return (
@@ -38,8 +47,8 @@ const GalleryPage = async ({
       description={content?.description}
       mainImage={content?.mainImage}
     >
-      {content?.body && <PortableText value={content?.body} />}
-      {gallery && <Gallery gallery={gallery} />}
+      {/* {content?.body && <RichText body={content?.body} />} */}
+      {/* {gallery && <Gallery gallery={images} />} */}
       <Carousel
         useArrows={false}
         images={images}

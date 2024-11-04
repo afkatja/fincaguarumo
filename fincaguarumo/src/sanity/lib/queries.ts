@@ -167,3 +167,9 @@ export const HOME_QUERY = groq`
     }
   }
 `
+
+export const GALLERY_QUERY = groq`
+  *[_type == 'gallery' && $category in categories[] -> title][0] {
+    title, images
+  }
+`

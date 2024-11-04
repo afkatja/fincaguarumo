@@ -41,11 +41,10 @@ const ImgSlider = ({
             <Image
               src={img.src}
               sizes="100vw"
-              // layout="fill"
               alt={img.alt}
               width={img.width ?? 2016}
               height={img.height ?? 1134}
-              className="mx-auto object-cover"
+              className="mx-auto object-cover max-h-[90dvh] min-h-[90dvh]"
             />
           </CarouselItem>
         ))}
