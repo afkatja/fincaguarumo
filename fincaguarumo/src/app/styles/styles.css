@@ -25,7 +25,7 @@ h6,
 .prose h5,
 .prose h6 {
   font-family: var(--font-poppins), sans-serif;
-  color: var(--guarumo-primary);
+  /* color: var(--guarumo-primary); */
   text-shadow: rgba(0, 0, 0, 0.01) 0 0 1px;
 }
 
@@ -54,6 +54,7 @@ h6,
 
 .prose {
   max-width: 60rem;
+  color: var(--prose-body);
 }
 
 .prose h2,
@@ -69,7 +70,7 @@ h6,
 .prose .fancy-underline {
   position: relative;
   text-decoration: none;
-  color: var(--guarumo-primary);
+  /* color: var(--guarumo-primary); */
   font-weight: 600;
 }
 

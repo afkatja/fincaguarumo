@@ -32,7 +32,7 @@ const TourItem = ({
       className="group tour no-underline"
       prefetch
     >
-      <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border-background">
         <CardContent className="flex h-full flex-col justify-between p-6">
           <div className="relative">
             {isNew && <Badge text="New" />}
@@ -63,7 +63,7 @@ const TourItem = ({
               </div>
             </div>
           )}
-          <div className="flex items-center mt-3 text-guarumo-accent">
+          <div className="flex items-center mt-3 text-guarumo-accent dark:text-card-foreground">
             <p className="fancy-underline">Read more</p>
             <Icon
               icon="ArrowRight"

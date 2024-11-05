@@ -31,10 +31,10 @@ const PageLayout = async ({
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="bg-white dark:bg-slate-500">
+      <div className="bg-white dark:bg-zinc-500 pt-5 lg:pt-8">
         <div className="prose w-11/12 lg:prose-lg mx-auto">
           <Title
-            titleClassName="text-5xl font-bold my-5 lg:my-8 text-guarumo-accent"
+            titleClassName="text-5xl font-bold mb-5 lg:mb-8 text-guarumo-accent dark:text-zinc-50"
             icon={{
               color: resolveConfig(theme).theme.colors.guarumo.accent,
             }}
@@ -43,7 +43,7 @@ const PageLayout = async ({
           />
           {subtitle && (
             <Title
-              titleClassName="text-3xl font-bold my-3 text-guarumo-primary"
+              titleClassName="text-3xl font-bold my-3 text-guarumo-primary dark:text-zinc-50"
               title={subtitle}
               Heading="h2"
             />
@@ -59,7 +59,9 @@ const PageLayout = async ({
           />
         )}
         <section className="w-11/12 py-5 lg:py-8 prose lg:prose-lg mx-auto">
-          <h3>{description}</h3>
+          <h3 className="text-guarumo-primary dark:text-zinc-50">
+            {description}
+          </h3>
         </section>
 
         {body && <RichText body={body} icon={iconProp} />}

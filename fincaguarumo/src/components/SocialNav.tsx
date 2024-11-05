@@ -37,11 +37,11 @@ const SocialNav = ({ className }: { className?: string }) => {
           target="_blank"
         >
           <Icon
-            className="hover:fill-secondary"
+            className="hover:fill-secondary fill-guarumo-primary dark:fill-zinc-50"
             icon={navItem.icon}
             alt={navItem.title}
             size={20}
-            color={IconColor.Primary}
+            // color={IconColor.Primary}
           />
         </Link>
       ))}
