@@ -51,8 +51,11 @@
     --background-start-rgb: 0, 0, 0;
     --background-end-rgb: 0, 0, 0;
     --card-foreground: 0, 0, 0;
+    --card: 240, 2%, 26%;
+    --border: 148, 92%, 15%;
     --muted: 240, 2%, 26%;
     --prose-body: hsl(240, 6%, 90%);
+    --guarumo-sky: #082f49;
   }
 }
 

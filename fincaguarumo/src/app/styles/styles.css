@@ -12,6 +12,97 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+.content-wrap {
+  position: relative;
+}
+.content-wrap::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 50%,
+      var(--sunrise-color) 50%,
+      var(--sunrise-color)
+    ),
+    linear-gradient(82deg, transparent 45%, #fdba74 50%, #fdba74),
+    linear-gradient(
+      67deg,
+      transparent 45%,
+      var(--sunrise-color) 50%,
+      var(--sunrise-color)
+    ),
+    linear-gradient(52deg, transparent 45%, #fdba74 50%, #fdba74),
+    linear-gradient(
+      37deg,
+      transparent 45%,
+      var(--sunrise-color) 50%,
+      var(--sunrise-color)
+    ),
+    linear-gradient(22deg, transparent 45%, #fdba74 50%, #fdba74),
+    linear-gradient(
+      7deg,
+      transparent 45%,
+      var(--sunrise-color) 50%,
+      var(--sunrise-color)
+    ),
+    linear-gradient(-8deg, transparent 45%, #fdba74 50%, #fdba74),
+    linear-gradient(
+      -23deg,
+      transparent 45%,
+      var(--sunrise-color) 50%,
+      var(--sunrise-color)
+    ),
+    linear-gradient(-38deg, transparent 45%, #fdba74 50%, #fdba74),
+    linear-gradient(
+      -53deg,
+      transparent 45%,
+      var(--sunrise-color) 50%,
+      var(--sunrise-color)
+    ),
+    linear-gradient(-68deg, transparent 45%, #fdba74 50%, #fdba74),
+    linear-gradient(
+      -83deg,
+      transparent 45%,
+      var(--sunrise-color) 50%,
+      var(--sunrise-color)
+    ),
+    linear-gradient(-90deg, transparent 45%, #fdba74 50%, #fdba74) no-repeat;
+  background-position: 0% 0%;
+  background-size: 200%;
+  height: 100%;
+  width: 100%;
+  z-index: -1;
+  opacity: 0.4;
+  /* filter: blur(20px); */
+}
+
+@media (prefers-color-scheme: dark) {
+  .content-wrap::before {
+    background-image: linear-gradient(
+        90deg,
+        transparent 50%,
+        #082f49 50%,
+        #082f49
+      ),
+      linear-gradient(82deg, transparent 45%, #b45309 50%, #b45309),
+      linear-gradient(67deg, transparent 45%, #082f49 50%, #082f49),
+      linear-gradient(52deg, transparent 45%, #b45309 50%, #b45309),
+      linear-gradient(37deg, transparent 45%, #082f49 50%, #082f49),
+      linear-gradient(22deg, transparent 45%, #b45309 50%, #b45309),
+      linear-gradient(7deg, transparent 45%, #082f49 50%, #082f49),
+      linear-gradient(-8deg, transparent 45%, #b45309 50%, #b45309),
+      linear-gradient(-23deg, transparent 45%, #082f49 50%, #082f49),
+      linear-gradient(-38deg, transparent 45%, #b45309 50%, #b45309),
+      linear-gradient(-53deg, transparent 45%, #082f49 50%, #082f49),
+      linear-gradient(-68deg, transparent 45%, #b45309 50%, #b45309),
+      linear-gradient(-83deg, transparent 45%, #082f49 50%, #082f49),
+      linear-gradient(-90deg, transparent 45%, #b45309 50%, #b45309);
+  }
+}
+
 h1,
 h2,
 h3,

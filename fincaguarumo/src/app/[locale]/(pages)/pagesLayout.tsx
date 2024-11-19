@@ -31,8 +31,8 @@ const PageLayout = async ({
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="bg-white dark:bg-zinc-500 pt-5 lg:pt-8">
-        <div className="prose w-11/12 lg:prose-lg mx-auto">
+      <div className="bg-white dark:bg-zinc-900 pt-5 lg:pt-8 content-wrap z-10">
+        <div className="prose w-11/12 lg:prose-lg mx-auto relative z-20">
           <Title
             titleClassName="text-5xl font-bold mb-5 lg:mb-8 text-guarumo-accent dark:text-zinc-50"
             icon={{
