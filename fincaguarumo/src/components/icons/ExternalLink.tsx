@@ -17,10 +17,10 @@ const ExternalLink = ({
       height={height ?? 24}
       fill="none"
       viewBox="0 0 24 24"
+      stroke={color ?? "#000"}
       className={className}
     >
       <path
-        stroke={color ?? "#000"}
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="2"
