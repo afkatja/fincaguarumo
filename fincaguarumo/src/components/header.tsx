@@ -26,7 +26,7 @@ const Header = async ({ locale }: { locale: string }) => {
         <MainNav className="mx-5" navItems={mainNav} />
         <div className="flex items-center gap-2 ml-auto">
           <UtilsNav navItems={utilsNav} />
-          <SocialNav />
+          <SocialNav className="md:hidden" />
           <LanguageSelector locale={locale} translations={languages} />
           <MobileNav navItems={navItems} />
         </div>
