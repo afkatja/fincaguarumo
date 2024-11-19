@@ -10,7 +10,7 @@ const UtilsNav = ({
 }) => {
   if (!navItems || !navItems.length) return
   return (
-    <nav className={`hidden md:flex items-center gap-5 ${className}`}>
+    <nav className={`hidden md:flex items-center gap-5 mx-4 ${className}`}>
       {navItems.map(navItem => (
         <NavItem key={crypto.randomUUID()} navItem={navItem} />
       ))}

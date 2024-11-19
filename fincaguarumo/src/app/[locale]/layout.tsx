@@ -58,11 +58,13 @@ export function generateStaticParams() {
 
 export default async function Layout({
   children,
-  params: { locale },
+  params,
 }: Readonly<{
   children: React.ReactNode
   params?: any
 }>) {
+  const { locale } = await params
+  const draft = await draftMode()
   return (
     <html lang={locale}>
       <body
@@ -77,7 +79,7 @@ export default async function Layout({
             <Header locale={locale} />
           </Suspense>
           <main className="flex-1">
-            {draftMode().isEnabled && (
+            {draft?.isEnabled && (
               <a
                 className="fixed right-0 bottom-0 bg-blue-500 text-white p-4 m-4"
                 href="/api/draft-mode/disable"
@@ -85,7 +87,7 @@ export default async function Layout({
                 Disable preview mode
               </a>
             )}
-            {children} {draftMode().isEnabled && <VisualEditing />}
+            {children} {draft?.isEnabled && <VisualEditing />}
           </main>
         </div>
         <Footer />
