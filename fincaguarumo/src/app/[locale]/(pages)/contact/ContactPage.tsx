@@ -10,15 +10,13 @@ import Title from "../../../../components/Title"
 const people = [
   {
     name: "Peter",
-    avatar:
-      "https://scontent-bog2-1.xx.fbcdn.net/v/t39.30808-6/345224841_983295626030915_2167433523251842109_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=86c6b0&_nc_ohc=jPSu55egeRAQ7kNvgGuqVVy&_nc_zt=23&_nc_ht=scontent-bog2-1.xx&_nc_gid=AuiCqTJppBrHnt8eGIbhZPX&oh=00_AYBK3CPjlD-SeyXpWs6y4kYj_PEMeIwQQULP-kQ5A9sN-w&oe=67278479",
-    phoneNumber: "23432543465",
+    avatar: "/images/peter.jpg",
     email: "sdfdsfsdf@sfdsdf.cr",
+    phoneNumber: "123456789",
   },
   {
     name: "Katia",
-    avatar:
-      "https://scontent-bog2-2.xx.fbcdn.net/v/t39.30808-6/256521242_602739894184377_4556844046395140842_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=833d8c&_nc_ohc=ne0S_p0b0TEQ7kNvgHh62U0&_nc_zt=23&_nc_ht=scontent-bog2-2.xx&_nc_gid=ACTi1sgqtTezlvRhkrqojja&oh=00_AYATH6RzNha4i79C9adHKklAFofSd13WWhAqFaoYBZNBrA&oe=67278BD9",
+    avatar: "/images/katia.jpeg",
     phoneNumber: "47568667567",
     email: "htyrytr@sfdsdf.cr",
   },
@@ -56,7 +54,7 @@ export default async function Contact({ locale }: { locale: string }) {
             title="Our location"
             titleClassName="text-3xl font-bold my-5"
           />
-          <Icon icon="Waze" className="inline" size={20} />
+          <Icon icon="Waze" className="inline dark:fill-white" size={20} />
           <Link
             href="https://ul.waze.com/ul?ll=8.49527176%2C-83.33406687&navigate=no&zoom=17"
             className="my-4 fancy-underline mx-2"
@@ -64,7 +62,11 @@ export default async function Contact({ locale }: { locale: string }) {
           >
             Calle Altos Corozal, La Balsa, Puerto Jimenez, Osa, Costa Rica
           </Link>
-          <Icon icon="ExternalLink" className="inline" size={20} />
+          <Icon
+            icon="ExternalLink"
+            className="inline dark:stroke-white"
+            size={20}
+          />
         </div>
 
         <iframe
