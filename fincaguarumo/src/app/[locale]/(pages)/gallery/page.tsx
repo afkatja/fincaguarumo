@@ -53,7 +53,7 @@ const GalleryPage = async ({
         useArrows={false}
         images={images}
         options={{ loop: true }}
-        className="bg-white py-5 lg:py-8 overflow-hidden"
+        className="bg-white dark:bg-zinc-500 py-5 lg:py-8 overflow-hidden"
       />
     </Layout>
   )

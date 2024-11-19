@@ -16,7 +16,7 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
       blockquote: ({ children }) => <p>{children}</p>,
       h2: ({ children }) => (
         <Title
-          titleClassName="col-span-2"
+          titleClassName="col-span-2 dark:text-white"
           title={children}
           icon={{
             title: icon,

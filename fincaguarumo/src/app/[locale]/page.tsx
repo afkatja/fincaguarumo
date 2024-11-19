@@ -100,7 +100,10 @@ export default async function Home({
           <ArrowDown className="animate-bounce stroke-white " />
         </Link>
       </div>
-      <div className="bg-white py-5" id="intro">
+      <div
+        className="bg-white dark:bg-gradient-to-br from-zinc-700 to-sky-900 py-5"
+        id="intro"
+      >
         <div className="prose prose-lg w-11/12 mx-auto">
           {content?.intro_body ? <RichText body={content?.intro_body} /> : null}
         </div>
