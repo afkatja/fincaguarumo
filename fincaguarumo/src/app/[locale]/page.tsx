@@ -84,7 +84,7 @@ export default async function Home({
           muted
           className="object-cover w-full h-full"
         />
-        <div className="hero text-center text-white drop-shadow-sharp">
+        <div className="hero text-center text-zinc-50 drop-shadow-sharp">
           <h1 className="text-6xl leading-normal font-black">
             {content?.hero_title}
           </h1>
@@ -97,13 +97,10 @@ export default async function Home({
           href="#intro"
           className="fade-from-view absolute bottom-8 left-1/2 -translate-x-1/2"
         >
-          <ArrowDown className="animate-bounce stroke-white " />
+          <ArrowDown className="animate-bounce stroke-zinc-50 " />
         </Link>
       </div>
-      <div
-        className="bg-white dark:bg-gradient-to-br from-zinc-700 to-sky-900 py-5"
-        id="intro"
-      >
+      <div className="content-wrap" id="intro">
         <div className="prose prose-lg w-11/12 mx-auto">
           {content?.intro_body ? <RichText body={content?.intro_body} /> : null}
         </div>

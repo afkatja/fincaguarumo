@@ -31,36 +31,42 @@ const DetailsPageLayout = ({
 }) => {
   return (
     <Suspense fallback={<Loading />}>
-      <div className="bg-white dark:bg-slate-500">
+      <div className="content-wrap">
         <div className="w-11/12 mx-auto py-5">
           {parent && <Breadcrumbs title={title} parent={parent} />}
           <Title
             title={title}
             titleClassName="text-3xl font-bold my-5"
-            icon={{ color: resolveConfig(theme).theme.colors.guarumo.accent }}
+            icon={{ iconClassName: "fill-accent dark:fill-zinc-50" }}
           />
         </div>
         {slideshow}
-        <section className="prose lg:prose-lg mt-5 mx-auto w-11/12">
+        <section className="prose prose-sky dark:prose-invert lg:prose-lg mt-5 mx-auto w-11/12">
           <div className="grid md:grid-cols-2 gap-8 mt-8 md:mt-12">
             <div>
               <h4 className="text-muted-foreground mt-2">{description}</h4>
               <div className="flex items-center gap-4 mt-4">
                 {duration && (
                   <div className="flex items-center gap-1">
-                    <Icon icon="Clock" className="h-5 w-5 text-primary" />
+                    <Icon
+                      icon="Clock"
+                      className="h-5 w-5 text-primary dark:text-zinc-50"
+                    />
                     <span>{duration}</span>
                   </div>
                 )}
                 {location && (
                   <div className="flex items-center gap-1">
-                    <Icon icon="Pin" className="h-5 w-5 text-primary" />
+                    <Icon
+                      icon="Pin"
+                      className="h-5 w-5 text-primary dark:text-zinc-50"
+                    />
                     <span>{location}</span>
                   </div>
                 )}
               </div>
             </div>
-            <footer className="bg-muted rounded-lg p-6 md:p-8">
+            <footer className="bg-muted dark:bg-gradient-to-br from-zinc-700 to-sky-900 rounded-lg p-6 md:p-8">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-2xl font-bold">${price}</span>

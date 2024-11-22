@@ -54,7 +54,7 @@ export default async function Contact({ locale }: { locale: string }) {
             title="Our location"
             titleClassName="text-3xl font-bold my-5"
           />
-          <Icon icon="Waze" className="inline dark:fill-white" size={20} />
+          <Icon icon="Waze" className="inline dark:fill-zinc-50" size={20} />
           <Link
             href="https://ul.waze.com/ul?ll=8.49527176%2C-83.33406687&navigate=no&zoom=17"
             className="my-4 fancy-underline mx-2"
@@ -64,7 +64,7 @@ export default async function Contact({ locale }: { locale: string }) {
           </Link>
           <Icon
             icon="ExternalLink"
-            className="inline dark:stroke-white"
+            className="inline dark:stroke-zinc-50"
             size={20}
           />
         </div>

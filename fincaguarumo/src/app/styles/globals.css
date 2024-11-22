@@ -47,6 +47,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: 148, 92%, 15%;
+    --foreground: 0, 0%, 98%;
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 0, 0, 0;
     --background-end-rgb: 0, 0, 0;
@@ -54,8 +55,11 @@
     --card: 240, 2%, 26%;
     --border: 148, 92%, 15%;
     --muted: 240, 2%, 26%;
+    --muted-foreground: 240, 5%, 84%;
     --prose-body: hsl(240, 6%, 90%);
     --guarumo-sky: #082f49;
+    --guarumo-sunset: #b45309;
+    --accent: 204, 80%, 16%;
   }
 }
 

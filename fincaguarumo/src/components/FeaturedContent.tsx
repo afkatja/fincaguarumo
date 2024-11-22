@@ -13,7 +13,7 @@ const FeaturedContent = ({
   href: string
 }) => {
   return (
-    <article className="relative z-10 bg-white dark:bg-gradient-to-br from-zinc-700 to-sky-900 ">
+    <article className="relative z-10 content-wrap">
       <div className="w-11/12 mx-auto py-5">
         {featuredContentTitle && (
           <Title titleClassName="text-3xl mt-5" title={featuredContentTitle} />
@@ -34,7 +34,7 @@ const FeaturedContent = ({
             >
               <Icon
                 icon="ArrowRight"
-                className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent"
+                className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
                 color="currentColor"
               />
             </Link>

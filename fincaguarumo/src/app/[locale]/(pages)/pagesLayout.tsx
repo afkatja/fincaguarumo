@@ -31,12 +31,12 @@ const PageLayout = async ({
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="bg-white dark:bg-zinc-900 pt-5 lg:pt-8 content-wrap z-10">
+      <div className="bg-zinc-50 dark:bg-zinc-900 pt-5 lg:pt-8 content-wrap z-10">
         <div className="prose w-11/12 lg:prose-lg mx-auto relative z-20">
           <Title
             titleClassName="text-5xl font-bold mb-5 lg:mb-8 text-guarumo-accent dark:text-zinc-50"
             icon={{
-              color: resolveConfig(theme).theme.colors.guarumo.accent,
+              iconClassName: "fill-guarumo-accent dark:fill-zinc-50",
             }}
             title={title}
             Heading="h1"
