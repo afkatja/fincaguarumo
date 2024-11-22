@@ -7,7 +7,7 @@ const Logo = () => {
     <Link href="/" className="block py-3 h-full logo-link" prefetch>
       <Icon
         icon="Logo"
-        className="logo fill-guarumo-primary dark:fill-white"
+        className="logo fill-guarumo-primary dark:fill-zinc-50"
         size={100}
       />
     </Link>
