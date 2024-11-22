@@ -19,7 +19,7 @@ const Footer = () => {
     className: item.className ?? "",
   }))
   return (
-    <div className="w-full bg-black text-white py-8">
+    <div className="w-full bg-zinc-950 text-zinc-50 py-8">
       <footer className="w-11/12 mx-auto">
         <ul className="grid grid-cols-4 gap-4">
           {items.map(item => (
