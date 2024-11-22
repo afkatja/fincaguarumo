@@ -16,11 +16,11 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
       blockquote: ({ children }) => <p>{children}</p>,
       h2: ({ children }) => (
         <Title
-          titleClassName="col-span-2 dark:text-white"
+          titleClassName="col-span-2 dark:text-zinc-50"
           title={children}
           icon={{
+            iconClassName: "fill-guarumo-accent dark:fill-zinc-50",
             title: icon,
-            color: resolveConfig(theme).theme.colors.guarumo.accent,
           }}
         />
       ),
@@ -36,17 +36,24 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
         />
       ),
     },
+
     marks: {
       internalLink: ({ value, children }) => (
-        <Link href={value.slug.current} className="fancy-underline">
+        <Link
+          href={value.slug.current}
+          className="fancy-underline dark:text-zinc-100"
+        >
           {children}
         </Link>
+      ),
+      strong: ({ value, children }) => (
+        <strong className="dark:text-zinc-100 font-bold">{children}</strong>
       ),
     },
   }
 
   return (
-    <div className="prose lg:prose-lg my-8 w-11/12 mx-auto md:grid md:grid-cols-2 gap-5">
+    <div className="prose lg:prose-lg py-8 w-11/12 mx-auto md:grid md:grid-cols-2 gap-5">
       <PortableText value={body} components={components} />
     </div>
   )
