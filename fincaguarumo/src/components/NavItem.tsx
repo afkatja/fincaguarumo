@@ -9,10 +9,10 @@ const NavItem = ({ navItem }: { navItem: { href: string; title: string } }) => {
   return (
     <Link
       href={`/${navItem.href}`}
-      className={`lowercase text-sm fancy-underline hover:text-guarumo-accent dark:hover:text-white ${
+      className={`lowercase text-sm fancy-underline hover:text-guarumo-accent dark:hover:text-zinc-50 ${
         pathname.includes(navItem.href)
           ? "font-bold text-guarumo-accent active"
-          : "text-guarumo-primary dark:text-white font-medium"
+          : "text-guarumo-primary dark:text-zinc-50 font-medium"
       }`}
       prefetch={true}
     >
