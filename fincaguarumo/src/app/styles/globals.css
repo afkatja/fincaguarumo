@@ -10,7 +10,7 @@
   --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;
 
-  --popover: 0 0 100;
+  --popover: 0 0 100%;
   --radius: 6px;
 
   --sunrise-color: #f9f2d8;
@@ -60,6 +60,8 @@
     --guarumo-sky: #082f49;
     --guarumo-sunset: #b45309;
     --accent: 204, 80%, 16%;
+    --popover: 204, 80%, 16%;
+    --popover-foreground: 0, 0%, 98%;
   }
 }
 

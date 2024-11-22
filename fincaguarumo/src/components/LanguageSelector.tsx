@@ -9,7 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useRouter, usePathname } from "../navigation"
-// import { languages } from "../config"
 import { i18n } from "../../languages"
 import ReactCountryFlag from "react-country-flag"
 
