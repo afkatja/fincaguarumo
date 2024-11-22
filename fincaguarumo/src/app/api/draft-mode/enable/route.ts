@@ -20,11 +20,12 @@ export async function GET(request: NextRequest) {
     clientWithToken,
     request.url
   )
+  const draft = await draftMode()
 
   if (!isValid) {
     return new Response("Invalid secret", { status: 401 })
   }
 
-  draftMode().enable()
+  draft.enable()
   return NextResponse.redirect(new URL(redirectTo, request.url))
 }
