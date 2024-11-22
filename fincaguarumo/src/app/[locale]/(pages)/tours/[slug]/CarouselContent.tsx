@@ -9,7 +9,7 @@ const CarouselContentContent = ({
   images,
   size,
 }: {
-  images: SanityImageObject[]
+  images: { src: string; alt: string; height: number; width: number }[]
   size: number
 }) => {
   return (
@@ -18,8 +18,8 @@ const CarouselContentContent = ({
         <CarouselItem key={crypto.randomUUID()}>
           {image && (
             <Image
-              src={urlFor(image).url()}
-              alt=""
+              src={image.src}
+              alt={image.alt}
               className="w-full h-[400px] md:h-[500px] object-cover"
               width={size}
               height={size}

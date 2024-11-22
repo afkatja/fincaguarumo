@@ -9,9 +9,9 @@ import { urlFor } from "../../../../../sanity/lib/image"
 const Slideshow = ({ images: imagesProp }: { images: SanityImageObject[] }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const images = imagesProp.map(img => ({
-    src: urlFor(img).height(700).width(1200).url(),
+    src: urlFor(img).height(500).width(1200).url(),
     alt: "",
-    height: 700,
+    height: 500,
     width: 1200,
   }))
 
@@ -21,10 +21,10 @@ const Slideshow = ({ images: imagesProp }: { images: SanityImageObject[] }) => {
       <Button
         variant="outline"
         size="sm"
-        className="absolute top-4 right-4 bg-background/50 hover:bg-background"
+        className="absolute top-4 right-4 bg-background/50 hover:bg-background dark:bg-transparent dark:hover:bg-zinc-700"
         onClick={() => setIsExpanded(true)}
       >
-        <Icon icon="Expand" className="h-5 w-5" />
+        <Icon icon="Expand" className="h-5 w-5 dark:stroke-zinc-50" />
         <span className="sr-only">Expand</span>
       </Button>
 
