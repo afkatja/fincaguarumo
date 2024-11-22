@@ -113,6 +113,7 @@ export const TOUR_QUERY = groq`
   title, 
   slug, 
   description, 
+  mainImage,
   "gallery": {
     images->{images}
   }, 
