@@ -20,7 +20,7 @@ const SheetPane = ({
           className="md:hidden"
           onClick={() => setOpen(true)}
         >
-          <Icon icon="Menu" className="w-6 h-6 dark:stroke-white" />
+          <Icon icon="Menu" className="w-6 h-6 dark:stroke-zinc-50" />
           <span className="sr-only">Toggle navigation menu</span>
         </Button>
       </SheetTrigger>

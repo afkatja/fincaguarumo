@@ -291,7 +291,7 @@ const DotButton: React.FC<PropType> = ({ children, ...restProps }) => {
           type="button"
           onClick={() => onDotButtonClick(index)}
           className={`border-0 flex justify-center rounded-full w-3 h-3 outline outline-2 m-2 
-            ${index === selectedIndex ? " outline-white drop-shadow-dots" : "outline-gray-500"}
+            ${index === selectedIndex ? " outline-zinc-50 drop-shadow-dots" : "outline-gray-500"}
           `}
           {...restProps}
         >
