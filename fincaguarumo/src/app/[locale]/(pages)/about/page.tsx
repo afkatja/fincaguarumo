@@ -11,11 +11,8 @@ type Content = {
   mainImage: SanityImageObject
   body: any
 }
-const About = async ({
-  params: { locale },
-}: {
-  params: { locale: string }
-}) => {
+const About = async ({ params }: { params: { locale: string } }) => {
+  const { locale } = await params
   const content: Content = await sanityFetch({
     query: ABOUT_QUERY,
     params: { language: locale },

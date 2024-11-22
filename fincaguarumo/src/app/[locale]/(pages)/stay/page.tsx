@@ -3,11 +3,8 @@ import Layout from "../pagesLayout"
 import { PAGE_QUERY } from "../../../../sanity/lib/queries"
 import { PortableText } from "next-sanity"
 
-const Accommodations = async ({
-  params: { locale },
-}: {
-  params: { locale: string }
-}) => {
+const Accommodations = async ({ params }: { params: { locale: string } }) => {
+  const { locale } = await params
   const pageContent: { title: string; description: string; body: any } =
     await sanityFetch({
       query: PAGE_QUERY,

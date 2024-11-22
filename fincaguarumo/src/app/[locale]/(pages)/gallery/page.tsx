@@ -15,16 +15,14 @@ type Content = {
   body: any
   gallery?: any[]
 }
-const GalleryPage = async ({
-  params: { locale },
-}: {
-  params: { locale: string }
-}) => {
+const GalleryPage = async ({ params }: { params: { locale: string } }) => {
   const content: Content = await sanityFetch({
     query: PAGE_QUERY,
     revalidate: 0,
     params: { language: locale, pageName: "gallery" },
   })
+
+  const { locale } = await params
 
   const gallery: { title: string; images: SanityImageObject[] } =
     await sanityFetch({

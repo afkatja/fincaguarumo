@@ -12,10 +12,11 @@ type Content = {
   body: any
 }
 const Volunteer = async ({
-  params: { locale },
+  params,
 }: {
   params: { locale: string }
 }) => {
+  const { locale } = await params
   const content: Content = await sanityFetch({
     query: PAGE_QUERY,
     revalidate: 0,

@@ -6,10 +6,11 @@ import { sanityFetch } from "../../../../sanity/lib/client"
 import Layout from "../pagesLayout"
 
 const Tours = async ({
-  params: { locale },
+  params,
 }: {
   params: { locale: string }
 }) => {
+  const { locale } = await params
   const tours = await sanityFetch<SanityDocument>({
     query: TOURS_QUERY,
     revalidate: 0,

@@ -12,40 +12,7 @@ import { useRouter, usePathname } from "../navigation"
 import { i18n } from "../../languages"
 import ReactCountryFlag from "react-country-flag"
 
-interface Params {
-  [key: string]: string | string[]
-}
-
-type Translation = {
-  path: string
-  language: string
-  title: string
-  countryCode: string
-}
-
-function onSelectChange({
-  val,
-  startTransition,
-  router,
-  pathname,
-  params,
-}: {
-  val: string
-  startTransition: (scope: TransitionFunction) => void
-  router: any
-  pathname: string
-  params: Params
-}) {
-  startTransition(() => {
-    router.replace(
-      // TypeScript will validate that only known `params`
-      // are used in combination with a given `pathname`. Since the two will
-      // always match for the current route, we can skip runtime checks.
-      { pathname, params },
-      { locale: val }
-    )
-  })
-}
+import { useTranslations, Translation } from "../lib/translationsUtil"
 
 const LanguageSelector = ({
   locale,
@@ -59,16 +26,8 @@ const LanguageSelector = ({
   const pathname = usePathname()
   const params = useParams()
 
-  const availableTranslations = useMemo<Translation[]>(
-    () =>
-      i18n.languages.reduce<Translation[]>((acc, cur) => {
-        const availableTranslation = translations.find(
-          translation => translation.language === cur.id
-        )
-        return availableTranslation ? [...acc, availableTranslation] : acc
-      }, []),
-    [translations]
-  )
+  const { onSelectChange, availableTranslations } =
+    useTranslations(translations)
 
   return (
     <Select
