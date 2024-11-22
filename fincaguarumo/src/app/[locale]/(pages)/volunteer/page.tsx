@@ -11,11 +11,7 @@ type Content = {
   mainImage: SanityImageObject
   body: any
 }
-const Volunteer = async ({
-  params,
-}: {
-  params: { locale: string }
-}) => {
+const Volunteer = async ({ params }: { params: any }) => {
   const { locale } = await params
   const content: Content = await sanityFetch({
     query: PAGE_QUERY,

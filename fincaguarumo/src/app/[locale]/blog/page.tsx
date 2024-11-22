@@ -5,7 +5,7 @@ import { POSTS_QUERYResult } from "../../../../sanity.types"
 import PagesLayout from "../(pages)/pagesLayout"
 import { SanityDocument } from "next-sanity"
 
-export default async function Page({ params }: { params: { locale: string } }) {
+export default async function Page({ params }: { params: any }) {
   const { locale } = await params
   const pageContent = await sanityFetch<SanityDocument>({
     query: PAGE_QUERY,

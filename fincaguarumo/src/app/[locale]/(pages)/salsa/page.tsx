@@ -3,12 +3,8 @@ import Layout from "../pagesLayout"
 import { PAGE_QUERY } from "../../../../sanity/lib/queries"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 
-const Salsa = async ({
-  params,
-}: {
-  params: { locale: string }
-}) => {
-  const {locale} = await params
+const Salsa = async ({ params }: { params: any }) => {
+  const { locale } = await params
   const pageContent: {
     title: string
     description: string

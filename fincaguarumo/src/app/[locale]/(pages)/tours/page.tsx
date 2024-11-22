@@ -5,11 +5,7 @@ import { PAGE_QUERY, TOURS_QUERY } from "../../../../sanity/lib/queries"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import Layout from "../pagesLayout"
 
-const Tours = async ({
-  params,
-}: {
-  params: { locale: string }
-}) => {
+const Tours = async ({ params }: { params: any }) => {
   const { locale } = await params
   const tours = await sanityFetch<SanityDocument>({
     query: TOURS_QUERY,

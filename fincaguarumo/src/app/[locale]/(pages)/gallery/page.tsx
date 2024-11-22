@@ -15,7 +15,7 @@ type Content = {
   body: any
   gallery?: any[]
 }
-const GalleryPage = async ({ params }: { params: { locale: string } }) => {
+const GalleryPage = async ({ params }: { params: any }) => {
   const content: Content = await sanityFetch({
     query: PAGE_QUERY,
     revalidate: 0,

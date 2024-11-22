@@ -18,12 +18,8 @@ import { Suspense } from "react"
 import Loading from "./(pages)/loading"
 import RichText from "../../components/RichText"
 
-export default async function Home({
-  params,
-}: {
-  params: { locale: string }
-}) {
-  const {locale} = await params
+export default async function Home({ params }: { params: any }) {
+  const { locale } = await params
   const content: {
     hero_title: string
     hero_slogan: string
