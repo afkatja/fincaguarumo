@@ -20,7 +20,7 @@ import { Post } from "./Post"
 //   }))
 // }
 
-export default async function Page({ params }: { params: QueryParams }) {
+export default async function Page({ params }: { params: any }) {
   const post = await sanityFetch<POST_QUERYResult>({
     query: POST_QUERY,
     params: { slug: params.slug, lanaguage: params.locale },
