@@ -65,9 +65,6 @@ export default async function Layout({
   params?: any
 }>) {
   const { locale } = await params
-
-  console.log({ locale })
-
   const draft = await draftMode()
   return (
     <html lang={locale}>
