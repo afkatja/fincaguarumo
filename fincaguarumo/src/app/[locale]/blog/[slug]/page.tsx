@@ -21,9 +21,10 @@ import { Post } from "./Post"
 // }
 
 export default async function Page({ params }: { params: any }) {
+  const { locale, slug } = await params
   const post = await sanityFetch<POST_QUERYResult>({
     query: POST_QUERY,
-    params: { slug: params.slug, lanaguage: params.locale },
+    params: { slug, lanaguage: locale },
     revalidate: 0,
   })
   if (!post) {
