@@ -18,7 +18,7 @@ const FeaturedContent = ({
         {featuredContentTitle && (
           <Title titleClassName="text-3xl mt-5" title={featuredContentTitle} />
         )}
-        <ul className="grid grid-cols-5 gap-2 md:-mx-5">
+        <ul className="md:grid lg:grid-cols-5 md:grid-cols-3 gap-4 md:-mx-5">
           {items.map(item => (
             <li
               key={crypto.randomUUID()}
