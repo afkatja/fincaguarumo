@@ -3,6 +3,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import Icon from "@/components/Icon"
 
+const possiblePaymentMethods = [
+  { type: "card" },
+  { type: "ideal" },
+  { type: "paypal" },
+]
+
 const PaymentMethods = ({ onCheck }: { onCheck: (val: string) => void }) => {
   const paymentMethods = [
     {
@@ -28,8 +34,15 @@ const PaymentMethods = ({ onCheck }: { onCheck: (val: string) => void }) => {
               htmlFor={method.value}
               className="flex items-center gap-2 cursor-pointer"
             >
-              <RadioGroupItem id={method.value} value={method.value} />
-              <Icon icon={method.icon} className="h-6 w-6" />
+              <RadioGroupItem
+                id={method.value}
+                value={method.value}
+                className="dark:border-zinc-50 data-[state=checked]:text-zinc-900 dark:data-[state=checked]:text-zinc-50"
+              />
+              <Icon
+                icon={method.icon}
+                className="h-6 w-6 dark:stroke-zinc-50"
+              />
               {method.name}
             </Label>
           ))}

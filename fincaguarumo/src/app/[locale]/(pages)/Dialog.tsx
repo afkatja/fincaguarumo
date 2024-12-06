@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from "react"
 import {
   Dialog,
@@ -42,78 +43,80 @@ const BookingDialog = ({
   const [open, setOpen] = useState(false)
   const [participants, setParticipants] = useState(1)
   const [paymentStep, setPaymentStep] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<null | string>(null)
+
+  const closeHandler = () => {
+    setOpen(!open)
+    setPaymentStep(false)
+  }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={() => closeHandler()} key="order-dialog">
       <DialogTrigger asChild>
         <Button size="lg" className="ml-auto">
           Reserve Now
         </Button>
       </DialogTrigger>
       {!paymentStep && (
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="min-h-[500px] sm:max-w-[500px] dark:bg-gradient-to-br dark:from-zinc-700 dark:to-sky-900">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <div>
-            <form className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="date">Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="flex-col items-start w-full h-auto"
-                    >
-                      <span className="font-semibold uppercase text-[0.65rem]">
-                        Select Date
-                      </span>
-                      <span className="font-normal">
-                        {new Date().toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 max-w-[276px]">
-                    <Calendar />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="guests">Guests</Label>
-                <Select onValueChange={val => setParticipants(Number(val))}>
-                  <SelectTrigger className="h-auto">
-                    <SelectValue
-                      placeholder={
-                        <div className="flex flex-col items-start">
-                          <span className="font-semibold uppercase text-[0.65rem]">
-                            Guests
-                          </span>
-                          <span className="font-normal">
-                            {participants} adults
-                          </span>
-                        </div>
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 adult</SelectItem>
-                    <SelectItem value="2">2 adults</SelectItem>
-                    <SelectItem value="3">2 adults + 1 child</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
+          <form className="grid gap-4" onSubmit={e => e.preventDefault()}>
+            <div className="grid gap-2">
+              <Label htmlFor="date">Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="flex-col items-start w-full h-auto"
+                  >
+                    <span className="font-semibold uppercase text-[0.65rem]">
+                      Select Date
+                    </span>
+                    <span className="font-normal">
+                      {new Date().toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 max-w-[276px]">
+                  <Calendar />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="guests">Guests</Label>
+              <Select onValueChange={val => setParticipants(Number(val))}>
+                <SelectTrigger className="h-auto">
+                  <SelectValue
+                    placeholder={
+                      <div className="flex flex-col items-start">
+                        <span className="font-semibold uppercase text-[0.65rem]">
+                          Guests
+                        </span>
+                        <span className="font-normal">
+                          {participants} adults
+                        </span>
+                      </div>
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 adult</SelectItem>
+                  <SelectItem value="2">2 adults</SelectItem>
+                  <SelectItem value="3">2 adults + 1 child</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {/* <div className="grid gap-2">
                 <PaymentMethods onCheck={val => setPaymentMethod(val)} />
-              </div>
-            </form>
-          </div>
+              </div> */}
+          </form>
           <DialogFooter className="flex-wrap">
             <div className="grid gap-2 flex-none w-full">
               <div className="flex items-center justify-between">
@@ -140,12 +143,12 @@ const BookingDialog = ({
         </DialogContent>
       )}
       {paymentStep && (
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="min-h-[500px] sm:max-w-[500px] dark:bg-gradient-to-br dark:from-zinc-700 dark:to-sky-900">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <Payment price={price * participants} paymentMethod={paymentMethod} />
+          <Payment price={price * participants} />
         </DialogContent>
       )}
     </Dialog>

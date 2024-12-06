@@ -31,6 +31,9 @@ import Waze from "./Waze"
 import Whatsapp from "./Whatsapp"
 import Youtube from "./Youtube"
 import ExternalLink from "./ExternalLink"
+import Success from "./Success"
+import Error from "./Error"
+import Info from "./Info"
 
 // @ts-ignore
 const icons = {
@@ -67,6 +70,9 @@ const icons = {
   Salsa,
   Waze,
   ExternalLink,
+  Success,
+  Error,
+  Info,
 }
 
 const headerIcons = {
