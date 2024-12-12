@@ -4,8 +4,6 @@ import Title from "../../../components/Title"
 import { Suspense } from "react"
 import Loading from "./loading"
 import RichText from "../../../components/RichText"
-import resolveConfig from "tailwindcss/resolveConfig"
-import theme from "../../../../tailwind.config"
 
 const PageLayout = async ({
   locale,
@@ -31,7 +29,7 @@ const PageLayout = async ({
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="bg-zinc-50 dark:bg-zinc-900 pt-5 lg:pt-8 content-wrap z-10">
+      <div className="bg-zinc-50 dark:bg-zinc-900 pt-5 lg:pt-8 content-wrap z-10 flex-1">
         <div className="prose w-11/12 lg:prose-lg mx-auto relative z-20">
           <Title
             titleClassName="text-5xl font-bold mb-5 lg:mb-8 text-guarumo-accent dark:text-zinc-50"
