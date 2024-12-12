@@ -79,7 +79,7 @@ export default async function Layout({
           <Suspense>
             <Header locale={locale} />
           </Suspense>
-          <main className="flex-1">
+          <main className="flex-1 flex flex-col">
             {draft?.isEnabled && (
               <a
                 className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
@@ -90,8 +90,8 @@ export default async function Layout({
             )}
             {children} {draft?.isEnabled && <VisualEditing />}
           </main>
+          <Footer />
         </div>
-        <Footer />
       </body>
     </html>
   )
