@@ -1,8 +1,10 @@
 import React from "react"
-import PaymentComplete from "@/components/PaymentComplete"
+import PaymentCompletePage from "./PaymentCompletePage"
 
-const PaymentSuccess = () => {
-  return <PaymentComplete />
+const PaymentSuccess = async ({ params }: { params: any }) => {
+  const { locale } = await params
+
+  return <PaymentCompletePage locale={locale} />
 }
 
 export default PaymentSuccess

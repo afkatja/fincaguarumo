@@ -1,12 +1,12 @@
 import React, { FormEventHandler, Suspense, useEffect, useState } from "react"
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
-import { Button } from "./ui/button"
-import Loading from "../app/[locale]/(pages)/loading"
+import { Button } from "../../../../components/ui/button"
+import Loading from "../loading"
 
 export default function CheckoutForm({
   dpmCheckerLink,
 }: {
-  dpmCheckerLink: string
+  dpmCheckerLink?: string
 }) {
   const stripe = useStripe()
   const elements = useElements() //stripe?.elements({ loader: "always" })
@@ -63,10 +63,8 @@ export default function CheckoutForm({
 
   return (
     <>
-      {/* {!render ? (
-        <Loading />
-      ) : ( */}
       <form id="payment-form" onSubmit={handleSubmit} className="flex flex-col">
+        {message && <p className="mb-4">{message}</p>}
         <PaymentElement options={paymentElementOptions} />
         <footer className="flex flex-wrap mt-auto pt-4">
           <Button
@@ -76,9 +74,7 @@ export default function CheckoutForm({
             {isLoading ? <Loading /> : "Pay now"}
           </Button>
         </footer>
-        {message && <p className="">{message}</p>}
       </form>
-      {/* )} */}
       {/* [DEV]: For demo purposes only, display dynamic payment methods annotation and integration checker */}
       {/* <div id="dpm-annotation">
         <p>

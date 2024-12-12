@@ -2,40 +2,39 @@
 import React, { useEffect, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements } from "@stripe/react-stripe-js"
-import CheckoutForm from "@/components/CheckoutForm"
-import CompletePage from "@/components/PaymentComplete"
+import CheckoutForm from "./CheckoutForm"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 const stripePromise = loadStripe(publishableKey)
 
-const Payment = ({ price }: { price: number }) => {
+const Payment = ({
+  price,
+  description,
+  fields,
+}: {
+  price: number
+  description: string
+  fields: Record<string, any>
+}) => {
   const [clientSecret, setClientSecret] = useState("")
-  const [dpmCheckerLink, setDpmCheckerLink] = useState("")
-  const [confirmed, setConfirmed] = useState(false)
-
-  useEffect(() => {
-    setConfirmed(
-      !!new URLSearchParams(window.location.search).get(
-        "payment_intent_client_secret"
-      )
-    )
-  }, [])
+  // const [dpmCheckerLink, setDpmCheckerLink] = useState("")
 
   useEffect(() => {
     if (clientSecret) return
+    console.log(fields)
 
     fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ price }),
+      body: JSON.stringify({ price, description, fields }),
     })
       .then(res => res.json())
       .then(data => {
         setClientSecret(data.clientSecret)
         // [DEV] For demo purposes only
-        setDpmCheckerLink(data.dpmCheckerLink)
+        // setDpmCheckerLink(data.dpmCheckerLink)
       })
-      .catch(err => console.error("Error fetching intent: " + err))
+      .catch(err => console.error("Error creating intent: " + err))
   })
 
   const appearance = {
@@ -61,11 +60,7 @@ const Payment = ({ price }: { price: number }) => {
     <>
       {clientSecret && (
         <Elements options={options} stripe={stripePromise} key={clientSecret}>
-          {confirmed ? (
-            <CompletePage />
-          ) : (
-            <CheckoutForm dpmCheckerLink={dpmCheckerLink} />
-          )}
+          <CheckoutForm />
         </Elements>
       )}
     </>
