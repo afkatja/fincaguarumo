@@ -35,7 +35,6 @@ import Success from "./Success"
 import Error from "./Error"
 import Info from "./Info"
 
-// @ts-ignore
 const icons = {
   Aracari,
   Arrow,

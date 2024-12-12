@@ -1,8 +1,8 @@
 import React from "react"
 
-const Info = () => {
+const Info = ({ ...props }) => {
   return (
-    <svg width="14" height="14" fill="none" viewBox="0 0 14 14">
+    <svg width="14" height="14" fill="none" viewBox="0 0 14 14" {...props}>
       <path
         fill="#fff"
         d="M10 1.5H4A2.5 2.5 0 0 0 1.5 4v6A2.5 2.5 0 0 0 4 12.5h6a2.5 2.5 0 0 0 2.5-2.5V4A2.5 2.5 0 0 0 10 1.5ZM4 0a4 4 0 0 0-4 4v6a4 4 0 0 0 4 4h6a4 4 0 0 0 4-4V4a4 4 0 0 0-4-4H4Z"
