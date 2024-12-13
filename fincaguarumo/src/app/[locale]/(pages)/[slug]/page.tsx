@@ -20,8 +20,6 @@ const Page = async ({ params }: { params: any }) => {
     revalidate: 0,
   })
 
-  console.log(content)
-
   return (
     <Layout
       locale={locale}
