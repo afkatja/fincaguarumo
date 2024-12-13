@@ -4,6 +4,23 @@ export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...
   _id, title, slug, mainImage, _createdAt
 }`
 
+export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && language == $language][0] {
+  title, subtitle, description, mainImage, body, language, slug,
+    "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->{
+        language,
+        title,
+        subtitle,
+        mainImage,
+        slug, 
+        body
+      })
+    }
+}`
+
 export const FEATURED_POSTS_QUERY = groq`
   *[_type == 'post' && defined(slug.current) && $category in categories[] -> title && language == $language] {
     title, slug, mainImage, 'category': *[_type == 'category' && title == $category],

@@ -1,0 +1,38 @@
+import React from "react"
+import { sanityFetch } from "../../../../sanity/lib/client"
+import { PAGES_QUERY } from "../../../../sanity/lib/queries"
+import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import Layout from "../pagesLayout"
+import RichText from "../../../../components/RichText"
+
+type Content = {
+  title: string
+  description: string
+  mainImage: SanityImageObject
+  body: any
+  slug: { current: string }
+}
+const Page = async ({ params }: { params: any }) => {
+  const { locale, slug } = await params
+  const content: Content = await sanityFetch({
+    query: PAGES_QUERY,
+    params: { slug, language: locale },
+    revalidate: 0,
+  })
+
+  console.log(content)
+
+  return (
+    <Layout
+      locale={locale}
+      pageName={slug}
+      title={content?.title}
+      description={content?.description}
+      mainImage={content?.mainImage}
+    >
+      <RichText body={content?.body} />
+    </Layout>
+  )
+}
+
+export default Page
