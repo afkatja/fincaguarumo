@@ -25,7 +25,7 @@ export function Post({
           parent={parent}
         />
       )}
-      <article className="prose prose-lg py-4 mx-auto">
+      <article className="prose prose-lg dark:prose-invert py-4 mx-auto">
         {title ? <Title title={title} Heading="h1" /> : null}
         {mainImage?.asset?._ref ? (
           <Image
