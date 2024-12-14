@@ -79,23 +79,27 @@ export default async function Home({ params }: { params: any }) {
           autoPlay
           loop
           muted
-          className="object-cover w-full h-full"
+          className="object-cover w-full h-full delay-2000 opacity-0 transition-opacity duration-700 animate-fade"
         />
         <div className="hero text-center text-zinc-50 drop-shadow-sharp">
-          <h1 className="text-6xl leading-normal font-black">
+          <h1 className="text-6xl leading-normal font-black opacity-0 transition-opacity duration-700 animate-fade delay-500">
             {content?.hero_title}
           </h1>
-          <h2 className="text-3xl mb-5 font-semibold">
+          <h2 className="text-3xl mb-5 font-semibold opacity-0 transition-opacity duration-700 delay-700 animate-fade">
             {content?.hero_slogan}
           </h2>
-          <h3 className="text-xl leading-normal">{content?.subtitle}</h3>
+          <h3 className="text-xl leading-normal opacity-0 transition-opacity duration-700 delay-1000 animate-fade">
+            {content?.subtitle}
+          </h3>
         </div>
-        <Link
-          href="#intro"
-          className="fade-from-view absolute bottom-8 left-1/2 -translate-x-1/2"
-        >
-          <ArrowDown className="animate-bounce stroke-zinc-50 " />
-        </Link>
+        <div className="animate-slide transition-transform duration-1000 delay-1000">
+          <Link
+            href="#intro"
+            className="fade-from-view absolute bottom-8 left-1/2 -translate-x-1/2"
+          >
+            <ArrowDown className="animate-bounce stroke-zinc-50" />
+          </Link>
+        </div>
       </div>
       <div className="content-wrap" id="intro">
         <div className="prose prose-lg w-11/12 mx-auto">

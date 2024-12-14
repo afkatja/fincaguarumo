@@ -38,7 +38,7 @@ const Video = ({
   const ref = useRef(null)
   useEffect(() => {
     const vid = ref?.current
-    if (vid) playPauseVideo(vid)
+    if (vid && autoPlay) playPauseVideo(vid)
   })
   return (
     <video ref={ref} src={src} autoPlay={autoPlay} loop={loop} {...props} />
