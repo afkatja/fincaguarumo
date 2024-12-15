@@ -11,6 +11,7 @@ export type TTour = {
   duration?: string
   body?: any
   language?: string
+  isPublished: boolean
 }
 
 const tours = [

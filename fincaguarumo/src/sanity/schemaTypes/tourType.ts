@@ -25,6 +25,11 @@ export const tourType = defineType({
       type: "boolean",
     }),
     defineField({
+      name: "isPublished",
+      type: "boolean",
+      initialValue: true,
+    }),
+    defineField({
       name: "description",
       type: "string",
     }),
@@ -81,6 +86,9 @@ export const tourType = defineType({
       type: "blockContent",
     }),
   ],
+  initialValue: {
+    isPublished: true,
+  },
   preview: {
     select: {
       title: "title",

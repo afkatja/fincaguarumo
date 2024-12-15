@@ -17,11 +17,13 @@ export default async function Page({ params }: { params: any }) {
     revalidate: 0,
   })
 
-  const postsOrdered = posts.sort((a, b) => {
-    if (a._createdAt < b._createdAt) return 1
-    if (a._createdAt > b._createdAt) return -1
-    return 0
-  })
+  const postsOrdered = posts
+    .filter(post => post.isPublished)
+    .sort((a, b) => {
+      if (a._createdAt < b._createdAt) return 1
+      if (a._createdAt > b._createdAt) return -1
+      return 0
+    })
 
   return (
     <PagesLayout

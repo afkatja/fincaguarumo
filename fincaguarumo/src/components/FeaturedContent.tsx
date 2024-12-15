@@ -18,16 +18,13 @@ const FeaturedContent = ({
         {featuredContentTitle && (
           <Title titleClassName="text-3xl mt-5" title={featuredContentTitle} />
         )}
-        <ul className="md:grid lg:grid-cols-5 md:grid-cols-3 gap-4 md:-mx-5">
+        <ul className="md:grid lg:auto-cols-fr md:grid-cols-3 gap-4 md:-mx-5">
           {items.map(item => (
-            <li
-              key={crypto.randomUUID()}
-              className="md:m-5 my-5 md:w-56 fade-in"
-            >
+            <li key={crypto.randomUUID()} className="md:m-5 my-5 fade-in">
               {item.content}
             </li>
           ))}
-          <li className="md:m-5 my-5 md:w-56 fade-in">
+          <li className="md:m-5 my-5 fade-in">
             <Link
               href={href}
               className="flex flex-wrap items-center justify-center h-full group no-underline"

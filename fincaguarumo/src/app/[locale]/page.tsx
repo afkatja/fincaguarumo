@@ -38,6 +38,7 @@ export default async function Home({ params }: { params: any }) {
     description?: string
     mainImage?: SanityImageObject & { alt: string }
     slug: { current: string }
+    isPublished: boolean
   }[] = await sanityFetch({
     query: FEATURED_TOURS_QUERY,
     params: { language: locale },
@@ -48,28 +49,41 @@ export default async function Home({ params }: { params: any }) {
     title: string
     slug: { current: string }
     mainImage?: SanityImageObject & { alt: string }
+    isPublished: boolean
   }[] = await sanityFetch({
     query: FEATURED_POSTS_QUERY,
     params: { category: "featured", language: locale },
     revalidate: 0,
   })
 
-  const featuredTours = tours.map(tour => ({
-    ...tour,
-    content: (
-      <TourItem
-        mainImage={tour.mainImage}
-        title={tour.title}
-        isFeatured
-        description={tour.description}
-        slug={tour.slug}
-      />
-    ),
-  }))
-  const featuredPosts = posts.map(({ title, mainImage, slug, ...post }) => ({
-    ...post,
-    content: <TourItem mainImage={mainImage} title={title} slug={slug} />,
-  }))
+  const featuredTours = tours
+    .filter(tour => tour.isPublished)
+    .map(tour => ({
+      ...tour,
+      content: (
+        <TourItem
+          mainImage={tour.mainImage}
+          title={tour.title}
+          isFeatured
+          description={tour.description}
+          slug={tour.slug}
+          isPublished={tour.isPublished}
+        />
+      ),
+    }))
+  const featuredPosts = posts
+    .filter(post => post.isPublished)
+    .map(({ title, mainImage, slug, isPublished, ...post }) => ({
+      ...post,
+      content: (
+        <TourItem
+          mainImage={mainImage}
+          title={title}
+          slug={slug}
+          isPublished={isPublished}
+        />
+      ),
+    }))
 
   return (
     <Suspense fallback={<Loading />}>

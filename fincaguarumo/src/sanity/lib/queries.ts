@@ -1,11 +1,11 @@
 import { groq } from "next-sanity"
 
 export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...12]{
-  _id, title, slug, mainImage, _createdAt
+  _id, title, slug, mainImage, _createdAt, isPublished
 }`
 
 export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && language == $language][0] {
-  title, subtitle, description, mainImage, body, language, slug,
+  title, subtitle, description, mainImage, body, language, slug, isPublished,
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -23,7 +23,7 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
 
 export const FEATURED_POSTS_QUERY = groq`
   *[_type == 'post' && defined(slug.current) && $category in categories[] -> title && language == $language] {
-    title, slug, mainImage, 'category': *[_type == 'category' && title == $category],
+    title, slug, mainImage, isPublished, 'category': *[_type == 'category' && title == $category],
      "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -38,7 +38,7 @@ export const FEATURED_POSTS_QUERY = groq`
 `
 
 export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
-  title, body, mainImage, language,
+  title, body, mainImage, language, isPublished,
   "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -53,7 +53,7 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
 
 export const PAGE_QUERY = groq`
   *[_type == 'page' && slug.current == $pageName && language == $language][0] {
-    title, subtitle, description, mainImage, body, language, 
+    title, subtitle, description, mainImage, body, language, isPublished,
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -64,14 +64,14 @@ export const PAGE_QUERY = groq`
         subtitle,
         mainImage,
         slug, 
-        body
+        body, isPublished
       })
     }
   }
 `
 export const NAV_QUERY = groq`
   *[_type == 'page' && language == $language && $category in categories[] -> title] {
-    title, slug, language,
+    title, slug, language, isPublished,
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -92,6 +92,7 @@ export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && la
   description, 
   dateAdded,
   language,
+  isPublished,
   "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -109,7 +110,7 @@ export const FEATURED_TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.curre
   slug,
   title, 
   mainImage,
-  description,
+  description, isPublished,
    "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -130,7 +131,7 @@ export const TOUR_QUERY = groq`
   title, 
   slug, 
   description, 
-  mainImage,
+  mainImage, isPublished,
   "gallery": {
     images->{images}
   }, 

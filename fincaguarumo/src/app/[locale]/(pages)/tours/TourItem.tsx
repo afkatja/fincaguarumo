@@ -15,6 +15,7 @@ export type TourType = {
   dateAdded?: string
   isNew?: boolean
   isFeatured?: boolean
+  isPublished: boolean
 }
 
 const TourItem = ({

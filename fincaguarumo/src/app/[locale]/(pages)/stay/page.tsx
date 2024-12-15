@@ -11,6 +11,7 @@ const Accommodations = async ({ params }: { params: any }) => {
       revalidate: 0,
       params: { language: locale, pageName: "stay" },
     })
+  console.log(pageContent)
 
   const { title, description, body } = pageContent || {}
 

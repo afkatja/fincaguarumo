@@ -11,6 +11,7 @@ type Content = {
   mainImage: SanityImageObject
   body: any
   slug: { current: string }
+  isPublished: boolean
 }
 const Page = async ({ params }: { params: any }) => {
   const { locale, slug } = await params
@@ -19,6 +20,8 @@ const Page = async ({ params }: { params: any }) => {
     params: { slug, language: locale },
     revalidate: 0,
   })
+
+  if (!content?.isPublished) return notFound()
 
   return (
     <Layout
