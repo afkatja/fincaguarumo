@@ -62,6 +62,7 @@ export default async function Home({ params }: { params: any }) {
       ...tour,
       content: (
         <TourItem
+          href={`/tours/${tour.slug.current}`}
           mainImage={tour.mainImage}
           title={tour.title}
           isFeatured
@@ -77,6 +78,7 @@ export default async function Home({ params }: { params: any }) {
       ...post,
       content: (
         <TourItem
+          href={`/blog/${slug.current}`}
           mainImage={mainImage}
           title={title}
           slug={slug}

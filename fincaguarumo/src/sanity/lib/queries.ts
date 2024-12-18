@@ -38,7 +38,7 @@ export const FEATURED_POSTS_QUERY = groq`
 `
 
 export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
-  title, body, mainImage, language, isPublished,
+  title, body, mainImage, language, isPublished, slug,
   "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
