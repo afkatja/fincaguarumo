@@ -31,5 +31,5 @@ export default async function Page({ params }: { params: any }) {
 
   if (!post?.isPublished) notFound()
 
-  return <Post post={post} parent={{ title: "Blog", href: "blog" }} />
+  return <Post post={post} parent={{ title: "Blog", href: "blog" }} locale={locale} />
 }

@@ -24,7 +24,7 @@ const DetailsPageLayout = ({
   parent,
   body,
   icon,
-}: Omit<TTour, "gallery"> & {
+}: Omit<TTour, "gallery" | "isPublished"> & {
   slideshow?: React.ReactNode
   parent?: { title: string; href: string }
   icon?: string
