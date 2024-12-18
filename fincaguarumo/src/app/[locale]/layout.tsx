@@ -64,7 +64,7 @@ export default async function Layout({
   children: React.ReactNode
   params?: any
 }>) {
-  const { locale } = await params
+  const { locale = "en" } = (await params) || {}
   const draft = await draftMode()
   return (
     <html lang={locale}>
@@ -75,11 +75,11 @@ export default async function Layout({
             : `${poppins.variable} ${cabin.variable}`
         }
       >
-        <div className="flex flex-col min-h-[100dvh]">
+        <div className="flex flex-col min-h-[80dvh]">
           <Suspense>
             <Header locale={locale} />
           </Suspense>
-          <main className="flex-1">
+          <main className="flex-1 flex flex-col">
             {draft?.isEnabled && (
               <a
                 className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
