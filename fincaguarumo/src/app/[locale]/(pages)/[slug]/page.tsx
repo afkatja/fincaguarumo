@@ -3,7 +3,8 @@ import { sanityFetch } from "../../../../sanity/lib/client"
 import { PAGES_QUERY } from "../../../../sanity/lib/queries"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import Layout from "../pagesLayout"
-import RichText from "../../../../components/RichText"
+import RichText from "@/components/RichText"
+import { notFound } from "next/navigation"
 
 type Content = {
   title: string
@@ -21,7 +22,7 @@ const Page = async ({ params }: { params: any }) => {
     revalidate: 0,
   })
 
-  if (!content?.isPublished) return notFound()
+  if (!content?.isPublished) notFound()
 
   return (
     <Layout

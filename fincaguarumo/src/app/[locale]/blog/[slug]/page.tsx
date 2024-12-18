@@ -29,7 +29,7 @@ export default async function Page({ params }: { params: any }) {
   })
   if (!post) return notFound()
 
-  if (!post?.isPublished) return notFound()
+  if (!post?.isPublished) notFound()
 
   return <Post post={post} parent={{ title: "Blog", href: "blog" }} />
 }
