@@ -66,6 +66,13 @@
 }
 /* } */
 
+.animate-slide {
+  transform: translateY(8.5rem);
+}
+.delay-2000 {
+  transition-delay: 2s;
+  animation-delay: 2s;
+}
 @keyframes fade-in {
   to {
     opacity: 1;

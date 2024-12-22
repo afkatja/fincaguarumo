@@ -5,6 +5,8 @@ import { Suspense } from "react"
 import Loading from "./loading"
 import RichText from "../../../components/RichText"
 
+import { notFound } from "next/navigation"
+
 const PageLayout = async ({
   locale,
   pageName,
@@ -25,7 +27,7 @@ const PageLayout = async ({
   children?: React.ReactNode
   [props: string]: any
 }) => {
-  if (!pageName) return "loading"
+  if (!pageName) notFound()
 
   return (
     <Suspense fallback={<Loading />}>

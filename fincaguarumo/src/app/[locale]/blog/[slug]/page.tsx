@@ -27,8 +27,9 @@ export default async function Page({ params }: { params: any }) {
     params: { slug, lanaguage: locale },
     revalidate: 0,
   })
-  if (!post) {
-    return notFound()
-  }
-  return <Post post={post} parent={{ title: "Blog", href: "blog" }} />
+  if (!post) return notFound()
+
+  if (!post?.isPublished) notFound()
+
+  return <Post post={post} parent={{ title: "Blog", href: "blog" }} locale={locale} />
 }

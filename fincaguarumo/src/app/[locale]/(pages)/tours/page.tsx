@@ -7,11 +7,13 @@ import Layout from "../pagesLayout"
 
 const Tours = async ({ params }: { params: any }) => {
   const { locale } = await params
-  const tours = await sanityFetch<SanityDocument>({
+  const toursContent = await sanityFetch<SanityDocument>({
     query: TOURS_QUERY,
     revalidate: 0,
     params: { language: locale },
   })
+
+  const tours = toursContent.filter((tour: TourType) => tour.isPublished)
 
   const pageContent = await sanityFetch<SanityDocument>({
     query: PAGE_QUERY,

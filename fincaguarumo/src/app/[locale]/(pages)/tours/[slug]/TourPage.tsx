@@ -4,9 +4,10 @@ import Slideshow from "./Slideshow"
 import DetailsPageLayout from "../../DetailsPageLayout"
 import { TTour } from "../data"
 import { titleCase } from "../../../../../lib/utils"
+import { notFound } from "next/navigation"
 
 const TourPage = ({ tour }: { tour: TTour }) => {
-  if (!tour) return "TODO 404"
+  if (!tour || !tour.isPublished) notFound()
 
   return (
     <DetailsPageLayout

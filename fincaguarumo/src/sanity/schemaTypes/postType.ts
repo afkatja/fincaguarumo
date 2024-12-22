@@ -61,7 +61,15 @@ export const postType = defineType({
       name: "body",
       type: "blockContent",
     }),
+    defineField({
+      name: "isPublished",
+      type: "boolean",
+      initialValue: true,
+    }),
   ],
+  initialValue: {
+    isPublished: true,
+  },
   preview: {
     select: {
       title: "title",

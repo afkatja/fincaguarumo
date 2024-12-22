@@ -15,6 +15,8 @@ export type TourType = {
   dateAdded?: string
   isNew?: boolean
   isFeatured?: boolean
+  isPublished: boolean
+  href: string
 }
 
 const TourItem = ({
@@ -25,13 +27,10 @@ const TourItem = ({
   dateAdded,
   isNew,
   isFeatured,
+  href,
 }: TourType) => {
   return (
-    <Link
-      href={`/tours/${slug.current}`}
-      className="group tour no-underline"
-      prefetch
-    >
+    <Link href={href} className="group tour no-underline" prefetch>
       <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border-background">
         <CardContent className="flex h-full flex-col justify-between p-6">
           <div className="relative">

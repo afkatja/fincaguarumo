@@ -14,6 +14,17 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
     block: {
       normal: ({ children }) => <p className="portable-text-p">{children}</p>,
       blockquote: ({ children }) => <p>{children}</p>,
+      h1: ({ children }) => (
+        <Title
+          Heading="h1"
+          titleClassName="col-span-2 dark:text-zinc-50"
+          title={children}
+          icon={{
+            iconClassName: "fill-guarumo-accent dark:fill-zinc-50",
+            title: icon,
+          }}
+        />
+      ),
       h2: ({ children }) => (
         <Title
           titleClassName="col-span-2 dark:text-zinc-50"
