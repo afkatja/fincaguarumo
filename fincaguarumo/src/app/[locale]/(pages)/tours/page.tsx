@@ -13,7 +13,12 @@ const Tours = async ({ params }: { params: any }) => {
     params: { language: locale },
   })
 
-  const tours = toursContent.filter((tour: TourType) => tour.isPublished)
+  const tours = toursContent
+    .filter((tour: TourType) => tour.isPublished)
+    .map((tour: Omit<TourType, "href">) => ({
+      href: `/tours/${tour.slug.current}`,
+      ...tour,
+    }))
 
   const pageContent = await sanityFetch<SanityDocument>({
     query: PAGE_QUERY,
