@@ -5,8 +5,10 @@ import Loading from "../loading"
 
 export default function CheckoutForm({
   dpmCheckerLink,
+  bookingDetails,
 }: {
   dpmCheckerLink?: string
+  bookingDetails: Record<string, string>
 }) {
   const stripe = useStripe()
   const elements = useElements() //stripe?.elements({ loader: "always" })
@@ -38,8 +40,7 @@ export default function CheckoutForm({
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        // Make sure to change this to your payment completion page
-        return_url: "http://localhost:3000/payment-success",
+        return_url: `http://localhost:3000/payment-success?bookingDetails=${JSON.stringify(bookingDetails)}`,
       },
     })
 

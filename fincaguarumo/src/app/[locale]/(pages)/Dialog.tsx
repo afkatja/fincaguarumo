@@ -46,13 +46,19 @@ const BookingDialog = ({
   const [fields, setFields] = useState<{
     name: string
     email: string
-    date: Date
-    guests: number
+    date: string
+    guests: string
+    bookingName: string
   }>({
     name: "",
     email: "",
-    date: new Date(),
-    guests: 1,
+    date: new Date().toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    guests: "1",
+    bookingName: title,
   })
 
   const closeHandler = () => {
@@ -88,7 +94,6 @@ const BookingDialog = ({
             noValidate
             onSubmit={e => {
               e.preventDefault()
-              console.log(fields)
               setPaymentStep(true)
             }}
           >
@@ -142,20 +147,24 @@ const BookingDialog = ({
                     <span className="font-semibold uppercase text-[0.65rem]">
                       Select Date
                     </span>
-                    <span className="font-normal">
-                      {fields.date.toLocaleDateString(undefined, {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </span>
+                    <span className="font-normal">{fields.date}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 max-w-[276px]">
                   <Calendar
                     mode="single"
                     onSelect={(_, selectedDay) => {
-                      setFields({ ...fields, date: new Date(selectedDay) })
+                      setFields({
+                        ...fields,
+                        date: new Date(selectedDay).toLocaleDateString(
+                          undefined,
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        ),
+                      })
                       setPopoverOpen(false)
                     }}
                   />
@@ -167,7 +176,7 @@ const BookingDialog = ({
               <Select
                 onValueChange={val => {
                   setParticipants(Number(val))
-                  setFields({ ...fields, guests: Number(val) })
+                  setFields({ ...fields, guests: val })
                 }}
               >
                 <SelectTrigger className="h-auto">
@@ -234,7 +243,7 @@ const BookingDialog = ({
           </DialogHeader>
           <Payment
             price={price * participants}
-            description={`${title} ${description}`}
+            description={description}
             fields={fields}
           />
         </DialogContent>

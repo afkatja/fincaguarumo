@@ -6,6 +6,7 @@ import CheckoutForm from "./CheckoutForm"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 const stripePromise = loadStripe(publishableKey)
+let clientSecret: string | null = null
 
 const Payment = ({
   price,
@@ -14,27 +15,26 @@ const Payment = ({
 }: {
   price: number
   description: string
-  fields: Record<string, any>
+  fields: Record<string, string>
 }) => {
-  const [clientSecret, setClientSecret] = useState("")
-  // const [dpmCheckerLink, setDpmCheckerLink] = useState("")
-
   useEffect(() => {
-    if (clientSecret) return
-    console.log(fields)
+    const fetchData = async () => {
+      try {
+        const response = await fetch("/api/create-payment-intent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ price, description, fields }),
+        })
+        const { clientSecret: clientSecretData } = await response.json()
 
-    fetch("/api/create-payment-intent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ price, description, fields }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        setClientSecret(data.clientSecret)
-        // [DEV] For demo purposes only
-        // setDpmCheckerLink(data.dpmCheckerLink)
-      })
-      .catch(err => console.error("Error creating intent: " + err))
+        clientSecret = clientSecretData
+      } catch (err) {
+        console.error("Error creating intent: " + err)
+      }
+    }
+    if (clientSecret) return
+
+    fetchData()
   })
 
   const appearance = {
@@ -51,16 +51,16 @@ const Payment = ({
       },
     },
   }
+  if (!clientSecret) return null
   const options = {
     clientSecret,
     appearance,
   }
-
   return (
     <>
       {clientSecret && (
         <Elements options={options} stripe={stripePromise} key={clientSecret}>
-          <CheckoutForm />
+          <CheckoutForm bookingDetails={fields} />
         </Elements>
       )}
     </>
