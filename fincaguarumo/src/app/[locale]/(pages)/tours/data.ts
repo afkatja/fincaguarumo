@@ -8,6 +8,7 @@ export type TTour = {
   gallery: { images: { images: SanityImageObject[] } }
   price?: string
   location?: string
+  geo?: { lat: number; lon: number }
   duration?: string
   body?: any
   language?: string

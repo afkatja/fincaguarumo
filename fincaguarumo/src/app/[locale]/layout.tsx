@@ -28,6 +28,7 @@ import Header from "../../components/header"
 import { VisualEditing } from "next-sanity"
 import { draftMode } from "next/headers"
 import Footer from "../../components/Footer"
+import { BookingProvider } from "./BookingProvider"
 
 const poppins = Poppins({
   weight: "500",
@@ -79,17 +80,19 @@ export default async function Layout({
           <Suspense>
             <Header locale={locale} />
           </Suspense>
-          <main className="flex-1 flex flex-col">
-            {draft?.isEnabled && (
-              <a
-                className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
-                href="/api/draft-mode/disable"
-              >
-                Disable preview mode
-              </a>
-            )}
-            {children} {draft?.isEnabled && <VisualEditing />}
-          </main>
+          <BookingProvider>
+            <main className="flex-1 flex flex-col">
+              {draft?.isEnabled && (
+                <a
+                  className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
+                  href="/api/draft-mode/disable"
+                >
+                  Disable preview mode
+                </a>
+              )}
+              {children} {draft?.isEnabled && <VisualEditing />}
+            </main>
+          </BookingProvider>
           <Footer />
         </div>
       </body>

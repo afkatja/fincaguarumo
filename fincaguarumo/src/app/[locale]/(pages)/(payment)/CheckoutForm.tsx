@@ -2,16 +2,17 @@ import React, { FormEventHandler, Suspense, useEffect, useState } from "react"
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { Button } from "../../../../components/ui/button"
 import Loading from "../loading"
+import { useBooking } from "../../BookingProvider"
 
 export default function CheckoutForm({
   dpmCheckerLink,
-  bookingDetails,
 }: {
   dpmCheckerLink?: string
-  bookingDetails: Record<string, string>
 }) {
   const stripe = useStripe()
   const elements = useElements() //stripe?.elements({ loader: "always" })
+
+  const { bookingData } = useBooking()
 
   const [message, setMessage] = useState<null | string | undefined>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -40,7 +41,7 @@ export default function CheckoutForm({
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `http://localhost:3000/payment-success?bookingDetails=${JSON.stringify(bookingDetails)}`,
+        return_url: "http://localhost:3000/payment-success",
       },
     })
 

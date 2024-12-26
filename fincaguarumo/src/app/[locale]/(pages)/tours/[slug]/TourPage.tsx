@@ -1,25 +1,44 @@
 "use client"
-import React from "react"
+import React, { useEffect } from "react"
 import Slideshow from "./Slideshow"
 import DetailsPageLayout from "../../DetailsPageLayout"
 import { TTour } from "../data"
 import { titleCase } from "../../../../../lib/utils"
 import { notFound } from "next/navigation"
+import { useBooking } from "../../../BookingProvider"
 
 const TourPage = ({ tour }: { tour: TTour }) => {
   if (!tour || !tour.isPublished) notFound()
+  const { bookingData, setBookingData } = useBooking()
+
+  useEffect(() => {
+    setBookingData({
+      ...bookingData,
+      tourDetails: {
+        title: tour.title,
+        description: tour.description,
+        price: tour.price,
+        duration: tour.duration,
+        location: tour.location,
+        body: tour.body,
+        guests: "1",
+      },
+    })
+  }, [tour])
 
   return (
     <DetailsPageLayout
-      title={tour.title}
-      description={tour.description}
+      tourDetails={{
+        title: tour.title,
+        description: tour.description,
+        duration: tour.duration,
+        location: tour.location,
+        price: tour.price,
+        body: tour.body,
+      }}
       slideshow={
         <Slideshow images={tour?.gallery?.images?.images ?? [tour.mainImage]} />
       }
-      price={tour.price ?? "0"}
-      location={tour.location ?? ""}
-      duration={tour.duration ?? ""}
-      body={tour.body}
       parent={{ title: "Tours", href: "tours" }}
       icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
     />

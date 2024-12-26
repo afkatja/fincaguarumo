@@ -3,31 +3,28 @@ import React, { useEffect, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements } from "@stripe/react-stripe-js"
 import CheckoutForm from "./CheckoutForm"
+import { useBooking } from "../../BookingProvider"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 const stripePromise = loadStripe(publishableKey)
-let clientSecret: string | null = null
 
-const Payment = ({
-  price,
-  description,
-  fields,
-}: {
-  price: number
-  description: string
-  fields: Record<string, string>
-}) => {
+const Payment = () => {
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const { bookingData } = useBooking()
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch("/api/create-payment-intent", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ price, description, fields }),
+          body: JSON.stringify({
+            customerDetails: bookingData.customerDetails,
+            tourDetails: bookingData.tourDetails,
+          }),
         })
         const { clientSecret: clientSecretData } = await response.json()
 
-        clientSecret = clientSecretData
+        setClientSecret(clientSecretData)
       } catch (err) {
         console.error("Error creating intent: " + err)
       }
@@ -51,6 +48,8 @@ const Payment = ({
       },
     },
   }
+  console.log(clientSecret)
+
   if (!clientSecret) return null
   const options = {
     clientSecret,
@@ -60,7 +59,7 @@ const Payment = ({
     <>
       {clientSecret && (
         <Elements options={options} stripe={stripePromise} key={clientSecret}>
-          <CheckoutForm bookingDetails={fields} />
+          <CheckoutForm />
         </Elements>
       )}
     </>

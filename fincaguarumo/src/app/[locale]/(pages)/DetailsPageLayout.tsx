@@ -6,29 +6,22 @@ import Icon from "@/components/Icon"
 import { TTour } from "./tours/data"
 import Breadcrumbs from "../../../components/Breadcrumbs"
 import Title from "../../../components/Title"
-import { PortableText } from "next-sanity"
 import Loading from "./loading"
-import Image from "next/image"
-import { urlFor } from "../../../sanity/lib/image"
-import resolveConfig from "tailwindcss/resolveConfig"
-import theme from "../../../../tailwind.config"
 import RichText from "../../../components/RichText"
 
 const DetailsPageLayout = ({
-  title,
-  description,
-  duration,
-  location,
-  price,
+  tourDetails,
   slideshow,
   parent,
-  body,
   icon,
-}: Omit<TTour, "gallery" | "isPublished"> & {
+}: {
+  tourDetails: Omit<TTour, "gallery" | "isPublished" | "slug" | "mainImage">
   slideshow?: React.ReactNode
   parent?: { title: string; href: string }
   icon?: string
 }) => {
+  const { title, description, duration, location, geo, price, body } =
+    tourDetails
   return (
     <Suspense fallback={<Loading />}>
       <div className="content-wrap">
@@ -72,11 +65,7 @@ const DetailsPageLayout = ({
                   <span className="text-2xl font-bold">${price}</span>
                   <span className="text-muted-foreground text-sm">/person</span>
                 </div>
-                <BookingDialog
-                  price={Number(price)}
-                  title={title}
-                  description={description}
-                />
+                <BookingDialog />
               </div>
             </footer>
           </div>
