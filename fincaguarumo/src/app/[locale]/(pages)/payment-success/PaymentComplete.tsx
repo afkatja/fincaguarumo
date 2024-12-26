@@ -7,8 +7,16 @@ import icons from "@/components/icons"
 import Loading from "../loading"
 import { useSearchParams } from "next/navigation"
 import Title from "../../../../components/Title"
+import AddToCalendar from "../../../../components/AddToCalendar"
+import { useBooking } from "../../BookingProvider"
 
 const { Success, Info, Error } = icons
+
+enum Status {
+  Success = "succeeded",
+  PaymentError = "requires_payment_method",
+  Error = "default",
+}
 
 const STATUS_CONTENT_MAP: Record<
   string,
@@ -41,34 +49,28 @@ export default function CompletePage({ locale }: { locale: string }) {
 
   const stripe = useStripe()
 
+  const { bookingData } = useBooking()
+
   const [status, setStatus] = useState<string | undefined>("default")
 
   const [paymentIntent, setPaymentIntent] = useState<
     Record<string, any> | null | undefined
   >(null)
 
-  const [customerDetails, setCustomerDetails] = useState<
-    Record<string, any> | null | undefined
-  >(null)
-
   React.useEffect(() => {
     if (!stripe || paymentIntent) return
-    const bookingDetails = searchParams.get("bookingDetails")
-    if (bookingDetails) {
-      setCustomerDetails(JSON.parse(bookingDetails))
-    }
     const clientSecret = searchParams.get("payment_intent_client_secret")
 
     if (!clientSecret) return
 
-    stripe
-      .retrievePaymentIntent(clientSecret)
-      .then(({ paymentIntent: intent }) => {
-        if (!intent) return
-        setPaymentIntent(intent)
-
-        setStatus(intent?.status)
-      })
+    const fetchData = async () => {
+      const { paymentIntent: intent } =
+        await stripe.retrievePaymentIntent(clientSecret)
+      if (!intent) return
+      setPaymentIntent(intent)
+      setStatus(intent?.status)
+    }
+    fetchData()
   }, [searchParams, stripe, paymentIntent])
 
   return (
@@ -77,30 +79,50 @@ export default function CompletePage({ locale }: { locale: string }) {
         <PagesLayout
           locale={locale}
           pageName="paymentComplete"
-          title={STATUS_CONTENT_MAP[status].text}
-          subtitle={`You paid $ ${paymentIntent?.amount / 100} for ${customerDetails?.bookingName}`}
+          title={`Dear ${bookingData.customerDetails?.name}, ${STATUS_CONTENT_MAP[status].text}`}
+          subtitle={`You paid $ ${paymentIntent?.amount / 100} for ${bookingData.tourDetails?.title} at ${bookingData.tourDetails.location}`}
           description={paymentIntent?.description}
         >
           <div className="w-11/12 mx-auto prose dark:prose-invert pb-8">
-            <Title title={`Dear ${customerDetails?.name},`} titleClassName="" />
-            <p>
-              Your booking of the{" "}
-              <strong>{customerDetails?.bookingName}</strong> for{" "}
-              {customerDetails?.guests} guests on{" "}
-              <strong>
-                {new Date(customerDetails?.date).toLocaleDateString(undefined, {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </strong>{" "}
-              has succeeded. An email with the confirmation has been sent to{" "}
-              <strong>{customerDetails?.email}</strong>.
-            </p>
-            <p className="flex flex-wrap items-center">
-              {STATUS_CONTENT_MAP[status].icon}
-              Add to calendar
-            </p>
+            <div className="flex">
+              <div className="mt-6">{STATUS_CONTENT_MAP[status].icon}</div>
+              {status === Status.Success && (
+                <p>
+                  Your booking of the{" "}
+                  <strong>{bookingData.tourDetails?.title}</strong> for{" "}
+                  {bookingData.tourDetails?.guests} guests on{" "}
+                  <strong>
+                    {new Date(bookingData.tourDetails?.date).toLocaleDateString(
+                      undefined,
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
+                  </strong>{" "}
+                  has succeeded. An email with the confirmation has been sent to{" "}
+                  <strong>{bookingData.customerDetails?.email}</strong>.
+                </p>
+              )}
+              {status === Status.PaymentError && (
+                <p>Your payment was not successful. Please try again.</p>
+              )}
+              {status === Status.Error && (
+                <p>Something went wrong. Please try again.</p>
+              )}
+            </div>
+
+            <AddToCalendar
+              event={{
+                title: bookingData.tourDetails?.title,
+                description: paymentIntent.description,
+                start: bookingData.tourDetails?.date,
+                duration: bookingData.tourDetails?.duration,
+                location: bookingData.tourDetails?.location,
+                geo: bookingData.tourDetails?.geo,
+              }}
+            />
           </div>
         </PagesLayout>
       )}
