@@ -49,7 +49,7 @@ export default function CompletePage({ locale }: { locale: string }) {
 
   const stripe = useStripe()
 
-  const { bookingData } = useBooking()
+  const { bookingData, setBookingData } = useBooking()
 
   const [status, setStatus] = useState<string | undefined>("default")
 

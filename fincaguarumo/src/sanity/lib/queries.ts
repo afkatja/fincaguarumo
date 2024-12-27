@@ -137,6 +137,7 @@ export const TOUR_QUERY = groq`
   }, 
   price, 
   location, 
+  geo,
   duration,
   body, 
   dialog,

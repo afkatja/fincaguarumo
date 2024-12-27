@@ -131,9 +131,12 @@ const BookingForm = ({
       <div className="grid gap-2">
         <Label htmlFor="guests">Guests</Label>
         <Select
-          onValueChange={val => {
-            setBookingData({ ...bookingData, guests: val })
-          }}
+          onValueChange={val =>
+            setBookingData({
+              ...bookingData,
+              tourDetails: { ...bookingData.tourDetails, guests: val },
+            })
+          }
         >
           <SelectTrigger className="h-auto">
             <SelectValue

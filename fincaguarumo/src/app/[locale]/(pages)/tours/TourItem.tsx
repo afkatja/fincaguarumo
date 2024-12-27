@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import Badge from "@/components/badge"
-import Icon from "../../../../components/Icon"
+import Icon from "@/components/Icon"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import { urlFor } from "@/sanity/lib/image"
 import { titleCase } from "../../../../lib/utils"
@@ -17,6 +17,7 @@ export type TourType = {
   isFeatured?: boolean
   isPublished: boolean
   href: string
+  geo?: { lat: string; lng: string }
 }
 
 const TourItem = ({

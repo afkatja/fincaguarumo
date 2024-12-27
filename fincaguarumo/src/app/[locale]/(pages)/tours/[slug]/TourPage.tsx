@@ -22,6 +22,7 @@ const TourPage = ({ tour }: { tour: TTour }) => {
         location: tour.location,
         body: tour.body,
         guests: "1",
+        geo: tour.geo,
       },
     })
   }, [tour])
