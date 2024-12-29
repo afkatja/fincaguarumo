@@ -1,33 +1,19 @@
 import PagesLayout from "../pagesLayout"
-import { sanityFetch } from "../../../../sanity/lib/client"
-import { PAGE_QUERY } from "../../../../sanity/lib/queries"
 import { SanityDocument } from "sanity"
 import CardItem from "./CardItem"
 import Link from "next/link"
 import Icon from "../../../../components/Icon"
 import Title from "../../../../components/Title"
 
-const people = [
-  {
-    name: "Peter",
-    avatar: "/images/peter.jpg",
-    email: "sdfdsfsdf@sfdsdf.cr",
-    phoneNumber: "123456789",
-  },
-  {
-    name: "Katia",
-    avatar: "/images/katia.jpeg",
-    phoneNumber: "47568667567",
-    email: "htyrytr@sfdsdf.cr",
-  },
-]
-
-export default async function Contact({ locale }: { locale: string }) {
-  const content = await sanityFetch<SanityDocument>({
-    query: PAGE_QUERY,
-    revalidate: 0,
-    params: { pageName: "contact", language: locale },
-  })
+export default function Contact({
+  locale,
+  content,
+  people,
+}: {
+  locale: string
+  content: SanityDocument
+  people: Record<string, any>
+}) {
   return (
     <PagesLayout
       locale={locale}
@@ -36,14 +22,14 @@ export default async function Contact({ locale }: { locale: string }) {
       description={content?.description}
       mainImage={content?.mainImage}
     >
-      <div className="w-11/12 mx-auto grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {people.map(person => (
+      <div className="w-11/12 mx-auto grid gap-4 md:grid-flow-col auto-cols-min justify-center">
+        {people.map((person: Record<string, any>) => (
           <CardItem
             key={crypto.randomUUID()}
             name={person.name}
             avatar={person.avatar}
-            phoneNumber={person.phoneNumber}
-            email={person.email}
+            phoneNumber={btoa(person.phoneNumber)}
+            email={btoa(person.email)}
           />
         ))}
       </div>
