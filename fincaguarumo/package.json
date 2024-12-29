@@ -36,6 +36,7 @@
     "embla-carousel-autoplay": "^8.1.7",
     "embla-carousel-react": "^8.1.5",
     "embla-carousel-reactive-utils": "^8.1.7",
+    "gsap": "^3.12.5",
     "lucide-react": "^0.395.0",
     "media": "^0.2.1",
     "next": "^15.1.0",

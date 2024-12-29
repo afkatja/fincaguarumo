@@ -1,5 +1,4 @@
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
-import { urlFor } from "@/sanity/lib/image"
 
 import { sanityFetch } from "../../sanity/lib/client"
 import {
@@ -7,8 +6,6 @@ import {
   FEATURED_TOURS_QUERY,
   HOME_QUERY,
 } from "../../sanity/lib/queries"
-// import Carousel from "@/components/Carousel"
-import Image from "next/image"
 import TourItem from "./(pages)/tours/TourItem"
 import Video from "../../components/Video"
 import FeaturedContent from "../../components/FeaturedContent"
@@ -20,6 +17,7 @@ import RichText from "../../components/RichText"
 
 export default async function Home({ params }: { params: any }) {
   const { locale } = await params
+
   const content: {
     hero_title: string
     hero_slogan: string
@@ -117,24 +115,24 @@ export default async function Home({ params }: { params: any }) {
           </Link>
         </div>
       </div>
-      <div className="content-wrap" id="intro">
-        <div className="prose prose-lg w-11/12 mx-auto">
+      <div className="content-wrap">
+        <div id="intro" className="prose prose-lg w-11/12 mx-auto">
           {content?.intro_body ? <RichText body={content?.intro_body} /> : null}
         </div>
-      </div>
 
-      <FeaturedContent
-        href="tours"
-        featuredContentTitle={content?.featured_content_title}
-        items={featuredTours}
-      />
-      {featuredPosts && (
         <FeaturedContent
-          href="blog"
-          featuredContentTitle={content?.featured_blog_title}
-          items={featuredPosts}
+          href="tours"
+          featuredContentTitle={content?.featured_content_title}
+          items={featuredTours}
         />
-      )}
+        {featuredPosts && (
+          <FeaturedContent
+            href="blog"
+            featuredContentTitle={content?.featured_blog_title}
+            items={featuredPosts}
+          />
+        )}
+      </div>
     </Suspense>
   )
 }
