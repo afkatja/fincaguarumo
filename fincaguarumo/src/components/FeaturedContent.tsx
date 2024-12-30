@@ -13,7 +13,7 @@ const FeaturedContent = ({
   href: string
 }) => {
   return (
-    <article className="relative z-10 content-wrap">
+    <article className="relative z-10">
       <div className="w-11/12 mx-auto py-5 lg:px-40">
         {featuredContentTitle && (
           <Title titleClassName="text-3xl mt-5" title={featuredContentTitle} />
