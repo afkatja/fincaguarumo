@@ -94,10 +94,16 @@ const BookingForm = ({
         </div>
         <Label htmlFor="date">Date</Label>
         <Popover open={popoverOpen}>
+          {popoverOpen && (
+            <div
+              className="overlay fixed top-0 left-0 w-[100vw] h-[100vh]"
+              onClick={() => setPopoverOpen(false)}
+            ></div>
+          )}
           <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>
             <Button
               variant="outline"
-              className="flex-col items-start w-full h-auto"
+              className="flex-col items-start w-full h-auto dark:bg-zinc-600 outline-none border-none hover:dark:text-zinc-50"
             >
               <span className="font-semibold uppercase text-[0.65rem]">
                 Select Date
