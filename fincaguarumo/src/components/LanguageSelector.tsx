@@ -1,5 +1,5 @@
 "use client"
-import { TransitionFunction, useMemo, useTransition } from "react"
+import { useTransition } from "react"
 import { useParams } from "next/navigation"
 import {
   Select,
@@ -9,7 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useRouter, usePathname } from "../navigation"
-import { i18n } from "../../languages"
 import ReactCountryFlag from "react-country-flag"
 
 import { useTranslations, Translation } from "../lib/translationsUtil"

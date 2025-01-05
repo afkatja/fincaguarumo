@@ -1,0 +1,23 @@
+# Specify the User-agent
+User-agent: *
+
+# Allow all bots to access the main site
+Allow: /
+
+# Block admin pages
+Disallow: /admin/
+Disallow: /login/
+Disallow: /register/
+
+# Block search pages and filter pages if they are not useful for SEO
+Disallow: /studio/
+
+# Allow specific directories if necessary
+Allow: /public/
+
+# Block specific file types
+Disallow: /*.pdf$
+Disallow: /*.doc$
+
+# Specify the location of the sitemap
+# Sitemap: https://www.fincaguarumo.com/api/sitemap.xml

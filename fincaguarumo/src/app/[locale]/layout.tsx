@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next"
+import type { Viewport } from "next"
 
 import { Poppins, Comfortaa, Cabin, Didact_Gothic } from "next/font/google"
 import "../styles/globals.css"
@@ -13,15 +13,10 @@ import { draftMode } from "next/headers"
 import Footer from "../../components/Footer"
 import TransitionProvider from "./providers"
 
-export const metadata: Metadata = {
-  title: "Finca Guarumo",
-  description: "Bosque de aves",
-  icons: {
-    icon: "/favicon/favicon.ico",
-    apple: "/favicon/apple-touch-icon.png",
-    shortcut: "/favicon/safari-pinned-tab.svg",
-  },
-}
+import { metadata } from "./meta"
+import { i18n } from "../../../languages"
+
+export const meta = metadata
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -66,6 +61,8 @@ export default async function Layout({
   params?: any
 }>) {
   const { locale = "en" } = (await params) || {}
+  if (!i18n.languages.map(lang => lang.id).includes(locale)) return null
+
   const draft = await draftMode()
   return (
     <html lang={locale}>
