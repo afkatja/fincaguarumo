@@ -14,7 +14,7 @@ const NavItem = ({ navItem }: { navItem: { href: string; title: string } }) => {
         </span>
       ) : (
         <Link
-          href={`/${navItem.href}`}
+          href={navItem.href}
           className="lowercase text-sm fancy-underline hover:text-guarumo-accent dark:hover:text-zinc-50 text-guarumo-primary dark:text-zinc-50 font-medium"
           prefetch={true}
         >

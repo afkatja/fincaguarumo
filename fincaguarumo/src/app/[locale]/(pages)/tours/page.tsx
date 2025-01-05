@@ -16,7 +16,7 @@ const Tours = async ({ params }: { params: any }) => {
   const tours = toursContent
     .filter((tour: TourType) => tour.isPublished)
     .map((tour: Omit<TourType, "href">) => ({
-      href: `/tours/${tour.slug.current}`,
+      href: `/${locale}/tours/${tour.slug.current}`,
       ...tour,
     }))
 
