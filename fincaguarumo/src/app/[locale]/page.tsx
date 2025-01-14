@@ -89,7 +89,6 @@ export default async function Home({ params }: { params: any }) {
   return (
     <Suspense fallback={<Loading />}>
       <div className="parallax-bg relative">
-        <Video
         {content?.mediaUrl && (
           <Video
             src={content?.mediaUrl?.url}
