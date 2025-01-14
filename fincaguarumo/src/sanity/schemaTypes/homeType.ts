@@ -33,6 +33,11 @@ export const homeType = defineType({
       type: "blockContent",
     }),
     defineField({
+      name: "background_media",
+      type: "file",
+      title: "Video",
+    }),
+    defineField({
       name: "featured_content_title",
       type: "string",
     }),

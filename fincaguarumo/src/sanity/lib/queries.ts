@@ -180,8 +180,15 @@ export const ABOUT_QUERY = groq`
 
 export const HOME_QUERY = groq`
   *[_type=='home' && language == $language][0] {
-    hero_title, hero_slogan, subtitle, language, featured_content_title,
-    featured_blog_title, slug, intro_body[] {
+    hero_title, 
+    hero_slogan, 
+    subtitle, 
+    language, 
+    featured_content_title,
+    featured_blog_title, 
+    slug, 
+    'mediaUrl': background_media.asset->{url}, 
+    intro_body[] {
       ...,
       markDefs[] {
         ...,
