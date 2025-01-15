@@ -94,7 +94,7 @@ export default async function Home({ params }: { params: any }) {
             src={content?.mediaUrl?.url}
             autoPlay
             loop
-            // muted
+            muted
             className="object-cover w-full h-full delay-2000 opacity-0 transition-opacity duration-700 animate-fade"
           />
         )}
