@@ -25,6 +25,7 @@ export default async function Home({ params }: { params: any }) {
     featured_content_title?: string
     featured_blog_title?: string
     intro_body?: any
+    mediaUrl?: any
   } = await sanityFetch({
     query: HOME_QUERY,
     params: { language: locale },
@@ -88,13 +89,15 @@ export default async function Home({ params }: { params: any }) {
   return (
     <Suspense fallback={<Loading />}>
       <div className="parallax-bg relative">
-        <Video
-          src="/assets/sunrise.m4v"
-          autoPlay
-          loop
-          muted
-          className="object-cover w-full h-full delay-2000 opacity-0 transition-opacity duration-700 animate-fade"
-        />
+        {content?.mediaUrl && (
+          <Video
+            src={content?.mediaUrl?.url}
+            autoPlay
+            loop
+            muted
+            className="object-cover w-full h-full delay-2000 opacity-0 transition-opacity duration-700 animate-fade"
+          />
+        )}
         <div className="hero text-center text-zinc-50 drop-shadow-sharp">
           <h1 className="text-6xl leading-normal font-black opacity-0 transition-opacity duration-700 animate-fade delay-500">
             {content?.hero_title}
