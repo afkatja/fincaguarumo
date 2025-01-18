@@ -58,11 +58,7 @@
 
 @media (prefers-color-scheme: dark) {
   .main-header {
-    background: radial-gradient(
-      circle at center top,
-      color(from var(--guarumo-sunset) srgb r g b / 0.6),
-      color(from var(--guarumo-sky) srgb r g b / 0.6) 40%
-    );
+    background: var(--gradient);
   }
   .logo-link::before {
     background-image: url(/images/logo-single-white.svg);

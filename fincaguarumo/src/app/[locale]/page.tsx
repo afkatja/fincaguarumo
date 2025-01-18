@@ -14,6 +14,7 @@ import Link from "next/link"
 import { Suspense } from "react"
 import Loading from "./(pages)/loading"
 import RichText from "../../components/RichText"
+import VideoOpenZip from "./components/VideoOpenZip"
 
 export default async function Home({ params }: { params: any }) {
   const { locale } = await params
@@ -87,55 +88,59 @@ export default async function Home({ params }: { params: any }) {
     }))
 
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="parallax-bg relative">
-        {content?.mediaUrl && (
-          <Video
-            src={content?.mediaUrl?.url}
-            autoPlay
-            loop
-            muted
-            className="object-cover w-full h-full delay-2000 opacity-0 transition-opacity duration-700 animate-fade"
-          />
-        )}
-        <div className="hero text-center text-zinc-50 drop-shadow-sharp">
-          <h1 className="text-6xl leading-normal font-black opacity-0 transition-opacity duration-700 animate-fade delay-500">
-            {content?.hero_title}
-          </h1>
-          <h2 className="text-3xl mb-5 font-semibold opacity-0 transition-opacity duration-700 delay-700 animate-fade">
-            {content?.hero_slogan}
-          </h2>
-          <h3 className="text-xl leading-normal opacity-0 transition-opacity duration-700 delay-1000 animate-fade">
-            {content?.subtitle}
-          </h3>
+    <VideoOpenZip>
+      <Suspense fallback={<Loading />}>
+        <div className="parallax-bg relative">
+          {content?.mediaUrl && (
+            <Video
+              src={content?.mediaUrl?.url}
+              autoPlay
+              loop
+              muted
+              className="object-cover w-full h-full delay-2000 opacity-0 transition-opacity duration-700 animate-fade"
+            />
+          )}
+          <div className="hero text-center text-zinc-50 drop-shadow-sharp">
+            <h1 className="text-6xl leading-normal font-black opacity-0 transition-opacity duration-700 animate-fade delay-500">
+              {content?.hero_title}
+            </h1>
+            <h2 className="text-3xl mb-5 font-semibold opacity-0 transition-opacity duration-700 delay-700 animate-fade">
+              {content?.hero_slogan}
+            </h2>
+            <h3 className="text-xl leading-normal opacity-0 transition-opacity duration-700 delay-1000 animate-fade">
+              {content?.subtitle}
+            </h3>
+          </div>
+          <div className="animate-slide transition-transform duration-1000 delay-1000">
+            <Link
+              href="#intro"
+              className="fade-from-view absolute bottom-8 left-1/2 -translate-x-1/2"
+            >
+              <ArrowDown className="animate-bounce stroke-zinc-50" />
+            </Link>
+          </div>
         </div>
-        <div className="animate-slide transition-transform duration-1000 delay-1000">
-          <Link
-            href="#intro"
-            className="fade-from-view absolute bottom-8 left-1/2 -translate-x-1/2"
-          >
-            <ArrowDown className="animate-bounce stroke-zinc-50" />
-          </Link>
-        </div>
-      </div>
-      <div className="content-wrap">
-        <div id="intro" className="prose prose-lg w-11/12 mx-auto">
-          {content?.intro_body ? <RichText body={content?.intro_body} /> : null}
-        </div>
+        <div className="content-wrap">
+          <div id="intro" className="prose prose-lg w-11/12 mx-auto">
+            {content?.intro_body ? (
+              <RichText body={content?.intro_body} />
+            ) : null}
+          </div>
 
-        <FeaturedContent
-          href="tours"
-          featuredContentTitle={content?.featured_content_title}
-          items={featuredTours}
-        />
-        {featuredPosts && (
           <FeaturedContent
-            href="blog"
-            featuredContentTitle={content?.featured_blog_title}
-            items={featuredPosts}
+            href="tours"
+            featuredContentTitle={content?.featured_content_title}
+            items={featuredTours}
           />
-        )}
-      </div>
-    </Suspense>
+          {featuredPosts && (
+            <FeaturedContent
+              href="blog"
+              featuredContentTitle={content?.featured_blog_title}
+              items={featuredPosts}
+            />
+          )}
+        </div>
+      </Suspense>
+    </VideoOpenZip>
   )
 }

@@ -62,6 +62,11 @@
     --accent: 204, 80%, 16%;
     --popover: 204, 80%, 16%;
     --popover-foreground: 0, 0%, 98%;
+    --gradient: radial-gradient(
+      circle at center top,
+      color(from var(--guarumo-sunset) srgb r g b / 0.6),
+      color(from var(--guarumo-sky) srgb r g b / 0.6) 40%
+    );
   }
 }
 
