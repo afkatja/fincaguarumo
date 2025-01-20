@@ -90,12 +90,12 @@ export default async function Home({ params }: { params: any }) {
   return (
     <VideoOpenZip>
       <Suspense fallback={<Loading />}>
-        <div className="parallax-bg relative">
+        <div className="parallax-bg relative w-full h-screen">
           {content?.mediaUrl && (
             <Video
               src={content?.mediaUrl?.url}
               autoPlay
-              loop
+              loop={false}
               muted
               className="object-cover w-full h-full delay-2000 opacity-0 transition-opacity duration-700 animate-fade"
             />

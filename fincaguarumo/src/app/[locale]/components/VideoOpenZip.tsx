@@ -34,7 +34,7 @@ const VideoOpenZip = ({ children }: { children: React.ReactNode }) => {
             videoContainer,
             {
               duration: 1,
-              height: "520px",
+              height: "100%",
               onComplete: () => {
                 video.play()
               },
@@ -86,14 +86,18 @@ const VideoOpenZip = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <div
-        className={`relative w-screen h-[520px] overflow-hidden bg-gradient-dark`}
+        className={`relative w-screen h-[calc(100dvh-100px)] overflow-hidden bg-gradient-dark`}
         ref={animationContainerRef}
       >
         <div
-          className="absolute inset-0 z-10 h-0 w-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden"
+          className="absolute inset-0 z-10 h-0 w-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-zinc-950"
           ref={videoContainerRef}
         >
-          <video ref={videoRef} className="w-full object-cover" muted>
+          <video
+            ref={videoRef}
+            className="w-11/12 mx-auto object-contain -my-12"
+            muted
+          >
             <source src="/assets/title.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
