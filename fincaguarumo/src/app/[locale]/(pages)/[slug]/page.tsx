@@ -13,6 +13,9 @@ type Content = {
   body: any
   slug: { current: string }
   isPublished: boolean
+  slideshow: {
+    images: SanityImageObject[]
+  }
 }
 const Page = async ({ params }: { params: any }) => {
   const { locale, slug } = await params
@@ -31,6 +34,7 @@ const Page = async ({ params }: { params: any }) => {
       title={content?.title}
       description={content?.description}
       mainImage={content?.mainImage}
+      images={content?.slideshow?.images}
     >
       <RichText body={content?.body} />
     </Layout>
