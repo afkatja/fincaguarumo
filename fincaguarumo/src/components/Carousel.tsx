@@ -54,9 +54,9 @@ const ImgSlider = ({
           <CarouselPrevious />
           <CarouselNext />
         </>
-      ) : (
+      ) : images.length > 1 ? (
         <CarouselDot />
-      )}
+      ) : null}
     </Carousel>
   )
 }
