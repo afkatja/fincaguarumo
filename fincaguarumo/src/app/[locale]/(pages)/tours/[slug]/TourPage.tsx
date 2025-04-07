@@ -1,6 +1,6 @@
 "use client"
 import React from "react"
-import Slideshow from "./Slideshow"
+import Slideshow from "@/components/Slideshow"
 import DetailsPageLayout from "../../DetailsPageLayout"
 import { TTour } from "../data"
 import { titleCase } from "../../../../../lib/utils"
@@ -8,13 +8,14 @@ import { notFound } from "next/navigation"
 
 const TourPage = ({ tour }: { tour: TTour }) => {
   if (!tour || !tour.isPublished) notFound()
+  console.log({ images: tour.slideshow.images })
 
   return (
     <DetailsPageLayout
       title={tour.title}
       description={tour.description}
       slideshow={
-        <Slideshow images={tour?.gallery?.images?.images ?? [tour.mainImage]} />
+        <Slideshow images={tour?.slideshow?.images ?? [tour.mainImage]} />
       }
       price={tour.price ?? "0"}
       location={tour.location ?? ""}
