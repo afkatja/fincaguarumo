@@ -2,10 +2,11 @@ import { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Finca Guarumo",
+  metadataBase: new URL("https://fincaguarumo.com"),
   description:
     "Bosque de aves - A sustainable jungle farm in Costa Rica offering an eco-villa, rural tours, and wildlife experiences near Corcovado.",
   keywords:
-    "birdwatching, hiking, rural tours, jungle, aves, naturaleza, nature, eco-tourism, sustainability, sostenibilidad, sustainable tourism, Corcovado, Osa Peninsula, Peninsula de Osa, Costa Rica",
+    "birdwatching, hiking, rural tours, jungle, aves, naturaleza, nature, eco-tourism, sustainability, sostenibilidad, sustainable tourism, Corcovado, Osa Peninsula, Peninsula de Osa, Costa Rica, Villa Bruno, eco-luxury, luxury, sustainable travel, travel, ecoturismo, turismo sostenible, turismo responsable, turismo rural, finca, guarumo, finca guarumo, finca guarumo costa rica, finca guarumo corcovado",
   icons: {
     icon: "/favicon/icon.ico",
     apple: "/favicon/apple-touch-icon.png",
