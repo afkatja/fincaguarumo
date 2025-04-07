@@ -1,10 +1,11 @@
+"use client"
 import React, { Suspense, useState } from "react"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import Carousel from "@/components/Carousel"
 import { Button } from "@/components/ui/button"
 import Icon from "@/components/Icon"
-import Loading from "../../loading"
-import { urlFor } from "../../../../../sanity/lib/image"
+import Loading from "../app/[locale]/(pages)/loading"
+import { urlFor } from "../sanity/lib/image"
 
 const Slideshow = ({ images: imagesProp }: { images: SanityImageObject[] }) => {
   const [isExpanded, setIsExpanded] = useState(false)
