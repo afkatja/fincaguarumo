@@ -10,6 +10,8 @@ export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][
 
 export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && language == $language][0] {
   title, subtitle, description, mainImage, body, language, slug, isPublished,
+  slideshow->{images}
+  , 
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -138,9 +140,7 @@ export const TOUR_QUERY = groq`
   slug, 
   description, 
   mainImage, isPublished,
-  "gallery": {
-    images->{images}
-  }, 
+  slideshow->{images}, 
   price, 
   location, 
   duration,

@@ -52,6 +52,11 @@ export const pageType = defineType({
       ],
     }),
     defineField({
+      name: "slideshow",
+      type: "reference",
+      to: [{ type: "gallery" }],
+    }),
+    defineField({
       name: "categories",
       type: "array",
       of: [{ type: "reference", to: { type: "category" } }],
