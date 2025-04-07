@@ -8,7 +8,6 @@ import { notFound } from "next/navigation"
 
 const TourPage = ({ tour }: { tour: TTour }) => {
   if (!tour || !tour.isPublished) notFound()
-  console.log({ images: tour.slideshow.images })
 
   return (
     <DetailsPageLayout

@@ -6,7 +6,7 @@ import { TransitionRouter, useTransitionState } from "next-transition-router"
 const TransitionProvider = ({ children }: { children: React.ReactNode }) => {
   const { stage, isReady } = useTransitionState()
 
-  console.log({ stage, isReady })
+  // console.log({ stage, isReady })
 
   return (
     <TransitionRouter
