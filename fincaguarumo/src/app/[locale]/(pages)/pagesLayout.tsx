@@ -34,7 +34,6 @@ const PageLayout = async ({
   [props: string]: any
 }) => {
   if (!pageName) notFound()
-  if (images) console.log(shuffle(images))
 
   return (
     <Suspense fallback={<Loading />}>
@@ -65,13 +64,15 @@ const PageLayout = async ({
             className="mb-5"
           />
         )} */}
-        <Slideshow
-          images={
-            images
-              ? (shuffle(images) as unknown as SanityImageObject[])
-              : [mainImage]
-          }
-        />
+        {(mainImage || images) && (
+          <Slideshow
+            images={
+              images
+                ? (shuffle(images) as unknown as SanityImageObject[])
+                : [mainImage]
+            }
+          />
+        )}
         <section className="w-11/12 py-5 lg:py-8 prose lg:prose-lg mx-auto">
           <h3 className="text-guarumo-primary dark:text-zinc-50">
             {description}
