@@ -10,11 +10,11 @@ import { draftMode } from "next/headers"
 import Footer from "../../components/Footer"
 import TransitionProvider from "./providers"
 
-import { metadata } from "./meta"
+import { metadata as meta } from "./meta"
 import { i18n } from "../../../languages"
 import Header from "../../components/header"
 
-export const meta = metadata
+export const metadata = meta
 
 export const viewport: Viewport = {
   width: "device-width",
