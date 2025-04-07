@@ -53,3 +53,11 @@ export async function isUniqueOtherThanLanguage(
 
 export const titleCase = (str: string) =>
   str.charAt(0).toUpperCase() + str.substring(1).toLowerCase()
+
+export const shuffle = (array: any[]) => {
+  let arr = array
+    .map(value => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value)
+  return arr
+}
