@@ -1,12 +1,14 @@
 import type { Viewport } from "next"
+import { draftMode } from "next/headers"
+import { NextIntlClientProvider } from "next-intl"
+import { VisualEditing } from "next-sanity"
 
 import { Poppins, Comfortaa, Cabin, Didact_Gothic } from "next/font/google"
+
 import "../styles/globals.css"
 import "../styles/styles.css"
 import { locales } from "../../config"
 
-import { VisualEditing } from "next-sanity"
-import { draftMode } from "next/headers"
 import Footer from "../../components/Footer"
 import TransitionProvider from "./providers"
 
@@ -47,7 +49,7 @@ const didact = Didact_Gothic({
   variable: "--font-didact",
   weight: "400",
 })
-export async function generateStaticParams() {
+export function generateStaticParams() {
   return locales.map(locale => ({ locale }))
 }
 
@@ -71,22 +73,24 @@ export default async function Layout({
             : `${poppins.variable} ${cabin.variable}`
         }
       >
-        <TransitionProvider>
-          <div className="flex flex-col min-h-[80dvh] animation-container">
-            <Header locale={locale} />
-            <main className="flex flex-col flex-1">{children}</main>
-            {draft?.isEnabled && (
-              <a
-                className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
-                href="/api/draft-mode/disable"
-              >
-                Disable preview mode
-              </a>
-            )}
-            {draft?.isEnabled && <VisualEditing />}
-          </div>
-        </TransitionProvider>
-        <Footer />
+        <NextIntlClientProvider locale={locale}>
+          <TransitionProvider>
+            <div className="flex flex-col min-h-[80dvh] animation-container">
+              <Header locale={locale} />
+              <main className="flex flex-col flex-1">{children}</main>
+              {draft?.isEnabled && (
+                <a
+                  className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
+                  href="/api/draft-mode/disable"
+                >
+                  Disable preview mode
+                </a>
+              )}
+              {draft?.isEnabled && <VisualEditing />}
+            </div>
+          </TransitionProvider>
+          <Footer />
+        </NextIntlClientProvider>
       </body>
     </html>
   )
