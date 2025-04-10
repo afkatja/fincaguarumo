@@ -1,10 +1,10 @@
-import { QueryParams } from "next-sanity"
+// import { QueryParams } from "next-sanity"
 import {
   POST_QUERYResult,
-  POSTS_QUERYResult,
+  // POSTS_QUERYResult,
 } from "../../../../../sanity.types"
 import { client, sanityFetch } from "../../../../sanity/lib/client"
-import { POST_QUERY, POSTS_QUERY } from "../../../../sanity/lib/queries"
+import { POST_QUERY } from "../../../../sanity/lib/queries"
 import { notFound } from "next/navigation"
 import { Post } from "./Post"
 
@@ -31,5 +31,11 @@ export default async function Page({ params }: { params: any }) {
 
   if (!post?.isPublished) notFound()
 
-  return <Post post={post} parent={{ title: "Blog", href: "blog" }} locale={locale} />
+  return (
+    <Post
+      post={post}
+      parent={{ title: "Blog", href: "blog" }}
+      locale={locale}
+    />
+  )
 }

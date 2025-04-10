@@ -1,10 +1,10 @@
-import Image from "next/image"
+// import Image from "next/image"
 
-import { urlFor } from "@/sanity/lib/image"
+// import { urlFor } from "@/sanity/lib/image"
 
 import { POST_QUERYResult } from "../../../../../sanity.types"
 import Breadcrumbs from "../../../../components/Breadcrumbs"
-import Title from "../../../../components/Title"
+// import Title from "../../../../components/Title"
 import RichText from "../../../../components/RichText"
 import PagesLayout from "../../(pages)/pagesLayout"
 
@@ -28,7 +28,7 @@ export function Post({
     >
       {parent && (
         <Breadcrumbs
-          className="max-w-[60rem] mx-auto"
+          className="max-w-[60rem] prose w-11/12 lg:prose-lg mx-auto"
           title={title as string}
           parent={parent}
         />
