@@ -260,8 +260,18 @@ h6,
   }
 }
 
+img.mt-0 + .portable-text-p {
+  margin-top: 0;
+  grid-column: 1;
+}
+
 .portable-text-p:has(+ h2),
-.portable-text-p:last-child {
+.portable-text-p:has(+ h3),
+.portable-text-p ~ h2,
+.portable-text-p ~ h3,
+.portable-text-p ~ ul,
+.portable-text-p:has(+ ul),
+.portable-text-p:last-child:not(:has(+ img)) {
   grid-column: span 2;
 }
 

@@ -7,6 +7,7 @@ import resolveConfig from "tailwindcss/resolveConfig"
 import theme from "../../tailwind.config"
 import { urlFor } from "../sanity/lib/image"
 import Link from "next/link"
+import ExternalLink from "./icons/ExternalLink"
 
 const RichText = ({ body, icon }: { body: any; icon?: string }) => {
   if (!body) return
@@ -57,6 +58,24 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
           {children}
         </Link>
       ),
+      link: ({ value, children }) => {
+        const { blank, href } = value
+        if (!href) return null
+
+        const target = blank ? "_blank" : "_self"
+        const rel = blank ? "noopener noreferrer" : undefined
+        return (
+          <Link
+            href={href}
+            target={target}
+            rel={rel}
+            className="fancy-underline dark:text-zinc-100"
+          >
+            <ExternalLink />
+            {children}
+          </Link>
+        )
+      },
       strong: ({ value, children }) => (
         <strong className="dark:text-zinc-100 font-bold">{children}</strong>
       ),
