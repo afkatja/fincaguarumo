@@ -9,7 +9,7 @@ export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][
 }`
 
 export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && language == $language][0] {
-  title, subtitle, description, mainImage, body, language, slug, isPublished,
+  title, subtitle, description, mainImage, body, language, slug, isPublished, showBookingOptions,
   slideshow->{images}
   , 
     "translations": *[
@@ -22,7 +22,8 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
         subtitle,
         mainImage,
         slug, 
-        body
+        body,
+        showBookingOptions
       })
     }
 }`

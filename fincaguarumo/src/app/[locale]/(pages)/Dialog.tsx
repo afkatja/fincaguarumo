@@ -11,24 +11,14 @@ import {
   // DialogClose,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select"
+
 import { Button } from "@/components/ui/button"
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import Icon from "@/components/Icon"
+import Datepicker from "@/components/ui/datepicker"
+import SelectBox from "../../../components/ui/selectBox"
 
 const BookingDialog = ({
   title,
@@ -56,54 +46,28 @@ const BookingDialog = ({
         <div>
           <form className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="date">Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="flex-col items-start w-full h-auto"
-                  >
-                    <span className="font-semibold uppercase text-[0.65rem]">
-                      Select Date
-                    </span>
-                    <span className="font-normal">
-                      {new Date().toLocaleDateString(undefined, {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="p-0 max-w-[276px]">
-                  <Calendar />
-                </PopoverContent>
-              </Popover>
+              <Datepicker label="Date" placeholder="Select date" />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="guests">Guests</Label>
-              <Select onValueChange={val => setParticipants(Number(val))}>
-                <SelectTrigger className="h-auto">
-                  <SelectValue
-                    placeholder={
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold uppercase text-[0.65rem]">
-                          Guests
-                        </span>
-                        <span className="font-normal">
-                          {participants} adults
-                        </span>
-                      </div>
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 adult</SelectItem>
-                  <SelectItem value="2">2 adults</SelectItem>
-                  <SelectItem value="3">2 adults + 1 child</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+              <SelectBox
+                label="Guests"
+                placeholder={
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold uppercase text-[0.65rem]">
+                      Guests
+                    </span>
+                    <span className="font-normal">{participants} adults</span>
+                  </div>
+                }
+                onValueChange={val => setParticipants(Number(val))}
+                values={[
+                  { val: "1", text: "1 adult" },
+                  { val: "2", text: "2 adults" },
+                  { val: "3", text: "3 adults" },
+                  { val: "4", text: "4 adults" },
+                  { val: "other", text: "Other" },
+                ]}
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="payment">Payment Method</Label>
