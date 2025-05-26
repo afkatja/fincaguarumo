@@ -31,6 +31,7 @@ const BookingDialog = ({
 }) => {
   const [open, setOpen] = useState(false)
   const [participants, setParticipants] = useState(1)
+  const [selectedDate, setSelectedDate] = useState(new Date())
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -46,7 +47,12 @@ const BookingDialog = ({
         <div>
           <form className="grid gap-4">
             <div className="grid gap-2">
-              <Datepicker label="Date" placeholder="Select date" />
+              <Datepicker
+                selectedDate={selectedDate}
+                onSelectDate={date => setSelectedDate(date)}
+                label="Date"
+                placeholder="Select date"
+              />
             </div>
             <div className="grid gap-2">
               <SelectBox
