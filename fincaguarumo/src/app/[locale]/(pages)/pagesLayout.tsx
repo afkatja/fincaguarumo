@@ -73,7 +73,7 @@ const PageLayout = async ({
             }
           />
         )}
-        <section className="w-11/12 py-5 lg:py-8 prose lg:prose-lg mx-auto">
+        <section className="w-11/12 pt-5 lg:py-8 prose lg:prose-lg mx-auto">
           <h3 className="text-guarumo-primary dark:text-zinc-50">
             {description}
           </h3>

@@ -33,7 +33,7 @@ const ImgSlider = ({
     <Carousel
       {...props}
       plugins={[Autoplay({})]}
-      className={`w-11/12 mx-auto ${props.className}`}
+      className={`w-11/12 mx-auto ${props.className} max-h-[500px]`}
     >
       <CarouselContent>
         {images.slice(0, 12).map((img, i) => (
