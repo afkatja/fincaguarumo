@@ -32,7 +32,15 @@ const GalleryPage = async ({ params }: { params: any }) => {
     })
 
   const images = gallery?.images.map(item => ({
-    src: urlFor(item).height(700).url(),
+    src: urlFor(item)
+      .width(2016)
+      .height(1134)
+      .fit("scale")
+      .quality(100)
+      .format("webp")
+      .url(),
+    width: 2016,
+    height: 1134,
     item,
     alt: "",
     ...item,
