@@ -46,9 +46,10 @@ export async function sanityFetch<QueryResponse>({
         token: token,
         perspective: "previewDrafts",
         stega: true,
+        cache: "no-store",
       } satisfies QueryOptions)),
     next: {
-      revalidate: dynamicRevalidate,
+      revalidate: 0, //dynamicRevalidate,
       tags,
     },
   })
