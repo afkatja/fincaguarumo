@@ -26,17 +26,14 @@ const BookingDialog = () => {
     setPaymentStep(false)
   }
 
-  // const getFormData = () => {
-  //   return Object.keys(fields).reduce(
-  //     (formData, name) => ({
-  //       ...formData,
-  //       [name]: fields[name],
-  //     }),
-  //     {}
-  //   )
-  // }
+  if (!bookingData) {
+    return null
+  }
 
-  const { title, description } = bookingData.tourDetails
+  const title = bookingData?.tourDetails?.title ?? "Tour Details"
+  const description =
+    bookingData?.tourDetails?.description ??
+    "Please fill in your booking details below."
 
   return (
     <Dialog open={open} onOpenChange={() => closeHandler()} key="order-dialog">

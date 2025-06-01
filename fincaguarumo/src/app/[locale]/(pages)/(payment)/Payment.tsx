@@ -4,6 +4,7 @@ import { loadStripe } from "@stripe/stripe-js"
 import { Elements } from "@stripe/react-stripe-js"
 import CheckoutForm from "./CheckoutForm"
 import { useBooking } from "../../BookingProvider"
+import Loading from "../loading"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 const stripePromise = loadStripe(publishableKey)
@@ -11,6 +12,7 @@ const stripePromise = loadStripe(publishableKey)
 const Payment = () => {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const { bookingData } = useBooking()
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,16 +50,16 @@ const Payment = () => {
       },
     },
   }
-  console.log(clientSecret)
 
-  if (!clientSecret) return null
   const options = {
-    clientSecret,
+    clientSecret: clientSecret ?? undefined,
     appearance,
   }
   return (
     <>
-      {clientSecret && (
+      {!clientSecret ? (
+        <Loading />
+      ) : (
         <Elements options={options} stripe={stripePromise} key={clientSecret}>
           <CheckoutForm />
         </Elements>

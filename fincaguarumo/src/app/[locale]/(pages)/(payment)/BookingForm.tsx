@@ -61,7 +61,7 @@ const BookingForm = ({
                 },
               })
             }
-            className="w-full mt-2 p-1 pl-4 rounded-sm outline outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer"
+            className="w-full mt-2 p-1 pl-4 rounded-sm outline outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900"
           />
           <span className="mt-2 hidden text-sm text-destructive peer-[&:not(:placeholder-shown):not(:focus):invalid]:block">
             Please enter your name
@@ -85,7 +85,7 @@ const BookingForm = ({
               })
             }
             placeholder="jane@doe.com"
-            className="w-full mt-2 p-1 pl-4 rounded-sm outline outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer"
+            className="w-full mt-2 p-1 pl-4 rounded-sm outline outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900"
             pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
           />
           <span className="mb-2 hidden text-sm text-destructive peer-[&:not(:placeholder-shown):not(:focus):invalid]:block">
@@ -116,6 +116,7 @@ const BookingForm = ({
           <PopoverContent className="p-0 max-w-[276px]">
             <Calendar
               mode="single"
+              disabled={(date: Date) => date < new Date()}
               onSelect={(_, selectedDay) => {
                 setBookingData({
                   ...bookingData,

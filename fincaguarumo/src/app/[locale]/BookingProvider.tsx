@@ -39,7 +39,6 @@ export const BookingProvider = ({
   })
 
   useEffect(() => {
-    console.log("booking provider", bookingData)
     if (bookingData) {
       localStorage.setItem("bookingData", JSON.stringify(bookingData))
     }
