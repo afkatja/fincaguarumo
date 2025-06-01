@@ -1,24 +1,24 @@
 import type { Viewport } from "next"
+import { draftMode } from "next/headers"
+import { NextIntlClientProvider } from "next-intl"
+import { VisualEditing } from "next-sanity"
 
 import { Poppins, Comfortaa, Cabin, Didact_Gothic } from "next/font/google"
+
 import "../styles/globals.css"
 import "../styles/styles.css"
 import { locales } from "../../config"
 
-import React, { Suspense } from "react"
-
-import Header from "../../components/header"
-import { VisualEditing } from "next-sanity"
-import { draftMode } from "next/headers"
 import Footer from "../../components/Footer"
 import TransitionProvider from "./providers"
 
 import { BookingProvider } from "./BookingProvider"
 
-import { metadata } from "./meta"
+import { metadata as meta } from "./meta"
 import { i18n } from "../../../languages"
+import Header from "../../components/header"
 
-export const meta = metadata
+export const metadata = meta
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -75,27 +75,28 @@ export default async function Layout({
             : `${poppins.variable} ${cabin.variable}`
         }
       >
-        <TransitionProvider>
-          <div className="flex flex-col min-h-[80dvh] animation-container">
-            <Suspense>
+        <NextIntlClientProvider locale={locale}>
+          <TransitionProvider>
+            <div className="flex flex-col min-h-[80dvh] animation-container">
               <Header locale={locale} />
-            </Suspense>
-            <BookingProvider>
-              <main className="flex-1 flex flex-col">
-                {draft?.isEnabled && (
-                  <a
-                    className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
-                    href="/api/draft-mode/disable"
-                  >
-                    Disable preview mode
-                  </a>
-                )}
-                {children} {draft?.isEnabled && <VisualEditing />}
-              </main>
-            </BookingProvider>
-          </div>
-        </TransitionProvider>
-        <Footer />
+
+              <BookingProvider>
+                <main className="flex-1 flex flex-col">
+                  {draft?.isEnabled && (
+                    <a
+                      className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
+                      href="/api/draft-mode/disable"
+                    >
+                      Disable preview mode
+                    </a>
+                  )}
+                  {children} {draft?.isEnabled && <VisualEditing />}
+                </main>
+              </BookingProvider>
+            </div>
+          </TransitionProvider>
+          <Footer />
+        </NextIntlClientProvider>
       </body>
     </html>
   )

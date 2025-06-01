@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     })
     return response
   } catch (error) {
-    console.log("sitemap error:", error)
+    console.error("sitemap error:", error)
 
     return NextResponse.json(
       { error: "Failed to generate sitemap" },

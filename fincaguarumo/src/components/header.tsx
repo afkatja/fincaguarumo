@@ -8,7 +8,13 @@ import { i18n } from "../../languages"
 import navigation from "../lib/navigation"
 import Logo from "./Logo"
 
-const Header = async ({ locale }: { locale: string }) => {
+const Header = async ({
+  locale,
+  ...props
+}: {
+  locale: string
+  [prop: string]: any
+}) => {
   const languages = i18n.languages.map(lang => {
     return {
       ...lang,
@@ -20,7 +26,10 @@ const Header = async ({ locale }: { locale: string }) => {
   const nav = await navigation({ locale })
   const { navItems, main: mainNav, utils: utilsNav } = nav || {}
   return (
-    <header className="main-header bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+    <header
+      className="main-header bg-background/80 backdrop-blur-sm sticky top-0 z-50"
+      {...props}
+    >
       <div className="flex items-center justify-between nav w-11/12 mx-auto">
         <Logo />
         <MainNav className="mx-5" navItems={mainNav} />

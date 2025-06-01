@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect } from "react"
-import Slideshow from "./Slideshow"
+import Slideshow from "@/components/Slideshow"
 import DetailsPageLayout from "../../DetailsPageLayout"
 import { TTour } from "../data"
 import { titleCase } from "../../../../../lib/utils"
@@ -38,7 +38,7 @@ const TourPage = ({ tour }: { tour: TTour }) => {
         body: tour.body,
       }}
       slideshow={
-        <Slideshow images={tour?.gallery?.images?.images ?? [tour.mainImage]} />
+        <Slideshow images={tour?.slideshow?.images ?? [tour.mainImage]} />
       }
       parent={{ title: "Tours", href: "tours" }}
       icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}

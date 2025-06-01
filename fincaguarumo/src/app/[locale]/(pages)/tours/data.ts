@@ -5,7 +5,7 @@ export type TTour = {
   slug?: { current: string }
   description: string
   mainImage?: SanityImageObject
-  gallery: { images: { images: SanityImageObject[] } }
+  slideshow: { images: SanityImageObject[] }
   price?: string
   location?: string
   geo?: { lat: number; lon: number }

@@ -10,7 +10,7 @@ const playPauseVideo = (videoElement: HTMLVideoElement) => {
   const callback: IntersectionObserverCallback = entries => {
     entries.forEach(entry => {
       const visiblePct = `${Math.floor(entry.intersectionRatio * 100)}%`
-      console.log({ entry, visiblePct })
+      // console.log({ entry, visiblePct })
       if (entry.isIntersecting) {
         // @ts-expect-error
         entry.target.play()

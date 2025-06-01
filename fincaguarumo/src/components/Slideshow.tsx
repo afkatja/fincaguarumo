@@ -1,32 +1,45 @@
+"use client"
 import React, { Suspense, useState } from "react"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import Carousel from "@/components/Carousel"
 import { Button } from "@/components/ui/button"
 import Icon from "@/components/Icon"
-import Loading from "../../loading"
-import { urlFor } from "../../../../../sanity/lib/image"
+import Loading from "../app/[locale]/(pages)/loading"
+import { urlFor } from "../sanity/lib/image"
 
 const Slideshow = ({ images: imagesProp }: { images: SanityImageObject[] }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const images = imagesProp.map(img => ({
-    src: urlFor(img).height(500).width(1200).url(),
+    src: urlFor(img)
+      .width(2016)
+      .height(1134)
+      .fit("crop")
+      .quality(100)
+      .format("webp")
+      .url(),
     alt: "",
-    height: 500,
-    width: 1200,
+    width: 2016,
+    height: 1134,
   }))
 
   return (
     <Suspense fallback={<Loading />}>
-      <Carousel images={images} useArrows={false} className="overflow-hidden" />
-      <Button
-        variant="outline"
-        size="sm"
-        className="absolute top-4 right-4 bg-background/50 hover:bg-background dark:bg-transparent dark:hover:bg-zinc-700"
-        onClick={() => setIsExpanded(true)}
-      >
-        <Icon icon="Expand" className="h-5 w-5 dark:stroke-zinc-50" />
-        <span className="sr-only">Expand</span>
-      </Button>
+      <div className="relative">
+        <Carousel
+          images={images}
+          useArrows={false}
+          className="overflow-hidden"
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="absolute top-4 right-8 md:right-16 bg-background/50 hover:bg-background dark:bg-transparent dark:hover:bg-zinc-700 z-50 drop-shadow-md"
+          onClick={() => setIsExpanded(true)}
+        >
+          <Icon icon="Expand" className="h-5 w-5 dark:stroke-zinc-50" />
+          <span className="sr-only">Expand</span>
+        </Button>
+      </div>
 
       {isExpanded && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">

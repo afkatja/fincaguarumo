@@ -27,7 +27,7 @@ export const galleryType = defineType({
       options: {
         layout: "grid",
       },
-      validation: rule => rule.max(12),
+      validation: rule => rule.max(18).error("Max 18 images"),
     }),
   ],
 })

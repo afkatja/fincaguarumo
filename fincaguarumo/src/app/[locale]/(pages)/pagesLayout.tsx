@@ -1,11 +1,15 @@
-import Image from "next/image"
-import { urlFor } from "@/sanity/lib/image"
-import Title from "../../../components/Title"
 import { Suspense } from "react"
-import Loading from "./loading"
-import RichText from "../../../components/RichText"
 
 import { notFound } from "next/navigation"
+// import { urlFor } from "@/sanity/lib/image"
+import Title from "@/components/Title"
+import Loading from "./loading"
+import RichText from "@/components/RichText"
+import Slideshow from "@/components/Slideshow"
+import { shuffle } from "../../../lib/utils"
+import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+// import resolveConfig from "tailwindcss/resolveConfig"
+// import theme from "../../../../tailwind.config"
 
 const PageLayout = async ({
   locale,
@@ -17,7 +21,8 @@ const PageLayout = async ({
   body,
   icon: iconProp,
   children,
-  ...props
+  images,
+  // ...props
 }: {
   locale: string
   subtitle?: string
@@ -25,6 +30,7 @@ const PageLayout = async ({
   body?: any
   icon?: string
   children?: React.ReactNode
+  images?: any[]
   [props: string]: any
 }) => {
   if (!pageName) notFound()
@@ -49,7 +55,7 @@ const PageLayout = async ({
             />
           )}
         </div>
-        {mainImage && (
+        {/* {mainImage && (
           <Image
             src={urlFor(mainImage).width(1600).height(500).url()}
             alt=""
@@ -57,13 +63,21 @@ const PageLayout = async ({
             width={1600}
             className="mb-5"
           />
+        )} */}
+        {(mainImage || images) && (
+          <Slideshow
+            images={
+              images
+                ? (shuffle(images) as unknown as SanityImageObject[])
+                : [mainImage]
+            }
+          />
         )}
-        <section className="w-11/12 py-5 lg:py-8 prose lg:prose-lg mx-auto">
+        <section className="w-11/12 pt-5 lg:py-8 prose lg:prose-lg mx-auto">
           <h3 className="text-guarumo-primary dark:text-zinc-50">
             {description}
           </h3>
         </section>
-
         {body && <RichText body={body} icon={iconProp} />}
         {children}
       </div>

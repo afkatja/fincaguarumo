@@ -52,6 +52,11 @@ export const pageType = defineType({
       ],
     }),
     defineField({
+      name: "slideshow",
+      type: "reference",
+      to: [{ type: "gallery" }],
+    }),
+    defineField({
       name: "categories",
       type: "array",
       of: [{ type: "reference", to: { type: "category" } }],
@@ -65,9 +70,18 @@ export const pageType = defineType({
       type: "boolean",
       initialValue: true,
     }),
+    defineField({
+      name: "showBookingOptions",
+      type: "boolean",
+      title: "Show Booking Options",
+      description:
+        "Enable to display booking options from Booking.com and Expedia",
+      initialValue: false,
+    }),
   ],
   initialValue: {
     isPublished: true,
+    showBookingOptions: false,
   },
   preview: {
     select: {

@@ -6,7 +6,12 @@ import Icon from "@/components/Icon"
 import { TTour } from "./tours/data"
 import Breadcrumbs from "../../../components/Breadcrumbs"
 import Title from "../../../components/Title"
+// import { PortableText } from "next-sanity"
 import Loading from "./loading"
+// import Image from "next/image"
+// import { urlFor } from "../../../sanity/lib/image"
+// import resolveConfig from "tailwindcss/resolveConfig"
+// import theme from "../../../../tailwind.config"
 import RichText from "../../../components/RichText"
 
 const DetailsPageLayout = ({
@@ -15,7 +20,10 @@ const DetailsPageLayout = ({
   parent,
   icon,
 }: {
-  tourDetails: Omit<TTour, "gallery" | "isPublished" | "slug" | "mainImage">
+  tourDetails: Omit<
+    TTour,
+    "gallery" | "isPublished" | "slug" | "mainImage" | "slideshow"
+  >
   slideshow?: React.ReactNode
   parent?: { title: string; href: string }
   icon?: string
