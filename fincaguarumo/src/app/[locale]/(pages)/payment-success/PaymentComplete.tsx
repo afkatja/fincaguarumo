@@ -1,5 +1,5 @@
 "use client"
-import React, { Suspense, use, useState } from "react"
+import React, { Suspense, useEffect, useState } from "react"
 import { useStripe } from "@stripe/react-stripe-js"
 
 import PagesLayout from "../pagesLayout"
@@ -23,7 +23,7 @@ const STATUS_CONTENT_MAP: Record<
   { text: string; iconColor: string; icon: React.ReactNode }
 > = {
   succeeded: {
-    text: "Payment succeeded",
+    text: "Booking succeeded",
     iconColor: "#30B130",
     icon: <Success fill="#30B130" className="mr-4" />,
   },
@@ -57,7 +57,7 @@ export default function CompletePage({ locale }: { locale: string }) {
     Record<string, any> | null | undefined
   >(null)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!stripe || paymentIntent) return
     const clientSecret = searchParams.get("payment_intent_client_secret")
 
@@ -69,9 +69,40 @@ export default function CompletePage({ locale }: { locale: string }) {
       if (!intent) return
       setPaymentIntent(intent)
       setStatus(intent?.status)
+
+      // Clear booking data after successful payment
+      if (intent?.status === Status.Success) {
+        localStorage.removeItem("bookingData")
+      }
     }
     fetchData()
   }, [searchParams, stripe, paymentIntent])
+
+  useEffect(() => {
+    const sendConfirmationEmail = async () => {
+      try {
+        const response = await fetch("/api/send-confirmation-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customerDetails: bookingData.customerDetails,
+            tourDetails: bookingData.tourDetails,
+          }),
+        })
+
+        if (!response.ok) {
+          console.error("Failed to send confirmation email")
+          return
+        }
+      } catch (error) {
+        console.error("Error sending confirmation email:", error)
+      }
+    }
+
+    if (searchParams.get("payment_intent_client_secret")) {
+      sendConfirmationEmail()
+    }
+  }, [searchParams, bookingData])
 
   return (
     <Suspense fallback={<Loading />}>
