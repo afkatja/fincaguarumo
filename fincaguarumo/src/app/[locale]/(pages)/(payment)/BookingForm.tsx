@@ -1,12 +1,7 @@
 "use client"
-import React, { use, useEffect, useState } from "react"
+import React, { useState } from "react"
 import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
+
 import {
   Select,
   SelectTrigger,
@@ -14,19 +9,23 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { useBooking } from "../../BookingProvider"
 import { DialogFooter } from "@/components/ui/dialog"
+import { BookingType, IBookingType } from "../../../../types"
+import PriceCalculation, { calculateTotal } from "@/components/priceCalculation"
+import DatePicker from "@/components/DatePicker"
 
 const BookingForm = ({
   onSubmit,
   onCancel,
+  bookingType,
 }: {
   onSubmit: () => void
   onCancel: () => void
+  bookingType: BookingType
 }) => {
-  const [popoverOpen, setPopoverOpen] = useState(false)
+  const [activePopover, setActivePopover] = useState<string | null>(null)
 
   const { bookingData, setBookingData } = useBooking()
 
@@ -36,6 +35,13 @@ const BookingForm = ({
       noValidate
       onSubmit={e => {
         e.preventDefault()
+        setBookingData({
+          ...bookingData,
+          type: bookingType,
+          bookingDetails: {
+            ...bookingData.bookingDetails,
+          },
+        })
         onSubmit()
       }}
     >
@@ -92,121 +98,148 @@ const BookingForm = ({
             Please enter a valid email address
           </span>
         </div>
-        <Label htmlFor="date">Date</Label>
-        <Popover open={popoverOpen}>
-          {popoverOpen && (
-            <div
-              className="overlay fixed top-0 left-0 w-[100vw] h-[100vh]"
-              onClick={() => setPopoverOpen(false)}
-            ></div>
-          )}
-          <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>
-            <Button
-              variant="outline"
-              className="flex-col items-start w-full h-auto dark:bg-zinc-600 outline-none border-none hover:dark:text-zinc-50"
-            >
-              <span className="font-semibold uppercase text-[0.65rem]">
-                Select Date
-              </span>
-              <span className="font-normal">
-                {bookingData.tourDetails.date}
-              </span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="p-0 max-w-[276px]">
-            <Calendar
-              mode="single"
-              disabled={(date: Date) => date < new Date()}
-              onSelect={(_, selectedDay) => {
+
+        {bookingType === IBookingType.villa ? (
+          <div className="md:flex items-center">
+            <div>
+              <Label htmlFor="check-in">Check-in Date</Label>
+              <DatePicker
+                isOpen={activePopover === "check-in"}
+                onClose={() => setActivePopover(null)}
+                onOpen={() => setActivePopover("check-in")}
+                onSelectDate={date => {
+                  setBookingData({
+                    ...bookingData,
+                    bookingDetails: {
+                      ...bookingData.bookingDetails,
+                      checkIn: new Date(date).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }),
+                    },
+                  })
+                  setActivePopover(null)
+                }}
+                label="Select date"
+                selectedDate={bookingData.bookingDetails.checkIn}
+              />
+            </div>
+
+            <div className="ml-4">
+              <Label htmlFor="check-out">Check-out Date</Label>
+              <DatePicker
+                label="Select date"
+                selectedDate={bookingData.bookingDetails.checkOut}
+                isOpen={activePopover === "check-out"}
+                onClose={() => setActivePopover(null)}
+                onOpen={() => setActivePopover("check-out")}
+                onSelectDate={date => {
+                  setBookingData({
+                    ...bookingData,
+                    bookingDetails: {
+                      ...bookingData.bookingDetails,
+                      checkOut: new Date(date).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }),
+                    },
+                  })
+                  setActivePopover(null)
+                }}
+              />
+            </div>
+          </div>
+        ) : (
+          <>
+            <Label htmlFor="date">Tour Date</Label>
+            <DatePicker
+              isOpen={activePopover === "tour-date"}
+              onClose={() => setActivePopover(null)}
+              onOpen={() => setActivePopover("tour-date")}
+              onSelectDate={date => {
                 setBookingData({
                   ...bookingData,
-                  tourDetails: {
-                    ...bookingData.tourDetails,
-                    date: new Date(selectedDay).toLocaleDateString(undefined, {
+                  bookingDetails: {
+                    ...bookingData.bookingDetails,
+                    date: new Date(date).toLocaleDateString(undefined, {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
                     }),
                   },
                 })
-                setPopoverOpen(false)
+                setActivePopover(null)
               }}
+              label="Select date"
+              selectedDate={bookingData.bookingDetails.date}
             />
-          </PopoverContent>
-        </Popover>
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="guests">Guests</Label>
-        <Select
-          onValueChange={val =>
-            setBookingData({
-              ...bookingData,
-              tourDetails: { ...bookingData.tourDetails, guests: val },
-            })
-          }
-        >
-          <SelectTrigger className="h-auto">
-            <SelectValue
-              placeholder={
-                <div className="flex flex-col items-start">
-                  <span className="font-semibold uppercase text-[0.65rem]">
-                    Guests
-                  </span>
-                  <span className="font-normal">
-                    {bookingData.tourDetails.guests} adults
-                  </span>
-                </div>
-              }
-            />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">1 adult</SelectItem>
-            <SelectItem value="2">2 adults</SelectItem>
-            <SelectItem value="3">2 adults + 1 child</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      {/* <div className="grid gap-2">
-                <PaymentMethods onCheck={val => setPaymentMethod(val)} />
-              </div> */}
-      <DialogFooter className="flex-wrap">
-        <div className="grid gap-2 flex-none w-full">
-          <div className="flex items-center justify-between">
-            <div className="text-muted-foreground">
-              ${bookingData.tourDetails.price} x{" "}
-              {bookingData.tourDetails.guests} people
-            </div>
-            <div>
-              $
-              {Number(bookingData.tourDetails.price) *
-                Number(bookingData.tourDetails.guests)}
-            </div>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between font-medium">
-            <div>Total</div>
-            <div>
-              $
-              {Number(bookingData.tourDetails.price) *
-                Number(bookingData.tourDetails.guests)}
-            </div>
-          </div>
+          </>
+        )}
+
+        <div className="grid gap-2 mt-4">
+          <Label htmlFor="guests">Guests</Label>
+          <Select
+            onValueChange={val =>
+              setBookingData({
+                ...bookingData,
+                bookingDetails: {
+                  ...bookingData.bookingDetails,
+                  guests: val,
+                  totalPrice: calculateTotal(
+                    Number(bookingData.bookingDetails.price),
+                    Number(val),
+                    bookingType
+                  ),
+                },
+              })
+            }
+          >
+            <SelectTrigger className="h-auto border border-zinc-300">
+              <SelectValue
+                placeholder={
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold uppercase text-[0.65rem]">
+                      Guests
+                    </span>
+                    <span className="font-normal">
+                      {bookingData.bookingDetails.guests} adults
+                    </span>
+                  </div>
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 adult</SelectItem>
+              <SelectItem value="2">2 adults</SelectItem>
+              <SelectItem value="3">2 adults + 1 child</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <div className="mt-5 flex justify-end gap-2 w-full flex-none">
-          <div>
-            <Button variant="outline" onClick={onCancel}>
-              Cancel
+
+        <DialogFooter className="flex-wrap">
+          <PriceCalculation
+            price={Number(bookingData.bookingDetails.price)}
+            guests={Number(bookingData.bookingDetails.guests)}
+            bookingType={bookingType}
+          />
+          <div className="mt-5 flex justify-end gap-2 w-full flex-none">
+            <div>
+              <Button variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+            </div>
+            <Button
+              type="submit"
+              className="group-invalid:pointer-events-none group-invalid:opacity-30"
+            >
+              Reserve
             </Button>
           </div>
-          <Button
-            type="submit"
-            className="group-invalid:pointer-events-none group-invalid:opacity-30"
-          >
-            Reserve
-          </Button>
-        </div>
-      </DialogFooter>
+        </DialogFooter>
+      </div>
     </form>
   )
 }

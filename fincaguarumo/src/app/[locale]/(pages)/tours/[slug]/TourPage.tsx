@@ -6,6 +6,7 @@ import { TTour } from "../data"
 import { titleCase } from "../../../../../lib/utils"
 import { notFound } from "next/navigation"
 import { useBooking } from "../../../BookingProvider"
+import { IBookingType } from "../../../../../types"
 
 const TourPage = ({ tour }: { tour: TTour }) => {
   if (!tour || !tour.isPublished) notFound()
@@ -14,7 +15,7 @@ const TourPage = ({ tour }: { tour: TTour }) => {
   useEffect(() => {
     setBookingData({
       ...bookingData,
-      tourDetails: {
+      bookingDetails: {
         title: tour.title,
         description: tour.description,
         price: tour.price,
@@ -29,7 +30,7 @@ const TourPage = ({ tour }: { tour: TTour }) => {
 
   return (
     <DetailsPageLayout
-      tourDetails={{
+      bookingDetails={{
         title: tour.title,
         description: tour.description,
         duration: tour.duration,
@@ -42,6 +43,7 @@ const TourPage = ({ tour }: { tour: TTour }) => {
       }
       parent={{ title: "Tours", href: "tours" }}
       icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
+      bookingType={IBookingType.tour}
     />
   )
 }

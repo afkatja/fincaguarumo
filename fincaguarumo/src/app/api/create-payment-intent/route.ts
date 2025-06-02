@@ -3,7 +3,7 @@ import Stripe from "stripe"
 import getRequestBody from "../../../lib/getRequestBody"
 
 export async function POST(request: NextRequest) {
-  const { customerDetails, tourDetails } = await getRequestBody(request)
+  const { customerDetails, bookingDetails } = await getRequestBody(request)
 
   const stripeInstance = new Stripe(process.env.STRIPE_API_KEY ?? "")
 
@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
     email: customerDetails.email,
   })
   const paymentIntent = await stripeInstance.paymentIntents.create({
-    amount: tourDetails.price * 100,
+    amount: bookingDetails.totalPrice * 100,
     currency: "usd",
-    description: tourDetails.description,
+    description: bookingDetails.description,
     customer: customer.id,
     setup_future_usage: "off_session",
     receipt_email: customerDetails.email,

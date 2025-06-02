@@ -21,7 +21,10 @@ const Payment = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             customerDetails: bookingData.customerDetails,
-            tourDetails: bookingData.tourDetails,
+            bookingDetails: {
+              ...bookingData.bookingDetails,
+              type: bookingData.type,
+            },
           }),
         })
         const { clientSecret: clientSecretData } = await response.json()

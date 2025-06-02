@@ -48,7 +48,10 @@ const AddToCalendar = ({ event }: { event: Record<string, any> }) => {
   }
   return (
     <Button onClick={handleAddToCalendar} className="flex items-center">
-      <Icon icon="Calendar" className="h-4 w-4 mr-4 dark:stroke-slate-50" />
+      <Icon
+        icon="Calendar"
+        className="h-4 w-4 mr-4 stroke-zinc-50 dark:stroke-slate-50"
+      />
       Add to Calendar
     </Button>
   )

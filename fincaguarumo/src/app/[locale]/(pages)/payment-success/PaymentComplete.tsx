@@ -6,7 +6,7 @@ import PagesLayout from "../pagesLayout"
 import icons from "@/components/icons"
 import Loading from "../loading"
 import { useSearchParams } from "next/navigation"
-import Title from "../../../../components/Title"
+// import Title from "../../../../components/Title"
 import AddToCalendar from "../../../../components/AddToCalendar"
 import { useBooking } from "../../BookingProvider"
 
@@ -69,11 +69,6 @@ export default function CompletePage({ locale }: { locale: string }) {
       if (!intent) return
       setPaymentIntent(intent)
       setStatus(intent?.status)
-
-      // Clear booking data after successful payment
-      if (intent?.status === Status.Success) {
-        localStorage.removeItem("bookingData")
-      }
     }
     fetchData()
   }, [searchParams, stripe, paymentIntent])
@@ -86,9 +81,17 @@ export default function CompletePage({ locale }: { locale: string }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             customerDetails: bookingData.customerDetails,
-            tourDetails: bookingData.tourDetails,
+            bookingDetails: {
+              ...bookingData.bookingDetails,
+              type: bookingData.type,
+            },
           }),
         })
+
+        // Clear booking data after successful payment
+        if (response?.ok && status === Status.Success) {
+          localStorage.removeItem("bookingData")
+        }
 
         if (!response.ok) {
           console.error("Failed to send confirmation email")
@@ -104,6 +107,13 @@ export default function CompletePage({ locale }: { locale: string }) {
     }
   }, [searchParams, bookingData])
 
+  const getBookingTitle = () => {
+    return bookingData.bookingDetails.title || "Villa Bruno Stay"
+  }
+
+  const getBookingLocation = () => {
+    return bookingData.bookingDetails.location || "Finca Guarumo"
+  }
   return (
     <Suspense fallback={<Loading />}>
       {status && paymentIntent && (
@@ -111,7 +121,7 @@ export default function CompletePage({ locale }: { locale: string }) {
           locale={locale}
           pageName="paymentComplete"
           title={`Dear ${bookingData.customerDetails?.name}, ${STATUS_CONTENT_MAP[status].text}`}
-          subtitle={`You paid $ ${paymentIntent?.amount / 100} for ${bookingData.tourDetails?.title} at ${bookingData.tourDetails.location}`}
+          subtitle={`You paid $ ${paymentIntent?.amount / 100} for ${getBookingTitle()} at ${getBookingLocation()}`}
           description={paymentIntent?.description}
         >
           <div className="w-11/12 mx-auto prose dark:prose-invert pb-8">
@@ -119,18 +129,17 @@ export default function CompletePage({ locale }: { locale: string }) {
               <div className="mt-6">{STATUS_CONTENT_MAP[status].icon}</div>
               {status === Status.Success && (
                 <p>
-                  Your booking of the{" "}
-                  <strong>{bookingData.tourDetails?.title}</strong> for{" "}
-                  {bookingData.tourDetails?.guests} guests on{" "}
+                  Your booking of the <strong>{getBookingTitle()}</strong> for{" "}
+                  {bookingData.bookingDetails?.guests} guests on{" "}
                   <strong>
-                    {new Date(bookingData.tourDetails?.date).toLocaleDateString(
-                      undefined,
-                      {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }
-                    )}
+                    {new Date(
+                      bookingData.bookingDetails.checkIn ??
+                        bookingData.bookingDetails?.date
+                    ).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
                   </strong>{" "}
                   has succeeded. An email with the confirmation has been sent to{" "}
                   <strong>{bookingData.customerDetails?.email}</strong>.
@@ -144,16 +153,18 @@ export default function CompletePage({ locale }: { locale: string }) {
               )}
             </div>
 
-            <AddToCalendar
-              event={{
-                title: bookingData.tourDetails?.title,
-                description: paymentIntent.description,
-                start: bookingData.tourDetails?.date,
-                duration: bookingData.tourDetails?.duration,
-                location: bookingData.tourDetails?.location,
-                geo: bookingData.tourDetails?.geo,
-              }}
-            />
+            <div className="mt-4">
+              <AddToCalendar
+                event={{
+                  title: bookingData.bookingDetails?.title,
+                  description: paymentIntent.description,
+                  start: bookingData.bookingDetails?.date,
+                  duration: bookingData.bookingDetails?.duration,
+                  location: bookingData.bookingDetails?.location,
+                  geo: bookingData.bookingDetails?.geo,
+                }}
+              />
+            </div>
           </div>
         </PagesLayout>
       )}

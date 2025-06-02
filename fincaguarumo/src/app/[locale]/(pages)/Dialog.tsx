@@ -14,8 +14,15 @@ import { Button } from "@/components/ui/button"
 import Payment from "./(payment)/Payment"
 import BookingForm from "./(payment)/BookingForm"
 import { useBooking } from "../BookingProvider"
+import { BookingType } from "../../../types"
 
-const BookingDialog = () => {
+const BookingDialog = ({
+  bookingType,
+  dialogOptions,
+}: {
+  bookingType: BookingType
+  dialogOptions: { title: string; buttonText: string; buttonClassName?: string }
+}) => {
   const [open, setOpen] = useState(false)
   const [paymentStep, setPaymentStep] = useState(false)
 
@@ -30,16 +37,16 @@ const BookingDialog = () => {
     return null
   }
 
-  const title = bookingData?.tourDetails?.title ?? "Tour Details"
+  const title = bookingData?.bookingDetails?.title ?? dialogOptions.title //"Booking Details"
   const description =
-    bookingData?.tourDetails?.description ??
+    bookingData?.bookingDetails?.description ??
     "Please fill in your booking details below."
 
   return (
     <Dialog open={open} onOpenChange={() => closeHandler()} key="order-dialog">
       <DialogTrigger asChild>
-        <Button size="lg" className="ml-auto">
-          Reserve Now
+        <Button size="lg" className={dialogOptions.buttonClassName}>
+          {dialogOptions.buttonText}
         </Button>
       </DialogTrigger>
       {!paymentStep && (
@@ -51,6 +58,7 @@ const BookingDialog = () => {
           <BookingForm
             onSubmit={() => setPaymentStep(true)}
             onCancel={() => setOpen(false)}
+            bookingType={bookingType}
           />
         </DialogContent>
       )}

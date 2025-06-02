@@ -78,6 +78,21 @@ export const pageType = defineType({
         "Enable to display booking options from Booking.com and Expedia",
       initialValue: false,
     }),
+    defineField({
+      name: "showBookingDialog",
+      type: "boolean",
+      title: "Show Booking dialog",
+      description: "Enable to display booking dialog",
+      initialValue: false,
+    }),
+    defineField({
+      name: "price",
+      type: "number",
+      title: "Price per person",
+      description: "Price per person in USD",
+      hidden: ({ document }) => !document?.showBookingDialog,
+      validation: rule => rule.min(0).precision(2),
+    }),
   ],
   initialValue: {
     isPublished: true,

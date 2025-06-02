@@ -3,8 +3,9 @@ import { createContext, useContext, useState, useEffect } from "react"
 
 const BookingContext = createContext({
   bookingData: {
+    type: "tour",
     customerDetails: { name: "", email: "" },
-    tourDetails: {
+    bookingDetails: {
       title: "",
       description: "",
       duration: "",
@@ -15,8 +16,19 @@ const BookingContext = createContext({
         month: "long",
         day: "numeric",
       }),
+      checkIn: new Date().toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      checkOut: new Date().toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
       guests: "1",
       price: "0",
+      totalPrice: "0",
       geo: { lat: "", lon: "" },
     },
   },

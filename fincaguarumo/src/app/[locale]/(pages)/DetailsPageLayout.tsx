@@ -13,23 +13,26 @@ import Loading from "./loading"
 // import resolveConfig from "tailwindcss/resolveConfig"
 // import theme from "../../../../tailwind.config"
 import RichText from "../../../components/RichText"
+import { BookingType } from "../../../types"
 
 const DetailsPageLayout = ({
-  tourDetails,
+  bookingDetails,
+  bookingType,
   slideshow,
   parent,
   icon,
 }: {
-  tourDetails: Omit<
+  bookingDetails: Omit<
     TTour,
     "gallery" | "isPublished" | "slug" | "mainImage" | "slideshow"
   >
+  bookingType: BookingType
   slideshow?: React.ReactNode
   parent?: { title: string; href: string }
   icon?: string
 }) => {
   const { title, description, duration, location, geo, price, body } =
-    tourDetails
+    bookingDetails
   return (
     <Suspense fallback={<Loading />}>
       <div className="content-wrap">
@@ -73,7 +76,7 @@ const DetailsPageLayout = ({
                   <span className="text-2xl font-bold">${price}</span>
                   <span className="text-muted-foreground text-sm">/person</span>
                 </div>
-                <BookingDialog />
+                <BookingDialog bookingType={bookingType} dialogOptions={{buttonText: 'Book  now', buttonClassName: 'ml-auto', title: 'Book now'}} />
               </div>
             </footer>
           </div>
