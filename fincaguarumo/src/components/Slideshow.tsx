@@ -33,7 +33,7 @@ const Slideshow = ({ images: imagesProp }: { images: SanityImageObject[] }) => {
         <Button
           variant="outline"
           size="sm"
-          className="absolute top-4 right-8 md:right-16 bg-background/50 hover:bg-background dark:bg-transparent dark:hover:bg-zinc-700 z-50 drop-shadow-md"
+          className="absolute top-4 right-8 md:right-16 bg-background/50 hover:bg-background dark:bg-transparent dark:hover:bg-zinc-700 z-40 drop-shadow-md"
           onClick={() => setIsExpanded(true)}
         >
           <Icon icon="Expand" className="h-5 w-5 dark:stroke-zinc-50" />
