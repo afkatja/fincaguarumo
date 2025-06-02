@@ -77,7 +77,7 @@ export default async function Layout({
       >
         <NextIntlClientProvider locale={locale}>
           <TransitionProvider>
-            <div className="flex flex-col min-h-[80dvh] animation-container">
+            <div className="flex flex-col min-h-[calc(100dvh-var(--footer-height))] animation-container">
               <Header locale={locale} />
 
               <BookingProvider>
