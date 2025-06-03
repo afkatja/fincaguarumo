@@ -15,6 +15,7 @@ const TourPage = ({ tour }: { tour: TTour }) => {
   useEffect(() => {
     setBookingData({
       ...bookingData,
+      type: IBookingType.tour,
       bookingDetails: {
         title: tour.title,
         description: tour.description,

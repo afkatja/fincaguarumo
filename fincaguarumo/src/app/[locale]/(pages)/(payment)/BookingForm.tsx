@@ -188,8 +188,8 @@ const BookingForm = ({
                   ...bookingData.bookingDetails,
                   guests: val,
                   totalPrice: calculateTotal(
-                    Number(bookingData.bookingDetails.price),
-                    Number(val),
+                    bookingData.bookingDetails.price,
+                    val,
                     bookingType
                   ),
                 },
@@ -221,8 +221,8 @@ const BookingForm = ({
 
         <DialogFooter className="flex-wrap">
           <PriceCalculation
-            price={Number(bookingData.bookingDetails.price)}
-            guests={Number(bookingData.bookingDetails.guests)}
+            price={bookingData.bookingDetails.price}
+            guests={bookingData.bookingDetails.guests}
             bookingType={bookingType}
           />
           <div className="mt-5 flex justify-end gap-2 w-full flex-none">

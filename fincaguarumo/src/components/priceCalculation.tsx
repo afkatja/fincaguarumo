@@ -2,16 +2,16 @@ import { BookingType, IBookingType } from "../types"
 import { Separator } from "@/components/ui/separator"
 
 export const calculateTotal = (
-  price: number,
-  guests: number,
+  price: string,
+  guests: string,
   bookingType: BookingType
 ) => {
   if (bookingType === IBookingType.tour) {
-    return Number(price) * Number(guests)
+    return parseInt(price) * parseInt(guests)
   } else {
     // Villa pricing: base price for 1 person, +$20 for each additional person up to 4
-    const basePrice = Number(price)
-    const additionalGuests = Math.min(Number(guests) - 1, 3) // Max 3 additional guests
+    const basePrice = parseInt(price)
+    const additionalGuests = Math.min(parseInt(guests) - 1, 3) // Max 3 additional guests
     const additionalPrice = additionalGuests * 20
     return basePrice + additionalPrice
   }
@@ -22,8 +22,8 @@ const PriceCalculation = ({
   guests,
   bookingType,
 }: {
-  price: number
-  guests: number
+  price: string
+  guests: string
   bookingType: BookingType
 }) => {
   const total = calculateTotal(price, guests, bookingType)
