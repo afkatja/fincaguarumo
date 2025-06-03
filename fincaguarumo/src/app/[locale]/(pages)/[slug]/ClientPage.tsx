@@ -7,7 +7,6 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
-  DialogOverlay,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { IBookingType } from "../../../../types"
@@ -21,6 +20,7 @@ const ClientPage = ({ content }: { content: Content }) => {
   useEffect(() => {
     setBookingData({
       ...bookingData,
+      type: IBookingType.villa,
       bookingDetails: {
         title: content.title,
         description: content.description,
