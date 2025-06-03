@@ -1,4 +1,5 @@
-import React, { Suspense } from "react"
+"use client"
+import React, { Suspense, useState } from "react"
 
 import BookingDialog from "./Dialog"
 
@@ -33,6 +34,7 @@ const DetailsPageLayout = ({
 }) => {
   const { title, description, duration, location, geo, price, body } =
     bookingDetails
+
   return (
     <Suspense fallback={<Loading />}>
       <div className="content-wrap">
@@ -76,7 +78,14 @@ const DetailsPageLayout = ({
                   <span className="text-2xl font-bold">${price}</span>
                   <span className="text-muted-foreground text-sm">/person</span>
                 </div>
-                <BookingDialog bookingType={bookingType} dialogOptions={{buttonText: 'Book  now', buttonClassName: 'ml-auto', title: 'Book now'}} />
+                <BookingDialog
+                  bookingType={bookingType}
+                  dialogOptions={{
+                    buttonText: "Book  now",
+                    buttonClassName: "ml-auto",
+                    title: "Book now",
+                  }}
+                />
               </div>
             </footer>
           </div>

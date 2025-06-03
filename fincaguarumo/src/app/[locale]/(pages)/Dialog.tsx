@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react"
+import React, { useContext, useState } from "react"
 import {
   Dialog,
   DialogTrigger,
@@ -31,13 +31,19 @@ const BookingDialog = ({
   const closeHandler = () => {
     setOpen(!open)
     setPaymentStep(false)
+    // const autoplay = carouselApi?.plugins()?.autoplay
+
+    // if (autoplay) {
+    //   const playOrStop = autoplay.isPlaying() ? autoplay.stop : autoplay.play
+    //   playOrStop()
+    // }
   }
 
   if (!bookingData) {
     return null
   }
 
-  const title = bookingData?.bookingDetails?.title ?? dialogOptions.title //"Booking Details"
+  const title = bookingData?.bookingDetails?.title ?? dialogOptions.title
   const description =
     bookingData?.bookingDetails?.description ??
     "Please fill in your booking details below."
