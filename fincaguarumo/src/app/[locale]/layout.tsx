@@ -17,6 +17,7 @@ import { BookingProvider } from "./BookingProvider"
 import { metadata as meta } from "./meta"
 import { i18n } from "../../../languages"
 import Header from "../../components/header"
+import Head from "next/head"
 
 export const metadata = meta
 
@@ -110,6 +111,34 @@ export default async function Layout({
   const draft = await draftMode()
   return (
     <html lang={locale}>
+      <Head>
+        <link rel="alternate" href="https://fincaguarumo.com/" hrefLang="en" />
+        <link
+          rel="alternate"
+          href="https://fincaguarumo.com/es"
+          hrefLang="es-CR"
+        />
+        <link
+          rel="alternate"
+          href="https://fincaguarumo.com/de"
+          hrefLang="de-DE"
+        />
+        <link
+          rel="alternate"
+          href="https://fincaguarumo.com/nl"
+          hrefLang="nl-NL"
+        />
+        <link
+          rel="alternate"
+          href="https://fincaguarumo.com/ru"
+          hrefLang="ru-RU"
+        />
+        <link
+          rel="alternate"
+          href="https://fincaguarumo.com/"
+          hrefLang="x-default"
+        />
+      </Head>
       <body
         className={
           locale === "ru"

@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   title: "Finca Guarumo",
   metadataBase: new URL("https://fincaguarumo.com"),
   description:
-    "Bosque de aves - A sustainable jungle farm in Costa Rica offering an eco-villa, rural tours, and wildlife experiences near Corcovado.",
+    "Stay at Villa Bruno in Finca Guarumo – a private eco-luxury villa in Costa Rica’s Osa Peninsula. Explore jungle trails, birdwatching, and rural life near Corcovado National Park.",
   keywords: `birdwatching, hiking, rural tours, jungle, aves, naturaleza, nature, eco-tourism, sustainability, sostenibilidad, sustainable tourism, Corcovado, Osa Peninsula, Peninsula de Osa, Costa Rica, Villa Bruno, eco-luxury, luxury, sustainable travel, travel, ecoturismo, turismo sostenible, turismo responsable, turismo rural, finca, guarumo, finca guarumo, finca guarumo costa rica, finca guarumo corcovado, vacation rental, airbnb, booking.com, vacation, holiday, stay, stay in Villa Bruno Costa Rica,
 jungle villa rental Costa Rica,
 eco-lodge near Corcovado,
