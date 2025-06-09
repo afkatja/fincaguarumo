@@ -55,6 +55,48 @@ export function generateStaticParams() {
   return locales.map(locale => ({ locale }))
 }
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "LodgingBusiness",
+  name: "Villa Bruno at Finca Guarumo",
+  description:
+    "Eco-luxury jungle villa on a sustainable farm near Corcovado, Costa Rica. Perfect for birdwatchers, nature lovers, and eco-travelers.",
+  image: "https://fincaguarumo.com/images/finca-guarumo-v4.4.jpg",
+  url: "https://fincaguarumo.com",
+  address: {
+    "@type": "PostalAddress",
+    addressCountry: "CR",
+    addressRegion: "Puntarenas",
+    addressLocality: "Puerto Jiménez",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 8.538,
+    longitude: -83.307,
+  },
+  amenityFeature: [
+    {
+      "@type": "LocationFeatureSpecification",
+      name: "Birdwatching",
+      value: true,
+    },
+    {
+      "@type": "LocationFeatureSpecification",
+      name: "Hiking Trails",
+      value: true,
+    },
+    {
+      "@type": "LocationFeatureSpecification",
+      name: "Eco-friendly",
+      value: true,
+    },
+  ],
+  sameAs: [
+    "https://www.instagram.com/fincaguarumo",
+    "https://www.facebook.com/fincaguarumo",
+  ],
+}
+
 export default async function Layout({
   children,
   params,
@@ -98,6 +140,12 @@ export default async function Layout({
           <Footer />
         </NextIntlClientProvider>
       </body>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      ></script>
     </html>
   )
 }
