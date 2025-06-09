@@ -3,6 +3,7 @@ User-agent: *
 
 # Allow all bots to access the main site
 Allow: /
+Allow: /api/sitemap
 
 # Block admin pages
 Disallow: /admin/

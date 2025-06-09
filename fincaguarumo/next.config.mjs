@@ -35,6 +35,14 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/robots.txt',
+        destination: '/robots.txt',
+      },
+    ];
+  },
 };
  
 const withNextIntl = createNextIntlPlugin();
