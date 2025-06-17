@@ -12,6 +12,10 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+.w-11\/12 {
+  max-width: 90rem;
+}
+
 .content-wrap {
   position: relative;
 }

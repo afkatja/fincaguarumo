@@ -35,7 +35,7 @@ const CardItem = ({
             <Icon icon="Mail" className="w-5 h-5 text-muted-foreground" />
             <a
               href={`mailto:${emailDecoded}`}
-              className="text-sm font-medium fancy-underline"
+              className="text-sm font-medium fancy-underline text-ellipsis overflow-hidden whitespace-nowrap block"
             >
               {emailDecoded}
             </a>

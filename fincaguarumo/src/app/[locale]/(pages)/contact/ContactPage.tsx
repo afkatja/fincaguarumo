@@ -4,6 +4,7 @@ import CardItem from "./CardItem"
 import Link from "next/link"
 import Icon from "../../../../components/Icon"
 import Title from "../../../../components/Title"
+import ContactForm, { IContactFormData } from "./ContactForm"
 
 export default function Contact({
   locale,
@@ -22,16 +23,23 @@ export default function Contact({
       description={content?.description}
       mainImage={content?.mainImage}
     >
-      <div className="w-11/12 mx-auto grid gap-4 md:grid-flow-col auto-cols-min justify-center">
-        {people.map((person: Record<string, any>) => (
-          <CardItem
-            key={crypto.randomUUID()}
-            name={person.name}
-            avatar={person.avatar}
-            phoneNumber={btoa(person.phoneNumber)}
-            email={btoa(person.email)}
-          />
-        ))}
+      <div className="w-11/12 mx-auto my-8 xl:grid xl:grid-cols-2 xl:gap-4 items-start">
+        <Title
+          title="Contact Us"
+          titleClassName="text-3xl font-bold my-5 col-span-2"
+        />
+        <ContactForm />
+        <div className="grid gap-4 md:grid-cols-2 justify-center mt-6 lg:mt-4">
+          {people.map((person: Record<string, any>) => (
+            <CardItem
+              key={crypto.randomUUID()}
+              name={person.name}
+              avatar={person.avatar}
+              phoneNumber={btoa(person.phoneNumber)}
+              email={btoa(person.email)}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="w-11/12 mx-auto my-4">
