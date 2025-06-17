@@ -17,9 +17,11 @@ const TourPage = ({ tour }: { tour: TTour }) => {
       ...bookingData,
       type: IBookingType.tour,
       bookingDetails: {
+        ...bookingData.bookingDetails,
         title: tour.title,
         description: tour.description,
         price: tour.price,
+        totalPrice: tour.price,
         duration: tour.duration,
         location: tour.location,
         body: tour.body,

@@ -22,6 +22,7 @@ const ClientPage = ({ content }: { content: Content }) => {
       ...bookingData,
       type: IBookingType.villa,
       bookingDetails: {
+        ...bookingData.bookingDetails,
         title: content.title,
         description: content.description,
         price: content.price,

@@ -15,6 +15,7 @@ import { DialogFooter } from "@/components/ui/dialog"
 import { BookingType, IBookingType } from "../../../../types"
 import PriceCalculation, { calculateTotal } from "@/components/priceCalculation"
 import DatePicker from "@/components/DatePicker"
+import Input from "../../../../components/Input"
 
 const BookingForm = ({
   onSubmit,
@@ -42,23 +43,20 @@ const BookingForm = ({
             ...bookingData.bookingDetails,
           },
         })
+
         onSubmit()
       }}
     >
       <div className="grid gap-2">
         <div className="my-1">
-          <Label
-            htmlFor="name"
-            className="block input-required:outline-destructive"
-          >
-            Your name *
-          </Label>
-          <input
+          <Input
             id="name"
             type="text"
             required
+            labelText="Your name *"
+            errorMessage="Please enter your name"
             placeholder="Jane Doe"
-            onBlur={e =>
+            onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
               setBookingData({
                 ...bookingData,
                 customerDetails: {
@@ -67,21 +65,18 @@ const BookingForm = ({
                 },
               })
             }
-            className="w-full mt-2 p-1 pl-4 rounded-sm outline outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900"
           />
-          <span className="mt-2 hidden text-sm text-destructive peer-[&:not(:placeholder-shown):not(:focus):invalid]:block">
-            Please enter your name
-          </span>
         </div>
         <div className="my-1">
-          <Label className="block required:outline-destructive" htmlFor="email">
-            Your email *
-          </Label>
-          <input
+          <Input
             id="email"
             type="email"
             required
-            onBlur={e =>
+            errorMessage="Please enter a valid email address"
+            labelText="Your email *"
+            placeholder="jane@doe.com"
+            pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+            onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
               setBookingData({
                 ...bookingData,
                 customerDetails: {
@@ -90,13 +85,7 @@ const BookingForm = ({
                 },
               })
             }
-            placeholder="jane@doe.com"
-            className="w-full mt-2 p-1 pl-4 rounded-sm outline outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900"
-            pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
           />
-          <span className="mb-2 hidden text-sm text-destructive peer-[&:not(:placeholder-shown):not(:focus):invalid]:block">
-            Please enter a valid email address
-          </span>
         </div>
 
         {bookingType === IBookingType.villa ? (
@@ -227,7 +216,14 @@ const BookingForm = ({
           />
           <div className="mt-5 flex justify-end gap-2 w-full flex-none">
             <div>
-              <Button variant="outline" onClick={onCancel}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setBookingData(null)
+                  localStorage.removeItem("bookingData")
+                  onCancel()
+                }}
+              >
                 Cancel
               </Button>
             </div>

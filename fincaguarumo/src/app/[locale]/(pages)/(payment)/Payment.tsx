@@ -5,6 +5,7 @@ import { Elements } from "@stripe/react-stripe-js"
 import CheckoutForm from "./CheckoutForm"
 import { useBooking } from "../../BookingProvider"
 import Loading from "../loading"
+import Title from "../../../../components/Title"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 const stripePromise = loadStripe(publishableKey)
@@ -64,6 +65,7 @@ const Payment = () => {
         <Loading />
       ) : (
         <Elements options={options} stripe={stripePromise} key={clientSecret}>
+          <Title title={`Pay $ ${bookingData.bookingDetails.totalPrice} now`} />
           <CheckoutForm />
         </Elements>
       )}
