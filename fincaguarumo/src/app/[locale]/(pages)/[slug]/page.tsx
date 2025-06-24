@@ -52,12 +52,12 @@ const Page = async ({ params }: { params: any }) => {
         <Dialog>
           <DialogTrigger asChild>
             <div className="flex items-center sticky bottom-4 mb-2 mx-auto w-11/12">
-              <Button size="lg" variant="secondary" className=" ml-auto">
+              <Button size="lg" variant="secondary" className="ml-auto">
                 Book now
               </Button>
             </div>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[600px]">
             <DialogTitle>Book Your Stay</DialogTitle>
             <div className="mt-8">
               <BookingOptions
