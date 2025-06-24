@@ -28,6 +28,7 @@ const initialBookingData = {
     guests: "1",
     price: "0",
     totalPrice: "0",
+    currency: "usd",
     geo: { lat: "", lon: "" },
   },
 }
