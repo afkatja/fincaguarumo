@@ -43,6 +43,8 @@
   --ring: 142 86% 28%;
   --radius: 0.5rem;
   --prose-body: #374151;
+
+  --rdp-accent-color: var(--guarumo-accent);
 }
 
 @media (prefers-color-scheme: dark) {

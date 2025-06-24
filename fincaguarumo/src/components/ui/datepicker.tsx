@@ -5,6 +5,19 @@ import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { Button } from "./button"
 import { Calendar } from "./calendar"
 
+const generateDateRange = (startDate: Date = new Date(), days: number = 30) => {
+  const dates = []
+  const currentDate = new Date(startDate)
+  currentDate.setHours(0, 0, 0, 0) // Reset time to start of day
+
+  for (let i = 0; i < days; i++) {
+    dates.push(new Date(currentDate))
+    currentDate.setDate(currentDate.getDate() + 1)
+  }
+
+  return dates
+}
+
 const datepicker = ({
   label,
   placeholder,
@@ -16,6 +29,7 @@ const datepicker = ({
   selectedDate?: Date
   onSelectDate: (date: Date) => void
 }) => {
+  const availableDates = generateDateRange(new Date(), 180)
   return (
     <>
       <Label htmlFor="date">{label}</Label>
@@ -41,6 +55,13 @@ const datepicker = ({
           <Calendar
             mode="single"
             onSelect={date => date && onSelectDate(date)}
+            disabled={(date: Date) =>
+              date < new Date() ||
+              !availableDates.some(
+                availableDate =>
+                  availableDate.toDateString() === date.toDateString()
+              )
+            }
           />
         </PopoverContent>
       </Popover>
