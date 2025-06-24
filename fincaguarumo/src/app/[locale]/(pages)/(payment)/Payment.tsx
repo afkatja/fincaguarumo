@@ -8,6 +8,8 @@ import Loading from "../loading"
 import Title from "../../../../components/Title"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+console.log("Stripe publishable key", publishableKey)
+
 const stripePromise = loadStripe(publishableKey)
 
 const Payment = () => {
