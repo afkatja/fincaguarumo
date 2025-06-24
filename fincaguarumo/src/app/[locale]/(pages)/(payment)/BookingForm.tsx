@@ -75,7 +75,7 @@ const BookingForm = ({
             errorMessage="Please enter a valid email address"
             labelText="Your email *"
             placeholder="jane@doe.com"
-            pattern="^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$"
+            pattern="^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$"
             onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
               setBookingData({
                 ...bookingData,
