@@ -7,6 +7,8 @@ import { Poppins, Comfortaa, Cabin, Didact_Gothic } from "next/font/google"
 
 import "../styles/globals.css"
 import "../styles/styles.css"
+import "react-day-picker/style.css"
+
 import { locales } from "../../config"
 
 import Footer from "../../components/Footer"
