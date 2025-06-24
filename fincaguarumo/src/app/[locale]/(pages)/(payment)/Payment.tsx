@@ -1,75 +1,94 @@
 "use client"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
+import Image from "next/image"
 import { loadStripe } from "@stripe/stripe-js"
-import { Elements } from "@stripe/react-stripe-js"
+import {
+  CheckoutProvider,
+  CurrencySelectorElement,
+  Elements,
+} from "@stripe/react-stripe-js"
 import CheckoutForm from "./CheckoutForm"
 import { useBooking } from "../../BookingProvider"
 import Loading from "../loading"
 import Title from "../../../../components/Title"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
-console.log("Stripe publishable key", publishableKey)
 
-const stripePromise = loadStripe(publishableKey)
+const stripePromise = loadStripe(publishableKey, {
+  betas: ["custom_checkout_adaptive_pricing_2"],
+})
 
 const Payment = () => {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const { bookingData } = useBooking()
+  const fetchData = useMemo(async () => {
+    try {
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerDetails: bookingData.customerDetails,
+          bookingDetails: {
+            ...bookingData.bookingDetails,
+            type: bookingData.type,
+          },
+        }),
+      })
+      const { clientSecret: clientSecretData } = await response.json()
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/create-payment-intent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            customerDetails: bookingData.customerDetails,
-            bookingDetails: {
-              ...bookingData.bookingDetails,
-              type: bookingData.type,
-            },
-          }),
-        })
-        const { clientSecret: clientSecretData } = await response.json()
-
-        setClientSecret(clientSecretData)
-      } catch (err) {
-        console.error("Error creating intent: " + err)
-      }
+      setClientSecret(clientSecretData)
+      return clientSecretData
+    } catch (err) {
+      console.error("Error creating payment session: " + err)
     }
-    if (clientSecret) return
-
-    fetchData()
-  })
+  }, [bookingData])
 
   const appearance = {
     theme: "stripe" as const,
     variables: {
       fontFamily: "Poppins",
       colorPrimary: "#034b35",
-      colorBackground: "#3f3f46",
-      colorText: "#f4f4f5",
+      colorBackground: "#d1d5dc",
+      colorText: "#1e2939",
+      colorTextSecondary: "#1e2939",
+      iconColor: "#1e2939",
     },
-    rules: {
-      ".AccordionItem--selected": {
-        color: "#f4f4f5",
-      },
-    },
+    rules: {},
   }
 
   const options = {
-    clientSecret: clientSecret ?? undefined,
     appearance,
   }
+
   return (
     <>
       {!clientSecret ? (
-        <Loading />
+        <Loading className="absolute" />
       ) : (
-        <Elements options={options} stripe={stripePromise} key={clientSecret}>
-          <Title title={`Pay $ ${bookingData.bookingDetails.totalPrice} now`} />
-          <CheckoutForm />
-        </Elements>
+        <>
+          <CheckoutProvider
+            options={{
+              fetchClientSecret: () => fetchData,
+              elementsOptions: options,
+            }}
+            stripe={stripePromise}
+          >
+            <CurrencySelectorElement />
+            <Title
+              title={`Pay ${bookingData.bookingDetails.currency.toUpperCase()} ${
+                bookingData.bookingDetails.totalPrice
+              }  now`}
+            />
+            <CheckoutForm />
+          </CheckoutProvider>
+          <Image
+            src="/images/stripe-badge.png"
+            width={450}
+            height={50}
+            alt="stripe badge"
+            className="w-full"
+          />
+        </>
       )}
     </>
   )

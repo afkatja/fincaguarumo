@@ -1,7 +1,13 @@
 import React, { FormEventHandler, useState } from "react"
-import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
+import {
+  PaymentElement,
+  useStripe,
+  useElements,
+  useCheckout,
+} from "@stripe/react-stripe-js"
 import { Button } from "@/components/ui/button"
 import Loading from "../loading"
+import { useBooking } from "../../BookingProvider"
 
 export default function CheckoutForm({
   dpmCheckerLink,
@@ -9,7 +15,9 @@ export default function CheckoutForm({
   dpmCheckerLink?: string
 }) {
   const stripe = useStripe()
-  const elements = useElements() //stripe?.elements({ loader: "always" })
+  // const elements = useElements() //stripe?.elements({ loader: "always" })
+  const checkout = useCheckout()
+  const { bookingData } = useBooking()
 
   const [message, setMessage] = useState<null | string | undefined>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -19,38 +27,24 @@ export default function CheckoutForm({
   const handleSubmit: FormEventHandler<HTMLFormElement> = async e => {
     e.preventDefault()
 
-    if (!stripe || !elements) {
+    if (!stripe) {
       return
     }
 
     setIsLoading(true)
+    // const result = await checkout.updateEmail(bookingData.customerDetails.email)
+    // if (result.type === "error") setMessage(result.error.message)
 
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url:
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:3000/payment-success"
-            : "https://fincaguarumo.com/payment-success",
-      },
-    })
-
-    // This point will only be reached if there is an immediate error when
-    // confirming the payment. Otherwise, your customer will be redirected to
-    // your `return_url`. For some payment methods like iDEAL, your customer will
-    // be redirected to an intermediate site first to authorize the payment, then
-    // redirected to the `return_url`.
-    if (error.type === "card_error" || error.type === "validation_error") {
-      setMessage(error.message)
-    } else {
-      setMessage("An unexpected error occurred.")
+    const confirmResult = await checkout.confirm()
+    if (confirmResult.type === "error") {
+      setMessage(confirmResult.error.message)
     }
 
     setIsLoading(false)
   }
 
   const paymentElementOptions = {
-    layout: "accordion" as const,
+    // layout: "accordion" as const,
   }
 
   return (
@@ -69,11 +63,7 @@ export default function CheckoutForm({
         <footer className="flex flex-wrap mt-auto pt-4">
           <Button
             disabled={
-              isLoading ||
-              !stripe ||
-              !elements ||
-              !isElementReady ||
-              !isFormComplete
+              isLoading || !stripe || !isElementReady || !isFormComplete
             }
             className="ml-auto"
           >
