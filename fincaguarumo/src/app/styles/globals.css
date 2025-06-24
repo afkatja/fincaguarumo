@@ -29,7 +29,7 @@
   --primary: 148 92% 15%;
   --primary-foreground: 356 29% 98%;
   --secondary: 329 67% 37%;
-  --secondary-foreground: 240 5.9% 10%;
+  --secondary-foreground: var(--sunrise-color); /*240 5.9% 10%; */
   --tertiary: 88 24% 20%;
   --teriary-foreground: 240 5.9% 10%;
   --muted: 240, 4.8%, 95.9%;

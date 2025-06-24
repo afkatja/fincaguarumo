@@ -35,40 +35,38 @@ const ClientPage = ({ content }: { content: Content }) => {
 
   return (
     <>
-      {content?.showBookingDialog && (
-        <div className="w-11/12 flex justify-center mx-auto">
+      <RichText body={content?.body} />
+      <footer className="w-11/12 flex justify-center gap-4 mx-auto my-3 sticky bottom-4">
+        {content?.showBookingDialog && (
           <BookingDialog
             bookingType={IBookingType.villa}
             dialogOptions={{
-              buttonText: "See availability",
-              title: "Reserve Villa Bruno",
+              buttonText: "Book directly on this site",
+              title: "Reserve Villa Bruno directly",
             }}
           />
-        </div>
-      )}
-      <RichText body={content?.body} />
-      {content?.showBookingOptions && (
-        <Dialog>
-          <DialogTrigger asChild>
-            <div className="flex items-center sticky bottom-4 mb-2 mx-auto w-11/12">
-              <Button size="lg" variant="secondary" className=" ml-auto">
-                Book now
+        )}
+        {content?.showBookingOptions && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button size="lg" variant="secondary">
+                Book on other platforms
               </Button>
-            </div>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogTitle>Book Your Stay</DialogTitle>
-            <div className="mt-8">
-              <BookingOptions
-                propertyId="your-booking-property-id"
-                expediaPropertyId={
-                  process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
-                }
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogTitle>Book Your Stay</DialogTitle>
+              <div className="mt-8">
+                <BookingOptions
+                  propertyId="your-booking-property-id"
+                  expediaPropertyId={
+                    process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
+                  }
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </footer>
     </>
   )
 }
