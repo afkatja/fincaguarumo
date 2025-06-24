@@ -28,6 +28,7 @@ const ClientPage = ({ content }: { content: Content }) => {
         price: content.price,
         body: content.body,
         guests: "1",
+        location: "Finca Guarumo",
       },
     })
   }, [content])

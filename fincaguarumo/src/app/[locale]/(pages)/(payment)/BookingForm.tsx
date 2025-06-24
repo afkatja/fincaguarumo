@@ -203,7 +203,7 @@ const BookingForm = ({
               <SelectItem value="1">1 adult</SelectItem>
               <SelectItem value="2">2 adults</SelectItem>
               <SelectItem value="3">2 adults + 1 child</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="other">2 adults + 2 children</SelectItem>
             </SelectContent>
           </Select>
         </div>
