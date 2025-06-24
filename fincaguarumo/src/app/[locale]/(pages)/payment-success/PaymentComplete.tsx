@@ -13,6 +13,7 @@ import { useBooking } from "../../BookingProvider"
 const { Success, Info, Error } = icons
 
 enum Status {
+  Complete = "complete",
   Success = "succeeded",
   PaymentError = "requires_payment_method",
   Error = "default",
@@ -22,26 +23,31 @@ const STATUS_CONTENT_MAP: Record<
   string,
   { text: string; iconColor: string; icon: React.ReactNode }
 > = {
-  succeeded: {
+  [Status.Success]: {
     text: "Booking succeeded",
     iconColor: "#30B130",
     icon: <Success fill="#30B130" className="mr-4" />,
   },
-  processing: {
-    text: "Your payment is processing.",
-    iconColor: "#6D6E78",
-    icon: <Info fill="#6D6E78" className="mr-4" />,
+  [Status.Complete]: {
+    text: "Booking succeeded",
+    iconColor: "#30B130",
+    icon: <Success fill="#30B130" className="mr-4" />,
   },
-  requires_payment_method: {
+  [Status.PaymentError]: {
     text: "Your payment was not successful, please try again.",
     iconColor: "#DF1B41",
     icon: <Error fill="#DF1B41" className="mr-4" />,
   },
-  default: {
+  [Status.Error]: {
     text: "Something went wrong, please try again.",
     iconColor: "#DF1B41",
     icon: <Error fill="#DF1B41" className="mr-4" />,
   },
+  // default: {
+  //   text: "Your payment is processing.",
+  //   iconColor: "#6D6E78",
+  //   icon: <Info fill="#6D6E78" className="mr-4" />,
+  // },
 }
 
 export default function CompletePage({ locale }: { locale: string }) {
@@ -56,22 +62,36 @@ export default function CompletePage({ locale }: { locale: string }) {
   const [paymentIntent, setPaymentIntent] = useState<
     Record<string, any> | null | undefined
   >(null)
+  const [session, setSession] = useState<any>(null)
 
   useEffect(() => {
-    if (!stripe || paymentIntent) return
+    if (!stripe) return
     const clientSecret = searchParams.get("payment_intent_client_secret")
+    const sessionId = searchParams.get("session_id")
 
-    if (!clientSecret) return
+    if (clientSecret && !paymentIntent) {
+      const fetchData = async () => {
+        const { paymentIntent: intent } =
+          await stripe.retrievePaymentIntent(clientSecret)
+        if (!intent) return
+        setPaymentIntent(intent)
+        setStatus(intent?.status)
+      }
+      fetchData()
+    } else if (sessionId && !session) {
+      const fetchSessionStatus = async () => {
+        const response = await fetch(
+          `/api/session-status?session_id=${sessionId}`
+        )
+        if (!response.ok) return
+        const data = await response.json()
 
-    const fetchData = async () => {
-      const { paymentIntent: intent } =
-        await stripe.retrievePaymentIntent(clientSecret)
-      if (!intent) return
-      setPaymentIntent(intent)
-      setStatus(intent?.status)
+        setSession(data.session)
+        setStatus(data.session?.status)
+      }
+      fetchSessionStatus()
     }
-    fetchData()
-  }, [searchParams, stripe, paymentIntent])
+  }, [searchParams, stripe, paymentIntent, session])
 
   useEffect(() => {
     const sendConfirmationEmail = async () => {
@@ -105,7 +125,7 @@ export default function CompletePage({ locale }: { locale: string }) {
     if (searchParams.get("payment_intent_client_secret")) {
       sendConfirmationEmail()
     }
-  }, [searchParams, bookingData])
+  }, [searchParams, bookingData, status])
 
   const getBookingTitle = () => {
     return bookingData.bookingDetails.title || "Villa Bruno Stay"
@@ -114,20 +134,27 @@ export default function CompletePage({ locale }: { locale: string }) {
   const getBookingLocation = () => {
     return bookingData.bookingDetails.location || "Finca Guarumo"
   }
+
+  const getBookingDescription = () => {
+    return bookingData.bookingDetails.description || ""
+  }
+
+  console.log({ session, status })
+
   return (
     <Suspense fallback={<Loading />}>
-      {status && paymentIntent && (
+      {status && (paymentIntent || session) && (
         <PagesLayout
           locale={locale}
           pageName="paymentComplete"
           title={`Dear ${bookingData.customerDetails?.name}, ${STATUS_CONTENT_MAP[status].text}`}
-          subtitle={`You paid $ ${paymentIntent?.amount / 100} for ${getBookingTitle()} at ${getBookingLocation()}`}
-          description={paymentIntent?.description}
+          subtitle={`You paid $ ${(paymentIntent?.amount || session.amount_total) / 100} for ${getBookingTitle()} at ${getBookingLocation()}`}
+          description={getBookingDescription()}
         >
           <div className="w-11/12 mx-auto prose dark:prose-invert pb-8">
             <div className="flex">
               <div className="mt-6">{STATUS_CONTENT_MAP[status].icon}</div>
-              {status === Status.Success && (
+              {(status === Status.Success || status == Status.Complete) && (
                 <p>
                   Your booking of the <strong>{getBookingTitle()}</strong> for{" "}
                   {bookingData.bookingDetails?.guests} guests on{" "}
@@ -156,11 +183,11 @@ export default function CompletePage({ locale }: { locale: string }) {
             <div className="mt-4">
               <AddToCalendar
                 event={{
-                  title: bookingData.bookingDetails?.title,
-                  description: paymentIntent.description,
+                  title: getBookingTitle(),
+                  description: getBookingDescription(),
                   start: bookingData.bookingDetails?.date,
                   duration: bookingData.bookingDetails?.duration,
-                  location: bookingData.bookingDetails?.location,
+                  location: getBookingLocation(),
                   geo: bookingData.bookingDetails?.geo,
                 }}
               />
