@@ -170,6 +170,7 @@ export default async function Layout({
         </NextIntlClientProvider>
       </body>
       <script
+        async={true}
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
