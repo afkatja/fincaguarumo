@@ -7,7 +7,13 @@ import Icon from "@/components/Icon"
 import Loading from "../app/[locale]/(pages)/loading"
 import { urlFor } from "../sanity/lib/image"
 
-const Slideshow = ({ images: imagesProp }: { images: SanityImageObject[] }) => {
+const Slideshow = ({
+  images: imagesProp,
+  showExpand,
+}: {
+  images: SanityImageObject[]
+  showExpand?: boolean
+}) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const images = imagesProp.map(img => ({
     src: urlFor(img)
@@ -30,15 +36,17 @@ const Slideshow = ({ images: imagesProp }: { images: SanityImageObject[] }) => {
           useArrows={false}
           className="overflow-hidden"
         />
-        <Button
-          variant="outline"
-          size="sm"
-          className="absolute top-4 right-8 md:right-16 bg-background/50 hover:bg-background dark:bg-transparent dark:hover:bg-zinc-700 z-50 drop-shadow-md"
-          onClick={() => setIsExpanded(true)}
-        >
-          <Icon icon="Expand" className="h-5 w-5 dark:stroke-zinc-50" />
-          <span className="sr-only">Expand</span>
-        </Button>
+        {showExpand && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="absolute top-4 right-8 md:right-16 bg-background/50 hover:bg-background dark:bg-transparent dark:hover:bg-zinc-700 z-50 drop-shadow-md"
+            onClick={() => setIsExpanded(true)}
+          >
+            <Icon icon="Expand" className="h-5 w-5 dark:stroke-zinc-50" />
+            <span className="sr-only">Expand</span>
+          </Button>
+        )}
       </div>
 
       {isExpanded && (
