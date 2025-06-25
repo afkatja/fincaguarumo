@@ -51,7 +51,11 @@ const BookingDialog = ({
   return (
     <Dialog open={open} onOpenChange={() => closeHandler()} key="order-dialog">
       <DialogTrigger asChild>
-        <Button size="lg" className={dialogOptions.buttonClassName}>
+        <Button
+          size="lg"
+          className={dialogOptions.buttonClassName}
+          variant="secondary"
+        >
           {dialogOptions.buttonText}
         </Button>
       </DialogTrigger>

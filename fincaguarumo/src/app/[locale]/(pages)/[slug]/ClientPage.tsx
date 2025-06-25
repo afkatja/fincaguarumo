@@ -49,11 +49,11 @@ const ClientPage = ({ content }: { content: Content }) => {
         {content?.showBookingOptions && (
           <Dialog>
             <DialogTrigger asChild>
-              <Button size="lg" variant="secondary">
+              <Button size="lg" variant="outline">
                 Book on other platforms
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
               <DialogTitle>Book Your Stay</DialogTitle>
               <div className="mt-8">
                 <BookingOptions
