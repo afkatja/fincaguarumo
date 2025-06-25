@@ -42,7 +42,10 @@ const TourPage = ({ tour }: { tour: TTour }) => {
         body: tour.body,
       }}
       slideshow={
-        <Slideshow images={tour?.slideshow?.images ?? [tour.mainImage]} />
+        <Slideshow
+          images={tour?.slideshow?.images ?? [tour.mainImage]}
+          showExpand={false}
+        />
       }
       parent={{ title: "Tours", href: "tours" }}
       icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
