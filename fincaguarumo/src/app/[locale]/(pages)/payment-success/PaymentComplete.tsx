@@ -139,11 +139,11 @@ export default function CompletePage({ locale }: { locale: string }) {
     return bookingData.bookingDetails.description || ""
   }
 
-  console.log({ session, status })
-
   return (
     <Suspense fallback={<Loading />}>
-      {status && (paymentIntent || session) && (
+      {!status && !(paymentIntent || session) ? (
+        <Loading />
+      ) : (
         <PagesLayout
           locale={locale}
           pageName="paymentComplete"
@@ -185,7 +185,9 @@ export default function CompletePage({ locale }: { locale: string }) {
                 event={{
                   title: getBookingTitle(),
                   description: getBookingDescription(),
-                  start: bookingData.bookingDetails?.date,
+                  start:
+                    bookingData.bookingDetails?.checkIn ??
+                    bookingData.bookingDetails?.date,
                   duration: bookingData.bookingDetails?.duration,
                   location: getBookingLocation(),
                   geo: bookingData.bookingDetails?.geo,
