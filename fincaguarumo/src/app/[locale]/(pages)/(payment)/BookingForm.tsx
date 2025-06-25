@@ -185,19 +185,15 @@ const BookingForm = ({
               })
             }
           >
-            <SelectTrigger className="h-auto border border-zinc-300">
-              <SelectValue
-                placeholder={
-                  <div className="flex flex-col items-start">
-                    <span className="font-semibold uppercase text-[0.65rem]">
-                      Guests
-                    </span>
-                    <span className="font-normal">
-                      {bookingData.bookingDetails.guests} adults
-                    </span>
-                  </div>
-                }
-              />
+            <SelectTrigger className="h-auto border border-zinc-300 w-full flex">
+              <div className="flex flex-col items-start w-full">
+                <span className="font-semibold uppercase text-[0.65rem]">
+                  Guests
+                </span>
+                <span className="font-normal">
+                  {bookingData.bookingDetails.guests} adults
+                </span>
+              </div>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="1">1 adult</SelectItem>

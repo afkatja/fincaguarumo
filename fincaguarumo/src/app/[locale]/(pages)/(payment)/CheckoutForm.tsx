@@ -2,22 +2,14 @@ import React, { FormEventHandler, useState } from "react"
 import {
   PaymentElement,
   useStripe,
-  useElements,
   useCheckout,
 } from "@stripe/react-stripe-js"
 import { Button } from "@/components/ui/button"
 import Loading from "../loading"
-import { useBooking } from "../../BookingProvider"
 
-export default function CheckoutForm({
-  dpmCheckerLink,
-}: {
-  dpmCheckerLink?: string
-}) {
+export default function CheckoutForm() {
   const stripe = useStripe()
-  // const elements = useElements() //stripe?.elements({ loader: "always" })
   const checkout = useCheckout()
-  const { bookingData } = useBooking()
 
   const [message, setMessage] = useState<null | string | undefined>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -71,21 +63,6 @@ export default function CheckoutForm({
           </Button>
         </footer>
       </form>
-      {/* [DEV]: For demo purposes only, display dynamic payment methods annotation and integration checker */}
-      {/* <div id="dpm-annotation">
-        <p>
-          Payment methods are dynamically displayed based on customer location,
-          order amount, and currency.&nbsp;
-          <a
-            href={dpmCheckerLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            id="dpm-integration-checker"
-          >
-            Preview payment methods by transaction
-          </a>
-        </p>
-      </div> */}
     </>
   )
 }

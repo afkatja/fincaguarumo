@@ -141,19 +141,19 @@ export default function CompletePage({ locale }: { locale: string }) {
 
   return (
     <Suspense fallback={<Loading />}>
-      {!status && !(paymentIntent || session) ? (
+      {!status && !paymentIntent && !session ? (
         <Loading />
       ) : (
         <PagesLayout
           locale={locale}
           pageName="paymentComplete"
-          title={`Dear ${bookingData.customerDetails?.name}, ${STATUS_CONTENT_MAP[status].text}`}
+          title={`Dear ${bookingData.customerDetails?.name}, ${STATUS_CONTENT_MAP[status!].text}`}
           subtitle={`You paid $ ${(paymentIntent?.amount || session.amount_total) / 100} for ${getBookingTitle()} at ${getBookingLocation()}`}
           description={getBookingDescription()}
         >
           <div className="w-11/12 mx-auto prose dark:prose-invert pb-8">
             <div className="flex">
-              <div className="mt-6">{STATUS_CONTENT_MAP[status].icon}</div>
+              <div className="mt-6">{STATUS_CONTENT_MAP[status!].icon}</div>
               {(status === Status.Success || status == Status.Complete) && (
                 <p>
                   Your booking of the <strong>{getBookingTitle()}</strong> for{" "}

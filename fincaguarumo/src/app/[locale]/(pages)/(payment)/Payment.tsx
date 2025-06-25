@@ -1,11 +1,10 @@
 "use client"
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import Image from "next/image"
 import { loadStripe } from "@stripe/stripe-js"
 import {
   CheckoutProvider,
   CurrencySelectorElement,
-  Elements,
 } from "@stripe/react-stripe-js"
 import CheckoutForm from "./CheckoutForm"
 import { useBooking } from "../../BookingProvider"
@@ -46,7 +45,7 @@ const Payment = () => {
   const appearance = {
     theme: "stripe" as const,
     variables: {
-      fontFamily: "Poppins",
+      fontFamily: "Poppins, sans-serif",
       colorPrimary: "#034b35",
       colorBackground: "#d1d5dc",
       colorText: "#1e2939",
