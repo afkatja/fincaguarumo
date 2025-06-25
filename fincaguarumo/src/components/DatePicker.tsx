@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button"
 import CalendarIcon from "./icons/Calendar"
 
 interface IDatePicker {
-  isOpen: boolean
-  onClose: () => void
-  onOpen: () => void
+  isOpen?: boolean
+  onClose?: () => void
+  onOpen?: () => void
   onSelectDate: (date: Date) => void
   label: string
   selectedDate: string
@@ -38,7 +38,7 @@ const DatePicker = ({
       <PopoverTrigger asChild onClick={onOpen}>
         <Button
           variant="outline"
-          className={`flex-col items-start w-full h-auto dark:bg-zinc-600  hover:dark:text-zinc-50 ${className}`}
+          className={`flex-col items-start w-full h-auto dark:bg-zinc-600 hover:dark:text-zinc-50 ${className}`}
         >
           {!selectedDate ? (
             <span className="font-semibold flex items-center">

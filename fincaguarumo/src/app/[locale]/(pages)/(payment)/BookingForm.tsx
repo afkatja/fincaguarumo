@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectTrigger,
-  SelectValue,
+  // SelectValue,
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
@@ -15,7 +15,7 @@ import { DialogFooter } from "@/components/ui/dialog"
 import { BookingType, IBookingType } from "../../../../types"
 import PriceCalculation, { calculateTotal } from "@/components/priceCalculation"
 import DatePicker from "@/components/DatePicker"
-import Input from "../../../../components/Input"
+import Input from "@/components/Input"
 
 const BookingForm = ({
   onSubmit,
@@ -187,9 +187,7 @@ const BookingForm = ({
           >
             <SelectTrigger className="h-auto border border-zinc-300 w-full flex">
               <div className="flex flex-col items-start w-full">
-                <span className="font-semibold uppercase text-[0.65rem]">
-                  Guests
-                </span>
+                <span className="font-semibold">Guests</span>
                 <span className="font-normal">
                   {bookingData.bookingDetails.guests} adults
                 </span>

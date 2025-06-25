@@ -23,8 +23,8 @@ const SelectBox = ({
     <>
       <Label htmlFor="guests">{label}</Label>
       <Select onValueChange={onValueChange}>
-        <SelectTrigger className="h-auto">
-          <SelectValue placeholder={placeholder} />
+        <SelectTrigger className="border border-solid border-input w-full">
+          <span className="font-semibold">{placeholder}</span>
         </SelectTrigger>
         <SelectContent>
           {values.map(value => (

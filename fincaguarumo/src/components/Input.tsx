@@ -1,6 +1,5 @@
 import React, { ChangeEventHandler } from "react"
 import { Label } from "./ui/label"
-import { StringDecoder } from "string_decoder"
 
 const Input = ({
   id,

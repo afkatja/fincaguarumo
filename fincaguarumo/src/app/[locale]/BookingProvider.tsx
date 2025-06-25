@@ -1,6 +1,10 @@
 "use client"
 import { createContext, useContext, useState, useEffect } from "react"
 
+const today = new Date()
+const tomorrow = new Date(+today + 86400000)
+const later = new Date(+today + 259200000)
+
 const initialBookingData = {
   type: "tour",
   customerDetails: { name: "", email: "" },
@@ -10,17 +14,17 @@ const initialBookingData = {
     duration: "",
     location: "",
     body: "",
-    date: new Date().toLocaleDateString(undefined, {
+    date: tomorrow.toLocaleDateString(undefined, {
       year: "numeric",
       month: "long",
       day: "numeric",
     }),
-    checkIn: new Date().toLocaleDateString(undefined, {
+    checkIn: tomorrow.toLocaleDateString(undefined, {
       year: "numeric",
       month: "long",
       day: "numeric",
     }),
-    checkOut: new Date().toLocaleDateString(undefined, {
+    checkOut: later.toLocaleDateString(undefined, {
       year: "numeric",
       month: "long",
       day: "numeric",

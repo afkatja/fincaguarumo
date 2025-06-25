@@ -2,7 +2,7 @@
 import { useState } from "react"
 // import { BookingService } from "../services/booking"
 import { ExpediaService } from "../services/expedia"
-import Datepicker from "./ui/datepicker"
+import Datepicker from "@/components/DatePicker"
 import SelectBox from "./ui/selectBox"
 import { Button } from "./ui/button"
 
@@ -15,8 +15,8 @@ export function BookingOptions({
   propertyId,
   expediaPropertyId,
 }: BookingOptionsProps) {
-  const [checkin, setCheckin] = useState(new Date())
-  const [checkout, setCheckout] = useState(new Date())
+  const [checkin, setCheckin] = useState(new Date(+new Date() + 86400000))
+  const [checkout, setCheckout] = useState(new Date(+new Date() + 259200000))
   const [guests, setGuests] = useState(2)
 
   const expediaService = new ExpediaService()
@@ -47,16 +47,22 @@ export function BookingOptions({
           <div>
             <Datepicker
               label="Check in"
-              placeholder="Select date"
-              selectedDate={checkin}
+              selectedDate={checkin.toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
               onSelectDate={date => setCheckin(date)}
             />
           </div>
-          <div>
+          <div className="mt-4 sm:mt-0">
             <Datepicker
               label="Check out"
-              placeholder="Check-out date"
-              selectedDate={checkout}
+              selectedDate={checkout.toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
               onSelectDate={date => setCheckout(date)}
             />
           </div>
