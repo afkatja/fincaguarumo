@@ -50,8 +50,6 @@ const DetailsPageLayout = ({
   })
   const t = translations?.booking
 
-  console.log(dialog)
-
   return (
     <Suspense fallback={<Loading />}>
       <div className="content-wrap">

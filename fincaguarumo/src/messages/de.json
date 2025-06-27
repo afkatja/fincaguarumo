@@ -27,7 +27,8 @@
   },
   "contact": {
     "title": "Contact Us",
-    "description": "Have a question or want to learn more about our retreats? Get in touch with us."
+    "description": "Have a question or want to learn more about our retreats? Get in touch with us.",
+    "location": "Our location"
   },
   "tours": {
     "title": "Tours",

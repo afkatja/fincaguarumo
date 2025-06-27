@@ -22,7 +22,8 @@
   },
   "contact": {
     "title": "Contáctanos",
-    "description": "¿Tienes alguna pregunta o quieres saber más sobre nuestros retiros? Ponte en contacto con nosotros."
+    "description": "¿Tienes alguna pregunta o quieres saber más sobre nuestros retiros? Ponte en contacto con nosotros.",
+    "location": "Nuestra ubicación"
   },
   "cards": {
     "new": "Nuevo",
