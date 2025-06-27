@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
@@ -5,7 +7,8 @@ import Badge from "@/components/badge"
 import Icon from "../../../../components/Icon"
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import { urlFor } from "@/sanity/lib/image"
-import { titleCase } from "../../../../lib/utils"
+import { titleCase, loadTranslations } from "../../../../lib/utils"
+import { useEffect, useState } from "react"
 
 export type TourType = {
   title: string
@@ -28,14 +31,42 @@ const TourItem = ({
   isNew,
   isFeatured,
   href,
-}: TourType) => {
+  locale = "en",
+}: TourType & { locale?: string }) => {
+  const [translations, setTranslations] = useState<{
+    cards: {
+      new: string
+      featured: string
+      readMore: string
+    }
+  } | null>(null)
+
+  useEffect(() => {
+    const loadTranslationsData = async () => {
+      const messages = await loadTranslations(locale)
+      setTranslations(messages)
+    }
+    loadTranslationsData()
+  }, [locale])
+
+  // Fallback translations in case loading fails
+  const fallbackTranslations = {
+    cards: {
+      new: "New",
+      featured: "Featured",
+      readMore: "Read more",
+    },
+  }
+
+  const t = translations?.cards || fallbackTranslations.cards
+
   return (
     <Link href={href} className="group tour no-underline" prefetch>
       <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border-background">
         <CardContent className="flex h-full flex-col justify-between p-6">
           <div className="relative">
-            {isNew && <Badge text="New" />}
-            {isFeatured && <Badge text="Featured" />}
+            {isNew && <Badge text={t.new} />}
+            {isFeatured && <Badge text={t.featured} />}
             {mainImage && (
               <Image
                 src={urlFor(mainImage).url()}
@@ -63,7 +94,7 @@ const TourItem = ({
             </div>
           )}
           <div className="flex items-center mt-3 text-guarumo-accent dark:text-card-foreground">
-            <p className="fancy-underline">Read more</p>
+            <p className="fancy-underline">{t.readMore}</p>
             <Icon
               icon="ArrowRight"
               className="ml-auto h-5 w-5 transition-all group-hover:translate-x-1"

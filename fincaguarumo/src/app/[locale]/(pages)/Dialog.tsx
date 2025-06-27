@@ -24,10 +24,12 @@ const BookingDialog = ({
   title,
   description,
   price,
+  buttonText,
 }: {
   title: string
   description: string
   price: number
+  buttonText: string
 }) => {
   const [open, setOpen] = useState(false)
   const [participants, setParticipants] = useState(1)
@@ -36,7 +38,7 @@ const BookingDialog = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="lg" className="ml-auto">
-          Reserve Now
+          {buttonText}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">

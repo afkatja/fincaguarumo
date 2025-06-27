@@ -11,7 +11,7 @@ const Page = async ({ params }: { params: any }) => {
     revalidate: 0,
   })
 
-  return <TourPage tour={tour} />
+  return <TourPage tour={tour} locale={locale} />
 }
 
 export default Page

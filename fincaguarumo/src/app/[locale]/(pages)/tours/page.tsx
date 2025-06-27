@@ -44,21 +44,27 @@ const Tours = async ({ params }: { params: any }) => {
         {!!part1.length && (
           <div className="column column-reverse flex flex-col md:py-2">
             {part1.map((tour: TourType) => {
-              return <Tour key={crypto.randomUUID()} {...tour} />
+              return (
+                <Tour key={crypto.randomUUID()} {...tour} locale={locale} />
+              )
             })}
           </div>
         )}
         {!!part2.length && (
           <div className="column flex flex-col md:py-2">
             {part2.map((tour: TourType) => {
-              return <Tour key={crypto.randomUUID()} {...tour} />
+              return (
+                <Tour key={crypto.randomUUID()} {...tour} locale={locale} />
+              )
             })}
           </div>
         )}
         {!!part3.length && (
           <div className="column column-reverse flex flex-col md:py-2">
             {part3.map((tour: TourType) => {
-              return <Tour key={crypto.randomUUID()} {...tour} />
+              return (
+                <Tour key={crypto.randomUUID()} {...tour} locale={locale} />
+              )
             })}
           </div>
         )}

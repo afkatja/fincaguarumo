@@ -26,6 +26,18 @@ export const getTranslations = (
       }
     })
 
+export const loadTranslations = async (locale: string) => {
+  try {
+    const messages = await import(`../messages/${locale}.json`)
+    return messages.default
+  } catch (error) {
+    console.error(`Failed to load translations for locale: ${locale}`, error)
+    // Fallback to English
+    const fallbackMessages = await import(`../messages/en.json`)
+    return fallbackMessages.default
+  }
+}
+
 export async function isUniqueOtherThanLanguage(
   slug: string,
   context: SlugValidationContext

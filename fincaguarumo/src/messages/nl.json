@@ -23,5 +23,14 @@
   "contact": {
     "title": "Neem contact met ons op",
     "description": "Heb je een vraag of wil je meer weten over onze retraites? Neem contact met ons op."
+  },
+  "cards": {
+    "new": "Nieuw",
+    "featured": "Uitgelicht",
+    "readMore": "Lees meer"
+  },
+  "booking": {
+    "perPerson": "persoon",
+    "reserveButton": "Boek nu"
   }
 }

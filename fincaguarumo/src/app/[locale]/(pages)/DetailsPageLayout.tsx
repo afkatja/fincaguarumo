@@ -1,4 +1,5 @@
-import React, { Suspense } from "react"
+"use client"
+import React, { Suspense, useEffect, useState } from "react"
 
 import BookingDialog from "./Dialog"
 
@@ -13,6 +14,7 @@ import Loading from "./loading"
 // import resolveConfig from "tailwindcss/resolveConfig"
 // import theme from "../../../../tailwind.config"
 import RichText from "../../../components/RichText"
+import { loadTranslations } from "../../../lib/utils"
 
 const DetailsPageLayout = ({
   title,
@@ -24,11 +26,28 @@ const DetailsPageLayout = ({
   parent,
   body,
   icon,
+  locale,
 }: Omit<TTour, "slideshow" | "isPublished"> & {
   slideshow?: React.ReactNode
   parent?: { title: string; href: string }
   icon?: string
+  locale: string
 }) => {
+  const [translations, setTranslations] = useState<{
+    booking: {
+      perPerson: string
+      reserveButton: string
+    }
+  } | null>(null)
+  useEffect(() => {
+    const loadTranslationsData = async () => {
+      const messages = await loadTranslations(locale)
+      setTranslations(messages)
+    }
+    loadTranslationsData()
+  })
+  const t = translations?.booking
+
   return (
     <Suspense fallback={<Loading />}>
       <div className="content-wrap">
@@ -70,12 +89,15 @@ const DetailsPageLayout = ({
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-2xl font-bold">${price}</span>
-                  <span className="text-muted-foreground text-sm">/person</span>
+                  <span className="text-muted-foreground text-sm">
+                    /{t?.perPerson}
+                  </span>
                 </div>
                 <BookingDialog
                   price={Number(price)}
                   title={title}
                   description={description}
+                  buttonText={t?.reserveButton}
                 />
               </div>
             </footer>

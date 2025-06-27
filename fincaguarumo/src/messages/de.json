@@ -32,5 +32,14 @@
   "tours": {
     "title": "Tours",
     "description": "Get off the beaten path and discover Osa Peninsula from within, lead by the locals, on the following tours"
+  },
+  "cards": {
+    "new": "Neu",
+    "featured": "Empfohlen",
+    "readMore": "Mehr lesen"
+  },
+  "booking": {
+    "perPerson": "person",
+    "reserveButton": "Reserve now"
   }
 }

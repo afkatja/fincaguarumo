@@ -69,6 +69,7 @@ export default async function Home({ params }: { params: any }) {
           description={tour.description}
           slug={tour.slug}
           isPublished={tour.isPublished}
+          locale={locale}
         />
       ),
     }))
@@ -83,6 +84,7 @@ export default async function Home({ params }: { params: any }) {
           title={title}
           slug={slug}
           isPublished={isPublished}
+          locale={locale}
         />
       ),
     }))

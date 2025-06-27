@@ -6,7 +6,7 @@ import { TTour } from "../data"
 import { titleCase } from "../../../../../lib/utils"
 import { notFound } from "next/navigation"
 
-const TourPage = ({ tour }: { tour: TTour }) => {
+const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
   if (!tour || !tour.isPublished) notFound()
 
   return (
@@ -25,6 +25,7 @@ const TourPage = ({ tour }: { tour: TTour }) => {
       body={tour.body}
       parent={{ title: "Tours", href: "tours" }}
       icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
+      locale={locale}
     />
   )
 }

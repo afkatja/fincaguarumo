@@ -23,5 +23,14 @@
   "contact": {
     "title": "Contáctanos",
     "description": "¿Tienes alguna pregunta o quieres saber más sobre nuestros retiros? Ponte en contacto con nosotros."
+  },
+  "cards": {
+    "new": "Nuevo",
+    "featured": "Destacado",
+    "readMore": "Leer más"
+  },
+  "booking": {
+    "perPerson": "persona",
+    "reserveButton": "Reserva ahora"
   }
 }
