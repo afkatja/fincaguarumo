@@ -51,7 +51,7 @@ const GalleryPage = async ({ params }: { params: any }) => {
       pageName="gallery"
       title={content?.title}
       description={content?.description}
-      mainImage={content?.mainImage}
+      // mainImage={content?.mainImage}
     >
       {/* {content?.body && <RichText body={content?.body} />} */}
       {/* {gallery && <Gallery gallery={images} />} */}
