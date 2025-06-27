@@ -31,6 +31,18 @@
   },
   "booking": {
     "perPerson": "persona",
-    "reserveButton": "Reserva ahora"
+    "reserveButton": "Reserva ahora",
+    "checkIn": "Llegada",
+    "checkOut": "Salida",
+    "guests": "Huéspedes",
+    "selectDate": "Seleccionar fecha",
+    "checkoutDate": "Fecha de salida",
+    "numberOfGuests": "Número de huéspedes",
+    "person": "persona",
+    "people": "personas",
+    "bookOnBooking": "Reservar en Booking.com",
+    "bookOnAirbnb": "Reservar en AirBnb",
+    "bookOnExpedia": "Reservar en Expedia",
+    "bookNow": "Reservar ahora"
   }
 }

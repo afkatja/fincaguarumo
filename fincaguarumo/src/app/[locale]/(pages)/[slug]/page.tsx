@@ -14,6 +14,7 @@ import {
   DialogOverlay,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { loadTranslations } from "../../../../lib/utils"
 
 type Content = {
   title: string
@@ -38,6 +39,10 @@ const Page = async ({ params }: { params: any }) => {
 
   if (!content?.isPublished) notFound()
 
+  // Load translations
+  const messages = await loadTranslations(locale)
+  const t = messages?.booking
+
   return (
     <Layout
       locale={locale}
@@ -53,18 +58,19 @@ const Page = async ({ params }: { params: any }) => {
           <DialogTrigger asChild>
             <div className="flex items-center sticky bottom-4 mb-2 mx-auto w-11/12">
               <Button size="lg" variant="secondary" className="ml-auto">
-                Book now
+                {t?.bookNow || "Book now"}
               </Button>
             </div>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px]">
-            <DialogTitle>Book Your Stay</DialogTitle>
+            <DialogTitle>{t.bookNow}</DialogTitle>
             <div className="mt-8">
               <BookingOptions
                 propertyId="your-booking-property-id"
                 expediaPropertyId={
                   process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
                 }
+                locale={locale}
               />
             </div>
           </DialogContent>
