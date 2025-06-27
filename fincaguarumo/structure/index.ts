@@ -77,6 +77,7 @@ export const defaultDocumentNode: DefaultDocumentNodeResolver = (
     case "page":
     case "tour":
     case "post":
+    case "dialog":
       return S.document().views([
         S.view.form(),
         // preview(S, client)

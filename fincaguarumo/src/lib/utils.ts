@@ -73,3 +73,14 @@ export const shuffle = (array: any[]) => {
     .map(({ value }) => value)
   return arr
 }
+
+export const getInternationalizedValue = (
+  field: Array<{ _key: string; value: string }> | undefined,
+  currentLanguage: string,
+  fallback?: string
+): string => {
+  if (!field || !Array.isArray(field)) return fallback || ""
+
+  const value = field.find(item => item._key === currentLanguage)?.value
+  return value || fallback || ""
+}

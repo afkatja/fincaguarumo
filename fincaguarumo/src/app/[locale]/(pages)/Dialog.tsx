@@ -19,17 +19,45 @@ import { Separator } from "@/components/ui/separator"
 import Icon from "@/components/Icon"
 import Datepicker from "@/components/ui/datepicker"
 import SelectBox from "../../../components/ui/selectBox"
+import { getInternationalizedValue } from "../../../lib/utils"
+
+type IField = {
+  _key: string
+  value: string
+}
+
+export type IDialog = {
+  cta?: IField[]
+  date?: IField[]
+  selectDate?: IField[]
+  guests?: IField[]
+  adults?: IField[]
+  adult?: IField[]
+  child?: IField[]
+  other?: IField[]
+  paymentMethod?: IField[]
+  creditCard?: IField[]
+  paypal?: IField[]
+  people?: IField[]
+  total?: IField[]
+  ok?: IField[]
+  cancel?: IField[]
+}
 
 const BookingDialog = ({
   title,
   description,
   price,
   buttonText,
+  dialog,
+  locale,
 }: {
   title: string
   description: string
   price: number
-  buttonText: string
+  buttonText?: string
+  locale: string
+  dialog?: IDialog
 }) => {
   const [open, setOpen] = useState(false)
   const [participants, setParticipants] = useState(1)
@@ -38,7 +66,8 @@ const BookingDialog = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="lg" className="ml-auto">
-          {buttonText}
+          {buttonText ||
+            getInternationalizedValue(dialog?.cta, locale, "Reserve")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
@@ -52,50 +81,108 @@ const BookingDialog = ({
               <Datepicker
                 selectedDate={selectedDate}
                 onSelectDate={date => setSelectedDate(date)}
-                label="Date"
-                placeholder="Select date"
+                label={getInternationalizedValue(dialog?.date, locale, "Date")}
+                placeholder={getInternationalizedValue(
+                  dialog?.selectDate,
+                  locale,
+                  "Select date"
+                )}
               />
             </div>
             <div className="grid gap-2">
               <SelectBox
-                label="Guests"
+                label={getInternationalizedValue(
+                  dialog?.guests,
+                  locale,
+                  "Guests"
+                )}
                 placeholder={
                   <div className="flex flex-col items-start">
                     <span className="font-semibold uppercase text-[0.65rem]">
-                      Guests
+                      {getInternationalizedValue(
+                        dialog?.guests,
+                        locale,
+                        "Guests"
+                      )}
                     </span>
-                    <span className="font-normal">{participants} adults</span>
+                    <span className="font-normal">
+                      {participants}{" "}
+                      {participants === 1
+                        ? getInternationalizedValue(
+                            dialog?.adult,
+                            locale,
+                            "adult"
+                          )
+                        : getInternationalizedValue(
+                            dialog?.adults,
+                            locale,
+                            "adults"
+                          )}
+                    </span>
                   </div>
                 }
                 onValueChange={val => setParticipants(Number(val))}
                 values={[
-                  { val: "1", text: "1 adult" },
-                  { val: "2", text: "2 adults" },
-                  { val: "3", text: "3 adults" },
-                  { val: "4", text: "4 adults" },
-                  { val: "other", text: "Other" },
+                  {
+                    val: "1",
+                    text: `1 ${getInternationalizedValue(dialog?.adult, locale, "adult")}`,
+                  },
+                  {
+                    val: "2",
+                    text: `2 ${getInternationalizedValue(dialog?.adults, locale, "adults")}`,
+                  },
+                  {
+                    val: "3",
+                    text: `3 ${getInternationalizedValue(dialog?.adults, locale, "adults")}`,
+                  },
+                  {
+                    val: "4",
+                    text: `4 ${getInternationalizedValue(dialog?.adults, locale, "adults")}`,
+                  },
+                  {
+                    val: "other",
+                    text: getInternationalizedValue(
+                      dialog?.other,
+                      locale,
+                      "Other"
+                    ),
+                  },
                 ]}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="payment">Payment Method</Label>
+              <Label htmlFor="payment">
+                {getInternationalizedValue(
+                  dialog?.paymentMethod,
+                  locale,
+                  "Payment Method"
+                )}
+              </Label>
               <RadioGroup defaultValue="card">
                 <div className="flex items-center gap-4">
                   <Label
-                    htmlFor="card"
+                    id="card"
                     className="flex items-center gap-2 cursor-pointer"
                   >
                     <RadioGroupItem id="card" value="card" />
                     <Icon icon="CreditCard" className="h-6 w-6" />
-                    Credit Card
+                    {getInternationalizedValue(
+                      dialog?.creditCard,
+                      locale,
+                      "Credit Card"
+                    )}
                   </Label>
                   <Label
-                    htmlFor="paypal"
+                    id="paypal"
                     className="flex items-center gap-2 cursor-pointer"
                   >
                     <RadioGroupItem id="paypal" value="paypal" />
                     <Icon icon="WalletCards" className="h-6 w-6" />
-                    PayPal
+                    {getInternationalizedValue(
+                      dialog?.paypal,
+                      locale,
+                      "PayPal"
+                    )}
                   </Label>
                 </div>
               </RadioGroup>
@@ -106,23 +193,28 @@ const BookingDialog = ({
           <div className="grid gap-2 flex-none w-full">
             <div className="flex items-center justify-between">
               <div className="text-muted-foreground">
-                ${price} x {participants} people
+                ${price} x {participants}{" "}
+                {getInternationalizedValue(dialog?.people, locale, "people")}
               </div>
               <div>${price * participants}</div>
             </div>
             <Separator />
             <div className="flex items-center justify-between font-medium">
-              <div>Total</div>
+              <div>
+                {getInternationalizedValue(dialog?.total, locale, "Total")}
+              </div>
               <div>${price * participants}</div>
             </div>
           </div>
           <div className="mt-5 flex justify-end gap-2 w-full flex-none">
             <div>
               <Button variant="outline" onClick={() => setOpen(false)}>
-                Cancel
+                {getInternationalizedValue(dialog?.cancel, locale, "Cancel")}
               </Button>
             </div>
-            <Button>Reserve</Button>
+            <Button>
+              {getInternationalizedValue(dialog?.ok, locale, "Reserve")}
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>

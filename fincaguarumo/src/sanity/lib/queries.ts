@@ -157,7 +157,23 @@ export const TOUR_QUERY = groq`
   location, 
   duration,
   body, 
-  dialog,
+  dialog -> {
+    'cta': CLA_button,
+    'date': Date_label,
+    'selectDate': Select_date,
+    'guests': Guests_label,
+    'adults': Adults_label,
+    'adult': Adult_label,
+    'child': Child_label,
+    'other': Other_label,
+    'paymentMethod': Payment_method_label,
+    'creditCard': Credit_card_label,
+    'paypal': Paypal_label,
+    'people': People_label,
+    'total': Total_label,
+    'ok': OK_button_label,
+    'cancel': Cancel_button_label
+  },
   "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref

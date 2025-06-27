@@ -26,6 +26,7 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
       parent={{ title: "Tours", href: "tours" }}
       icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
       locale={locale}
+      dialog={tour.dialog}
     />
   )
 }

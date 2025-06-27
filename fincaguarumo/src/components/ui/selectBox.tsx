@@ -7,6 +7,7 @@ import {
   SelectItem,
 } from "./select"
 import { Label } from "./label"
+import { titleCase } from "../../lib/utils"
 
 const SelectBox = ({
   label,
@@ -21,7 +22,7 @@ const SelectBox = ({
 }) => {
   return (
     <>
-      <Label htmlFor="guests">{label}</Label>
+      <Label htmlFor="guests">{titleCase(label)}</Label>
       <Select onValueChange={onValueChange}>
         <SelectTrigger className="h-auto">
           <SelectValue placeholder={placeholder} />

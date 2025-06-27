@@ -85,6 +85,11 @@ export const tourType = defineType({
       name: "body",
       type: "blockContent",
     }),
+    defineField({
+      name: "dialog",
+      type: "reference",
+      to: [{ type: "dialog" }],
+    }),
   ],
   initialValue: {
     isPublished: true,

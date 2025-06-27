@@ -1,7 +1,7 @@
 "use client"
 import React, { Suspense, useEffect, useState } from "react"
 
-import BookingDialog from "./Dialog"
+import BookingDialog, { IDialog } from "./Dialog"
 
 import Icon from "@/components/Icon"
 import { TTour } from "./tours/data"
@@ -27,11 +27,13 @@ const DetailsPageLayout = ({
   body,
   icon,
   locale,
+  dialog,
 }: Omit<TTour, "slideshow" | "isPublished"> & {
   slideshow?: React.ReactNode
   parent?: { title: string; href: string }
   icon?: string
   locale: string
+  dialog?: IDialog
 }) => {
   const [translations, setTranslations] = useState<{
     booking: {
@@ -47,6 +49,8 @@ const DetailsPageLayout = ({
     loadTranslationsData()
   })
   const t = translations?.booking
+
+  console.log(dialog)
 
   return (
     <Suspense fallback={<Loading />}>
@@ -98,6 +102,8 @@ const DetailsPageLayout = ({
                   title={title}
                   description={description}
                   buttonText={t?.reserveButton}
+                  dialog={dialog}
+                  locale={locale}
                 />
               </div>
             </footer>
