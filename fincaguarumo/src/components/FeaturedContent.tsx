@@ -2,6 +2,7 @@ import React, { ReactNode } from "react"
 import Title from "./Title"
 import Icon from "./Icon"
 import Link from "next/link"
+import FadeInObserver from "./FadeInObserver"
 
 const FeaturedContent = ({
   featuredContentTitle,
@@ -20,21 +21,25 @@ const FeaturedContent = ({
         )}
         <ul className="md:grid lg:auto-cols-fr md:grid-cols-3 gap-4 md:-mx-5">
           {items.map(item => (
-            <li key={crypto.randomUUID()} className="md:m-5 my-5 fade-in">
-              {item.content}
+            <li key={crypto.randomUUID()} className="md:m-5 my-5">
+              <FadeInObserver className="fade-in">
+                {item.content}
+              </FadeInObserver>
             </li>
           ))}
-          <li className="md:m-5 my-5 fade-in">
-            <Link
-              href={href}
-              className="flex flex-wrap items-center justify-center h-full group no-underline"
-            >
-              <Icon
-                icon="ArrowRight"
-                className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
-                color="currentColor"
-              />
-            </Link>
+          <li className="md:m-5 my-5">
+            <FadeInObserver className="fade-in">
+              <Link
+                href={href}
+                className="flex flex-wrap items-center justify-center h-full group no-underline"
+              >
+                <Icon
+                  icon="ArrowRight"
+                  className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+                  color="currentColor"
+                />
+              </Link>
+            </FadeInObserver>
           </li>
         </ul>
       </div>

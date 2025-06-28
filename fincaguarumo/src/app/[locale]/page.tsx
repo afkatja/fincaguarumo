@@ -9,6 +9,7 @@ import {
 import TourItem from "./(pages)/tours/TourItem"
 import Video from "../../components/Video"
 import FeaturedContent from "../../components/FeaturedContent"
+import FadeInObserver from "../../components/FadeInObserver"
 import { ArrowDown } from "lucide-react"
 import Link from "next/link"
 import { Suspense } from "react"
@@ -114,12 +115,14 @@ export default async function Home({ params }: { params: any }) {
             </h3>
           </div>
           <div className="animate-slide transition-transform duration-1000 delay-1000">
-            <Link
-              href="#intro"
-              className="fade-from-view absolute bottom-8 left-1/2 -translate-x-1/2"
-            >
-              <ArrowDown className="animate-bounce stroke-zinc-50" />
-            </Link>
+            <FadeInObserver threshold={0.5} rootMargin="0px 0px -100px 0px">
+              <Link
+                href="#intro"
+                className="fade-from-view absolute bottom-8 left-1/2 -translate-x-1/2"
+              >
+                <ArrowDown className="animate-bounce stroke-zinc-50" />
+              </Link>
+            </FadeInObserver>
           </div>
         </div>
         <div className="content-wrap">
@@ -134,7 +137,7 @@ export default async function Home({ params }: { params: any }) {
             featuredContentTitle={content?.featured_content_title}
             items={featuredTours}
           />
-          {featuredPosts && (
+          {!!featuredPosts.length && (
             <FeaturedContent
               href="blog"
               featuredContentTitle={content?.featured_blog_title}
