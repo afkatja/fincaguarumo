@@ -1,5 +1,4 @@
 import { SanityImageObject } from "@sanity/image-url/lib/types/types"
-import { IDialog } from "../Dialog"
 
 export type TTour = {
   title: string
@@ -14,7 +13,7 @@ export type TTour = {
   body?: any
   language?: string
   isPublished: boolean
-  dialog?: IDialog
+  dialog?: { _ref: string }
 }
 
 const tours = [

@@ -1,3 +1,6 @@
+"use client"
+import { useDialog } from "../app/[locale]/DialogProvider"
+import { getInternationalizedValue } from "../lib/utils"
 import { BookingType, IBookingType } from "../types"
 import { Separator } from "@/components/ui/separator"
 
@@ -21,22 +24,27 @@ const PriceCalculation = ({
   price,
   guests,
   bookingType,
+  locale,
 }: {
   price: string
   guests: string
   bookingType: BookingType
+  locale: string
 }) => {
   const total = calculateTotal(price, guests, bookingType)
-
+  const { dialogData: dialog } = useDialog()
   return (
     <div className="grid gap-2 flex-none w-full">
       <div className="flex items-center justify-between">
-        <div className="text-muted-foreground">Price for {guests} people</div>
+        <div className="text-muted-foreground">
+          Price for {guests}{" "}
+          {getInternationalizedValue(dialog?.people, locale, "people")}
+        </div>
         <div>${total}</div>
       </div>
       <Separator />
       <div className="flex items-center justify-between font-medium">
-        <div>Total</div>
+        <div> {getInternationalizedValue(dialog?.total, locale, "Total")}</div>
         <div>${total}</div>
       </div>
     </div>

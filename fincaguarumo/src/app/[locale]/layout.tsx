@@ -15,6 +15,7 @@ import Footer from "../../components/Footer"
 import TransitionProvider from "./providers"
 
 import { BookingProvider } from "./BookingProvider"
+import { DialogProvider } from "./DialogProvider"
 
 import { metadata as meta } from "./meta"
 import { i18n } from "../../../languages"
@@ -154,17 +155,19 @@ export default async function Layout({
               <Header locale={locale} />
 
               <BookingProvider>
-                <main className="flex-1 flex flex-col">
-                  {draft?.isEnabled && (
-                    <a
-                      className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
-                      href="/api/draft-mode/disable"
-                    >
-                      Disable preview mode
-                    </a>
-                  )}
-                  {children} {draft?.isEnabled && <VisualEditing />}
-                </main>
+                <DialogProvider>
+                  <main className="flex-1 flex flex-col">
+                    {draft?.isEnabled && (
+                      <a
+                        className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
+                        href="/api/draft-mode/disable"
+                      >
+                        Disable preview mode
+                      </a>
+                    )}
+                    {children} {draft?.isEnabled && <VisualEditing />}
+                  </main>
+                </DialogProvider>
               </BookingProvider>
             </div>
           </TransitionProvider>

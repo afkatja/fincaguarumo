@@ -2,13 +2,8 @@
 import React, { useState } from "react"
 import { Label } from "@/components/ui/label"
 
-import {
-  Select,
-  SelectTrigger,
-  // SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select"
+import SelectBox from "@/components/ui/selectBox"
+
 import { Button } from "@/components/ui/button"
 import { useBooking } from "../../BookingProvider"
 import { DialogFooter } from "@/components/ui/dialog"
@@ -16,15 +11,22 @@ import { BookingType, IBookingType } from "../../../../types"
 import PriceCalculation, { calculateTotal } from "@/components/priceCalculation"
 import DatePicker from "@/components/DatePicker"
 import Input from "@/components/Input"
+import { getInternationalizedValue } from "../../../../lib/utils"
+import { IField } from "../Dialog"
+import SelectGuestsOptions from "./SelectGuestsOptions"
 
 const BookingForm = ({
   onSubmit,
   onCancel,
   bookingType,
+  locale,
+  dialog,
 }: {
   onSubmit: () => void
   onCancel: () => void
   bookingType: BookingType
+  locale: string
+  dialog: Record<string, IField[]>
 }) => {
   const [activePopover, setActivePopover] = useState<string | null>(null)
 
@@ -53,8 +55,15 @@ const BookingForm = ({
             id="name"
             type="text"
             required
-            labelText="Your name *"
-            errorMessage="Please enter your name"
+            labelText={getInternationalizedValue(
+              dialog?.nameLabel,
+              locale,
+              "Your name"
+            )}
+            errorMessage={getInternationalizedValue(
+              dialog?.nameError,
+              "Please enter your name"
+            )}
             placeholder="Jane Doe"
             onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
               setBookingData({
@@ -72,8 +81,16 @@ const BookingForm = ({
             id="email"
             type="email"
             required
-            errorMessage="Please enter a valid email address"
-            labelText="Your email *"
+            errorMessage={getInternationalizedValue(
+              dialog?.emailError,
+              locale,
+              "Please enter a valid email address"
+            )}
+            labelText={getInternationalizedValue(
+              dialog?.emailLabel,
+              locale,
+              "Your email *"
+            )}
             placeholder="jane@doe.com"
             pattern="^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$"
             onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -91,7 +108,6 @@ const BookingForm = ({
         {bookingType === IBookingType.villa ? (
           <div className="md:flex items-center">
             <div>
-              <Label htmlFor="check-in">Check-in Date</Label>
               <DatePicker
                 isOpen={activePopover === "check-in"}
                 onClose={() => setActivePopover(null)}
@@ -110,15 +126,22 @@ const BookingForm = ({
                   })
                   setActivePopover(null)
                 }}
-                label="Select date"
+                label={getInternationalizedValue(
+                  dialog?.checkinDate,
+                  locale,
+                  "Check-in date"
+                )}
                 selectedDate={bookingData.bookingDetails.checkIn}
               />
             </div>
 
             <div className="ml-4">
-              <Label htmlFor="check-out">Check-out Date</Label>
               <DatePicker
-                label="Select date"
+                label={getInternationalizedValue(
+                  dialog?.checkoutDate,
+                  locale,
+                  "Check-out date"
+                )}
                 selectedDate={bookingData.bookingDetails.checkOut}
                 isOpen={activePopover === "check-out"}
                 onClose={() => setActivePopover(null)}
@@ -142,7 +165,6 @@ const BookingForm = ({
           </div>
         ) : (
           <>
-            <Label htmlFor="date">Tour Date</Label>
             <DatePicker
               isOpen={activePopover === "tour-date"}
               onClose={() => setActivePopover(null)}
@@ -161,45 +183,30 @@ const BookingForm = ({
                 })
                 setActivePopover(null)
               }}
-              label="Select date"
+              label={getInternationalizedValue(
+                dialog?.selectDate,
+                locale,
+                "Select date"
+              )}
               selectedDate={bookingData.bookingDetails.date}
             />
           </>
         )}
 
         <div className="grid gap-2 mt-4">
-          <Label htmlFor="guests">Guests</Label>
-          <Select
-            onValueChange={val =>
+          <SelectGuestsOptions
+            locale={locale}
+            guests={bookingData.bookingDetails.guests}
+            onChange={val =>
               setBookingData({
                 ...bookingData,
                 bookingDetails: {
                   ...bookingData.bookingDetails,
                   guests: val,
-                  totalPrice: calculateTotal(
-                    bookingData.bookingDetails.price,
-                    val,
-                    bookingType
-                  ),
                 },
               })
             }
-          >
-            <SelectTrigger className="h-auto border border-zinc-300 w-full flex">
-              <div className="flex flex-col items-start w-full">
-                <span className="font-semibold">Guests</span>
-                <span className="font-normal">
-                  {bookingData.bookingDetails.guests} adults
-                </span>
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1 adult</SelectItem>
-              <SelectItem value="2">2 adults</SelectItem>
-              <SelectItem value="3">2 adults + 1 child</SelectItem>
-              <SelectItem value="4">2 adults + 2 children</SelectItem>
-            </SelectContent>
-          </Select>
+          />
         </div>
 
         <DialogFooter className="flex-wrap">
@@ -207,6 +214,7 @@ const BookingForm = ({
             price={bookingData.bookingDetails.price}
             guests={bookingData.bookingDetails.guests}
             bookingType={bookingType}
+            locale={locale}
           />
           <div className="mt-5 flex justify-end gap-2 w-full flex-none">
             <div>
@@ -218,14 +226,14 @@ const BookingForm = ({
                   onCancel()
                 }}
               >
-                Cancel
+                {getInternationalizedValue(dialog?.cancel, locale, "Cancel")}
               </Button>
             </div>
             <Button
               type="submit"
               className="group-invalid:pointer-events-none group-invalid:opacity-30"
             >
-              Reserve
+              {getInternationalizedValue(dialog?.ok, locale, "Reserve")}
             </Button>
           </div>
         </DialogFooter>

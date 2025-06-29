@@ -144,6 +144,28 @@ export const FEATURED_TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.curre
 }
 `
 
+export const DIALOG_QUERY = groq`
+*[_type == 'dialog' 
+// && _id == $dialogId
+][0] {
+  'cta': CLA_button,
+  'date': Date_label,
+  'selectDate': Select_date,
+  'guests': Guests_label,
+  'adults': Adults_label,
+  'adult': Adult_label,
+  'child': Child_label,
+  'other': Other_label,
+  'paymentMethod': Payment_method_label,
+  'creditCard': Credit_card_label,
+  'paypal': Paypal_label,
+  'people': People_label,
+  'total': Total_label,
+  'ok': OK_button_label,
+  'cancel': Cancel_button_label
+}
+`
+
 export const TOUR_QUERY = groq`
 *[_type == 'tour' && slug.current == $slug && language == $language][0]{
   _id, 
@@ -157,24 +179,8 @@ export const TOUR_QUERY = groq`
   location, 
   geo,
   duration,
-  body, 
-  dialog -> {
-    'cta': CLA_button,
-    'date': Date_label,
-    'selectDate': Select_date,
-    'guests': Guests_label,
-    'adults': Adults_label,
-    'adult': Adult_label,
-    'child': Child_label,
-    'other': Other_label,
-    'paymentMethod': Payment_method_label,
-    'creditCard': Credit_card_label,
-    'paypal': Paypal_label,
-    'people': People_label,
-    'total': Total_label,
-    'ok': OK_button_label,
-    'cancel': Cancel_button_label
-  },
+  body,
+  dialog,
   "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref

@@ -14,8 +14,25 @@ import BookingDialog from "../Dialog"
 import { Content } from "./page"
 import { useBooking } from "../../BookingProvider"
 
-const ClientPage = ({ content }: { content: Content }) => {
+type Messages = {
+  booking?: {
+    bookNow?: string
+    [key: string]: any
+  }
+  [key: string]: any
+}
+
+const ClientPage = ({
+  content,
+  locale,
+  messages,
+}: {
+  content: Content
+  locale: string
+  messages: Messages
+}) => {
   const { bookingData, setBookingData } = useBooking()
+  const t = messages?.booking
 
   useEffect(() => {
     setBookingData({
@@ -41,9 +58,11 @@ const ClientPage = ({ content }: { content: Content }) => {
           <BookingDialog
             bookingType={IBookingType.villa}
             dialogOptions={{
-              buttonText: "Book directly on this site",
-              title: "Reserve Villa Bruno directly",
+              buttonText: t?.bookNow || "Book now",
+              title: t?.bookNow || "Reserve Villa Bruno directly",
             }}
+            price={content.price || 0}
+            locale={locale}
           />
         )}
         {content?.showBookingOptions && (

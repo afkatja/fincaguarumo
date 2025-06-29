@@ -44,6 +44,10 @@
     "bookOnBooking": "Reservar en Booking.com",
     "bookOnAirbnb": "Reservar en AirBnb",
     "bookOnExpedia": "Reservar en Expedia",
-    "bookNow": "Reservar ahora"
+    "bookNow": "Reservar ahora",
+    "emailLabel": "Tu correo electrónico *",
+    "emailError": "Por favor ingresa una dirección de correo electrónico válida",
+    "nameLabel": "Tu nombre *",
+    "nameError": "Por favor ingresa tu nombre"
   }
 }
