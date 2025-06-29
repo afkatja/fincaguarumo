@@ -54,6 +54,8 @@
     "bookOnAirbnb": "Book on AirBnb",
     "bookOnExpedia": "Book on Expedia",
     "bookNow": "Book now",
+    "bookOnOthers": "Book on other platforms",
+    "bookVilla": "Book your stay",
     "emailLabel": "Your email *",
     "emailError": "Please enter a valid email address",
     "nameLabel": "Your name *",

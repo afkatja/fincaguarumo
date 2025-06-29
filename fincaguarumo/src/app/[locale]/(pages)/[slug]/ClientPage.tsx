@@ -69,13 +69,14 @@ const ClientPage = ({
           <Dialog>
             <DialogTrigger asChild>
               <Button size="lg" variant="outline">
-                Book on other platforms
+                {t?.bookOnOthers}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
-              <DialogTitle>Book Your Stay</DialogTitle>
+              <DialogTitle>{t?.bookVilla}</DialogTitle>
               <div className="mt-8">
                 <BookingOptions
+                  locale={locale}
                   propertyId="your-booking-property-id"
                   expediaPropertyId={
                     process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
