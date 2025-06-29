@@ -10,7 +10,7 @@ const people = [
     name: "Peter",
     avatar: "/images/peter.jpg",
     email: "info@fincaguarumo.com",
-    phoneNumber: "+506877729995",
+    phoneNumber: "+50687729995",
   },
   {
     name: "Katia",

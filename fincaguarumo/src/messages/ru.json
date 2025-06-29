@@ -22,6 +22,28 @@
   },
   "contact": {
     "title": "Свяжитесь с нами",
-    "description": "Есть вопрос или хотите узнать больше о наших ретритах? Свяжитесь с нами."
+    "description": "Есть вопрос или хотите узнать больше о наших ретритах? Свяжитесь с нами.",
+    "location": "Где мы находимся"
+  },
+  "cards": {
+    "new": "Новый",
+    "featured": "Рекомендуемый",
+    "readMore": "Читать далее"
+  },
+  "booking": {
+    "perPerson": "человека",
+    "reserveButton": "Резервировать",
+    "checkIn": "Заезд",
+    "checkOut": "Выезд",
+    "guests": "Гости",
+    "selectDate": "Выберите дату",
+    "checkoutDate": "Дата выезда",
+    "numberOfGuests": "Количество гостей",
+    "person": "человек",
+    "people": "человек",
+    "bookOnBooking": "Забронировать на Booking.com",
+    "bookOnAirbnb": "Забронировать на AirBnb",
+    "bookOnExpedia": "Забронировать на Expedia",
+    "bookNow": "Забронировать сейчас"
   }
 }

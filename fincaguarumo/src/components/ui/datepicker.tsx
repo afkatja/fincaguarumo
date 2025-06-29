@@ -4,6 +4,7 @@ import { Label } from "./label"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { Button } from "./button"
 import { Calendar } from "./calendar"
+import { titleCase } from "../../lib/utils"
 
 const generateDateRange = (startDate: Date = new Date(), days: number = 30) => {
   const dates = []
@@ -32,7 +33,7 @@ const datepicker = ({
   const availableDates = generateDateRange(new Date(), 180)
   return (
     <>
-      <Label htmlFor="date">{label}</Label>
+      <Label htmlFor="date">{titleCase(label)}</Label>
       <Popover>
         <PopoverTrigger asChild>
           <Button

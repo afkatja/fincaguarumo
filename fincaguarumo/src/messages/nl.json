@@ -22,6 +22,28 @@
   },
   "contact": {
     "title": "Neem contact met ons op",
-    "description": "Heb je een vraag of wil je meer weten over onze retraites? Neem contact met ons op."
+    "description": "Heb je een vraag of wil je meer weten over onze retraites? Neem contact met ons op.",
+    "location": "Onze locatie"
+  },
+  "cards": {
+    "new": "Nieuw",
+    "featured": "Uitgelicht",
+    "readMore": "Lees meer"
+  },
+  "booking": {
+    "perPerson": "persoon",
+    "reserveButton": "Boek nu",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "guests": "Gasten",
+    "selectDate": "Selecteer datum",
+    "checkoutDate": "Check-out datum",
+    "numberOfGuests": "Aantal gasten",
+    "person": "persoon",
+    "people": "personen",
+    "bookOnBooking": "Boek op Booking.com",
+    "bookOnAirbnb": "Boek op AirBnb",
+    "bookOnExpedia": "Boek op Expedia",
+    "bookNow": "Boek nu"
   }
 }

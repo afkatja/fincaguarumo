@@ -27,10 +27,32 @@
   },
   "contact": {
     "title": "Contact Us",
-    "description": "Have a question or want to learn more about our retreats? Get in touch with us."
+    "description": "Have a question or want to learn more about our retreats? Get in touch with us.",
+    "location": "Our location"
   },
   "tours": {
     "title": "Tours",
     "description": "Get off the beaten path and discover Osa Peninsula from within, lead by the locals, on the following tours"
+  },
+  "cards": {
+    "new": "Neu",
+    "featured": "Empfohlen",
+    "readMore": "Mehr lesen"
+  },
+  "booking": {
+    "perPerson": "person",
+    "reserveButton": "Reserve now",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "guests": "Gäste",
+    "selectDate": "Datum auswählen",
+    "checkoutDate": "Check-out Datum",
+    "numberOfGuests": "Anzahl der Gäste",
+    "person": "Person",
+    "people": "Personen",
+    "bookOnBooking": "Auf Booking.com buchen",
+    "bookOnAirbnb": "Auf AirBnb buchen",
+    "bookOnExpedia": "Auf Expedia buchen",
+    "bookNow": "Jetzt buchen"
   }
 }

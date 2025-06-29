@@ -22,6 +22,28 @@
   },
   "contact": {
     "title": "Contáctanos",
-    "description": "¿Tienes alguna pregunta o quieres saber más sobre nuestros retiros? Ponte en contacto con nosotros."
+    "description": "¿Tienes alguna pregunta o quieres saber más sobre nuestros retiros? Ponte en contacto con nosotros.",
+    "location": "Nuestra ubicación"
+  },
+  "cards": {
+    "new": "Nuevo",
+    "featured": "Destacado",
+    "readMore": "Leer más"
+  },
+  "booking": {
+    "perPerson": "persona",
+    "reserveButton": "Reserva ahora",
+    "checkIn": "Llegada",
+    "checkOut": "Salida",
+    "guests": "Huéspedes",
+    "selectDate": "Seleccionar fecha",
+    "checkoutDate": "Fecha de salida",
+    "numberOfGuests": "Número de huéspedes",
+    "person": "persona",
+    "people": "personas",
+    "bookOnBooking": "Reservar en Booking.com",
+    "bookOnAirbnb": "Reservar en AirBnb",
+    "bookOnExpedia": "Reservar en Expedia",
+    "bookNow": "Reservar ahora"
   }
 }

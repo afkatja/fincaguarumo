@@ -8,7 +8,7 @@ import { notFound } from "next/navigation"
 import { useBooking } from "../../../BookingProvider"
 import { IBookingType } from "../../../../../types"
 
-const TourPage = ({ tour }: { tour: TTour }) => {
+const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
   if (!tour || !tour.isPublished) notFound()
   const { bookingData, setBookingData } = useBooking()
 
@@ -50,6 +50,8 @@ const TourPage = ({ tour }: { tour: TTour }) => {
       parent={{ title: "Tours", href: "tours" }}
       icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
       bookingType={IBookingType.tour}
+      locale={locale}
+      dialogId={tour.dialog?._ref}
     />
   )
 }

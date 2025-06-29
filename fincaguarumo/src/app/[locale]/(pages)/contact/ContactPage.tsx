@@ -1,10 +1,13 @@
+"use client"
 import PagesLayout from "../pagesLayout"
 import { SanityDocument } from "sanity"
 import CardItem from "./CardItem"
 import Link from "next/link"
 import Icon from "../../../../components/Icon"
 import Title from "../../../../components/Title"
-import ContactForm, { IContactFormData } from "./ContactForm"
+import ContactForm from "./ContactForm"
+import { useEffect, useState } from "react"
+import { loadTranslations } from "../../../../lib/utils"
 
 export default function Contact({
   locale,
@@ -15,6 +18,20 @@ export default function Contact({
   content: SanityDocument
   people: Record<string, any>
 }) {
+  const [translations, setTranslations] = useState<{
+    contact: {
+      location: string
+    }
+  } | null>(null)
+
+  useEffect(() => {
+    const loadTranslationsData = async () => {
+      const messages = await loadTranslations(locale)
+      setTranslations(messages)
+    }
+    loadTranslationsData()
+  })
+  const t = translations?.contact
   return (
     <PagesLayout
       locale={locale}
@@ -44,10 +61,7 @@ export default function Contact({
 
       <div className="w-11/12 mx-auto my-4">
         <div className="my-4">
-          <Title
-            title="Our location"
-            titleClassName="text-3xl font-bold my-5"
-          />
+          <Title title={t?.location} titleClassName="text-3xl font-bold my-5" />
           <Icon icon="Waze" className="inline dark:fill-zinc-50" size={20} />
           <Link
             href="https://ul.waze.com/ul?ll=8.49527176%2C-83.33406687&navigate=no&zoom=17"

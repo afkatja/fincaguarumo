@@ -13,12 +13,14 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
   if (!body) return
   const components: Partial<PortableTextReactComponents> = {
     block: {
-      normal: ({ children }) => <p className="portable-text-p">{children}</p>,
+      normal: ({ children }) => (
+        <p className="portable-text-p mb-6 leading-7">{children}</p>
+      ),
       blockquote: ({ children }) => <p>{children}</p>,
       h1: ({ children }) => (
         <Title
           Heading="h1"
-          titleClassName="col-span-2 dark:text-zinc-50"
+          titleClassName="col-span-2 dark:text-zinc-50 !y-6"
           title={children}
           icon={{
             iconClassName: "fill-guarumo-accent dark:fill-zinc-50",
@@ -28,7 +30,7 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
       ),
       h2: ({ children }) => (
         <Title
-          titleClassName="col-span-2 dark:text-zinc-50"
+          titleClassName="col-span-2 dark:text-zinc-50 !my-6"
           title={children}
           icon={{
             iconClassName: "fill-guarumo-accent dark:fill-zinc-50",
@@ -83,7 +85,7 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
   }
 
   return (
-    <div className="prose lg:prose-lg py-8 w-11/12 mx-auto md:grid md:grid-cols-2 gap-5">
+    <div className="prose prose-lg !max-w-4xl mx-auto py-2 leading-relaxed">
       <PortableText value={body} components={components} />
     </div>
   )

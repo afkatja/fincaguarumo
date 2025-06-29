@@ -1,25 +1,70 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 // import { BookingService } from "../services/booking"
 import { ExpediaService } from "../services/expedia"
 import Datepicker from "@/components/DatePicker"
-import SelectBox from "./ui/selectBox"
 import { Button } from "./ui/button"
+import { loadTranslations } from "../lib/utils"
+import SelectGuestsOptions from "../app/[locale]/(pages)/(payment)/SelectGuestsOptions"
 
 interface BookingOptionsProps {
   propertyId: string
   expediaPropertyId: string
+  locale?: string
 }
 
 export function BookingOptions({
   propertyId,
   expediaPropertyId,
+  locale = "en",
 }: BookingOptionsProps) {
   const [checkin, setCheckin] = useState(new Date(+new Date() + 86400000))
   const [checkout, setCheckout] = useState(new Date(+new Date() + 259200000))
   const [guests, setGuests] = useState(2)
+  const [translations, setTranslations] = useState<{
+    booking: {
+      checkIn: string
+      checkOut: string
+      guests: string
+      selectDate: string
+      checkoutDate: string
+      numberOfGuests: string
+      person: string
+      people: string
+      bookOnBooking: string
+      bookOnAirbnb: string
+      bookOnExpedia: string
+    }
+  } | null>(null)
 
   const expediaService = new ExpediaService()
+
+  useEffect(() => {
+    const loadTranslationsData = async () => {
+      const messages = await loadTranslations(locale)
+      setTranslations(messages)
+    }
+    loadTranslationsData()
+  }, [locale])
+
+  // Fallback translations in case loading fails
+  const fallbackTranslations = {
+    booking: {
+      checkIn: "Check in",
+      checkOut: "Check out",
+      guests: "Guests",
+      selectDate: "Select date",
+      checkoutDate: "Check-out date",
+      numberOfGuests: "Number of guests",
+      person: "person",
+      people: "people",
+      bookOnBooking: "Book on Booking.com",
+      bookOnAirbnb: "Book on AirBnb",
+      bookOnExpedia: "Book on Expedia",
+    },
+  }
+
+  const t = translations?.booking || fallbackTranslations.booking
 
   const handleBookingClick = () => {
     const url = `https://www.booking.com/hotel/cr/villa-bruno-a-hidden-jungle-gem.html?aid=304142&label=gen173nr-1FCAsoM0IfdmlsbGEtYnJ1bm8tYS1oaWRkZW4tanVuZ2xlLWdlbUgzWARoM4gBAZgBMbgBGMgBDNgBAegBAfgBAogCAagCBLgCroLswgbAAgHSAiQyOTk2OTI3OC05MDY0LTQ2MjAtODQ2Yi02YWVlYTE1NzhhZmTYAgXgAgE&sid=ef97aaae69e87f0b80d352203416dd9f&all_sr_blocks=1391185401_413977351_2_0_0_1091564&checkin=${checkin.toISOString().split("T")[0]}&checkout=${checkout.toISOString().split("T")[0]}&dest_id=-1108708&dest_type=city&dist=0&group_adults=${guests}&group_children=0&hapos=1&highlighted_blocks=1391185401_413977351_2_0_0_1091564&hpos=1&matching_block_id=1391185401_413977351_2_0_0_1091564&no_rooms=1&req_adults=2&req_children=0&room1=A%2CA&sb_price_type=total&sr_order=popularity&sr_pri_blocks=1391185401_413977351_2_0_0_1091564_26271&srepoch=1750794564&srpvid=8d118b5e79280b04&type=total&ucfs=1&`
@@ -46,7 +91,7 @@ export function BookingOptions({
         <div className="md:grid md:grid-cols-2 gap-4">
           <div>
             <Datepicker
-              label="Check in"
+              label={t.checkIn}
               selectedDate={checkin.toLocaleDateString(undefined, {
                 year: "numeric",
                 month: "long",
@@ -57,7 +102,7 @@ export function BookingOptions({
           </div>
           <div className="mt-4 sm:mt-0">
             <Datepicker
-              label="Check out"
+              label={t.checkOut}
               selectedDate={checkout.toLocaleDateString(undefined, {
                 year: "numeric",
                 month: "long",
@@ -69,16 +114,10 @@ export function BookingOptions({
         </div>
 
         <div>
-          <SelectBox
-            label="Guests"
-            placeholder="Number of guests"
-            onValueChange={value => setGuests(parseInt(value))}
-            values={[
-              { val: "1", text: "1 person" },
-              { val: "2", text: "2 people" },
-              { val: "3", text: "3 people" },
-              { val: "4", text: "4 people" },
-            ]}
+          <SelectGuestsOptions
+            onChange={value => setGuests(parseInt(value))}
+            locale={locale}
+            guests={guests.toString()}
           />
         </div>
 
@@ -87,19 +126,19 @@ export function BookingOptions({
             onClick={handleBookingClick}
             className="col-span-3 md:col-span-1"
           >
-            Book on Booking.com
+            {t.bookOnBooking}
           </Button>
           <Button
             onClick={handleAirbnbClick}
             className="col-span-3 md:col-span-1"
           >
-            Book on AirBnb
+            {t.bookOnAirbnb}
           </Button>
           <Button
             onClick={handleExpediaClick}
             className="col-span-3 md:col-span-1"
           >
-            Book on Expedia
+            {t.bookOnExpedia}
           </Button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client"
-import React, { Suspense, useState } from "react"
+import React, { Suspense, useEffect, useState } from "react"
 
-import BookingDialog from "./Dialog"
+import BookingDialog, { IDialog } from "./Dialog"
 
 import Icon from "@/components/Icon"
 import { TTour } from "./tours/data"
@@ -15,6 +15,7 @@ import Loading from "./loading"
 // import theme from "../../../../tailwind.config"
 import RichText from "../../../components/RichText"
 import { BookingType } from "../../../types"
+import { loadTranslations } from "../../../lib/utils"
 
 const DetailsPageLayout = ({
   bookingDetails,
@@ -22,6 +23,8 @@ const DetailsPageLayout = ({
   slideshow,
   parent,
   icon,
+  locale,
+  dialogId,
 }: {
   bookingDetails: Omit<
     TTour,
@@ -31,9 +34,26 @@ const DetailsPageLayout = ({
   slideshow?: React.ReactNode
   parent?: { title: string; href: string }
   icon?: string
+  locale: string
+  dialogId?: string
 }) => {
   const { title, description, duration, location, geo, price, body } =
     bookingDetails
+  const [translations, setTranslations] = useState<{
+    booking: {
+      perPerson: string
+      reserveButton: string
+    }
+  } | null>(null)
+
+  useEffect(() => {
+    const loadTranslationsData = async () => {
+      const messages = await loadTranslations(locale)
+      setTranslations(messages)
+    }
+    loadTranslationsData()
+  })
+  const t = translations?.booking
 
   return (
     <Suspense fallback={<Loading />}>
@@ -76,15 +96,20 @@ const DetailsPageLayout = ({
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-2xl font-bold">${price}</span>
-                  <span className="text-muted-foreground text-sm">/person</span>
+                  <span className="text-muted-foreground text-sm">
+                    /{t?.perPerson}
+                  </span>
                 </div>
                 <BookingDialog
                   bookingType={bookingType}
                   dialogOptions={{
-                    buttonText: "Book  now",
+                    buttonText: t?.reserveButton || "Book now",
                     buttonClassName: "ml-auto",
                     title: "Book now",
                   }}
+                  dialogId={dialogId}
+                  locale={locale}
+                  price={Number(price) || 0}
                 />
               </div>
             </footer>

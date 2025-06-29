@@ -5,6 +5,7 @@ import { sanityFetch } from "../../../../sanity/lib/client"
 import { PAGES_QUERY } from "../../../../sanity/lib/queries"
 import Layout from "../pagesLayout"
 import ClientPage from "./ClientPage"
+import { loadTranslations } from "../../../../lib/utils"
 
 export type Content = {
   title: string
@@ -31,6 +32,9 @@ const Page = async ({ params }: { params: any }) => {
 
   if (!content?.isPublished) notFound()
 
+  // Load translations
+  const messages = await loadTranslations(locale)
+
   return (
     <Layout
       locale={locale}
@@ -40,7 +44,7 @@ const Page = async ({ params }: { params: any }) => {
       mainImage={content?.mainImage}
       images={content?.slideshow?.images}
     >
-      <ClientPage content={content} />
+      <ClientPage content={content} locale={locale} messages={messages} />
     </Layout>
   )
 }
