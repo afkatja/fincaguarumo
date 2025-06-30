@@ -50,6 +50,7 @@
     "emailLabel": "Je e-mail *",
     "emailError": "Voer een geldig e-mailadres in",
     "nameLabel": "Je naam *",
-    "nameError": "Voer je naam in"
+    "nameError": "Voer je naam in",
+    "priceLabel": "Prijs voor"
   }
 }

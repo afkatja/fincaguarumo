@@ -59,6 +59,7 @@
     "emailLabel": "Your email *",
     "emailError": "Please enter a valid email address",
     "nameLabel": "Your name *",
-    "nameError": "Please enter your name"
+    "nameError": "Please enter your name",
+    "priceLabel": "Price for"
   }
 }

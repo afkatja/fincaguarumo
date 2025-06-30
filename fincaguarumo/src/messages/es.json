@@ -50,6 +50,7 @@
     "emailLabel": "Tu correo electrónico *",
     "emailError": "Por favor ingresa una dirección de correo electrónico válida",
     "nameLabel": "Tu nombre *",
-    "nameError": "Por favor ingresa tu nombre"
+    "nameError": "Por favor ingresa tu nombre",
+    "priceLabel": "Precio para"
   }
 }

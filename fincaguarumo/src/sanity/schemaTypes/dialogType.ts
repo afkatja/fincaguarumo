@@ -58,6 +58,11 @@ export const dialogType = defineType({
     }),
     defineField({
       type: "internationalizedArrayString",
+      name: "Person_label",
+      description: "Label for 1 person",
+    }),
+    defineField({
+      type: "internationalizedArrayString",
       name: "People_label",
       description: "Label for amount of people",
     }),

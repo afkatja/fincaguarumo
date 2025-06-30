@@ -20,6 +20,7 @@ export type IDialog = {
   paymentMethod?: IField[]
   creditCard?: IField[]
   paypal?: IField[]
+  person?: IField[]
   people?: IField[]
   total?: IField[]
   ok?: IField[]
@@ -47,10 +48,10 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchDialog = async () => {
-      if (!dialogId) {
-        setDialogData(null)
-        return
-      }
+      // if (!dialogId) {
+      //   setDialogData(null)
+      //   return
+      // }
 
       setIsLoading(true)
       try {
@@ -58,6 +59,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
           DIALOG_QUERY
           // params: { dialogId },
         )
+
         if (data) setDialogData(data)
       } catch (error) {
         console.error("Error fetching dialog:", error)

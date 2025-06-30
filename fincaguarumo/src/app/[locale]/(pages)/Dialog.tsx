@@ -105,7 +105,6 @@ const BookingDialog = ({
             onCancel={() => setOpen(false)}
             bookingType={bookingType}
             locale={locale}
-            dialog={dialogData || {}}
           />
         </DialogContent>
       ) : (

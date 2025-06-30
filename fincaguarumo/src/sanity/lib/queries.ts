@@ -160,9 +160,16 @@ export const DIALOG_QUERY = groq`
   'creditCard': Credit_card_label,
   'paypal': Paypal_label,
   'people': People_label,
+  'person': Person_label,
   'total': Total_label,
   'ok': OK_button_label,
-  'cancel': Cancel_button_label
+  'cancel': Cancel_button_label,
+  "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->)
+    }
 }
 `
 

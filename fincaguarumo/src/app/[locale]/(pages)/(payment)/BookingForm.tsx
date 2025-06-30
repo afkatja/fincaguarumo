@@ -1,8 +1,5 @@
 "use client"
-import React, { useState } from "react"
-import { Label } from "@/components/ui/label"
-
-import SelectBox from "@/components/ui/selectBox"
+import React, { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { useBooking } from "../../BookingProvider"
@@ -11,26 +8,41 @@ import { BookingType, IBookingType } from "../../../../types"
 import PriceCalculation, { calculateTotal } from "@/components/priceCalculation"
 import DatePicker from "@/components/DatePicker"
 import Input from "@/components/Input"
-import { getInternationalizedValue } from "../../../../lib/utils"
+import {
+  getInternationalizedValue,
+  loadTranslations,
+} from "../../../../lib/utils"
 import { IField } from "../Dialog"
 import SelectGuestsOptions from "./SelectGuestsOptions"
+import { useDialog } from "../../DialogProvider"
 
 const BookingForm = ({
   onSubmit,
   onCancel,
   bookingType,
   locale,
-  dialog,
 }: {
   onSubmit: () => void
   onCancel: () => void
   bookingType: BookingType
   locale: string
-  dialog: Record<string, IField[]>
 }) => {
   const [activePopover, setActivePopover] = useState<string | null>(null)
+  const [translations, setTranslations] = useState<{
+    booking: Record<string, string>
+  } | null>(null)
 
   const { bookingData, setBookingData } = useBooking()
+  const { dialogData: dialog } = useDialog()
+
+  useEffect(() => {
+    const loadTranslationsData = async () => {
+      const messages = await loadTranslations(locale)
+      setTranslations(messages)
+    }
+    loadTranslationsData()
+  })
+  const t = translations?.booking
 
   return (
     <form
@@ -55,15 +67,8 @@ const BookingForm = ({
             id="name"
             type="text"
             required
-            labelText={getInternationalizedValue(
-              dialog?.nameLabel,
-              locale,
-              "Your name"
-            )}
-            errorMessage={getInternationalizedValue(
-              dialog?.nameError,
-              "Please enter your name"
-            )}
+            labelText={t?.nameLabel || "Your name"}
+            errorMessage={t?.nameError || "Please enter your name"}
             placeholder="Jane Doe"
             onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
               setBookingData({
@@ -81,16 +86,8 @@ const BookingForm = ({
             id="email"
             type="email"
             required
-            errorMessage={getInternationalizedValue(
-              dialog?.emailError,
-              locale,
-              "Please enter a valid email address"
-            )}
-            labelText={getInternationalizedValue(
-              dialog?.emailLabel,
-              locale,
-              "Your email *"
-            )}
+            errorMessage={t?.emailError || "Please enter a valid email address"}
+            labelText={t?.emailLabel || "Your email *"}
             placeholder="jane@doe.com"
             pattern="^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$"
             onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -106,42 +103,32 @@ const BookingForm = ({
         </div>
 
         {bookingType === IBookingType.villa ? (
-          <div className="md:flex items-center">
-            <div>
-              <DatePicker
-                isOpen={activePopover === "check-in"}
-                onClose={() => setActivePopover(null)}
-                onOpen={() => setActivePopover("check-in")}
-                onSelectDate={date => {
-                  setBookingData({
-                    ...bookingData,
-                    bookingDetails: {
-                      ...bookingData.bookingDetails,
-                      checkIn: new Date(date).toLocaleDateString(undefined, {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }),
-                    },
-                  })
-                  setActivePopover(null)
-                }}
-                label={getInternationalizedValue(
-                  dialog?.checkinDate,
-                  locale,
-                  "Check-in date"
-                )}
-                selectedDate={bookingData.bookingDetails.checkIn}
-              />
-            </div>
+          <div className="md:grid md:grid-cols-2 gap-2">
+            <DatePicker
+              isOpen={activePopover === "check-in"}
+              onClose={() => setActivePopover(null)}
+              onOpen={() => setActivePopover("check-in")}
+              onSelectDate={date => {
+                setBookingData({
+                  ...bookingData,
+                  bookingDetails: {
+                    ...bookingData.bookingDetails,
+                    checkIn: new Date(date).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    }),
+                  },
+                })
+                setActivePopover(null)
+              }}
+              label={t?.checkinDate || "Check-in date"}
+              selectedDate={bookingData.bookingDetails.checkIn}
+            />
 
-            <div className="ml-4">
+            <div className="ml-4 md:ml-0">
               <DatePicker
-                label={getInternationalizedValue(
-                  dialog?.checkoutDate,
-                  locale,
-                  "Check-out date"
-                )}
+                label={t?.checkoutDate || "Check-out date"}
                 selectedDate={bookingData.bookingDetails.checkOut}
                 isOpen={activePopover === "check-out"}
                 onClose={() => setActivePopover(null)}
@@ -193,7 +180,7 @@ const BookingForm = ({
           </>
         )}
 
-        <div className="grid gap-2 mt-4">
+        <div className="grid gap-2 my-4">
           <SelectGuestsOptions
             locale={locale}
             guests={bookingData.bookingDetails.guests}
@@ -215,6 +202,7 @@ const BookingForm = ({
             guests={bookingData.bookingDetails.guests}
             bookingType={bookingType}
             locale={locale}
+            t={t}
           />
           <div className="mt-5 flex justify-end gap-2 w-full flex-none">
             <div>
