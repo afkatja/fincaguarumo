@@ -6,7 +6,14 @@ export class ExpediaService {
     this.affiliateId = process.env.NEXT_PUBLIC_EXPEDIA_AFFILIATE_ID || ""
   }
 
-  getExpediaUrl(propertyId: string, checkin: string, checkout: string): string {
-    return `https://www.expedia.com/Puerto-Jimenez-Hotels-Villa-Bruno-Handcrafted-Jungle-Hideaway-Powered-By-The-Sun-Wifi-Hot-Water.h${propertyId}.Hotel-Information?chkin=${checkin}&chkout=${checkout}&rm1=a2`
+  getExpediaUrl(
+    propertyId: string,
+    checkin: string,
+    checkout: string,
+    guests: string
+  ): string {
+    const url = `https://www.expedia.com/Puerto-Jimenez-Hotels-Villa-Bruno-Handcrafted-Jungle-Hideaway-Powered-By-The-Sun-Wifi-Hot-Water.h${propertyId}.Hotel-Information?chkin=${checkin}&chkout=${checkout}&adults=${guests}`
+
+    return url
   }
 }
