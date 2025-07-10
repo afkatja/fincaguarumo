@@ -34,7 +34,7 @@ export default async function Page({ params }: { params: any }) {
       mainImage={pageContent?.mainImage}
       description={pageContent?.description}
     >
-      <Posts posts={postsOrdered} />
+      <Posts posts={postsOrdered} locale={locale} />
     </PagesLayout>
   )
 }
