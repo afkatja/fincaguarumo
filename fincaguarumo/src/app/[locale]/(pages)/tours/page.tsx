@@ -1,9 +1,52 @@
 import React from "react"
 import { SanityDocument } from "next-sanity"
+import { Metadata } from "next"
 import Tour, { TourType } from "./TourItem"
 import { PAGE_QUERY, TOURS_QUERY } from "../../../../sanity/lib/queries"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import Layout from "../pagesLayout"
+
+// Generate metadata for the tours page
+export async function generateMetadata({
+  params,
+}: {
+  params: any
+}): Promise<Metadata> {
+  const { locale } = await params
+  const pageContent = await sanityFetch<SanityDocument>({
+    query: PAGE_QUERY,
+    params: { pageName: "tours", language: locale },
+    revalidate: 0,
+  })
+
+  const baseUrl = "https://fincaguarumo.com"
+  const canonicalUrl = `${baseUrl}/${locale}/tours`
+
+  return {
+    title: pageContent?.title || "Tours - Finca Guarumo",
+    description:
+      pageContent?.description ||
+      "Explore our guided tours and wildlife experiences at Finca Guarumo in Costa Rica.",
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        en: `${baseUrl}/en/tours`,
+        es: `${baseUrl}/es/tours`,
+        ru: `${baseUrl}/ru/tours`,
+        nl: `${baseUrl}/nl/tours`,
+        de: `${baseUrl}/de/tours`,
+      },
+    },
+    openGraph: {
+      title: pageContent?.title || "Tours - Finca Guarumo",
+      description:
+        pageContent?.description ||
+        "Explore our guided tours and wildlife experiences at Finca Guarumo in Costa Rica.",
+      url: canonicalUrl,
+      type: "website",
+    },
+  }
+}
 
 const Tours = async ({ params }: { params: any }) => {
   const { locale } = await params
@@ -45,7 +88,11 @@ const Tours = async ({ params }: { params: any }) => {
           <div className="column column-reverse flex flex-col md:py-2">
             {part1.map((tour: TourType) => {
               return (
-                <Tour key={crypto.randomUUID()} {...tour} locale={locale} />
+                <Tour
+                  key={`tour-${tour.slug.current}`}
+                  {...tour}
+                  locale={locale}
+                />
               )
             })}
           </div>
@@ -54,7 +101,11 @@ const Tours = async ({ params }: { params: any }) => {
           <div className="column flex flex-col md:py-2">
             {part2.map((tour: TourType) => {
               return (
-                <Tour key={crypto.randomUUID()} {...tour} locale={locale} />
+                <Tour
+                  key={`tour-${tour.slug.current}`}
+                  {...tour}
+                  locale={locale}
+                />
               )
             })}
           </div>
@@ -63,7 +114,11 @@ const Tours = async ({ params }: { params: any }) => {
           <div className="column column-reverse flex flex-col md:py-2">
             {part3.map((tour: TourType) => {
               return (
-                <Tour key={crypto.randomUUID()} {...tour} locale={locale} />
+                <Tour
+                  key={`tour-${tour.slug.current}`}
+                  {...tour}
+                  locale={locale}
+                />
               )
             })}
           </div>
