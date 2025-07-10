@@ -5,22 +5,25 @@ import {
   ALL_PAGES_QUERY,
   POSTS_QUERY,
   TOURS_QUERY,
+  GALLERY_QUERY,
 } from "../sanity/lib/queries"
 
 const fetchContent = async (): Promise<{
   posts: SanityDocument[]
   tours: SanityDocument[]
   pages: SanityDocument[]
+  gallery: SanityDocument[]
 }> => {
-  const [posts, tours, pages] = await Promise.all([
+  const [posts, tours, pages, gallery] = await Promise.all([
     sanityFetch({ query: POSTS_QUERY }) as Promise<SanityDocument[]>,
     sanityFetch({ query: TOURS_QUERY, params: { language: "en" } }) as Promise<
       SanityDocument[]
     >,
     sanityFetch({ query: ALL_PAGES_QUERY }) as Promise<SanityDocument[]>,
+    sanityFetch({ query: GALLERY_QUERY }) as Promise<SanityDocument[]>,
   ])
 
-  return { posts, tours, pages }
+  return { posts, tours, pages, gallery }
 }
 
 const generateUrl = (type: string, item: SanityDocument) => {
@@ -33,11 +36,21 @@ const generateUrl = (type: string, item: SanityDocument) => {
 }
 
 export const generateSitemap = async () => {
-  const { posts, tours, pages } = await fetchContent()
+  const { posts, tours, pages, gallery } = await fetchContent()
+
+  // Add main gallery page
+  const mainGalleryUrl = {
+    url: "/gallery",
+    lastmod: new Date().toISOString(),
+    changefreq: "weekly",
+    priority: 0.7,
+  }
+
   const urls = [
     ...posts.map(post => generateUrl("blog", post)),
     ...tours.map(tour => generateUrl("tours", tour)),
     ...pages.map(page => generateUrl("pages", page)),
+    mainGalleryUrl,
   ]
 
   const sitemap = xml({
