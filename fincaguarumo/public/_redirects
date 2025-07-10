@@ -1,0 +1,22 @@
+# Redirect www to non-www
+https://www.fincaguarumo.com/* https://fincaguarumo.com/:splat 301!
+
+# Redirect http to https
+http://fincaguarumo.com/* https://fincaguarumo.com/:splat 301!
+http://www.fincaguarumo.com/* https://fincaguarumo.com/:splat 301!
+
+# Handle locale redirects properly
+/en/* /en/:splat 200
+/es/* /es/:splat 200
+/ru/* /ru/:splat 200
+/nl/* /nl/:splat 200
+/de/* /de/:splat 200
+
+# Redirect root to default locale
+/ /en/ 302!
+
+# Handle sitemap
+/api/sitemap /api/sitemap 200
+
+# Handle robots.txt
+/robots.txt /robots.txt 200 
