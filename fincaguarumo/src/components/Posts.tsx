@@ -17,7 +17,7 @@ export function Posts({
         <li key={post._id} className="md:m-5 my-5 flex-initial md:w-56 w-full">
           <Link
             className="group no-underline flex flex-col items-center justify-content"
-            href={`${locale}/blog/${post?.slug?.current}`}
+            href={`/${locale}/blog/${post?.slug?.current}`}
           >
             {post?.mainImage && (
               <Image
