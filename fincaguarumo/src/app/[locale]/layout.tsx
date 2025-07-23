@@ -66,8 +66,23 @@ export default async function Layout({
   if (!i18n.languages.map(lang => lang.id).includes(locale)) return null
 
   const draft = await draftMode()
+  const baseUrl = "https://fincaguarumo.com"
+
   return (
     <html lang={locale}>
+      <head>
+        {/* Add hreflang tags for each supported locale */}
+        {i18n.languages.map(({ id }) => (
+          <link
+            key={id}
+            rel="alternate"
+            hrefLang={id}
+            href={`${baseUrl}/${id}/`}
+          />
+        ))}
+        {/* Optionally, add x-default */}
+        <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/en/`} />
+      </head>
       <body
         className={
           locale === "ru"
