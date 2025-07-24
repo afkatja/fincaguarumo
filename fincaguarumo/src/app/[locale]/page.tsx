@@ -128,7 +128,7 @@ export default async function Home({ params }: { params: any }) {
         <div className="content-wrap">
           <div id="intro" className="prose prose-lg w-11/12 mx-auto">
             {content?.intro_body ? (
-              <RichText body={content?.intro_body} />
+              <RichText body={content?.intro_body} className="mx-0" />
             ) : null}
           </div>
 

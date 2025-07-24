@@ -3,13 +3,11 @@ import { PortableText, PortableTextReactComponents } from "next-sanity"
 import Image from "next/image"
 
 import Title from "./Title"
-import resolveConfig from "tailwindcss/resolveConfig"
-import theme from "../../tailwind.config"
 import { urlFor } from "../sanity/lib/image"
 import Link from "next/link"
 import ExternalLink from "./icons/ExternalLink"
 
-const RichText = ({ body, icon }: { body: any; icon?: string }) => {
+const RichText = ({ body, icon, className }: { body: any; icon?: string; className?: string }) => {
   if (!body) return
   const components: Partial<PortableTextReactComponents> = {
     block: {
@@ -85,7 +83,7 @@ const RichText = ({ body, icon }: { body: any; icon?: string }) => {
   }
 
   return (
-    <div className="prose prose-lg !max-w-4xl mx-auto py-2 leading-relaxed">
+    <div className={`"prose prose-lg !w-11/12 mx-auto py-2 leading-relaxed" ${className}`}>
       <PortableText value={body} components={components} />
     </div>
   )

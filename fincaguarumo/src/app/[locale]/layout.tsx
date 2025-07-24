@@ -17,6 +17,7 @@ import TransitionProvider from "./providers"
 import { metadata as meta } from "./meta"
 import { i18n } from "../../../languages"
 import Header from "../../components/header"
+import { cn } from "../../lib/utils"
 
 export const metadata = meta
 
@@ -84,15 +85,16 @@ export default async function Layout({
         <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/en/`} />
       </head>
       <body
-        className={
+        className={cn(
           locale === "ru"
             ? `${comfortaa.variable} ${didact.variable}`
-            : `${poppins.variable} ${cabin.variable}`
-        }
+            : `${poppins.variable} ${cabin.variable}`,
+          "min-h-[100vh]"
+        )}
       >
         <NextIntlClientProvider locale={locale}>
           <TransitionProvider>
-            <div className="flex flex-col min-h-[80dvh] animation-container">
+            <div className="flex flex-col min-h-[calc(100dvh-var(--header-height))] animation-container">
               <Header locale={locale} />
               <main className="flex flex-col flex-1">{children}</main>
               {draft?.isEnabled && (
