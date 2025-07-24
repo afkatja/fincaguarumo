@@ -23,21 +23,43 @@ const fetchContent = async (): Promise<{
   return { posts, tours, pages }
 }
 
-const generateUrl = (type: string, item: SanityDocument) => {
-  return {
-    url: `/${type}/${item.slug.current}`,
+const locales = ["en", "es", "ru", "nl", "de"]
+const generateLocalizedUrls = (type: string, item: SanityDocument) => {
+  return locales.map(locale => ({
+    url: `/${locale}/${type}/${item.slug.current}`,
     lastmod: new Date(item._updatedAt).toISOString(),
     changefreq: "weekly",
     priority: 0.7,
-  }
+  }))
 }
 
 export const generateSitemap = async () => {
   const { posts, tours, pages } = await fetchContent()
+
+  // Add main gallery page
+  const mainGalleryUrl = () => {
+    return locales.map(locale => ({
+      url: `${locale}/gallery`,
+      lastmod: new Date().toISOString(),
+      changefreq: "weekly",
+      priority: 0.7,
+    }))
+  }
+
+  const mainPages = () => {
+    return locales.map(locale => ({
+      url: `/${locale}`,
+      lastmod: new Date().toISOString(),
+      changefreq: "daily",
+      priority: 1.0,
+    }))
+  }
   const urls = [
-    ...posts.map(post => generateUrl("blog", post)),
-    ...tours.map(tour => generateUrl("tours", tour)),
-    ...pages.map(page => generateUrl("pages", page)),
+    ...mainPages(),
+    ...posts.flatMap(post => generateLocalizedUrls("blog", post)),
+    ...tours.flatMap(tour => generateLocalizedUrls("tours", tour)),
+    ...pages.flatMap(page => generateLocalizedUrls("pages", page)),
+    ...mainGalleryUrl(),
   ]
 
   const sitemap = xml({

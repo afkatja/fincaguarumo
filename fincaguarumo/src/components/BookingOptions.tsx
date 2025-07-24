@@ -66,22 +66,26 @@ export function BookingOptions({
 
   const t = translations?.booking || fallbackTranslations.booking
 
+  const checkinStr = checkin.toISOString().split("T")[0]
+  const checkoutStr = checkout.toISOString().split("T")[0]
+
   const handleBookingClick = () => {
-    const url = `https://www.booking.com/hotel/cr/villa-bruno-a-hidden-jungle-gem.html?aid=304142&label=gen173nr-1FCAsoM0IfdmlsbGEtYnJ1bm8tYS1oaWRkZW4tanVuZ2xlLWdlbUgzWARoM4gBAZgBMbgBGMgBDNgBAegBAfgBAogCAagCBLgCroLswgbAAgHSAiQyOTk2OTI3OC05MDY0LTQ2MjAtODQ2Yi02YWVlYTE1NzhhZmTYAgXgAgE&sid=ef97aaae69e87f0b80d352203416dd9f&all_sr_blocks=1391185401_413977351_2_0_0_1091564&checkin=${checkin.toISOString().split("T")[0]}&checkout=${checkout.toISOString().split("T")[0]}&dest_id=-1108708&dest_type=city&dist=0&group_adults=${guests}&group_children=0&hapos=1&highlighted_blocks=1391185401_413977351_2_0_0_1091564&hpos=1&matching_block_id=1391185401_413977351_2_0_0_1091564&no_rooms=1&req_adults=2&req_children=0&room1=A%2CA&sb_price_type=total&sr_order=popularity&sr_pri_blocks=1391185401_413977351_2_0_0_1091564_26271&srepoch=1750794564&srpvid=8d118b5e79280b04&type=total&ucfs=1&`
+    const url = `https://www.booking.com/hotel/cr/villa-bruno-a-hidden-jungle-gem.html?checkin=${checkinStr}&checkout=${checkoutStr}&group_adults=${guests}&group_children=0`
     window.open(url, "_blank")
   }
 
   const handleExpediaClick = () => {
     const url = expediaService.getExpediaUrl(
       expediaPropertyId,
-      checkin.toISOString().split("T")[0],
-      checkout.toISOString().split("T")[0]
+      checkinStr,
+      checkoutStr,
+      guests.toString()
     )
     window.open(url, "_blank")
   }
 
   const handleAirbnbClick = () => {
-    const url = `https://www.airbnb.com/rooms/1392758794880269478?source_impression_id=p3_1750793716_P3dkCGHyoUr4jQr5&check_in=${checkin.toISOString().split("T")[0]}&guests=${guests}&adults=${guests}&check_out=${checkout.toISOString().split("T")[0]}&cancellation_policy_id=3`
+    const url = `https://www.airbnb.com/rooms/1392758794880269478?check_in=${checkinStr}&guests=${guests}&adults=${guests}&check_out=${checkoutStr}`
     window.open(url, "_blank")
   }
 

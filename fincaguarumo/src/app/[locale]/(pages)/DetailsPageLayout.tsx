@@ -114,7 +114,7 @@ const DetailsPageLayout = ({
               </div>
             </footer>
           </div>
-          <RichText body={body} icon={icon} />
+          <RichText body={body} icon={icon} className="mx-0" />
         </section>
       </div>
     </Suspense>

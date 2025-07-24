@@ -4,13 +4,76 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes fade-out {
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes fade-in {
+  100% {
+    opacity: 1;
+  }
+}
+
+/* View Transitions API Support */
+@supports (view-transition-name: none) {
+  @view-transition {
+    navigation: auto;
+  }
+
+  /* Define view transition names for key elements */
+  .animation-container {
+    view-transition-name: page-content;
+  }
+
+  .main-header {
+    view-transition-name: header;
+  }
+
+  .hero {
+    view-transition-name: hero;
+  }
+
+  /* Custom transition styles */
+  ::view-transition-old,
+  ::view-transition-new {
+    animation-duration: 0.8s;
+    animation-timing-function: ease-in-out;
+  }
+  ::view-transition-old {
+    animation: fade-out;
+  }
+  ::view-transition-new {
+    animation: fade-in;
+  }
+
+  ::view-transition-old(header),
+  ::view-transition-new(header) {
+    animation-duration: 0.2s;
+    animation-timing-function: ease-out;
+  }
+
+  ::view-transition-old(hero),
+  ::view-transition-new(hero) {
+    animation-duration: 0.4s;
+    animation-timing-function: ease-in-out;
+  }
+}
+
+/* GSAP Fallback for browsers without View Transitions API */
+@supports not (view-transition-name: none) {
+  .animation-container {
+    transition: opacity 0.3s ease-in-out;
+  }
+}
+
 :root {
   --background: 0 0% 100%;
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;
 
-  --popover: 0 0 100%;
+  --popover: 0 0% 100%;
   --radius: 6px;
 
   --sunrise-color: #f9f2d8;

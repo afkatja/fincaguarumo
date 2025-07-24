@@ -36,7 +36,7 @@ const FadeInObserver = ({
     const observer = new IntersectionObserver(
       entries => {
         entries.forEach(entry => {
-          console.log(entry.intersectionRatio, entry.isIntersecting)
+          // console.log(entry.intersectionRatio, entry.isIntersecting)
 
           if (entry.isIntersecting) {
             entry.target.classList.add("fade-in-visible")

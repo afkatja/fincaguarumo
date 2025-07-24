@@ -21,6 +21,7 @@ import { metadata as meta } from "./meta"
 import { i18n } from "../../../languages"
 import Header from "../../components/header"
 import Head from "next/head"
+import { cn } from "../../lib/utils"
 
 export const metadata = meta
 
@@ -96,8 +97,8 @@ const jsonLd = {
     },
   ],
   sameAs: [
-    "https://www.instagram.com/fincaguarumo",
-    "https://www.facebook.com/fincaguarumo",
+    "https://www.instagram.com/fincaguarumo.osa",
+    "https://www.facebook.com/fincaguarumoosa",
   ],
 }
 
@@ -112,46 +113,32 @@ export default async function Layout({
   if (!i18n.languages.map(lang => lang.id).includes(locale)) return null
 
   const draft = await draftMode()
+  const baseUrl = "https://fincaguarumo.com"
+
   return (
     <html lang={locale}>
       <Head>
-        <link rel="alternate" href="https://fincaguarumo.com/" hrefLang="en" />
-        <link
-          rel="alternate"
-          href="https://fincaguarumo.com/es"
-          hrefLang="es-CR"
-        />
-        <link
-          rel="alternate"
-          href="https://fincaguarumo.com/de"
-          hrefLang="de-DE"
-        />
-        <link
-          rel="alternate"
-          href="https://fincaguarumo.com/nl"
-          hrefLang="nl-NL"
-        />
-        <link
-          rel="alternate"
-          href="https://fincaguarumo.com/ru"
-          hrefLang="ru-RU"
-        />
-        <link
-          rel="alternate"
-          href="https://fincaguarumo.com/"
-          hrefLang="x-default"
-        />
+        {i18n.languages.map(({ id }) => (
+          <link
+            key={id}
+            rel="alternate"
+            hrefLang={id}
+            href={`${baseUrl}/${id}/`}
+          />
+        ))}
+        <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/en/`} />
       </Head>
       <body
-        className={
+        className={cn(
           locale === "ru"
             ? `${comfortaa.variable} ${didact.variable}`
-            : `${poppins.variable} ${cabin.variable}`
-        }
+            : `${poppins.variable} ${cabin.variable}`,
+          "min-h-[100vh]"
+        )}
       >
         <NextIntlClientProvider locale={locale}>
           <TransitionProvider>
-            <div className="flex flex-col min-h-[calc(100dvh-var(--footer-height))] animation-container">
+            <div className="flex flex-col min-h-[calc(100dvh-var(--header-height))] animation-container">
               <Header locale={locale} />
 
               <BookingProvider>
