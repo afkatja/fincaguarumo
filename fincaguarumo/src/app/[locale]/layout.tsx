@@ -160,14 +160,14 @@ export default async function Layout({
           </TransitionProvider>
           <Footer />
         </NextIntlClientProvider>
+        <script
+          async={true}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        ></script>
       </body>
-      <script
-        async={true}
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-        }}
-      ></script>
     </html>
   )
 }
