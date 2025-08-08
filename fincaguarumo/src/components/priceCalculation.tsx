@@ -7,7 +7,8 @@ import { Separator } from "@/components/ui/separator"
 export const calculateTotal = (
   price: string,
   guests: string,
-  bookingType: BookingType
+  bookingType: BookingType,
+  duration?: number
 ) => {
   if (bookingType === IBookingType.tour) {
     return parseInt(price) * parseInt(guests)
@@ -16,7 +17,7 @@ export const calculateTotal = (
     const basePrice = parseInt(price)
     const additionalGuests = Math.min(parseInt(guests) - 1, 3) // Max 3 additional guests
     const additionalPrice = additionalGuests * 20
-    return basePrice + additionalPrice
+    return (basePrice + additionalPrice) * duration!
   }
 }
 
@@ -26,14 +27,16 @@ const PriceCalculation = ({
   bookingType,
   locale,
   t,
+  duration,
 }: {
   price: string
   guests: string
   bookingType: BookingType
   locale: string
-  t: Record<string, string>
+  duration?: number
+  t: Record<string, string> | undefined
 }) => {
-  const total = calculateTotal(price, guests, bookingType)
+  const total = calculateTotal(price, guests, bookingType, duration)
   const { dialogData: dialog } = useDialog()
   return (
     <div className="grid gap-2 flex-none w-full">
@@ -46,12 +49,11 @@ const PriceCalculation = ({
             "people"
           )}
         </div>
-        <div>${total}</div>
+        <div>${price + Math.min(parseInt(guests) - 1, 3) * 20}</div>
       </div>
       <Separator />
       <div className="flex items-center justify-between font-medium">
         <div>
-          {" "}
           {titleCase(getInternationalizedValue(dialog?.total, locale, "Total"))}
         </div>
         <div>${total}</div>

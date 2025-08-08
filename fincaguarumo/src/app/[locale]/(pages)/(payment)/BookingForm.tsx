@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useState } from "react"
+import { differenceInDays } from "date-fns"
 
 import { Button } from "@/components/ui/button"
 import { useBooking } from "../../BookingProvider"
@@ -12,9 +13,32 @@ import {
   getInternationalizedValue,
   loadTranslations,
 } from "../../../../lib/utils"
-import { IField } from "../Dialog"
 import SelectGuestsOptions from "./SelectGuestsOptions"
 import { useDialog } from "../../DialogProvider"
+import parseLocalizedDate from "../../../../lib/parseLocalizedDate"
+
+// Function to calculate duration in nights between check-in and check-out dates
+const calculateDuration = (checkIn: string, checkOut: string): number => {
+  if (!checkIn || !checkOut) return 0
+
+  try {
+    const checkInDate = parseLocalizedDate(checkIn)
+    const checkOutDate = parseLocalizedDate(checkOut)
+
+    // Check if dates are valid
+    if (!checkInDate || !checkOutDate) {
+      return 0
+    }
+
+    // Calculate the difference in days using date-fns
+    const nights = differenceInDays(checkOutDate, checkInDate)
+
+    return Math.max(0, nights) // Return 0 if negative
+  } catch (error) {
+    console.error("Error calculating duration:", error)
+    return 0
+  }
+}
 
 const BookingForm = ({
   onSubmit,
@@ -44,6 +68,12 @@ const BookingForm = ({
   })
   const t = translations?.booking
 
+  // Calculate duration based on check-in and check-out dates
+  const duration = calculateDuration(
+    bookingData.bookingDetails.checkIn,
+    bookingData.bookingDetails.checkOut
+  )
+
   return (
     <form
       className="grid gap-4 group"
@@ -55,6 +85,12 @@ const BookingForm = ({
           type: bookingType,
           bookingDetails: {
             ...bookingData.bookingDetails,
+            totalPrice: calculateTotal(
+              bookingData.bookingDetails.price,
+              bookingData.bookingDetails.guests,
+              bookingType,
+              duration
+            ),
           },
         })
 
@@ -203,6 +239,7 @@ const BookingForm = ({
             bookingType={bookingType}
             locale={locale}
             t={t}
+            duration={duration}
           />
           <div className="mt-5 flex justify-end gap-2 w-full flex-none">
             <div>
