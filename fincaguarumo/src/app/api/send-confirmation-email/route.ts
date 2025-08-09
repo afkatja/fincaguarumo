@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server"
-import { IBookingType } from "../../../types"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
-
-import { calculateTotal } from "../../../components/priceCalculation"
+import calculateTotal from "@/lib/calculateTotal"
+import calculateDuration from "@/lib/calculateDuration"
+import { IBookingType } from "../../../types"
 
 const mailerSend = new MailerSend({
-  apiKey: process.env.MAILERSEND_API_KEY || "",
+  apiKey: process.env.MAILERSEND_TOKEN || "",
 })
 
 export async function POST(request: Request) {
@@ -104,7 +104,13 @@ export async function POST(request: Request) {
               - Total Amount: $${calculateTotal(
                 bookingDetails.price,
                 bookingDetails.guests,
-                bookingDetails.type
+                bookingDetails.type,
+                bookingDetails.type === IBookingType.villa
+                  ? calculateDuration(
+                      bookingDetails.checkIn,
+                      bookingDetails.checkOut
+                    )
+                  : undefined
               )}`,
       html: `
               <h1>New ${getBookingType()} Booking Received</h1>

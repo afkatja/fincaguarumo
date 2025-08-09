@@ -1,44 +1,18 @@
 "use client"
 import React, { useEffect, useState } from "react"
-import { differenceInDays } from "date-fns"
 
 import { Button } from "@/components/ui/button"
-import { useBooking } from "../../BookingProvider"
 import { DialogFooter } from "@/components/ui/dialog"
-import { BookingType, IBookingType } from "../../../../types"
-import PriceCalculation, { calculateTotal } from "@/components/priceCalculation"
+import PriceCalculation from "@/components/priceCalculation"
 import DatePicker from "@/components/DatePicker"
 import Input from "@/components/Input"
-import {
-  getInternationalizedValue,
-  loadTranslations,
-} from "../../../../lib/utils"
-import SelectGuestsOptions from "./SelectGuestsOptions"
+import { getInternationalizedValue, loadTranslations } from "@/lib/utils"
+import calculateDuration from "@/lib/calculateDuration"
+import calculateTotal from "@/lib/calculateTotal"
+import { BookingType, IBookingType } from "../../../../types"
+import { useBooking } from "../../BookingProvider"
 import { useDialog } from "../../DialogProvider"
-import parseLocalizedDate from "../../../../lib/parseLocalizedDate"
-
-// Function to calculate duration in nights between check-in and check-out dates
-const calculateDuration = (checkIn: string, checkOut: string): number => {
-  if (!checkIn || !checkOut) return 0
-
-  try {
-    const checkInDate = parseLocalizedDate(checkIn)
-    const checkOutDate = parseLocalizedDate(checkOut)
-
-    // Check if dates are valid
-    if (!checkInDate || !checkOutDate) {
-      return 0
-    }
-
-    // Calculate the difference in days using date-fns
-    const nights = differenceInDays(checkOutDate, checkInDate)
-
-    return Math.max(0, nights) // Return 0 if negative
-  } catch (error) {
-    console.error("Error calculating duration:", error)
-    return 0
-  }
-}
+import SelectGuestsOptions from "./SelectGuestsOptions"
 
 const BookingForm = ({
   onSubmit,

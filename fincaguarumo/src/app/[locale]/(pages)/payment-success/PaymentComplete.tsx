@@ -55,9 +55,10 @@ export default function CompletePage({ locale }: { locale: string }) {
 
   const stripe = useStripe()
 
-  const { bookingData, setBookingData } = useBooking()
+  const { bookingData } = useBooking()
 
-  const [status, setStatus] = useState<string | undefined>("default")
+  const [status, setStatus] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   const [paymentIntent, setPaymentIntent] = useState<
     Record<string, any> | null | undefined
@@ -65,31 +66,61 @@ export default function CompletePage({ locale }: { locale: string }) {
   const [session, setSession] = useState<any>(null)
 
   useEffect(() => {
-    if (!stripe) return
     const clientSecret = searchParams.get("payment_intent_client_secret")
     const sessionId = searchParams.get("session_id")
 
-    if (clientSecret && !paymentIntent) {
+    // If neither parameter is present, we can't fetch payment data
+    if (!clientSecret && !sessionId) {
+      setIsLoading(false)
+      return
+    }
+
+    // Handle payment intent with client secret (requires Stripe)
+    if (clientSecret && stripe && !paymentIntent) {
       const fetchData = async () => {
-        const { paymentIntent: intent } =
-          await stripe.retrievePaymentIntent(clientSecret)
-        if (!intent) return
-        setPaymentIntent(intent)
-        setStatus(intent?.status)
+        try {
+          const { paymentIntent: intent } =
+            await stripe.retrievePaymentIntent(clientSecret)
+          if (!intent) return
+          setPaymentIntent(intent)
+          setStatus(intent?.status)
+          setIsLoading(false)
+        } catch (error) {
+          console.error("Error retrieving payment intent:", error)
+          setIsLoading(false)
+        }
       }
       fetchData()
-    } else if (sessionId && !session) {
-      const fetchSessionStatus = async () => {
-        const response = await fetch(
-          `/api/session-status?session_id=${sessionId}`
-        )
-        if (!response.ok) return
-        const data = await response.json()
+    }
 
-        setSession(data.session)
-        setStatus(data.session?.status)
+    // Handle session-based payment (doesn't require Stripe)
+    else if (sessionId && !session) {
+      const fetchSessionStatus = async () => {
+        try {
+          const response = await fetch(
+            `/api/session-status?session_id=${sessionId}`
+          )
+          if (!response.ok) {
+            console.error("Failed to fetch session status")
+            setIsLoading(false)
+            return
+          }
+          const data = await response.json()
+          setSession(data.session)
+          setStatus(data.session?.status)
+          setIsLoading(false)
+        } catch (error) {
+          console.error("Error fetching session status:", error)
+          setIsLoading(false)
+        }
       }
       fetchSessionStatus()
+    }
+
+    // If we have a client secret but stripe isn't loaded yet, keep loading
+    else if (clientSecret && !stripe) {
+      // Stripe is still loading, keep isLoading true
+      return
     }
   }, [searchParams, stripe, paymentIntent, session])
 
@@ -122,7 +153,10 @@ export default function CompletePage({ locale }: { locale: string }) {
       }
     }
 
-    if (searchParams.get("payment_intent_client_secret")) {
+    if (
+      searchParams.get("payment_intent_client_secret") ||
+      searchParams.get("session_id")
+    ) {
       sendConfirmationEmail()
     }
   }, [searchParams, bookingData, status])
@@ -141,7 +175,7 @@ export default function CompletePage({ locale }: { locale: string }) {
 
   return (
     <Suspense fallback={<Loading />}>
-      {!status && !paymentIntent && !session ? (
+      {isLoading ? (
         <Loading />
       ) : (
         <PagesLayout

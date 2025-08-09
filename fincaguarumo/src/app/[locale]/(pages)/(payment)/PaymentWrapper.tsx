@@ -4,6 +4,12 @@ import { Elements } from "@stripe/react-stripe-js"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 
+if (!publishableKey) {
+  console.warn(
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set. Stripe functionality will not work."
+  )
+}
+
 const stripePromise = loadStripe(publishableKey)
 
 const PaymentWrapper = ({ children }: { children: React.ReactNode }) => {
