@@ -17,7 +17,7 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
       ...bookingData,
       type: IBookingType.tour,
       bookingDetails: {
-        ...bookingData.bookingDetails,
+        ...(bookingData || {}).bookingDetails,
         title: tour.title,
         description: tour.description,
         price: tour.price,

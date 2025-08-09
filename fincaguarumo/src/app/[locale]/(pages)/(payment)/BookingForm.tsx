@@ -218,9 +218,10 @@ const BookingForm = ({
           <div className="mt-5 flex justify-end gap-2 w-full flex-none">
             <div>
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => {
-                  setBookingData(null)
+                  // setBookingData(null)
                   localStorage.removeItem("bookingData")
                   onCancel()
                 }}

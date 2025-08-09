@@ -2,7 +2,7 @@
 import { useDialog } from "../app/[locale]/DialogProvider"
 import calculateTotal from "../lib/calculateTotal"
 import { getInternationalizedValue, titleCase } from "../lib/utils"
-import { BookingType } from "../types"
+import { BookingType, IBookingType } from "../types"
 import { Separator } from "@/components/ui/separator"
 
 const PriceCalculation = ({
@@ -20,27 +20,32 @@ const PriceCalculation = ({
   duration?: number
   t: Record<string, string> | undefined
 }) => {
+  const priceForPeople =
+    bookingType === IBookingType.villa
+      ? parseInt(price) + Math.min(parseInt(guests) - 1, 3) * 20
+      : parseInt(price) * parseInt(guests)
   const total = calculateTotal(price, guests, bookingType, duration)
+
   const { dialogData: dialog } = useDialog()
   return (
     <div className="grid gap-2 flex-none w-full">
       <div className="flex items-center justify-between">
-        <div className="text-muted-foreground">
+        <span className="text-muted-foreground">
           {t?.priceLabel} {guests}{" "}
           {getInternationalizedValue(
             Number(guests) === 1 ? dialog?.person : dialog?.people,
             locale,
             "people"
           )}
-        </div>
-        <div>${price + Math.min(parseInt(guests) - 1, 3) * 20}</div>
+        </span>
+        <span>${priceForPeople}</span>
       </div>
       <Separator />
       <div className="flex items-center justify-between font-medium">
-        <div>
+        <span>
           {titleCase(getInternationalizedValue(dialog?.total, locale, "Total"))}
-        </div>
-        <div>${total}</div>
+        </span>
+        <span>${total}</span>
       </div>
     </div>
   )

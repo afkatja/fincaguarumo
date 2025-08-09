@@ -1,22 +1,14 @@
 "use client"
 import React, { useState } from "react"
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog"
+import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 
 import { Button } from "@/components/ui/button"
 
-import Payment from "./(payment)/Payment"
-import BookingForm from "./(payment)/BookingForm"
 import { useBooking } from "../BookingProvider"
 import { useDialog } from "../DialogProvider"
 import { BookingType } from "../../../types"
 import { getInternationalizedValue } from "../../../lib/utils"
+import BookingDialogContent from "./BookingDialogContent"
 
 export type IField = {
   _key: string
@@ -44,13 +36,11 @@ export type IDialog = {
 const BookingDialog = ({
   bookingType,
   dialogOptions,
-  price,
   dialogId,
   locale,
 }: {
   bookingType: BookingType
   dialogOptions: { title: string; buttonText: string; buttonClassName?: string }
-  price: number
   locale: string
   dialogId?: string
 }) => {
@@ -66,18 +56,10 @@ const BookingDialog = ({
   }, [dialogId, setDialogId])
 
   const closeHandler = () => {
-    setOpen(!open)
+    setOpen(false)
     setPaymentStep(false)
   }
 
-  if (!bookingData) {
-    return null
-  }
-
-  const title = bookingData?.bookingDetails?.title ?? dialogOptions.title
-  const description =
-    bookingData?.bookingDetails?.description ??
-    "Please fill in your booking details below."
   const buttonText =
     dialogOptions.buttonText ||
     getInternationalizedValue(dialogData?.cta, locale, "Reserve")
@@ -94,28 +76,15 @@ const BookingDialog = ({
           {buttonText}
         </Button>
       </DialogTrigger>
-      {!paymentStep ? (
-        <DialogContent className="min-h-[500px] sm:max-w-[500px] dark:bg-gradient-to-br dark:from-zinc-700 dark:to-sky-900 ">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
-          <BookingForm
-            onSubmit={() => setPaymentStep(true)}
-            onCancel={() => setOpen(false)}
-            bookingType={bookingType}
-            locale={locale}
-          />
-        </DialogContent>
-      ) : (
-        <DialogContent className="min-h-[500px] sm:max-w-[500px] dark:bg-gradient-to-br dark:from-zinc-700 dark:to-sky-900">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
-          <Payment />
-        </DialogContent>
-      )}
+      <BookingDialogContent
+        bookingData={bookingData}
+        title={dialogOptions.title}
+        paymentStep={paymentStep}
+        onBookingFormSubmit={() => setPaymentStep(true)}
+        onCancel={closeHandler}
+        bookingType={bookingType}
+        locale={locale}
+      />
     </Dialog>
   )
 }

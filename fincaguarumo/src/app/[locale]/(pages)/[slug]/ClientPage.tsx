@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { IBookingType } from "../../../../types"
-import BookingDialog from "../Dialog"
+import BookingDialog from "../BookingDialog"
 import { Content } from "./page"
 import { useBooking } from "../../BookingProvider"
 

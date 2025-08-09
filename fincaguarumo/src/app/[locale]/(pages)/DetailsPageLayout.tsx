@@ -1,7 +1,7 @@
 "use client"
 import React, { Suspense, useEffect, useState } from "react"
 
-import BookingDialog, { IDialog } from "./Dialog"
+import BookingDialog, { IDialog } from "./BookingDialog"
 
 import Icon from "@/components/Icon"
 import { TTour } from "./tours/data"
@@ -109,7 +109,6 @@ const DetailsPageLayout = ({
                   }}
                   dialogId={dialogId}
                   locale={locale}
-                  price={Number(price) || 0}
                 />
               </div>
             </footer>
