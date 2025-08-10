@@ -53,7 +53,7 @@ export async function POST(request: Request) {
             ${
               bookingDetails.type === IBookingType.villa
                 ? `- Check-in: ${bookingDetails.checkIn}
-            - Check-out: ${bookingDetails.checkOut}`
+                  - Check-out: ${bookingDetails.checkOut}`
                 : `- Tour: ${bookingDetails.title}
             - Location: ${bookingDetails.location}`
             }
@@ -90,6 +90,7 @@ export async function POST(request: Request) {
             Customer Details:
             - Name: ${customerDetails.name}
             - Email: ${customerDetails.email}
+            - Phone: ${customerDetails.phoneNumber}
 
             Booking Details:
             ${
@@ -118,6 +119,7 @@ export async function POST(request: Request) {
               <ul>
                 <li>Name: ${customerDetails.name}</li>
                 <li>Email: ${customerDetails.email}</li>
+                <li>Phone: ${customerDetails.phoneNumber}</li>
               </ul>
               <h2>Booking Details:</h2>
               <ul>
