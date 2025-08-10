@@ -53,6 +53,6 @@
     "nameError": "Por favor ingresa tu nombre",
     "priceLabel": "Precio para",
     "phoneLabel": "Su número de teléfono *",
-    "phoneError": "Por favor, introduzca un número de válido"
+    "phoneError": "Por favor, introduzca un número de teléfono válido"
   }
 }

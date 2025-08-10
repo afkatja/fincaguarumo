@@ -59,7 +59,17 @@ export async function POST(request: Request) {
             }
             - Date: ${bookingDetails.date}
             - Number of Guests: ${bookingDetails.guests}
-            - Total Amount: $${Number(bookingDetails.price) * Number(bookingDetails.guests)}
+            - Total Amount: $${calculateTotal(
+              bookingDetails.price,
+              bookingDetails.guests,
+              bookingDetails.type,
+              bookingDetails.type === IBookingType.villa
+                ? calculateDuration(
+                    bookingDetails.checkIn,
+                    bookingDetails.checkOut
+                  )
+                : undefined
+            )}
 
             We look forward to welcoming you!
 

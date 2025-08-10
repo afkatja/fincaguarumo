@@ -11,7 +11,7 @@ import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 // import resolveConfig from "tailwindcss/resolveConfig"
 // import theme from "../../../../tailwind.config"
 
-const PageLayout = async ({
+const PageLayout = ({
   locale,
   pageName,
   title,
