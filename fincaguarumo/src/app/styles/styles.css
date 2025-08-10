@@ -279,6 +279,10 @@ img.mt-0 + .portable-text-p {
   grid-column: span 2;
 }
 
+input::-webkit-inner-spin-button {
+  display: none !important;
+}
+
 /* @media screen and (min-width: 1024px) {
   @supports (animation-timeline: scroll()) {
     .column-reverse {

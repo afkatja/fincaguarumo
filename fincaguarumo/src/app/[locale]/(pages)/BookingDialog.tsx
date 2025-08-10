@@ -56,7 +56,7 @@ const BookingDialog = ({
   }, [dialogId, setDialogId])
 
   const closeHandler = () => {
-    setOpen(false)
+    setOpen(!open)
     setPaymentStep(false)
   }
 

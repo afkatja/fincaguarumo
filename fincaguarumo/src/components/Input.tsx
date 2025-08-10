@@ -1,6 +1,20 @@
 import React, { ChangeEventHandler } from "react"
 import { Label } from "./ui/label"
 
+export interface TextInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
+  id: string
+  type: string
+  labelText?: string
+  placeholder: string
+  onChangeHandler?: ChangeEventHandler
+  errorMessage: string
+  required: boolean
+  value?: string
+  className?: string
+  [prop: string]: any
+}
+
 const Input = ({
   id,
   type,
@@ -10,23 +24,19 @@ const Input = ({
   errorMessage,
   required,
   value,
+  className = "",
   ...props
-}: {
-  id: string
-  type: string
-  labelText: string
-  placeholder: string
-  onChangeHandler: ChangeEventHandler
-  errorMessage: string
-  required: boolean
-  value?: string
-  [prop: string]: any
-}) => {
+}: TextInputProps) => {
   return (
-    <div className="my-1">
-      <Label htmlFor={id} className="block input-required:outline-destructive">
-        {labelText}
-      </Label>
+    <div className={`my-1 ${className}`}>
+      {!!labelText && (
+        <Label
+          htmlFor={id}
+          className="block input-required:outline-destructive"
+        >
+          {labelText}
+        </Label>
+      )}
       <input
         id={id}
         name={id}

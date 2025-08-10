@@ -51,6 +51,8 @@
     "emailError": "Voer een geldig e-mailadres in",
     "nameLabel": "Je naam *",
     "nameError": "Voer je naam in",
-    "priceLabel": "Prijs voor"
+    "priceLabel": "Prijs voor",
+    "phoneLabel": "Uw telefoonnummer *",
+    "phoneError": "Voer een geldig telefoonnummer in"
   }
 }

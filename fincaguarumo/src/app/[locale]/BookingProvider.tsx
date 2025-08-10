@@ -7,7 +7,7 @@ const later = new Date(+today + 259200000)
 
 const initialBookingData = {
   type: "tour",
-  customerDetails: { name: "", email: "" },
+  customerDetails: { name: "", email: "", phoneNumber: "" },
   bookingDetails: {
     title: "",
     description: "",

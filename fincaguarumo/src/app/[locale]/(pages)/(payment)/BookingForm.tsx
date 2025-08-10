@@ -13,6 +13,7 @@ import { BookingType, IBookingType } from "../../../../types"
 import { useBooking } from "../../BookingProvider"
 import { useDialog } from "../../DialogProvider"
 import SelectGuestsOptions from "./SelectGuestsOptions"
+import PhoneInput from "../../../../components/PhoneInput"
 
 const BookingForm = ({
   onSubmit,
@@ -106,6 +107,26 @@ const BookingForm = ({
                 customerDetails: {
                   ...bookingData.customerDetails,
                   email: e.target.value,
+                },
+              })
+            }
+          />
+        </div>
+        <div className="my-1">
+          <PhoneInput
+            id="phone"
+            required
+            defaultCountry={"CR"}
+            errorMessage={t?.phoneError || "Please enter a valid phone number"}
+            labelText={t?.phoneLabel || "Your phone number *"}
+            placeholder="12345678"
+            pattern="^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$"
+            onChange={(value: string) =>
+              setBookingData({
+                ...bookingData,
+                customerDetails: {
+                  ...bookingData.customerDetails,
+                  phoneNumber: value,
                 },
               })
             }

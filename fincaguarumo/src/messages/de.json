@@ -60,6 +60,8 @@
     "emailError": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
     "nameLabel": "Ihr Name *",
     "nameError": "Bitte geben Sie Ihren Namen ein",
-    "priceLabel": "Preis für"
+    "priceLabel": "Preis für",
+    "phoneLabel": "Ihre Telefonnummer *",
+    "phoneError": "Bitte geben Sie eine gültige Telefonnummer ein"
   }
 }
