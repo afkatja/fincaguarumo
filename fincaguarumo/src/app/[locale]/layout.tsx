@@ -116,7 +116,7 @@ export default async function Layout({
   const baseUrl = "https://fincaguarumo.com"
 
   return (
-    <html lang={locale}>
+    <html lang={locale} data-scroll-behavior="smooth">
       <Head>
         {i18n.languages.map(({ id }) => (
           <link
