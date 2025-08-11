@@ -61,7 +61,6 @@ const ClientPage = ({
               buttonText: t?.bookNow || "Book now",
               title: t?.bookNow || "Reserve Villa Bruno directly",
             }}
-            price={content.price || 0}
             locale={locale}
           />
         )}

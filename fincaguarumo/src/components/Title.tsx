@@ -14,34 +14,33 @@ interface ITitle {
   }
 }
 
-const Title = ({
-  title,
-  titleClassName,
-  Heading = "h2",
-  icon: iconProp = {},
-}: ITitle) => {
-  const {
-    iconClassName = "",
-    size = 40,
-    title: iconTitle,
-    color = "currentColor",
-  } = iconProp
-  const icons = Object.keys(headerIcons)
-  const icon = icons[Math.floor(Math.random() * icons.length)]
+const Title = React.memo(
+  ({ title, titleClassName, Heading = "h2", icon: iconProp = {} }: ITitle) => {
+    const {
+      iconClassName = "",
+      size = 40,
+      title: iconTitle,
+      color = "currentColor",
+    } = iconProp
+    const icons = Object.keys(headerIcons)
+    const icon = icons[Math.floor(Math.random() * icons.length)]
 
-  return (
-    <Heading className={titleClassName}>
-      {!!Object.keys(iconProp).length && (
-        <Icon
-          icon={iconTitle ?? icon}
-          size={size}
-          className={`inline mr-4 ${iconClassName}`}
-          color={color}
-        />
-      )}
-      {title}
-    </Heading>
-  )
-}
+    return (
+      <Heading className={titleClassName}>
+        {!!Object.keys(iconProp).length && (
+          <Icon
+            icon={iconTitle ?? icon}
+            size={size}
+            className={`inline mr-4 ${iconClassName}`}
+            color={color}
+          />
+        )}
+        {title}
+      </Heading>
+    )
+  }
+)
+
+Title.displayName = "Title"
 
 export default Title
