@@ -18,6 +18,7 @@ import { metadata as meta } from "./meta"
 import { i18n } from "../../../languages"
 import Header from "../../components/header"
 import { cn } from "../../lib/utils"
+import Head from "next/head"
 
 export const metadata = meta
 
@@ -70,9 +71,8 @@ export default async function Layout({
   const baseUrl = "https://fincaguarumo.com"
 
   return (
-    <html lang={locale}>
-      <head>
-        {/* Add hreflang tags for each supported locale */}
+    <html lang={locale} data-scroll-behavior="smooth">
+      <Head>
         {i18n.languages.map(({ id }) => (
           <link
             key={id}
@@ -83,7 +83,7 @@ export default async function Layout({
         ))}
         {/* Optionally, add x-default */}
         <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/en/`} />
-      </head>
+      </Head>
       <body
         className={cn(
           locale === "ru"
