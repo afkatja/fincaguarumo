@@ -1,11 +1,11 @@
 "use client"
-import React, { Suspense, useEffect, useState } from "react"
+import React, { Suspense, useEffect, useRef, useState } from "react"
 import { useStripe } from "@stripe/react-stripe-js"
 
 import PagesLayout from "../pagesLayout"
 import icons from "@/components/icons"
 import Loading from "../loading"
-import { useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 // import Title from "../../../../components/Title"
 import AddToCalendar from "../../../../components/AddToCalendar"
 import { useBooking } from "../../BookingProvider"
@@ -57,8 +57,13 @@ export default function CompletePage({ locale }: { locale: string }) {
 
   const { bookingData } = useBooking()
 
+  const pathname = usePathname()
+  const router = useRouter()
+
   const [status, setStatus] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  const emailSentRef = useRef(false)
 
   const [paymentIntent, setPaymentIntent] = useState<
     Record<string, any> | null | undefined
@@ -126,6 +131,7 @@ export default function CompletePage({ locale }: { locale: string }) {
 
   useEffect(() => {
     const sendConfirmationEmail = async () => {
+      emailSentRef.current = true
       try {
         const response = await fetch("/api/send-confirmation-email", {
           method: "POST",
@@ -140,7 +146,10 @@ export default function CompletePage({ locale }: { locale: string }) {
         })
 
         // Clear booking data after successful payment
-        if (response?.ok && status === Status.Success) {
+        if (
+          response?.ok &&
+          (status === Status.Success || status === Status.Complete)
+        ) {
           localStorage.removeItem("bookingData")
         }
 
@@ -153,13 +162,41 @@ export default function CompletePage({ locale }: { locale: string }) {
       }
     }
 
+    const emailSent = localStorage.getItem("emailSent")
+
     if (
-      searchParams.get("payment_intent_client_secret") ||
-      searchParams.get("session_id")
+      (searchParams.get("payment_intent_client_secret") ||
+        searchParams.get("session_id")) &&
+      status === Status.Complete &&
+      !emailSent &&
+      !emailSentRef.current
     ) {
       sendConfirmationEmail()
     }
   }, [searchParams, bookingData, status])
+
+  useEffect(() => {
+    // Only redirect if this is a page reload (not initial navigation)
+    if (
+      performance &&
+      performance.getEntriesByType("navigation").length === 1 &&
+      (
+        performance.getEntriesByType(
+          "navigation"
+        )[0] as PerformanceNavigationTiming
+      ).type === "reload"
+    ) {
+      router.replace(`/${locale}`)
+    }
+    if (pathname !== `/${locale}/payment-success`) {
+      console.log("pathname", pathname)
+      setSession(null)
+      setStatus(null)
+      setPaymentIntent(null)
+      if (localStorage.getItem("emailSent"))
+        localStorage.removeItem("emailSent")
+    }
+  }, [router, locale, pathname])
 
   const getBookingTitle = () => {
     return bookingData.bookingDetails.title || "Villa Bruno Stay"
