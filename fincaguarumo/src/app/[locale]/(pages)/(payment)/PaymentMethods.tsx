@@ -3,12 +3,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import Icon from "@/components/Icon"
 
-const possiblePaymentMethods = [
-  { type: "card" },
-  { type: "ideal" },
-  { type: "paypal" },
-]
-
 const PaymentMethods = ({ onCheck }: { onCheck: (val: string) => void }) => {
   const paymentMethods = [
     {
@@ -30,7 +24,7 @@ const PaymentMethods = ({ onCheck }: { onCheck: (val: string) => void }) => {
         <div className="flex items-center gap-4">
           {paymentMethods.map(method => (
             <Label
-              key={crypto.randomUUID()}
+              key={method.value}
               htmlFor={method.value}
               className="flex items-center gap-2 cursor-pointer"
             >

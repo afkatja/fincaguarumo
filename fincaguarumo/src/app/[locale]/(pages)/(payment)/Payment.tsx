@@ -59,6 +59,9 @@ const Payment = () => {
     appearance,
   }
 
+  const currency = bookingData.bookingDetails.currency?.toUpperCase() ?? "USD"
+  const amount = Number(bookingData.bookingDetails.totalPrice || 0).toFixed(2)
+
   return (
     <>
       {!clientSecret ? (
@@ -73,11 +76,7 @@ const Payment = () => {
             stripe={stripePromise}
           >
             <CurrencySelectorElement />
-            <Title
-              title={`Pay ${bookingData.bookingDetails.currency.toUpperCase()} ${
-                bookingData.bookingDetails.totalPrice
-              }  now`}
-            />
+            <Title title={`Pay ${currency} ${amount}  now`} />
             <CheckoutForm />
           </CheckoutProvider>
           <Image

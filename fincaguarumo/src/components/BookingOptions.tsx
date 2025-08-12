@@ -6,6 +6,7 @@ import Datepicker from "@/components/DatePicker"
 import { Button } from "./ui/button"
 import { loadTranslations } from "../lib/utils"
 import SelectGuestsOptions from "../app/[locale]/(pages)/(payment)/SelectGuestsOptions"
+import { format } from "date-fns"
 
 interface BookingOptionsProps {
   propertyId: string
@@ -66,12 +67,12 @@ export function BookingOptions({
 
   const t = translations?.booking || fallbackTranslations.booking
 
-  const checkinStr = checkin.toISOString().split("T")[0]
-  const checkoutStr = checkout.toISOString().split("T")[0]
+  const checkinStr = format(checkin, "yyyy-MM-dd")
+  const checkoutStr = format(checkout, "yyyy-MM-dd")
 
   const handleBookingClick = () => {
     const url = `https://www.booking.com/hotel/cr/villa-bruno-a-hidden-jungle-gem.html?checkin=${checkinStr}&checkout=${checkoutStr}&group_adults=${guests}&group_children=0`
-    window.open(url, "_blank")
+    window.open(url, "_blank", "noopener, noreferrer")
   }
 
   const handleExpediaClick = () => {
@@ -81,12 +82,12 @@ export function BookingOptions({
       checkoutStr,
       guests.toString()
     )
-    window.open(url, "_blank")
+    window.open(url, "_blank", "noopener, noreferrer")
   }
 
   const handleAirbnbClick = () => {
     const url = `https://www.airbnb.com/rooms/1392758794880269478?check_in=${checkinStr}&guests=${guests}&adults=${guests}&check_out=${checkoutStr}`
-    window.open(url, "_blank")
+    window.open(url, "_blank", "noopener, noreferrer")
   }
 
   return (
@@ -119,7 +120,10 @@ export function BookingOptions({
 
         <div>
           <SelectGuestsOptions
-            onChange={value => setGuests(parseInt(value))}
+            onChange={value => {
+              const n = Number.parseInt(value, 10)
+              setGuests(Number.isFinite(n) && n > 0 ? n : 1)
+            }}
             locale={locale}
             guests={guests.toString()}
           />

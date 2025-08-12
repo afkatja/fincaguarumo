@@ -2,12 +2,12 @@
 import React from "react"
 
 import { Label } from "./ui/label"
-import Select from "react-select"
+import Select, { FilterOptionOption, StylesConfig } from "react-select"
 
 interface DropdownOption {
   label: React.ReactNode
   value: string
-  [data: string]: any
+  [data: string]: unknown
 }
 
 export interface DropdownInputProps<
@@ -17,7 +17,10 @@ export interface DropdownInputProps<
   value?: string
   onChange: (value: string) => void
   label?: React.ReactNode
-  itemPredicate?: (option: any, value: string) => boolean
+  itemPredicate?: (
+    option: FilterOptionOption<DropdownOption>,
+    value: string
+  ) => boolean
   position?: "popper" | "item-aligned" | undefined
   className?: string
   inputStyle?: React.CSSProperties
@@ -38,7 +41,7 @@ const DropdownInput = <TOption extends DropdownOption = DropdownOption>({
   itemPredicate = DEFAULT_ITEM_PREDICATE,
   className = "",
 }: DropdownInputProps<TOption>) => {
-  const styles = {
+  const styles: StylesConfig<DropdownOption> = {
     control: (base: any) => ({
       ...base,
       minHeight: "32px",
@@ -76,7 +79,7 @@ const DropdownInput = <TOption extends DropdownOption = DropdownOption>({
         className="react-select"
         defaultValue={options.find(option => option.value === value)}
         isSearchable
-        name="color"
+        name="drowpdown-input"
         options={options}
         blurInputOnSelect
         onChange={selected => onChange(selected ? selected.value : "")}

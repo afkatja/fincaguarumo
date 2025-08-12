@@ -3,7 +3,7 @@ import React, { useEffect } from "react"
 import Slideshow from "@/components/Slideshow"
 import DetailsPageLayout from "../../DetailsPageLayout"
 import { TTour } from "../data"
-import { titleCase } from "../../../../../lib/utils"
+import { titleCase } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import { useBooking } from "../../../BookingProvider"
 import { IBookingType } from "../../../../../types"
@@ -22,11 +22,11 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
         description: tour.description,
         price: tour.price,
         totalPrice: tour.price,
-        duration: tour.duration,
-        location: tour.location,
+        duration: tour.duration ?? "",
+        location: tour.location ?? "",
         body: tour.body,
         guests: "1",
-        geo: tour.geo,
+        geo: tour.geo ?? { lat: "", lon: "" },
       },
     })
   }, [tour])
@@ -40,6 +40,7 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
         location: tour.location,
         price: tour.price,
         body: tour.body,
+        geo: tour.geo,
       }}
       slideshow={
         <Slideshow

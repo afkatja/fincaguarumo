@@ -187,7 +187,6 @@ export const TOUR_QUERY = groq`
   geo,
   duration,
   body,
-  dialog,
   "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -198,7 +197,6 @@ export const TOUR_QUERY = groq`
         slug,
         description,
         body,
-        dialog,
       })
     }
 }

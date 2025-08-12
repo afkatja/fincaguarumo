@@ -9,6 +9,16 @@ import Payment from "./(payment)/Payment"
 import BookingForm from "./(payment)/BookingForm"
 import { BookingType } from "../../../types"
 
+interface BookingDialogContentProps {
+  bookingData: Record<string, any>
+  title?: string
+  paymentStep: boolean
+  onBookingFormSubmit: () => void
+  onCancel: () => void
+  bookingType: BookingType
+  locale: string
+}
+
 const BookingDialogContent = ({
   bookingData,
   title: titleProp,
@@ -17,15 +27,7 @@ const BookingDialogContent = ({
   onCancel,
   bookingType,
   locale,
-}: {
-  bookingData: Record<string, any>
-  title?: string
-  paymentStep: boolean
-  onBookingFormSubmit: () => void
-  onCancel: () => void
-  bookingType: BookingType
-  locale: string
-}) => {
+}: BookingDialogContentProps) => {
   if (!bookingData) return null
 
   const title = bookingData?.bookingDetails?.title ?? titleProp

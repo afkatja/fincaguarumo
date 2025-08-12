@@ -36,10 +36,14 @@ const initialBookingData = {
     geo: { lat: "", lon: "" },
   },
 }
+type BookingData = typeof initialBookingData
 
-const BookingContext = createContext({
+const BookingContext = createContext<{
+  bookingData: BookingData
+  setBookingData: React.Dispatch<React.SetStateAction<BookingData>>
+}>({
   bookingData: initialBookingData,
-  setBookingData: (val: any) => val,
+  setBookingData: () => {},
 })
 
 export const useBooking = () => useContext(BookingContext)

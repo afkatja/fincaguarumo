@@ -1,4 +1,4 @@
-import { parse } from "date-fns"
+import { isValid, parse } from "date-fns"
 
 // Parse localized date strings (e.g., "January 15, 2024", "15 janvier 2024", etc.)
 const parseLocalizedDate = (dateString: string): Date | null => {
@@ -13,21 +13,17 @@ const parseLocalizedDate = (dateString: string): Date | null => {
   ]
 
   for (const format of formats) {
-    try {
-      const parsedDate = parse(dateString, format, new Date())
-      if (!isNaN(parsedDate.getTime())) {
-        return parsedDate
-      }
-    } catch (error) {
-      // Continue to next format
-    }
+    const parsedDate = parse(
+      dateString,
+      format,
+      new Date() /*, locale? see previous comment */
+    )
+    if (isValid(parsedDate)) return parsedDate
   }
 
   // Fallback: try to parse with the Date constructor
   const date = new Date(dateString)
-  if (!isNaN(date.getTime())) {
-    return date
-  }
+  if (isValid(date)) return date
 
   return null
 }

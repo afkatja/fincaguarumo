@@ -1,4 +1,5 @@
-import React from "react"
+"use client"
+import React, { useMemo } from "react"
 import Icon from "./Icon"
 import { headerIcons } from "./icons"
 
@@ -22,8 +23,11 @@ const Title = React.memo(
       title: iconTitle,
       color = "currentColor",
     } = iconProp
-    const icons = Object.keys(headerIcons)
-    const icon = icons[Math.floor(Math.random() * icons.length)]
+
+    const icon = useMemo(() => {
+      const icons = Object.keys(headerIcons)
+      return icons[Math.floor(Math.random() * icons.length)]
+    }, [])
 
     return (
       <Heading className={titleClassName}>

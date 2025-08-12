@@ -1,15 +1,12 @@
 import { Suspense } from "react"
 
 import { notFound } from "next/navigation"
-// import { urlFor } from "@/sanity/lib/image"
 import Title from "@/components/Title"
 import Loading from "./loading"
 import RichText from "@/components/RichText"
 import Slideshow from "@/components/Slideshow"
-import { shuffle } from "../../../lib/utils"
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
-// import resolveConfig from "tailwindcss/resolveConfig"
-// import theme from "../../../../tailwind.config"
+import { shuffle } from "@/lib/utils"
+import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
 
 const PageLayout = ({
   locale,
@@ -55,15 +52,6 @@ const PageLayout = ({
             />
           )}
         </div>
-        {/* {mainImage && (
-          <Image
-            src={urlFor(mainImage).width(1600).height(500).url()}
-            alt=""
-            height={700}
-            width={1600}
-            className="mb-5"
-          />
-        )} */}
         {(mainImage || images) && (
           <Slideshow
             images={

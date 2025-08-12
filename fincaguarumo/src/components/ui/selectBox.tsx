@@ -29,7 +29,7 @@ const SelectBox = ({
         </SelectTrigger>
         <SelectContent>
           {values.map(value => (
-            <SelectItem key={crypto.randomUUID()} value={value.val}>
+            <SelectItem key={value.val} value={value.val}>
               {value.text}
             </SelectItem>
           ))}

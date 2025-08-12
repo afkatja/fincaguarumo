@@ -41,7 +41,7 @@ const LanguageSelector = ({
       </SelectTrigger>
       <SelectContent>
         {availableTranslations.map(version => (
-          <SelectItem key={crypto.randomUUID()} value={version.language}>
+          <SelectItem key={version.language} value={version.language}>
             <ReactCountryFlag
               countryCode={version.countryCode.toUpperCase()}
               svg

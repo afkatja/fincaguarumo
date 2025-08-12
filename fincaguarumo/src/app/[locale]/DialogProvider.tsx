@@ -48,10 +48,10 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchDialog = async () => {
-      // if (!dialogId) {
-      //   setDialogData(null)
-      //   return
-      // }
+      if (!dialogId) {
+        setDialogData(null)
+        return
+      }
 
       setIsLoading(true)
       try {

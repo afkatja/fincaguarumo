@@ -9,6 +9,7 @@ interface DropdownOption {
   label: React.ReactNode
   value: string
   color?: string
+  [key: string]: any
 }
 
 interface CountriesDropdownProps {

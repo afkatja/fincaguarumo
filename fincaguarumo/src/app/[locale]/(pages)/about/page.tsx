@@ -1,7 +1,7 @@
 import React from "react"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { ABOUT_QUERY } from "../../../../sanity/lib/queries"
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import Layout from "../pagesLayout"
 import RichText from "../../../../components/RichText"
 

@@ -21,7 +21,10 @@ const FeaturedContent = ({
         )}
         <ul className="md:grid lg:auto-cols-fr md:grid-cols-3 gap-4 md:-mx-5">
           {items.map(item => (
-            <li key={crypto.randomUUID()} className="md:m-5 my-5">
+            <li
+              key={item.content?.valueOf().toString()}
+              className="md:m-5 my-5"
+            >
               <FadeInObserver className="fade-in">
                 {item.content}
               </FadeInObserver>

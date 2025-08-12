@@ -1,7 +1,7 @@
 import React from "react"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { GALLERY_QUERY, PAGE_QUERY } from "../../../../sanity/lib/queries"
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import Layout from "../pagesLayout"
 // import Gallery from "./Gallery"
 import Carousel from "@/components/Carousel"

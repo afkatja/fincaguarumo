@@ -13,7 +13,8 @@ const calculateTotal = (
     const basePrice = parseInt(price)
     const additionalGuests = Math.min(parseInt(guests) - 1, 3) // Max 3 additional guests
     const additionalPrice = additionalGuests * 20
-    return (basePrice + additionalPrice) * duration!
+    const stay = duration ?? 1
+    return (basePrice + additionalPrice) * stay // Default duration is 1 if not provided
   }
 }
 

@@ -1,4 +1,4 @@
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
 
 import { sanityFetch } from "../../sanity/lib/client"
 import {

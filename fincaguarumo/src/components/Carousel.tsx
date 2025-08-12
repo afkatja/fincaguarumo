@@ -16,6 +16,7 @@ const ImgSlider = React.memo(
     images,
     useArrows,
     options,
+    className = "",
     ...props
   }: {
     images: {
@@ -29,13 +30,14 @@ const ImgSlider = React.memo(
     }[]
     useArrows?: boolean
     options?: any
+    className?: string
     [prop: string]: any
   }) => {
     return (
       <Carousel
         {...props}
         plugins={[Autoplay({})]}
-        className={`w-11/12 mx-auto ${props.className} md:max-h-[70dvh] flex flex-col`}
+        className={`w-11/12 mx-auto md:max-h-[70dvh] flex flex-col ${className}`}
       >
         <CarouselContent>
           {images.slice(0, 12).map((img, i) => (

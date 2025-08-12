@@ -20,16 +20,16 @@ import { DialogProvider } from "./DialogProvider"
 import { metadata as meta } from "./meta"
 import { i18n } from "../../../languages"
 import Header from "../../components/header"
-import Head from "next/head"
 import { cn } from "../../lib/utils"
+import Script from "next/script"
 
 export const metadata = meta
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
 }
 
 const poppins = Poppins({
@@ -117,17 +117,6 @@ export default async function Layout({
 
   return (
     <html lang={locale} data-scroll-behavior="smooth">
-      <Head>
-        {i18n.languages.map(({ id }) => (
-          <link
-            key={id}
-            rel="alternate"
-            hrefLang={id}
-            href={`${baseUrl}/${id}/`}
-          />
-        ))}
-        <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/en/`} />
-      </Head>
       <body
         className={cn(
           locale === "ru"
@@ -160,13 +149,14 @@ export default async function Layout({
           </TransitionProvider>
           <Footer />
         </NextIntlClientProvider>
-        <script
-          async={true}
+        <Script
+          id="json-ld"
+          strategy="afterInteractive"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
           }}
-        ></script>
+        />
       </body>
     </html>
   )

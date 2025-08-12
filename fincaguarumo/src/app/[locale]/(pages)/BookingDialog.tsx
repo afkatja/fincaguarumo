@@ -40,7 +40,11 @@ const BookingDialog = ({
   locale,
 }: {
   bookingType: BookingType
-  dialogOptions: { title: string; buttonText: string; buttonClassName?: string }
+  dialogOptions: {
+    title: string
+    buttonText?: string
+    buttonClassName?: string
+  }
   locale: string
   dialogId?: string
 }) => {
@@ -61,7 +65,7 @@ const BookingDialog = ({
   }
 
   const buttonText =
-    dialogOptions.buttonText ||
+    dialogOptions.buttonText ??
     getInternationalizedValue(dialogData?.cta, locale, "Reserve")
 
   return (

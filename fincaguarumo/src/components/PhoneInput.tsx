@@ -11,6 +11,7 @@ interface DropdownOption {
   phoneCode: number
   label: React.ReactNode
   value: string
+  [key: string]: any
 }
 
 interface PhoneInputProps
@@ -57,7 +58,6 @@ const PhoneInput: React.FC<PhoneInputProps> = function PhoneInput({
       <div className="flex flex-wrap items-center">
         <CountriesDropdown
           name="countries"
-          handleCountrySelect={handleCountrySelect}
           countries={countries}
           defaultCountry={defaultCountry}
           onCountrySelect={handleCountrySelect}

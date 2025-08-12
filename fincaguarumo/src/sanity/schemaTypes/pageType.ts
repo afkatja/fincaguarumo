@@ -81,7 +81,7 @@ export const pageType = defineType({
     defineField({
       name: "showBookingDialog",
       type: "boolean",
-      title: "Show Booking dialog",
+      title: "Show Booking Dialog",
       description: "Enable to display booking dialog",
       initialValue: false,
     }),

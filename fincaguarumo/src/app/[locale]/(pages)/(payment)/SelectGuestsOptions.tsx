@@ -4,17 +4,21 @@ import SelectBox from "../../../../components/ui/selectBox"
 import { getInternationalizedValue } from "../../../../lib/utils"
 import { useDialog } from "../../DialogProvider"
 
+const DEFAULT_GUEST_OPTIONS = ["1", "2", "3", "4"] as const
+
 const SelectGuestsOptions = ({
   locale,
   guests,
   onChange,
+  maxGuests = DEFAULT_GUEST_OPTIONS,
 }: {
   locale: string
   guests: string
   onChange: (val: string) => void
+  maxGuests?: readonly string[]
 }) => {
   const { dialogData: field } = useDialog()
-  const guestsOptions = ["1", "2", "3", "4"].map(val => ({
+  const guestsOptions = maxGuests.map(val => ({
     val: val,
     text: `${val} ${val === "1" ? getInternationalizedValue(field?.adult, locale, "adult") : getInternationalizedValue(field?.adult, locale, "adults")}`,
   }))

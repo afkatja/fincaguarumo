@@ -1,6 +1,6 @@
 import React from "react"
 import { notFound } from "next/navigation"
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { PAGES_QUERY } from "../../../../sanity/lib/queries"
 import Layout from "../pagesLayout"

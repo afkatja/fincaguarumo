@@ -81,7 +81,6 @@ export default function ContactForm() {
         errorMessage="Please enter your email"
         placeholder="jane@doe.com"
         required
-        pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
       />
 
       <div>

@@ -1,80 +1,29 @@
 import { Metadata } from "next"
+import { i18n } from "../../../languages"
 
+const baseUrl = "https://fincaguarumo.com"
 export const metadata: Metadata = {
   title: "Finca Guarumo",
   metadataBase: new URL("https://fincaguarumo.com"),
   description:
     "Stay at Villa Bruno in Finca Guarumo – a private eco-luxury villa in Costa Rica’s Osa Peninsula. Explore jungle trails, birdwatching, and rural life near Corcovado National Park.",
-  keywords: `birdwatching, hiking, rural tours, jungle, aves, naturaleza, nature, eco-tourism, sustainability, sostenibilidad, sustainable tourism, Corcovado, Osa Peninsula, Peninsula de Osa, Costa Rica, Villa Bruno, eco-luxury, luxury, sustainable travel, travel, ecoturismo, turismo sostenible, turismo responsable, turismo rural, finca, guarumo, finca guarumo, finca guarumo costa rica, finca guarumo corcovado, vacation rental, airbnb, booking.com, vacation, holiday, stay, stay in Villa Bruno Costa Rica,
-jungle villa rental Costa Rica,
-eco-lodge near Corcovado,
-private jungle villa Osa Peninsula,
-Villa Bruno Corcovado stay,
-luxury jungle retreat Costa Rica,
-rainforest villa Costa Rica,
-unique stays Costa Rica,
-secluded villa Costa Rica,
-Villa Bruno vacation rental,
-eco-accommodation Osa Peninsula,
-villa with wildlife view Costa Rica,
-off-grid villa Costa Rica,
-eco-retreat Costa Rica,
-birdwatching Costa Rica villa,
-best place to see birds in Costa Rica,
-bird photography Costa Rica,
-Costa Rica birding tours,
-wildlife retreat Costa Rica,
-birdwatching Osa Peninsula,
-jungle birds Costa Rica,
-tropical birdwatching lodge,
-birds of Corcovado,
-rare bird sightings Costa Rica,
-hummingbirds Costa Rica jungle,
-nature photography Costa Rica,
-eco-friendly villa Costa Rica,
-sustainable jungle stay,
-green travel Costa Rica,
-regenerative tourism Costa Rica,
-off-the-grid vacation Costa Rica,
-eco-conscious travel Costa Rica,
-sustainability in tourism Costa Rica,
-permaculture finca stay,
-reforestation tourism Costa Rica,
-low-impact travel Costa Rica,
-rural tourism Osa Peninsula,
-authentic Costa Rica experiences,
-jungle hiking trails Costa Rica,
-guided nature walks Costa Rica,
-farm-to-table villa Costa Rica,
-organic farm Costa Rica stay,
-hiking Corcovado without a guide,
-nature immersion Costa Rica,
-Costa Rica rainforest experience,
-adventure travel Osa Peninsula,
-near Corcovado National Park,
-Puerto Jimenez villa rental,
-stay near Carate or La Leona,
-Osa Peninsula lodging,
-jungle accommodation Puerto Jimenez,
-villa near Golfo Dulce,
-remote Costa Rica vacation,
-near the jungle and beach Costa Rica,
-where to stay in Osa Peninsula,
-best eco-lodge near Corcovado,
-top nature stays in Costa Rica,
-romantic jungle getaway Costa Rica,
-Costa Rica villa for couples,
-peaceful nature retreat Costa Rica,
-jungle airbnb Costa Rica,
-Costa Rica vacation villa booking,
-private villa for rent in Costa Rica,
-`,
+  keywords:
+    `birdwatching, hiking, jungle, nature, eco-tourism, sustainability, Corcovado, Osa Peninsula, Costa Rica, Villa Bruno, eco-luxury, sustainable travel, ecoturismo, turismo sostenible, turismo rural, finca guarumo, vacation rental, airbnb, luxury jungle retreat Costa Rica, rainforest villa, secluded villa Costa Rica, eco-lodge near Corcovado, birdwatching Osa Peninsula, nature photography Costa Rica, eco-friendly villa Costa Rica, regenerative tourism Costa Rica, rural tourism Osa Peninsula, guided nature walks Costa Rica, organic farm Costa Rica stay, nature immersion Costa Rica, near Corcovado National Park, Puerto Jimenez villa rental, villa near Golfo Dulce, romantic jungle getaway Costa Rica, peaceful nature retreat Costa Rica`
+      .split(",")
+      .map(k => k.trim())
+      .filter(Boolean),
   icons: {
     icon: "/favicon/icon.ico",
     apple: "/favicon/apple-touch-icon.png",
     shortcut: "/favicon/safari-pinned-tab.svg",
   },
   robots: "index, follow",
+  alternates: {
+    languages: Object.fromEntries(
+      i18n.languages.map(({ id }) => [id, `${baseUrl}/${id}/`])
+    ),
+    canonical: `${baseUrl}/en/`,
+  },
   openGraph: {
     title: "Finca Guarumo",
     description:
@@ -100,6 +49,11 @@ private villa for rent in Costa Rica,
     title: "Finca Guarumo – Eco-Villa & Birding Paradise in Costa Rica",
     description:
       "Stay at Villa Bruno in the Osa Peninsula. A sustainable jungle experience with birds, wildlife, rural tours, and Corcovado nearby.",
-    images: ["/images/finca-guarumo-v4.4.jpg"],
+    images: [
+      {
+        url: "/images/finca-guarumo-v4.4.jpg",
+        alt: "Finca Guarumo – Villa Bruno jungle view",
+      },
+    ],
   },
 }

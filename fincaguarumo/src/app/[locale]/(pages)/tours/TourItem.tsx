@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import Badge from "@/components/badge"
 import Icon from "@/components/Icon"
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import { urlFor } from "@/sanity/lib/image"
 import { titleCase, loadTranslations } from "../../../../lib/utils"
 import { useEffect, useState } from "react"
@@ -20,6 +20,7 @@ export type TourType = {
   isFeatured?: boolean
   isPublished: boolean
   href: string
+  /** lat/lng as decimal degrees in string form (e.g., "9.1234") */
   geo?: { lat: string; lng: string }
 }
 

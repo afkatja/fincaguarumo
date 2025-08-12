@@ -1,7 +1,7 @@
 import { POSTS_QUERYResult } from "../../sanity.types"
 import FeaturedContent from "./FeaturedContent"
 import TourItem from "../app/[locale]/(pages)/tours/TourItem"
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
 
 export function Posts({
   posts: postsProp,

@@ -2,13 +2,13 @@ import { NextResponse } from "next/server"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
 import calculateTotal from "@/lib/calculateTotal"
 import calculateDuration from "@/lib/calculateDuration"
-import { IBookingType } from "../../../types"
+import { IBookingType } from "../types"
 
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_TOKEN || "",
 })
 
-export async function POST(request: Request) {
+export async function sendConfirmationEmail(request: Request) {
   try {
     const { customerDetails, bookingDetails } = await request.json()
 

@@ -17,7 +17,7 @@ const CardItem = ({
   avatar?: string
 }) => {
   const [emailDecoded, setEmailDecoded] = useState(email)
-  const [phoneDecoded, setPhoneDecoded] = useState(email)
+  const [phoneDecoded, setPhoneDecoded] = useState(phoneNumber)
   useEffect(() => {
     setEmailDecoded(atob(email))
     setPhoneDecoded(atob(phoneNumber))

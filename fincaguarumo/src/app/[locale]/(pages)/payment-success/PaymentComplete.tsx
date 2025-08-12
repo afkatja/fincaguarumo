@@ -26,22 +26,22 @@ const STATUS_CONTENT_MAP: Record<
   [Status.Success]: {
     text: "Booking succeeded",
     iconColor: "#30B130",
-    icon: <Success fill="#30B130" className="mr-4" />,
+    icon: <Success fill="#30B130" className="mr-4" title="Success" />,
   },
   [Status.Complete]: {
     text: "Booking succeeded",
     iconColor: "#30B130",
-    icon: <Success fill="#30B130" className="mr-4" />,
+    icon: <Success fill="#30B130" className="mr-4" title="Success" />,
   },
   [Status.PaymentError]: {
     text: "Your payment was not successful, please try again.",
     iconColor: "#DF1B41",
-    icon: <Error fill="#DF1B41" className="mr-4" />,
+    icon: <Error fill="#DF1B41" className="mr-4" title="Error" />,
   },
   [Status.Error]: {
     text: "Something went wrong, please try again.",
     iconColor: "#DF1B41",
-    icon: <Error fill="#DF1B41" className="mr-4" />,
+    icon: <Error fill="#DF1B41" className="mr-4" title="Error" />,
   },
   // default: {
   //   text: "Your payment is processing.",
@@ -129,72 +129,67 @@ export default function CompletePage({ locale }: { locale: string }) {
     }
   }, [searchParams, stripe, paymentIntent, session])
 
+  // useEffect(() => {
+  //   const sendConfirmationEmail = async () => {
+  //     emailSentRef.current = true
+  //     try {
+  //       const response = await fetch("/api/send-confirmation-email", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({
+  //           customerDetails: bookingData.customerDetails,
+  //           bookingDetails: {
+  //             ...bookingData.bookingDetails,
+  //             type: bookingData.type,
+  //           },
+  //         }),
+  //       })
+
+  //       // Clear booking data after successful payment
+  //       if (
+  //         response?.ok &&
+  //         (status === Status.Success || status === Status.Complete)
+  //       ) {
+  //         localStorage.removeItem("bookingData")
+  //       }
+
+  //       if (!response.ok) {
+  //         console.error("Failed to send confirmation email")
+  //         return
+  //       }
+  //     } catch (error) {
+  //       console.error("Error sending confirmation email:", error)
+  //     }
+  //   }
+
+  //   const emailSent = localStorage.getItem("emailSent")
+
+  //   if (
+  //     (searchParams.get("payment_intent_client_secret") ||
+  //       searchParams.get("session_id")) &&
+  //     status === Status.Complete &&
+  //     !emailSent &&
+  //     !emailSentRef.current
+  //   ) {
+  //     sendConfirmationEmail()
+  //   }
+  // }, [searchParams, bookingData, status])
+
   useEffect(() => {
-    const sendConfirmationEmail = async () => {
-      emailSentRef.current = true
-      try {
-        const response = await fetch("/api/send-confirmation-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            customerDetails: bookingData.customerDetails,
-            bookingDetails: {
-              ...bookingData.bookingDetails,
-              type: bookingData.type,
-            },
-          }),
-        })
-
-        // Clear booking data after successful payment
-        if (
-          response?.ok &&
-          (status === Status.Success || status === Status.Complete)
-        ) {
-          localStorage.removeItem("bookingData")
-        }
-
-        if (!response.ok) {
-          console.error("Failed to send confirmation email")
-          return
-        }
-      } catch (error) {
-        console.error("Error sending confirmation email:", error)
-      }
-    }
-
-    const emailSent = localStorage.getItem("emailSent")
-
-    if (
-      (searchParams.get("payment_intent_client_secret") ||
-        searchParams.get("session_id")) &&
-      status === Status.Complete &&
-      !emailSent &&
-      !emailSentRef.current
-    ) {
-      sendConfirmationEmail()
-    }
-  }, [searchParams, bookingData, status])
-
-  useEffect(() => {
-    // Only redirect if this is a page reload (not initial navigation)
-    if (
-      performance &&
-      performance.getEntriesByType("navigation").length === 1 &&
-      (
-        performance.getEntriesByType(
-          "navigation"
-        )[0] as PerformanceNavigationTiming
-      ).type === "reload"
-    ) {
+    // Check if this is a page reload
+    const isReload = sessionStorage.getItem("payment-success-loaded")
+    if (isReload) {
       router.replace(`/${locale}`)
+      sessionStorage.removeItem("payment-success-loaded")
+    } else {
+      sessionStorage.setItem("payment-success-loaded", "true")
     }
     if (pathname !== `/${locale}/payment-success`) {
-      console.log("pathname", pathname)
       setSession(null)
       setStatus(null)
       setPaymentIntent(null)
-      if (localStorage.getItem("emailSent"))
-        localStorage.removeItem("emailSent")
+      // if (localStorage.getItem("emailSent"))
+      //   localStorage.removeItem("emailSent")
     }
   }, [router, locale, pathname])
 

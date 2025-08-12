@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
+import { sendConfirmationEmail } from "../../../lib/sendConfirmationEmail"
 
 export async function POST(request: NextRequest) {
   const stripeInstance = new Stripe(process.env.STRIPE_API_KEY ?? "")
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     case "checkout.session.completed": {
       const session = event.data.object
       console.log(`Checkout session completed: ${session.id}`)
-      // TODO: Handle successful checkout session (e.g., mark booking as paid, send confirmation email)
+      sendConfirmationEmail(request)
       break
     }
     case "payment_intent.succeeded": {
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
       break
     }
     case "payment_method.attached": {
-      const paymentMethod = event.data.object
+      // const paymentMethod = event.data.object
       // Then define and call a method to handle the successful attachment of a PaymentMethod.
       // handlePaymentMethodAttached(paymentMethod);
       break
