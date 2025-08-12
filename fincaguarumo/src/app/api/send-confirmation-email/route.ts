@@ -44,7 +44,10 @@ export async function POST(request: Request) {
         email: process.env.MAILERSEND_FROM_EMAIL!,
         name: "Finca Guarumo",
       },
-      subject: `Your Finca Guarumo ${getBookingType()} Booking Confirmation`,
+      subject:
+        bookingDetails.type === IBookingType.villa
+          ? "Your reservation at Villa Bruno is confirmed!"
+          : `Your Finca Guarumo ${getBookingType()} Booking Confirmation`,
       text: `Dear ${customerDetails.name},
 
             Thank you for booking your ${getBookingType().toLowerCase()} with Finca Guarumo!
@@ -138,12 +141,39 @@ export async function POST(request: Request) {
             `,
     }
 
-    const customerEmailConfig = new EmailParams()
-      .setFrom(new Sender(process.env.MAILERSEND_FROM_EMAIL!, "Finca Guarumo"))
-      .setTo([new Recipient(customerDetails.email, customerDetails.name)])
-      .setSubject(`Your Finca Guarumo ${getBookingType()} Booking Confirmation`)
-      .setText(customerMsg.text)
-      .setHtml(customerMsg.html)
+    const customerEmailConfig = new EmailParams(customerMsg)
+      // .setFrom(new Sender(process.env.MAILERSEND_FROM_EMAIL!, "Finca Guarumo"))
+      // .setTo([new Recipient(customerDetails.email, customerDetails.name)])
+      // .setSubject(`Your Finca Guarumo ${getBookingType()} Booking Confirmation`)
+      .setTemplateId(
+        bookingDetails.type === IBookingType.villa
+          ? "k68zxl2ek59lj905"
+          : "zr6ke4ne3234on12"
+      )
+      .setPersonalization([
+        {
+          email: process.env.MAILERSEND_FROM_EMAIL!,
+          data: {
+            account_name: "Finca Guarumo",
+            name: customerDetails.name,
+            total: `$${Number(bookingDetails.totalPrice)}`,
+            guests_number: bookingDetails.guests,
+            support_mail: process.env.CONTACT_EMAIL!,
+            ...(bookingDetails.type === IBookingType.villa
+              ? {
+                  checkin: bookingDetails.checkIn,
+                  checkout: bookingDetails.checkOut,
+                }
+              : {
+                  tour: bookingDetails.title,
+                  location: bookingDetails.location,
+                }),
+            date: bookingDetails.date,
+          },
+        },
+      ])
+    // .setText(customerMsg.text)
+    // .setHtml(customerMsg.html)
 
     const adminEmailConfig = new EmailParams()
       .setFrom(
