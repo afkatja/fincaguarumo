@@ -91,7 +91,17 @@ export const pageType = defineType({
       title: "Price per person",
       description: "Price per person in USD",
       hidden: ({ document }) => !document?.showBookingDialog,
-      validation: rule => rule.min(0).precision(2),
+      validation: rule =>
+        rule
+          .min(0)
+          .precision(2)
+          .custom((value, context) => {
+            const enabled = Boolean(context.document?.showBookingDialog)
+            if (enabled && (value === undefined || value === null)) {
+              return "Price is required when Booking Dialog is enabled"
+            }
+            return true
+          }),
     }),
   ],
   initialValue: {

@@ -9,7 +9,7 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { IBookingType } from "../../../../types"
+import { BOOKING_TYPE } from "../../../../types"
 import BookingDialog from "../BookingDialog"
 import { Content } from "./page"
 import { useBooking } from "../../BookingProvider"
@@ -37,7 +37,7 @@ const ClientPage = ({
   useEffect(() => {
     setBookingData({
       ...bookingData,
-      type: IBookingType.villa,
+      type: BOOKING_TYPE.villa,
       bookingDetails: {
         ...bookingData.bookingDetails,
         title: content.title,
@@ -56,7 +56,7 @@ const ClientPage = ({
       <footer className="w-11/12 flex justify-center gap-4 mx-auto my-3 sticky bottom-4">
         {content?.showBookingDialog && (
           <BookingDialog
-            bookingType={IBookingType.villa}
+            bookingType={BOOKING_TYPE.villa}
             dialogOptions={{
               buttonText: t?.bookNow || "Book now",
               title: t?.bookNow || "Reserve Villa Bruno directly",

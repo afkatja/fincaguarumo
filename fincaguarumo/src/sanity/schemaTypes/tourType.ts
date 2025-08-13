@@ -47,11 +47,8 @@ export const tourType = defineType({
     }),
     defineField({
       name: "geo",
-      type: "object",
-      fields: [
-        { type: "string", title: "lat", name: "lat" },
-        { type: "string", title: "lng", name: "lng" },
-      ],
+      title: "Geo Location",
+      type: "geopoint",
     }),
     defineField({
       name: "duration",

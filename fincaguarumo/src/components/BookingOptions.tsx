@@ -97,7 +97,7 @@ export function BookingOptions({
           <div>
             <Datepicker
               label={t.checkIn}
-              selectedDate={checkin.toLocaleDateString(undefined, {
+              selectedDate={checkin.toLocaleDateString(locale, {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -108,7 +108,7 @@ export function BookingOptions({
           <div className="mt-4 sm:mt-0">
             <Datepicker
               label={t.checkOut}
-              selectedDate={checkout.toLocaleDateString(undefined, {
+              selectedDate={checkout.toLocaleDateString(locale, {
                 year: "numeric",
                 month: "long",
                 day: "numeric",

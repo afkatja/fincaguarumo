@@ -3,10 +3,10 @@ import React from "react"
 import PaymentComplete from "./PaymentComplete"
 import PaymentWrapper from "../(payment)/PaymentWrapper"
 
-const PaymentCompletePage = ({ locale }: { locale: string }) => {
+const PaymentCompletePage = () => {
   return (
     <PaymentWrapper>
-      <PaymentComplete locale={locale} />
+      <PaymentComplete />
     </PaymentWrapper>
   )
 }

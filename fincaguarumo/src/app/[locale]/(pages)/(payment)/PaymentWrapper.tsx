@@ -10,9 +10,11 @@ if (!publishableKey) {
   )
 }
 
-const stripePromise = loadStripe(publishableKey)
+const stripePromise = publishableKey && loadStripe(publishableKey)
 
 const PaymentWrapper = ({ children }: { children: React.ReactNode }) => {
+  if (!stripePromise) return children
+
   return <Elements stripe={stripePromise}>{children}</Elements>
 }
 

@@ -32,7 +32,7 @@ const AddToCalendar = ({ event }: { event: Record<string, any> }) => {
       description,
       location,
       url: window.location.href,
-      geo: geo ? { lat: Number(geo.lat), lon: Number(geo.lng) } : undefined,
+      geo: geo ? { lat: geo.lat, lon: geo.lng } : undefined,
     }
 
     //@ts-ignore

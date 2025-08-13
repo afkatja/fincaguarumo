@@ -13,9 +13,11 @@ import Title from "../../../../components/Title"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 
-const stripePromise = loadStripe(publishableKey, {
-  betas: ["custom_checkout_adaptive_pricing_2"],
-})
+const stripePromise =
+  publishableKey &&
+  loadStripe(publishableKey, {
+    betas: ["custom_checkout_adaptive_pricing_2"],
+  })
 
 const Payment = () => {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
@@ -62,32 +64,30 @@ const Payment = () => {
   const currency = bookingData.bookingDetails.currency?.toUpperCase() ?? "USD"
   const amount = Number(bookingData.bookingDetails.totalPrice || 0).toFixed(2)
 
+  if (!stripePromise) return <Loading className="absolute" />
+  if (!clientSecret) {
+    return <Loading className="absolute" />
+  }
   return (
     <>
-      {!clientSecret ? (
-        <Loading className="absolute" />
-      ) : (
-        <>
-          <CheckoutProvider
-            options={{
-              fetchClientSecret: () => fetchData,
-              elementsOptions: options,
-            }}
-            stripe={stripePromise}
-          >
-            <CurrencySelectorElement />
-            <Title title={`Pay ${currency} ${amount}  now`} />
-            <CheckoutForm />
-          </CheckoutProvider>
-          <Image
-            src="/images/stripe-badge.png"
-            width={450}
-            height={50}
-            alt="stripe badge"
-            className="w-full"
-          />
-        </>
-      )}
+      <CheckoutProvider
+        options={{
+          fetchClientSecret: () => fetchData,
+          elementsOptions: options,
+        }}
+        stripe={stripePromise}
+      >
+        <CurrencySelectorElement />
+        <Title title={`Pay ${currency} ${amount}  now`} />
+        <CheckoutForm />
+      </CheckoutProvider>
+      <Image
+        src="/images/stripe-badge.png"
+        width={450}
+        height={50}
+        alt="stripe badge"
+        className="w-full"
+      />
     </>
   )
 }

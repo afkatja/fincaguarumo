@@ -1,9 +1,5 @@
 import React, { FormEventHandler, useState } from "react"
-import {
-  PaymentElement,
-  useStripe,
-  useCheckout,
-} from "@stripe/react-stripe-js"
+import { PaymentElement, useStripe, useCheckout } from "@stripe/react-stripe-js"
 import { Button } from "@/components/ui/button"
 import Loading from "../loading"
 
@@ -22,17 +18,24 @@ export default function CheckoutForm() {
     if (!stripe) {
       return
     }
+    if (!checkout) {
+      setMessage("Payment service not ready. Please try again.")
+      return
+    }
 
+    setMessage(null)
     setIsLoading(true)
     // const result = await checkout.updateEmail(bookingData.customerDetails.email)
     // if (result.type === "error") setMessage(result.error.message)
 
-    const confirmResult = await checkout.confirm()
-    if (confirmResult.type === "error") {
-      setMessage(confirmResult.error.message)
+    try {
+      const confirmResult = await checkout.confirm()
+      if (confirmResult.type === "error") {
+        setMessage(confirmResult.error.message)
+      }
+    } finally {
+      setIsLoading(false)
     }
-
-    setIsLoading(false)
   }
 
   const paymentElementOptions = {
@@ -42,7 +45,11 @@ export default function CheckoutForm() {
   return (
     <>
       <form id="payment-form" onSubmit={handleSubmit} className="flex flex-col">
-        {message && <p className="mb-4">{message}</p>}
+        {message && (
+          <p className="mb-4" aria-live="polite" role="status">
+            {message}
+          </p>
+        )}
         <PaymentElement
           options={paymentElementOptions}
           onReady={() => {
@@ -58,6 +65,7 @@ export default function CheckoutForm() {
               isLoading || !stripe || !isElementReady || !isFormComplete
             }
             className="ml-auto"
+            type="submit"
           >
             {isLoading ? <Loading /> : "Pay now"}
           </Button>

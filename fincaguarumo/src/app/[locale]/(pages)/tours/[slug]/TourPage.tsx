@@ -6,7 +6,7 @@ import { TTour } from "../data"
 import { titleCase } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import { useBooking } from "../../../BookingProvider"
-import { IBookingType } from "../../../../../types"
+import { BOOKING_TYPE } from "../../../../../types"
 
 const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
   if (!tour || !tour.isPublished) notFound()
@@ -15,7 +15,7 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
   useEffect(() => {
     setBookingData({
       ...bookingData,
-      type: IBookingType.tour,
+      type: BOOKING_TYPE.tour,
       bookingDetails: {
         ...(bookingData || {}).bookingDetails,
         title: tour.title,
@@ -50,7 +50,7 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
       }
       parent={{ title: "Tours", href: "tours" }}
       icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
-      bookingType={IBookingType.tour}
+      bookingType={BOOKING_TYPE.tour}
       locale={locale}
       dialogId={tour.dialog?._ref}
     />

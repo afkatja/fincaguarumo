@@ -7,7 +7,7 @@ export const dialogType = defineType({
   fields: [
     defineField({
       type: "internationalizedArrayString",
-      name: "CLA_button",
+      name: "CTA_button",
       initialValue: "Reserve",
       description: `Call to action, like "Reserve now"`,
     }),

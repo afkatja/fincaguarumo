@@ -9,7 +9,7 @@ import Input from "@/components/Input"
 import { getInternationalizedValue, loadTranslations } from "@/lib/utils"
 import calculateDuration from "@/lib/calculateDuration"
 import calculateTotal from "@/lib/calculateTotal"
-import { BookingType, IBookingType } from "../../../../types"
+import { BookingType, BOOKING_TYPE } from "../../../../types"
 import { useBooking } from "../../BookingProvider"
 import { useDialog } from "../../DialogProvider"
 import SelectGuestsOptions from "./SelectGuestsOptions"
@@ -40,7 +40,8 @@ const BookingForm = ({
       setTranslations(messages)
     }
     loadTranslationsData()
-  })
+  }, [locale])
+
   const t = translations?.booking
 
   // Calculate duration based on check-in and check-out dates
@@ -100,7 +101,7 @@ const BookingForm = ({
             errorMessage={t?.emailError || "Please enter a valid email address"}
             labelText={t?.emailLabel || "Your email *"}
             placeholder="jane@doe.com"
-            pattern="^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$"
+            pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
             onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
               setBookingData({
                 ...bookingData,
@@ -133,7 +134,7 @@ const BookingForm = ({
           />
         </div>
 
-        {bookingType === IBookingType.villa ? (
+        {bookingType === BOOKING_TYPE.villa ? (
           <div className="md:grid md:grid-cols-2 gap-2">
             <DatePicker
               isOpen={activePopover === "check-in"}
@@ -144,7 +145,7 @@ const BookingForm = ({
                   ...bookingData,
                   bookingDetails: {
                     ...bookingData.bookingDetails,
-                    checkIn: new Date(date).toLocaleDateString(undefined, {
+                    checkIn: new Date(date).toLocaleDateString(locale, {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -169,7 +170,7 @@ const BookingForm = ({
                     ...bookingData,
                     bookingDetails: {
                       ...bookingData.bookingDetails,
-                      checkOut: new Date(date).toLocaleDateString(undefined, {
+                      checkOut: new Date(date).toLocaleDateString(locale, {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -192,7 +193,7 @@ const BookingForm = ({
                   ...bookingData,
                   bookingDetails: {
                     ...bookingData.bookingDetails,
-                    date: new Date(date).toLocaleDateString(undefined, {
+                    date: new Date(date).toLocaleDateString(locale, {
                       year: "numeric",
                       month: "long",
                       day: "numeric",

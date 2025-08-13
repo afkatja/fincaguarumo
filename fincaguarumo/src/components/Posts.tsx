@@ -11,7 +11,7 @@ export function Posts({
   locale: string
 }) {
   const posts = postsProp
-    .filter(post => post.isPublished)
+    .filter(post => post.isPublished && post.slug?.current)
     .map(post => ({
       ...post,
       content: (
@@ -19,10 +19,10 @@ export function Posts({
           href={`/tours/${post?.slug?.current}`}
           mainImage={post?.mainImage as SanityImageObject & { alt: string }}
           title={post.title ?? ""}
-          isFeatured
+          isFeatured={post.isPublished ?? false}
           description={""}
           slug={post.slug as { current: string }}
-          isPublished
+          isPublished={post.isPublished ?? false}
           locale={locale}
         />
       ),

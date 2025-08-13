@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
 import calculateTotal from "@/lib/calculateTotal"
 import calculateDuration from "@/lib/calculateDuration"
-import { IBookingType } from "../../../types"
+import { BOOKING_TYPE } from "../../../types"
 
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_TOKEN || "",
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const { customerDetails, bookingDetails } = await request.json()
 
     const getBookingType = () => {
-      return bookingDetails.type === IBookingType.villa ? "Villa" : "Tour"
+      return bookingDetails.type === BOOKING_TYPE.villa ? "Villa" : "Tour"
     }
 
     const getBookingDetails = () => {
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
         <li>Total Amount: $${calculateTotal(bookingDetails.price, bookingDetails.guests, bookingDetails.type)}</li>
       `
 
-      if (bookingDetails.type === IBookingType.villa) {
+      if (bookingDetails.type === BOOKING_TYPE.villa) {
         return `
           <li>Check-in: ${bookingDetails.checkIn}</li>
           <li>Check-out: ${bookingDetails.checkOut}</li>
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         name: "Finca Guarumo",
       },
       subject:
-        bookingDetails.type === IBookingType.villa
+        bookingDetails.type === BOOKING_TYPE.villa
           ? "Your reservation at Villa Bruno is confirmed!"
           : `Your Finca Guarumo ${getBookingType()} Booking Confirmation`,
       text: `Dear ${customerDetails.name},
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
 
             Booking Details:
             ${
-              bookingDetails.type === IBookingType.villa
+              bookingDetails.type === BOOKING_TYPE.villa
                 ? `- Check-in: ${bookingDetails.checkIn}
                   - Check-out: ${bookingDetails.checkOut}`
                 : `- Tour: ${bookingDetails.title}
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
               bookingDetails.price,
               bookingDetails.guests,
               bookingDetails.type,
-              bookingDetails.type === IBookingType.villa
+              bookingDetails.type === BOOKING_TYPE.villa
                 ? calculateDuration(
                     bookingDetails.checkIn,
                     bookingDetails.checkOut
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
 
             Booking Details:
             ${
-              bookingDetails.type === IBookingType.villa
+              bookingDetails.type === BOOKING_TYPE.villa
                 ? `- Check-in: ${bookingDetails.checkIn}
               - Check-out: ${bookingDetails.checkOut}`
                 : `- Tour: ${bookingDetails.title}
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
                 bookingDetails.price,
                 bookingDetails.guests,
                 bookingDetails.type,
-                bookingDetails.type === IBookingType.villa
+                bookingDetails.type === BOOKING_TYPE.villa
                   ? calculateDuration(
                       bookingDetails.checkIn,
                       bookingDetails.checkOut
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
       // .setTo([new Recipient(customerDetails.email, customerDetails.name)])
       // .setSubject(`Your Finca Guarumo ${getBookingType()} Booking Confirmation`)
       .setTemplateId(
-        bookingDetails.type === IBookingType.villa
+        bookingDetails.type === BOOKING_TYPE.villa
           ? "k68zxl2ek59lj905"
           : "zr6ke4ne3234on12"
       )
@@ -159,7 +159,7 @@ export async function POST(request: Request) {
             total: `$${calculateTotal(bookingDetails.price, bookingDetails.guests, bookingDetails.type)}`,
             guests_number: bookingDetails.guests,
             support_mail: process.env.CONTACT_EMAIL!,
-            ...(bookingDetails.type === IBookingType.villa
+            ...(bookingDetails.type === BOOKING_TYPE.villa
               ? {
                   checkin: bookingDetails.checkIn,
                   checkout: bookingDetails.checkOut,

@@ -1,7 +1,6 @@
 import { groq } from "next-sanity"
 
 export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...12]{
-  
   _id, title, slug, mainImage, _createdAt, _updatedAt, isPublished
 }`
 export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][0...12]{
@@ -145,10 +144,8 @@ export const FEATURED_TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.curre
 `
 
 export const DIALOG_QUERY = groq`
-*[_type == 'dialog' 
-// && _id == $dialogId
-][0] {
-  'cta': CLA_button,
+*[_type == 'dialog' && _id == $dialogId][0] {
+  'cta': CTA_button,
   'date': Date_label,
   'selectDate': Select_date,
   'guests': Guests_label,
@@ -187,6 +184,7 @@ export const TOUR_QUERY = groq`
   geo,
   duration,
   body,
+  dialog,
   "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref

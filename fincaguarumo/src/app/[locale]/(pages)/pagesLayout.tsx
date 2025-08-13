@@ -9,7 +9,6 @@ import { shuffle } from "@/lib/utils"
 import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
 
 const PageLayout = ({
-  locale,
   pageName,
   title,
   subtitle,
@@ -21,7 +20,6 @@ const PageLayout = ({
   images,
   // ...props
 }: {
-  locale: string
   subtitle?: string
   pageName: string
   body?: any

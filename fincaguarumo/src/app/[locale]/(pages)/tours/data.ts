@@ -6,7 +6,7 @@ export type TTour = {
   description: string
   mainImage?: SanityImageObject
   slideshow: { images: SanityImageObject[] }
-  price: string
+  price: number
   location?: string
   geo?: { lat: string; lon: string }
   duration?: string

@@ -9,7 +9,18 @@ import ContactForm from "./ContactForm"
 import { useEffect, useState } from "react"
 import { loadTranslations } from "@/lib/utils"
 
-const safeBtoa = (s: string) => btoa(unescape(encodeURIComponent(s)))
+const safeBtoa = (s?: string) => {
+  if (typeof s !== "string") return ""
+  try {
+    const bytes = new TextEncoder().encode(s)
+    let binary = ""
+    for (let i = 0; i < bytes.length; i++)
+      binary += String.fromCharCode(bytes[i])
+    return btoa(binary)
+  } catch {
+    return ""
+  }
+}
 
 export default function Contact({
   locale,

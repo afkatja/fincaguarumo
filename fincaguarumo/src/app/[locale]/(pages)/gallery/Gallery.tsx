@@ -4,7 +4,11 @@ import { urlFor } from "../../../../sanity/lib/image"
 import Image from "next/image"
 import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
 
-const Gallery = ({ gallery }: { gallery: { item: SanityImageObject }[] }) => {
+const Gallery = ({
+  gallery,
+}: {
+  gallery: { item: SanityImageObject & { alt?: string } }[]
+}) => {
   const [active, setActive] = useState<null | number>(null)
 
   return (
@@ -15,7 +19,12 @@ const Gallery = ({ gallery }: { gallery: { item: SanityImageObject }[] }) => {
           key={item.item.asset._ref}
           onClick={() => setActive(i)}
         >
-          <Image src={urlFor(item).url()} alt={""} width={1200} height={700} />
+          <Image
+            src={urlFor(item.item).url()}
+            alt={item.item.alt || "Gallery image"}
+            width={1200}
+            height={700}
+          />
         </div>
       ))}
     </section>
