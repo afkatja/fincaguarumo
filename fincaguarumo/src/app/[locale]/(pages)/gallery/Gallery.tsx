@@ -2,12 +2,12 @@
 import React, { useState } from "react"
 import { urlFor } from "../../../../sanity/lib/image"
 import Image from "next/image"
-import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import { SanityImageObject } from "../../../../types"
 
 const Gallery = ({
   gallery,
 }: {
-  gallery: { item: SanityImageObject & { alt?: string } }[]
+  gallery: { item: SanityImageObject }[]
 }) => {
   const [active, setActive] = useState<null | number>(null)
 

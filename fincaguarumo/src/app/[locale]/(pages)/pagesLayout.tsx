@@ -6,7 +6,7 @@ import Loading from "./loading"
 import RichText from "@/components/RichText"
 import Slideshow from "@/components/Slideshow"
 import { shuffle } from "@/lib/utils"
-import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import { SanityImageObject } from "../../../types"
 
 const PageLayout = ({
   pageName,

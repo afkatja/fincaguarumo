@@ -1,4 +1,4 @@
-import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import { SanityImageObject } from "../../../../types"
 
 export type TTour = {
   title: string
@@ -9,7 +9,7 @@ export type TTour = {
   price: number
   location?: string
   geo?: { lat: number; lon: number }
-  duration?: string
+  duration?: number
   body?: any
   language?: string
   isPublished: boolean

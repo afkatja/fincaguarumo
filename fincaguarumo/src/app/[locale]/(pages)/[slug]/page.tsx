@@ -1,11 +1,12 @@
 import React from "react"
 import { notFound } from "next/navigation"
-import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
+
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { PAGES_QUERY } from "../../../../sanity/lib/queries"
 import Layout from "../pagesLayout"
 import ClientPage from "./ClientPage"
 import { loadTranslations } from "../../../../lib/utils"
+import { SanityImageObject } from "../../../../types"
 
 export type Content = {
   title: string

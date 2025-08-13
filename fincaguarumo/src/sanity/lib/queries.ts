@@ -155,7 +155,24 @@ export const DIALOG_QUERY = groq`
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
     ][0].translations[]{
-      ...(value->)
+      ...(value->{
+          'cta': CTA_button,
+          'date': Date_label,
+          'selectDate': Select_date,
+          'guests': Guests_label,
+          'adults': Adults_label,
+          'adult': Adult_label,
+          'child': Child_label,
+          'other': Other_label,
+          'paymentMethod': Payment_method_label,
+          'creditCard': Credit_card_label,
+          'paypal': Paypal_label,
+          'people': People_label,
+          'person': Person_label,
+          'total': Total_label,
+          'ok': OK_button_label,
+          'cancel': Cancel_button_label,
+      })
     }
 }
 `

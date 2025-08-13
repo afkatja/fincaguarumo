@@ -1,12 +1,10 @@
 import React from "react"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { GALLERY_QUERY, PAGE_QUERY } from "../../../../sanity/lib/queries"
-import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import Layout from "../pagesLayout"
-// import Gallery from "./Gallery"
 import Carousel from "@/components/Carousel"
 import { urlFor } from "../../../../sanity/lib/image"
-// import RichText from "../../../../components/RichText"
+import { SanityImageObject } from "../../../../types"
 
 type Content = {
   title: string
@@ -32,6 +30,9 @@ const GalleryPage = async ({ params }: { params: any }) => {
     })
 
   const images = gallery?.images.map(item => ({
+    _type: item._type || "image",
+    asset: item.asset,
+    alt: item.alt || "",
     src: urlFor(item)
       .width(2016)
       .height(1134)
@@ -41,9 +42,6 @@ const GalleryPage = async ({ params }: { params: any }) => {
       .url(),
     width: 2016,
     height: 1134,
-    item,
-    alt: "",
-    ...item,
   }))
   return (
     <Layout
@@ -51,10 +49,7 @@ const GalleryPage = async ({ params }: { params: any }) => {
       pageName="gallery"
       title={content?.title}
       description={content?.description}
-      // mainImage={content?.mainImage}
     >
-      {/* {content?.body && <RichText body={content?.body} />} */}
-      {/* {gallery && <Gallery gallery={images} />} */}
       <Carousel
         useArrows={false}
         images={images}

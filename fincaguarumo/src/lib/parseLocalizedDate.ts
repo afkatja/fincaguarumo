@@ -1,4 +1,4 @@
-import { isValid, parse } from "date-fns"
+import { isValid, parse, startOfDay } from "date-fns"
 import { de, enUS, es, nl, ru } from "date-fns/locale"
 
 const localeMap: Record<string, Locale> = {
@@ -29,15 +29,11 @@ const parseLocalizedDate = (
     const parsedDate = parse(
       dateString,
       format,
-      new Date(),
+      startOfDay(new Date()),
       locale ? { locale: dateFnsLocale } : undefined
     )
     if (isValid(parsedDate)) return parsedDate
   }
-
-  // Fallback: try to parse with the Date constructor
-  const date = new Date(dateString)
-  if (isValid(date)) return date
 
   return null
 }

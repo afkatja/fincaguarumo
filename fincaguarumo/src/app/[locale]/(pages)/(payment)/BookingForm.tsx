@@ -67,7 +67,7 @@ const BookingForm = ({
               bookingData.bookingDetails.guests,
               bookingType,
               duration
-            ),
+            ).total,
           },
         })
 

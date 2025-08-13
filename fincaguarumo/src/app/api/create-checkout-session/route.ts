@@ -1,9 +1,11 @@
 import { NextRequest } from "next/server"
 import Stripe from "stripe"
 import getRequestBody from "../../../lib/getRequestBody"
+import { BookingData } from "../../../types"
 
 export async function POST(request: NextRequest) {
-  const { customerDetails, bookingDetails } = await getRequestBody(request)
+  const { customerDetails, bookingDetails }: BookingData =
+    await getRequestBody(request)
 
   const stripeInstance = new Stripe(process.env.STRIPE_API_KEY ?? "")
 

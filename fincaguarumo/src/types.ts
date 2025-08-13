@@ -1,9 +1,20 @@
+import type { SanityImageSource } from "@sanity/asset-utils"
+
 export const BOOKING_TYPE = {
   tour: "tour",
   villa: "villa",
 } as const
 
 export type BookingType = keyof typeof BOOKING_TYPE
+
+type SanityImageObject = {
+  _type: "image"
+  asset: {
+    _ref: string
+    _type: "reference"
+  }
+} & SanityImageSource & { alt: string }
+export type { SanityImageObject }
 
 const today = new Date()
 const tomorrow = new Date(+today + 86400000)
@@ -16,7 +27,7 @@ export const initialBookingData = {
     type: "tour",
     title: "",
     description: "",
-    duration: "",
+    duration: 0,
     location: "",
     body: "",
     date: tomorrow.toLocaleDateString(undefined, {

@@ -21,20 +21,13 @@ const PriceCalculation = ({
   t: Record<string, string> | undefined
 }) => {
   const { dialogData: dialog } = useDialog()
-  const parsedPrice = price
-  const parsedGuests = guests
 
-  if (isNaN(parsedPrice) || isNaN(parsedGuests)) {
-    console.error("Invalid price or guests value", { price, guests })
-    return null
-  }
-
-  const priceForPeople =
-    bookingType === BOOKING_TYPE.villa
-      ? parsedPrice + Math.min(parsedGuests - 1, 3) * 20
-      : parsedPrice * parsedGuests
-
-  const total = calculateTotal(price, guests, bookingType, duration)
+  const { priceForPeople, total } = calculateTotal(
+    price,
+    guests,
+    bookingType,
+    duration
+  )
 
   return (
     <div className="grid gap-2 flex-none w-full">

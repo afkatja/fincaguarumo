@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
 import Image from "next/image"
+import { SanityImageObject } from "../types"
 
 const ImgSlider = React.memo(
   ({
@@ -19,7 +20,7 @@ const ImgSlider = React.memo(
     className = "",
     ...props
   }: {
-    images: {
+    images: (SanityImageObject & {
       desktop?: string
       tablet?: string
       mobile?: string
@@ -27,7 +28,7 @@ const ImgSlider = React.memo(
       alt: string
       width?: number
       height?: number
-    }[]
+    })[]
     useArrows?: boolean
     options?: any
     className?: string

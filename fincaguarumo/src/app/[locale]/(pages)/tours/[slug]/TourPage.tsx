@@ -22,7 +22,7 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
         description: tour.description,
         price: tour.price,
         totalPrice: tour.price,
-        duration: tour.duration ?? "",
+        duration: tour.duration ?? 0,
         location: tour.location ?? "",
         body: tour.body,
         guests: 1,

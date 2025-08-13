@@ -1,5 +1,3 @@
-import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
-
 import { sanityFetch } from "../../sanity/lib/client"
 import {
   FEATURED_POSTS_QUERY,
@@ -16,6 +14,7 @@ import { Suspense } from "react"
 import Loading from "./(pages)/loading"
 import RichText from "../../components/RichText"
 import VideoOpenZip from "./components/VideoOpenZip"
+import { SanityImageObject } from "../../types"
 
 export default async function Home({ params }: { params: any }) {
   const { locale } = await params

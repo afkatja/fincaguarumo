@@ -5,10 +5,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import Badge from "@/components/badge"
 import Icon from "@/components/Icon"
-import type { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import { urlFor } from "@/sanity/lib/image"
 import { titleCase, loadTranslations } from "../../../../lib/utils"
 import { useEffect, useState } from "react"
+import { SanityImageObject } from "../../../../types"
 
 export type TourType = {
   title: string
