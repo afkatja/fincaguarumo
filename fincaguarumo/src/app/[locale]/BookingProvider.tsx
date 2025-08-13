@@ -2,8 +2,6 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import { BookingData, initialBookingData } from "../../types"
 
-const today = new Date()
-
 const BookingContext = createContext<{
   bookingData: BookingData
   setBookingData: React.Dispatch<React.SetStateAction<BookingData>>
@@ -19,7 +17,7 @@ export const BookingProvider = ({
 }: {
   children: React.ReactNode
 }) => {
-  const [bookingData, setBookingData] = useState(() => {
+  const [bookingData, setBookingData] = useState<BookingData>(() => {
     if (typeof window !== "undefined") {
       const storedData = localStorage.getItem("bookingData")
       if (storedData) {

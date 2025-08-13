@@ -69,7 +69,8 @@ export async function POST(request: Request) {
               bookingDetails.type === BOOKING_TYPE.villa
                 ? calculateDuration(
                     bookingDetails.checkIn,
-                    bookingDetails.checkOut
+                    bookingDetails.checkOut,
+                    "en"
                   )
                 : undefined
             )}
@@ -122,7 +123,8 @@ export async function POST(request: Request) {
                 bookingDetails.type === BOOKING_TYPE.villa
                   ? calculateDuration(
                       bookingDetails.checkIn,
-                      bookingDetails.checkOut
+                      bookingDetails.checkOut,
+                      "en"
                     )
                   : undefined
               )}`,

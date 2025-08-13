@@ -1,3 +1,4 @@
+"use client"
 import React, { FormEventHandler, useState } from "react"
 import { PaymentElement, useStripe, useCheckout } from "@stripe/react-stripe-js"
 import { Button } from "@/components/ui/button"

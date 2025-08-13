@@ -121,11 +121,11 @@ export function BookingOptions({
         <div>
           <SelectGuestsOptions
             onChange={value => {
-              const n = Number.parseInt(value, 10)
+              const n = value
               setGuests(Number.isFinite(n) && n > 0 ? n : 1)
             }}
             locale={locale}
-            guests={guests.toString()}
+            guests={guests}
           />
         </div>
 

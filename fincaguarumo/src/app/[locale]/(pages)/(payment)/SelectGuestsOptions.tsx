@@ -13,8 +13,8 @@ const SelectGuestsOptions = ({
   maxGuests = DEFAULT_GUEST_OPTIONS,
 }: {
   locale: string
-  guests: string
-  onChange: (val: string) => void
+  guests: number
+  onChange: (val: number) => void
   maxGuests?: readonly string[]
 }) => {
   const { dialogData: field } = useDialog()
@@ -32,8 +32,8 @@ const SelectGuestsOptions = ({
             {getInternationalizedValue(field?.guests, locale, "Guests")}
           </span>
           <span className="font-normal">
-            {guests}{" "}
-            {Number(guests) === 1
+            {String(guests)}
+            {guests === 1
               ? getInternationalizedValue(field?.adult, locale, "adult")
               : getInternationalizedValue(field?.adults, locale, "adults")}
           </span>

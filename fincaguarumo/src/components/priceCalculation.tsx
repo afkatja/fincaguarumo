@@ -13,16 +13,16 @@ const PriceCalculation = ({
   t,
   duration,
 }: {
-  price: string
-  guests: string
+  price: number
+  guests: number
   bookingType: BookingType
   locale: string
   duration?: number
   t: Record<string, string> | undefined
 }) => {
   const { dialogData: dialog } = useDialog()
-  const parsedPrice = parseInt(price, 10)
-  const parsedGuests = parseInt(guests, 10)
+  const parsedPrice = price
+  const parsedGuests = guests
 
   if (isNaN(parsedPrice) || isNaN(parsedGuests)) {
     console.error("Invalid price or guests value", { price, guests })

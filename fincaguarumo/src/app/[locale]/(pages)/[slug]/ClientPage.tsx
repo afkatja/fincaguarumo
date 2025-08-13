@@ -37,18 +37,18 @@ const ClientPage = ({
   useEffect(() => {
     setBookingData({
       ...bookingData,
-      type: BOOKING_TYPE.villa,
       bookingDetails: {
         ...bookingData.bookingDetails,
+        type: BOOKING_TYPE.villa,
         title: content.title,
         description: content.description,
-        price: content.price,
+        price: content.price ?? 0,
         body: content.body,
-        guests: "1",
+        guests: 1,
         location: "Finca Guarumo",
       },
     })
-  }, [content])
+  }, [bookingData, setBookingData, content])
 
   return (
     <>

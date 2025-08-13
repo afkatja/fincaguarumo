@@ -47,7 +47,8 @@ const BookingForm = ({
   // Calculate duration based on check-in and check-out dates
   const duration = calculateDuration(
     bookingData.bookingDetails.checkIn,
-    bookingData.bookingDetails.checkOut
+    bookingData.bookingDetails.checkOut,
+    locale
   )
 
   return (
@@ -58,9 +59,9 @@ const BookingForm = ({
         e.preventDefault()
         setBookingData({
           ...bookingData,
-          type: bookingType,
           bookingDetails: {
             ...bookingData.bookingDetails,
+            type: bookingType,
             totalPrice: calculateTotal(
               bookingData.bookingDetails.price,
               bookingData.bookingDetails.guests,

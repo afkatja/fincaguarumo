@@ -15,9 +15,9 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
   useEffect(() => {
     setBookingData({
       ...bookingData,
-      type: BOOKING_TYPE.tour,
       bookingDetails: {
         ...(bookingData || {}).bookingDetails,
+        type: BOOKING_TYPE.tour,
         title: tour.title,
         description: tour.description,
         price: tour.price,
@@ -25,11 +25,11 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
         duration: tour.duration ?? "",
         location: tour.location ?? "",
         body: tour.body,
-        guests: "1",
-        geo: tour.geo ?? { lat: "", lon: "" },
+        guests: 1,
+        geo: tour.geo ?? { lat: 0, lon: 0 },
       },
     })
-  }, [tour])
+  }, [bookingData, setBookingData, tour])
 
   return (
     <DetailsPageLayout

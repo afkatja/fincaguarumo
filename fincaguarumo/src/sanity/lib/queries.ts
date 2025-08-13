@@ -60,16 +60,6 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
 export const PAGE_QUERY = groq`
   *[_type == 'page' && slug.current == $pageName && language == $language][0] {
     title, subtitle, description, mainImage, body 
-    // {
-    //   ..., {
-    //     markDefs[] {
-    //     ...,
-    //     _type == "internalLink" => {
-    //       ...,
-    //       "slug": @.reference-> slug
-    //     }
-    //   }},
-    // }
     , language, isPublished,
     "translations": *[
       _type == "translation.metadata" && 

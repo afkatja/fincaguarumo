@@ -1,12 +1,16 @@
 import { differenceInDays } from "date-fns"
 import parseLocalizedDate from "./parseLocalizedDate"
 
-const calculateDuration = (checkIn: string, checkOut: string): number => {
+const calculateDuration = (
+  checkIn: string,
+  checkOut: string,
+  locale: string
+): number => {
   if (!checkIn || !checkOut) return 0
 
   try {
-    const checkInDate = parseLocalizedDate(checkIn)
-    const checkOutDate = parseLocalizedDate(checkOut)
+    const checkInDate = parseLocalizedDate(checkIn, locale)
+    const checkOutDate = parseLocalizedDate(checkOut, locale)
 
     // Check if dates are valid
     if (!checkInDate || !checkOutDate) {

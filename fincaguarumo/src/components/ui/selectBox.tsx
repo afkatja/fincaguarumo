@@ -16,7 +16,7 @@ const SelectBox = ({
   values,
 }: {
   label: string
-  onValueChange: (val: string) => void
+  onValueChange: (val: any) => void
   placeholder: React.ReactNode
   values: { val: string; text: string }[]
 }) => {

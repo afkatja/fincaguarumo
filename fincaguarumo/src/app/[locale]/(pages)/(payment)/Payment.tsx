@@ -9,7 +9,7 @@ import {
 import CheckoutForm from "./CheckoutForm"
 import { useBooking } from "../../BookingProvider"
 import Loading from "../loading"
-import Title from "../../../../components/Title"
+import Title from "@/components/Title"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 
@@ -31,7 +31,7 @@ const Payment = () => {
           customerDetails: bookingData.customerDetails,
           bookingDetails: {
             ...bookingData.bookingDetails,
-            type: bookingData.type,
+            type: bookingData.bookingDetails.type,
           },
         }),
       })
