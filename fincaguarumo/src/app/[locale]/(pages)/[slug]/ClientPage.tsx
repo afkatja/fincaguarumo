@@ -48,7 +48,7 @@ const ClientPage = ({
         location: "Finca Guarumo",
       },
     })
-  }, [bookingData, setBookingData, content])
+  }, [])
 
   return (
     <>
