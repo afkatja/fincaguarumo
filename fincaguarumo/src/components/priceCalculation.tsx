@@ -31,13 +31,15 @@ const PriceCalculation = ({
     duration
   )
 
-  const currency = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: currencyProp,
-  })
-    .format(1)
-    .replace(/\d/g, "")
-    .trim()
+  const currency = (toFormat: number) =>
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: currencyProp,
+    })
+      .format(toFormat)
+      .trim()
+
+  const totalDisplayed = `${getInternationalizedValue(dialog?.total, locale, "Total")} ${duration ? `for ${duration} nights` : null}`
 
   return (
     <div className="grid gap-2 flex-none w-full">
@@ -50,18 +52,12 @@ const PriceCalculation = ({
             "people"
           )}
         </span>
-        <span>
-          {currency} {priceForPeople}
-        </span>
+        <span>{currency(priceForPeople)}</span>
       </div>
       <Separator />
       <div className="flex items-center justify-between font-medium">
-        <span>
-          {titleCase(getInternationalizedValue(dialog?.total, locale, "Total"))}
-        </span>
-        <span>
-          {currency} {total}
-        </span>
+        <span>{titleCase(totalDisplayed)}</span>
+        <span>{currency(total)}</span>
       </div>
     </div>
   )
