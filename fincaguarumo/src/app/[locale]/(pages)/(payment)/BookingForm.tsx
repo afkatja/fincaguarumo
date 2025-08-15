@@ -9,7 +9,11 @@ import Input from "@/components/Input"
 import { getInternationalizedValue, loadTranslations } from "@/lib/utils"
 import calculateDuration from "@/lib/calculateDuration"
 import calculateTotal from "@/lib/calculateTotal"
-import { BookingType, BOOKING_TYPE } from "../../../../types"
+import {
+  BookingType,
+  BOOKING_TYPE,
+  initialBookingData,
+} from "../../../../types"
 import { useBooking } from "../../BookingProvider"
 import { useDialog } from "../../DialogProvider"
 import SelectGuestsOptions from "./SelectGuestsOptions"
@@ -245,7 +249,7 @@ const BookingForm = ({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  // setBookingData(null)
+                  setBookingData(initialBookingData)
                   localStorage.removeItem("bookingData")
                   onCancel()
                 }}
