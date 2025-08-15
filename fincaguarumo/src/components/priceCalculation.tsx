@@ -2,7 +2,7 @@
 import { useDialog } from "../app/[locale]/DialogProvider"
 import calculateTotal from "../lib/calculateTotal"
 import { getInternationalizedValue, titleCase } from "../lib/utils"
-import { BookingType, BOOKING_TYPE } from "../types"
+import { BookingType } from "../types"
 import { Separator } from "@/components/ui/separator"
 
 const PriceCalculation = ({
@@ -12,12 +12,14 @@ const PriceCalculation = ({
   locale,
   t,
   duration,
+  currency: currencyProp = "USD",
 }: {
   price: number
   guests: number
   bookingType: BookingType
   locale: string
   duration?: number
+  currency?: string
   t: Record<string, string> | undefined
 }) => {
   const { dialogData: dialog } = useDialog()
@@ -28,6 +30,14 @@ const PriceCalculation = ({
     bookingType,
     duration
   )
+
+  const currency = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currencyProp,
+  })
+    .format(1)
+    .replace(/\d/g, "")
+    .trim()
 
   return (
     <div className="grid gap-2 flex-none w-full">
@@ -40,14 +50,18 @@ const PriceCalculation = ({
             "people"
           )}
         </span>
-        <span>${priceForPeople}</span>
+        <span>
+          {currency} {priceForPeople}
+        </span>
       </div>
       <Separator />
       <div className="flex items-center justify-between font-medium">
         <span>
           {titleCase(getInternationalizedValue(dialog?.total, locale, "Total"))}
         </span>
-        <span>${total}</span>
+        <span>
+          {currency} {total}
+        </span>
       </div>
     </div>
   )

@@ -26,7 +26,7 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
         location: tour.location ?? "",
         body: tour.body,
         guests: 1,
-        geo: tour.geo ?? { lat: 0, lon: 0 },
+        geo: tour.geo ?? { lat: 0, lng: 0 },
       },
     })
   }, [bookingData, setBookingData, tour])

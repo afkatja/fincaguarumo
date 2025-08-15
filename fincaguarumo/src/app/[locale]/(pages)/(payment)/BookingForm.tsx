@@ -237,6 +237,7 @@ const BookingForm = ({
             locale={locale}
             t={t}
             duration={duration}
+            currency={bookingData.bookingDetails.currency}
           />
           <div className="mt-5 flex justify-end gap-2 w-full flex-none">
             <div>

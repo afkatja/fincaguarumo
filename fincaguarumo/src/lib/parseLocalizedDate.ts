@@ -14,24 +14,33 @@ const parseLocalizedDate = (
   dateString: string,
   locale: string
 ): Date | null => {
-  // Try to parse with date-fns using multiple formats
-  const formats = [
+  // Normalize locale tags like "es-ES" or "en_US" to language code ("es", "en")
+  const normalized = (locale || "en").toLowerCase()
+  const base = normalized.split(/[-_]/)[0]
+  const dateFnsLocale: Locale = localeMap[base] || enUS
+
+  // Prefer unambiguous formats and month-name formats first; then numeric by locale
+  const baseFormats = [
+    "yyyy-MM-dd", // ISO (2024-01-15)
     "MMMM d, yyyy", // January 15, 2024
     "d MMMM yyyy", // 15 January 2024
     "MMMM d yyyy", // January 15 2024
-    "yyyy-MM-dd", // 2024-01-15 (ISO format)
-    "MM/dd/yyyy", // 01/15/2024
-    "dd/MM/yyyy", // 15/01/2024
+    "d MMM yyyy", // 15 Jan 2024
+    "MMM d, yyyy", // Jan 15, 2024
   ]
-  const dateFnsLocale = localeMap[locale] || enUS
+  const numericMDY = ["M/d/yyyy", "MM/dd/yyyy"]
+  const numericDMY = ["d/M/yyyy", "dd/MM/yyyy"]
+  const formats = [
+    ...baseFormats,
+    ...(normalized.startsWith("en-us") || base === "en"
+      ? numericMDY
+      : numericDMY),
+  ]
 
   for (const format of formats) {
-    const parsedDate = parse(
-      dateString,
-      format,
-      startOfDay(new Date()),
-      locale ? { locale: dateFnsLocale } : undefined
-    )
+    const parsedDate = parse(dateString, format, startOfDay(new Date()), {
+      locale: dateFnsLocale,
+    })
     if (isValid(parsedDate)) return parsedDate
   }
 

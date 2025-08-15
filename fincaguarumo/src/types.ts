@@ -49,7 +49,7 @@ export const initialBookingData = {
     price: 0,
     totalPrice: 0,
     currency: "usd",
-    geo: { lat: 0, lon: 0 },
+    geo: { lat: 0, lng: 0 },
   },
 }
 export type BookingData = typeof initialBookingData

@@ -18,6 +18,7 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
         language,
         title,
         subtitle,
+        description,
         mainImage,
         slug, 
         body,

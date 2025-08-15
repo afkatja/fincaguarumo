@@ -18,6 +18,7 @@ const ImgSlider = React.memo(
     useArrows,
     options,
     className = "",
+    plugins,
     ...props
   }: {
     images: (SanityImageObject & {
@@ -31,13 +32,17 @@ const ImgSlider = React.memo(
     })[]
     useArrows?: boolean
     options?: any
+    plugins?: any[]
     className?: string
     [prop: string]: any
   }) => {
+    const autoplayRef = React.useRef(Autoplay(options ?? {}))
     return (
       <Carousel
         {...props}
-        plugins={[Autoplay({})]}
+        opts={options ?? (props as any).opts}
+        // Use a stable plugin instance and merge user-provided plugins.
+        plugins={[autoplayRef.current, ...(plugins ?? [])]}
         className={`w-11/12 mx-auto md:max-h-[70dvh] flex flex-col ${className}`}
       >
         <CarouselContent>
