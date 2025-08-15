@@ -60,33 +60,37 @@ export default async function Home({ params }: { params: any }) {
     .filter(tour => tour.isPublished)
     .map(tour => ({
       ...tour,
-      content: (
-        <TourItem
-          href={`/tours/${tour.slug.current}`}
-          mainImage={tour.mainImage}
-          title={tour.title}
-          isFeatured
-          description={tour.description}
-          slug={tour.slug}
-          isPublished={tour.isPublished}
-          locale={locale}
-        />
-      ),
+      content: {
+        [tour.slug.current]: (
+          <TourItem
+            href={`/tours/${tour.slug.current}`}
+            mainImage={tour.mainImage}
+            title={tour.title}
+            isFeatured
+            description={tour.description}
+            slug={tour.slug}
+            isPublished={tour.isPublished}
+            locale={locale}
+          />
+        ),
+      },
     }))
   const featuredPosts = posts
     .filter(post => post.isPublished)
     .map(({ title, mainImage, slug, isPublished, ...post }) => ({
       ...post,
-      content: (
-        <TourItem
-          href={`/blog/${slug.current}`}
-          mainImage={mainImage}
-          title={title}
-          slug={slug}
-          isPublished={isPublished}
-          locale={locale}
-        />
-      ),
+      content: {
+        [slug.current]: (
+          <TourItem
+            href={`/blog/${slug.current}`}
+            mainImage={mainImage}
+            title={title}
+            slug={slug}
+            isPublished={isPublished}
+            locale={locale}
+          />
+        ),
+      },
     }))
 
   return (
