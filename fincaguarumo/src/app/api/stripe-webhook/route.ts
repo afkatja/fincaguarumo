@@ -39,20 +39,20 @@ export async function POST(request: NextRequest) {
           phoneNumber: metadata?.customerPhone || "",
         }
         const bookingDetails = {
-          type: metadata?.bookingType || "",
-          title: metadata?.bookingTitle || "",
-          description: metadata?.bookingDescription || "",
+          type: metadata?.type || "",
+          title: metadata?.title || "",
+          description: metadata?.description || "",
           duration: Number(metadata?.duration) || 0,
-          location: metadata?.bookingLocation || "",
-          body: metadata?.bookingBody || "",
-          date: metadata?.bookingDate || "",
+          location: metadata?.location || "",
+          body: metadata?.body || "",
+          date: metadata?.date || "",
           checkIn: metadata?.checkIn || "",
           checkOut: metadata?.checkOut || "",
           price: Number(metadata?.price) || 0,
           totalPrice: (metadata?.totalPrice as unknown as number) || 0,
           currency: metadata?.currency || "USD",
           guests: Number(metadata?.guests) || 0,
-          geo: metadata?.bookingGeo ? JSON.parse(metadata.bookingGeo) : {},
+          geo: metadata?.geo ? JSON.parse(metadata.geo) : {},
         }
         try {
           const response = await sendConfirmationEmail({
