@@ -14,19 +14,22 @@ import { locales } from "../../config"
 import Footer from "../../components/Footer"
 import TransitionProvider from "./providers"
 
+import { BookingProvider } from "./BookingProvider"
+import { DialogProvider } from "./DialogProvider"
+
 import { metadata as meta } from "./meta"
 import { i18n } from "../../../languages"
 import Header from "../../components/header"
 import { cn } from "../../lib/utils"
-import Head from "next/head"
+import Script from "next/script"
 
 export const metadata = meta
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
 }
 
 const poppins = Poppins({
@@ -57,6 +60,48 @@ export function generateStaticParams() {
   return locales.map(locale => ({ locale }))
 }
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "LodgingBusiness",
+  name: "Villa Bruno at Finca Guarumo",
+  description:
+    "Eco-luxury jungle villa on a sustainable farm near Corcovado, Costa Rica. Perfect for birdwatchers, nature lovers, and eco-travelers.",
+  image: "https://fincaguarumo.com/images/finca-guarumo-v4.4.jpg",
+  url: "https://fincaguarumo.com",
+  address: {
+    "@type": "PostalAddress",
+    addressCountry: "CR",
+    addressRegion: "Puntarenas",
+    addressLocality: "Puerto Jiménez",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 8.538,
+    longitude: -83.307,
+  },
+  amenityFeature: [
+    {
+      "@type": "LocationFeatureSpecification",
+      name: "Birdwatching",
+      value: true,
+    },
+    {
+      "@type": "LocationFeatureSpecification",
+      name: "Hiking Trails",
+      value: true,
+    },
+    {
+      "@type": "LocationFeatureSpecification",
+      name: "Eco-friendly",
+      value: true,
+    },
+  ],
+  sameAs: [
+    "https://www.instagram.com/fincaguarumo.osa",
+    "https://www.facebook.com/fincaguarumoosa",
+  ],
+}
+
 export default async function Layout({
   children,
   params,
@@ -72,18 +117,6 @@ export default async function Layout({
 
   return (
     <html lang={locale} data-scroll-behavior="smooth">
-      <Head>
-        {i18n.languages.map(({ id }) => (
-          <link
-            key={id}
-            rel="alternate"
-            hrefLang={id}
-            href={`${baseUrl}/${id}/`}
-          />
-        ))}
-        {/* Optionally, add x-default */}
-        <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/en/`} />
-      </Head>
       <body
         className={cn(
           locale === "ru"
@@ -96,20 +129,34 @@ export default async function Layout({
           <TransitionProvider>
             <div className="flex flex-col min-h-[calc(100dvh-var(--header-height))] animation-container">
               <Header locale={locale} />
-              <main className="flex flex-col flex-1">{children}</main>
-              {draft?.isEnabled && (
-                <a
-                  className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
-                  href="/api/draft-mode/disable"
-                >
-                  Disable preview mode
-                </a>
-              )}
-              {draft?.isEnabled && <VisualEditing />}
+
+              <BookingProvider>
+                <DialogProvider>
+                  <main className="flex-1 flex flex-col">
+                    {draft?.isEnabled && (
+                      <a
+                        className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
+                        href="/api/draft-mode/disable"
+                      >
+                        Disable preview mode
+                      </a>
+                    )}
+                    {children} {draft?.isEnabled && <VisualEditing />}
+                  </main>
+                </DialogProvider>
+              </BookingProvider>
             </div>
           </TransitionProvider>
           <Footer />
         </NextIntlClientProvider>
+        <Script
+          id="json-ld"
+          strategy="afterInteractive"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
       </body>
     </html>
   )

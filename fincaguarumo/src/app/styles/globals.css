@@ -82,6 +82,7 @@
   --guarumo-accent: #9d1f60;
 
   --header-height: 96px;
+  --footer-height: 128px;
 
   --foreground: 240 10% 3.9%;
   --card: 0 0% 100%;
@@ -91,7 +92,7 @@
   --primary: 148 92% 15%;
   --primary-foreground: 356 29% 98%;
   --secondary: 329 67% 37%;
-  --secondary-foreground: 240 5.9% 10%;
+  --secondary-foreground: var(--sunrise-color); /*240 5.9% 10%; */
   --tertiary: 88 24% 20%;
   --teriary-foreground: 240 5.9% 10%;
   --muted: 240, 4.8%, 95.9%;
@@ -111,7 +112,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 148, 92%, 15%;
+    --background: 240, 5%, 34%;
     --foreground: 0, 0%, 98%;
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 0, 0, 0;

@@ -3,6 +3,7 @@ import { sanityFetch } from "../../../../sanity/lib/client"
 import { PAGE_QUERY } from "../../../../sanity/lib/queries"
 
 import ContactPage from "./ContactPage"
+import { IContactFormData } from "./ContactForm"
 
 const people = [
   {
@@ -26,6 +27,7 @@ const Contact = async ({ params }: { params: any }) => {
     revalidate: 0,
     params: { pageName: "contact", language: locale },
   })
+
   return <ContactPage locale={locale} content={content} people={people} />
 }
 

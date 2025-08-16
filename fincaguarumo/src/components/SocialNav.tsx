@@ -31,7 +31,7 @@ const SocialNav = ({ className }: { className?: string }) => {
     <nav className={`hidden md:flex items-center gap-5 mx-4 ${className}`}>
       {navItems.map(navItem => (
         <Link
-          key={crypto.randomUUID()}
+          key={navItem.title}
           href={navItem.href}
           prefetch={false}
           target="_blank"

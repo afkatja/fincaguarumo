@@ -23,7 +23,7 @@ const Footer = () => {
       <footer className="w-11/12 mx-auto">
         <ul className="grid grid-cols-4 gap-4">
           {items.map(item => (
-            <li key={crypto.randomUUID()} className={item.className}>
+            <li key={item.title} className={item.className}>
               <Link
                 href={item.href}
                 className="footer-link hover:text-secondary"

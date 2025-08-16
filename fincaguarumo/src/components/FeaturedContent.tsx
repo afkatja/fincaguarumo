@@ -10,7 +10,7 @@ const FeaturedContent = ({
   href,
 }: {
   featuredContentTitle?: string
-  items: { content: ReactNode }[]
+  items: { content: { [key: string]: ReactNode } }[]
   href: string
 }) => {
   return (
@@ -20,13 +20,13 @@ const FeaturedContent = ({
           <Title titleClassName="text-3xl mt-5" title={featuredContentTitle} />
         )}
         <ul className="md:grid lg:auto-cols-fr md:grid-cols-3 gap-4 md:-mx-5">
-          {items.map(item => (
-            <li key={crypto.randomUUID()} className="md:m-5 my-5">
-              <FadeInObserver className="fade-in">
-                {item.content}
-              </FadeInObserver>
-            </li>
-          ))}
+          {items.map(item => {
+            return Object.entries(item.content).map(([key, content]) => (
+              <li key={key} className="md:m-5 my-5">
+                <FadeInObserver className="fade-in">{content}</FadeInObserver>
+              </li>
+            ))
+          })}
           <li className="md:m-5 my-5">
             <FadeInObserver className="fade-in">
               <Link

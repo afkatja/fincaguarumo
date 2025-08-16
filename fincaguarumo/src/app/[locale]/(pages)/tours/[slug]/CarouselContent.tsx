@@ -2,8 +2,6 @@ import React from "react"
 import Image from "next/image"
 
 import { CarouselContent, CarouselItem } from "@/components/ui/carousel"
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
-import { urlFor } from "@/sanity/lib/image"
 
 const CarouselContentContent = ({
   images,
@@ -15,7 +13,7 @@ const CarouselContentContent = ({
   return (
     <CarouselContent>
       {images.map(image => (
-        <CarouselItem key={crypto.randomUUID()}>
+        <CarouselItem key={image.src}>
           {image && (
             <Image
               src={image.src}

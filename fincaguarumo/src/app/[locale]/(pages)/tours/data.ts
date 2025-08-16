@@ -1,5 +1,4 @@
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
-import { IDialog } from "../Dialog"
+import { SanityImageObject } from "../../../../types"
 
 export type TTour = {
   title: string
@@ -7,13 +6,17 @@ export type TTour = {
   description: string
   mainImage?: SanityImageObject
   slideshow: { images: SanityImageObject[] }
-  price?: string
+  price: number
   location?: string
-  duration?: string
+  geo?: { lat: number; lng: number }
+  guests?: number
+  isFeatured?: boolean
+  isNew?: boolean
+  duration?: number
   body?: any
   language?: string
   isPublished: boolean
-  dialog?: IDialog
+  dialog?: { _ref: string }
 }
 
 const tours = [

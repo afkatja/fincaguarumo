@@ -18,19 +18,22 @@ const FadeInObserver = ({
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Check if Intersection Observer is supported
-    if (!("IntersectionObserver" in window)) {
-      // Fallback: make all elements visible immediately
-      const currentRef = ref.current
-      if (currentRef) {
-        const fadeElements = currentRef.querySelectorAll(
-          ".fade-in, .fade-from-view"
-        )
-        fadeElements.forEach(el => {
-          el.classList.add("fade-in-visible")
-        })
+    const currentRef = ref.current
+    if (currentRef) {
+      const fadeElements = currentRef.querySelectorAll(
+        ".fade-in, .fade-from-view"
+      )
+
+      // Check if Intersection Observer is supported
+      if (!("IntersectionObserver" in window)) {
+        // Fallback: make all elements visible immediately
+        if (fadeElements.length) {
+          fadeElements.forEach(el => {
+            el.classList.add("fade-in-visible")
+          })
+        }
+        return
       }
-      return
     }
 
     const observer = new IntersectionObserver(
@@ -51,20 +54,31 @@ const FadeInObserver = ({
       }
     )
 
-    const currentRef = ref.current
     if (currentRef) {
-      observer.observe(currentRef)
+      const fadeElements = currentRef.querySelectorAll(
+        ".fade-in, .fade-from-view"
+      )
+      if (fadeElements.length) {
+        fadeElements.forEach(el => observer.observe(el))
+      } else {
+        // Fallback: observe wrapper if no target elements found
+        observer.observe(currentRef)
+      }
     }
 
     return () => {
       if (currentRef) {
+        const fadeElements = currentRef.querySelectorAll(
+          ".fade-in, .fade-from-view"
+        )
+        fadeElements.forEach(el => observer.unobserve(el))
         observer.unobserve(currentRef)
       }
     }
   }, [threshold, rootMargin])
 
   return (
-    <div ref={ref} className={className}>
+    <div ref={ref} className={`${className} h-full`}>
       {children}
     </div>
   )

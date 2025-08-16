@@ -1,7 +1,6 @@
 import { groq } from "next-sanity"
 
 export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...12]{
-  
   _id, title, slug, mainImage, _createdAt, _updatedAt, isPublished
 }`
 export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][0...12]{
@@ -9,9 +8,8 @@ export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][
 }`
 
 export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && language == $language][0] {
-  title, subtitle, description, mainImage, body, language, slug, isPublished, showBookingOptions,
-  slideshow->{images}
-  , 
+  title, subtitle, description, mainImage, body, language, slug, isPublished, showBookingOptions, showBookingDialog,
+  slideshow->{images}, price,
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -20,10 +18,12 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
         language,
         title,
         subtitle,
+        description,
         mainImage,
         slug, 
         body,
-        showBookingOptions
+        showBookingOptions,
+        showBookingDialog
       })
     }
 }`
@@ -61,16 +61,6 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
 export const PAGE_QUERY = groq`
   *[_type == 'page' && slug.current == $pageName && language == $language][0] {
     title, subtitle, description, mainImage, body 
-    // {
-    //   ..., {
-    //     markDefs[] {
-    //     ...,
-    //     _type == "internalLink" => {
-    //       ...,
-    //       "slug": @.reference-> slug
-    //     }
-    //   }},
-    // }
     , language, isPublished,
     "translations": *[
       _type == "translation.metadata" && 
@@ -144,6 +134,50 @@ export const FEATURED_TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.curre
 }
 `
 
+export const DIALOG_QUERY = groq`
+*[_type == 'dialog' && _id == $dialogId][0] {
+  'cta': CTA_button,
+  'date': Date_label,
+  'selectDate': Select_date,
+  'guests': Guests_label,
+  'adults': Adults_label,
+  'adult': Adult_label,
+  'child': Child_label,
+  'other': Other_label,
+  'paymentMethod': Payment_method_label,
+  'creditCard': Credit_card_label,
+  'paypal': Paypal_label,
+  'people': People_label,
+  'person': Person_label,
+  'total': Total_label,
+  'ok': OK_button_label,
+  'cancel': Cancel_button_label,
+  "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->{
+          'cta': CTA_button,
+          'date': Date_label,
+          'selectDate': Select_date,
+          'guests': Guests_label,
+          'adults': Adults_label,
+          'adult': Adult_label,
+          'child': Child_label,
+          'other': Other_label,
+          'paymentMethod': Payment_method_label,
+          'creditCard': Credit_card_label,
+          'paypal': Paypal_label,
+          'people': People_label,
+          'person': Person_label,
+          'total': Total_label,
+          'ok': OK_button_label,
+          'cancel': Cancel_button_label,
+      })
+    }
+}
+`
+
 export const TOUR_QUERY = groq`
 *[_type == 'tour' && slug.current == $slug && language == $language][0]{
   _id, 
@@ -155,25 +189,10 @@ export const TOUR_QUERY = groq`
   slideshow->{images}, 
   price, 
   location, 
+  geo,
   duration,
-  body, 
-  dialog -> {
-    'cta': CLA_button,
-    'date': Date_label,
-    'selectDate': Select_date,
-    'guests': Guests_label,
-    'adults': Adults_label,
-    'adult': Adult_label,
-    'child': Child_label,
-    'other': Other_label,
-    'paymentMethod': Payment_method_label,
-    'creditCard': Credit_card_label,
-    'paypal': Paypal_label,
-    'people': People_label,
-    'total': Total_label,
-    'ok': OK_button_label,
-    'cancel': Cancel_button_label
-  },
+  body,
+  dialog,
   "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -184,7 +203,6 @@ export const TOUR_QUERY = groq`
         slug,
         description,
         body,
-        dialog,
       })
     }
 }

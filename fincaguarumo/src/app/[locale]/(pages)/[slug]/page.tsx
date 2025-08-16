@@ -1,22 +1,14 @@
 import React from "react"
 import { notFound } from "next/navigation"
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { PAGES_QUERY } from "../../../../sanity/lib/queries"
 import Layout from "../pagesLayout"
-import RichText from "@/components/RichText"
-import { BookingOptions } from "@/components/BookingOptions"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogOverlay,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import ClientPage from "./ClientPage"
 import { loadTranslations } from "../../../../lib/utils"
+import { SanityImageObject } from "../../../../types"
 
-type Content = {
+export type Content = {
   title: string
   description: string
   mainImage: SanityImageObject
@@ -24,9 +16,11 @@ type Content = {
   slug: { current: string }
   isPublished: boolean
   showBookingOptions: boolean
+  showBookingDialog: boolean
   slideshow: {
     images: SanityImageObject[]
   }
+  price?: number
 }
 
 const Page = async ({ params }: { params: any }) => {
@@ -41,7 +35,6 @@ const Page = async ({ params }: { params: any }) => {
 
   // Load translations
   const messages = await loadTranslations(locale)
-  const t = messages?.booking
 
   return (
     <Layout
@@ -52,30 +45,7 @@ const Page = async ({ params }: { params: any }) => {
       mainImage={content?.mainImage}
       images={content?.slideshow?.images}
     >
-      <RichText body={content?.body} />
-      {content?.showBookingOptions && (
-        <Dialog>
-          <DialogTrigger asChild>
-            <div className="flex items-center sticky bottom-4 mb-2 mx-auto w-11/12">
-              <Button size="lg" variant="secondary" className="ml-auto">
-                {t?.bookNow || "Book now"}
-              </Button>
-            </div>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogTitle>{t.bookNow}</DialogTitle>
-            <div className="mt-8">
-              <BookingOptions
-                propertyId="your-booking-property-id"
-                expediaPropertyId={
-                  process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
-                }
-                locale={locale}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      <ClientPage content={content} locale={locale} messages={messages} />
     </Layout>
   )
 }

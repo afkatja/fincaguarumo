@@ -39,7 +39,7 @@ const Parallax: React.FC<IParallax> = ({
             <ParallaxLayer
               {...img}
               style={style}
-              key={crypto.randomUUID()}
+              key={img.src}
               offset={img.offset ?? 0}
               factor={img.factor ?? 1}
               speed={img.speed ?? 1}

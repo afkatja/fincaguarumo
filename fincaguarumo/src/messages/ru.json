@@ -44,6 +44,15 @@
     "bookOnBooking": "Забронировать на Booking.com",
     "bookOnAirbnb": "Забронировать на AirBnb",
     "bookOnExpedia": "Забронировать на Expedia",
-    "bookNow": "Забронировать сейчас"
+    "bookNow": "Забронировать сейчас",
+    "bookOnOthers": "Забронировать на других платформах",
+    "bookVilla": "Забронировать проживание",
+    "emailLabel": "Ваш email *",
+    "emailError": "Пожалуйста, введите действительный email адрес",
+    "nameLabel": "Ваше имя *",
+    "nameError": "Пожалуйста, введите ваше имя",
+    "priceLabel": "Цена за",
+    "phoneLabel": "Ваш номер телефона *",
+    "phoneError": "Пожалуйста, введите действительный номер телефона"
   }
 }

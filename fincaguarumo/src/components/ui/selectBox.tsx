@@ -16,7 +16,7 @@ const SelectBox = ({
   values,
 }: {
   label: string
-  onValueChange: (val: string) => void
+  onValueChange: (val: any) => void
   placeholder: React.ReactNode
   values: { val: string; text: string }[]
 }) => {
@@ -24,12 +24,12 @@ const SelectBox = ({
     <>
       <Label htmlFor="guests">{titleCase(label)}</Label>
       <Select onValueChange={onValueChange}>
-        <SelectTrigger className="h-auto">
-          <SelectValue placeholder={placeholder} />
+        <SelectTrigger className="border border-solid border-input w-full">
+          <span className="font-semibold">{placeholder}</span>
         </SelectTrigger>
         <SelectContent>
           {values.map(value => (
-            <SelectItem key={crypto.randomUUID()} value={value.val}>
+            <SelectItem key={value.val} value={value.val}>
               {value.text}
             </SelectItem>
           ))}
