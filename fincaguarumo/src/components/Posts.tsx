@@ -14,18 +14,20 @@ export function Posts({
     .filter(post => post.isPublished && post.slug?.current)
     .map(post => ({
       ...post,
-      content: (
-        <TourItem
-          href={`/tours/${post?.slug?.current}`}
-          mainImage={post?.mainImage as SanityImageObject & { alt: string }}
-          title={post.title ?? ""}
-          isFeatured={post.isPublished ?? false}
-          description={""}
-          slug={post.slug as { current: string }}
-          isPublished={post.isPublished ?? false}
-          locale={locale}
-        />
-      ),
+      content: {
+        [post.slug?.current as string]: (
+          <TourItem
+            href={`/tours/${post?.slug?.current}`}
+            mainImage={post?.mainImage as SanityImageObject & { alt: string }}
+            title={post.title ?? ""}
+            isFeatured={post.isPublished ?? false}
+            description={""}
+            slug={post.slug as { current: string }}
+            isPublished={post.isPublished ?? false}
+            locale={locale}
+          />
+        ),
+      },
     }))
   return <FeaturedContent href="tours" items={posts} />
 }
