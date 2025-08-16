@@ -9,6 +9,9 @@ export type TTour = {
   price: number
   location?: string
   geo?: { lat: number; lng: number }
+  guests?: number
+  isFeatured?: boolean
+  isNew?: boolean
   duration?: number
   body?: any
   language?: string

@@ -55,10 +55,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
 
       setIsLoading(true)
       try {
-        const data = await clientSideFetch(
-          DIALOG_QUERY
-          // params: { dialogId },
-        )
+        const data = await clientSideFetch(DIALOG_QUERY, { dialogId })
 
         if (data) setDialogData(data)
       } catch (error) {

@@ -61,6 +61,7 @@
     "nameLabel": "Your name *",
     "nameError": "Please enter your name",
     "priceLabel": "Price for",
+    "rateLabel": "Price",
     "phoneLabel": "Your phone number *",
     "phoneError": "Please enter a valid phone number"
   }

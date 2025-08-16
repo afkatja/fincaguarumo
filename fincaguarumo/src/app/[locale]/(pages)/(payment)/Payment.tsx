@@ -86,7 +86,7 @@ const Payment = () => {
         width={450}
         height={50}
         alt="stripe badge"
-        className="w-full"
+        className="w-full h-auto"
       />
     </>
   )
