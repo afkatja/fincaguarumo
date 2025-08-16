@@ -49,7 +49,7 @@ const PriceCalculation = ({
       <div className="flex items-center justify-between">
         <span className="text-muted-foreground">
           {bookingType === BOOKING_TYPE.villa
-            ? `${t?.priceLabel}" "${guests}" "
+            ? `${t?.priceLabel} ${guests} 
           ${getInternationalizedValue(
             guests === 1 ? dialog?.person : dialog?.people,
             locale,

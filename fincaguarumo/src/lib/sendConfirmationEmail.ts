@@ -130,7 +130,7 @@ export async function sendConfirmationEmail({
       .setSubject(`Your Finca Guarumo ${getBookingType()} Booking Confirmation`)
       .setTemplateId(
         bookingDetails.type === BOOKING_TYPE.villa
-          ? "k68zxl2ek59lj905"
+          ? "z3m5jgry77m4dpyo"
           : "yzkq340kvv6gd796"
       )
       .setPersonalization([
