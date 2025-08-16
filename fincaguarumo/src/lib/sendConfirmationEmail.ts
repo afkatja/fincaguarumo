@@ -143,7 +143,7 @@ export async function sendConfirmationEmail({
             account_email: process.env.MAILERSEND_FROM_EMAIL!,
             account_phone: process.env.CONTACT_PHONE!,
             account_address: "Calle La Balsa, Puerto Jimenez, Costa Rica",
-            account_logo: "https://fincaguarumo.com/logo.png",
+            account_logo: "https://fincaguarumo.com/logo.jpg",
             account_logo_single: "https://fincaguarumo.com/logo-single.png",
             name: customerDetails.name,
             total_price: `$${bookingDetails.totalPrice}`,
