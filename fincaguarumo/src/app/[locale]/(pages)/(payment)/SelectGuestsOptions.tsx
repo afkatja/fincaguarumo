@@ -20,7 +20,7 @@ const SelectGuestsOptions = ({
   const { dialogData: field } = useDialog()
   const guestsOptions = maxGuests.map(val => ({
     val: val,
-    text: `${val} ${val === "1" ? getInternationalizedValue(field?.adult, locale, "adult") : getInternationalizedValue(field?.adult, locale, "adults")}`,
+    text: `${val} ${val === "1" ? getInternationalizedValue(field?.person, locale, "person") : getInternationalizedValue(field?.people, locale, "people")}`,
   }))
 
   return (
@@ -32,10 +32,10 @@ const SelectGuestsOptions = ({
             {getInternationalizedValue(field?.guests, locale, "Guests")}
           </span>
           <span className="font-normal">
-            {String(guests)}
+            {String(guests)}{" "}
             {guests === 1
-              ? getInternationalizedValue(field?.adult, locale, "adult")
-              : getInternationalizedValue(field?.adults, locale, "adults")}
+              ? getInternationalizedValue(field?.person, locale, "person")
+              : getInternationalizedValue(field?.people, locale, "people")}
           </span>
         </div>
       }
