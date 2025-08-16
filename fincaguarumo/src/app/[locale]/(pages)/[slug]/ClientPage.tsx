@@ -9,7 +9,7 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { BOOKING_TYPE } from "../../../../types"
+import { BOOKING_TYPE, BookingData } from "../../../../types"
 import BookingDialog from "../BookingDialog"
 import { Content } from "./page"
 import { useBooking } from "../../BookingProvider"
@@ -31,36 +31,30 @@ const ClientPage = ({
   locale: string
   messages: Messages
 }) => {
-  const { bookingData, setBookingData } = useBooking()
+  const { setBookingData } = useBooking()
   const t = messages?.booking
 
-  const newBookingDetails = {
-    bookingDetails: {
-      ...bookingData.bookingDetails,
-      type: BOOKING_TYPE.villa,
-      title: content.title,
-      description: content.description,
-      price: content.price ?? 0,
-      body: content.body,
-      guests: 1,
-      location: "Finca Guarumo",
-    },
-  }
-  const updateBookingData = useCallback(
-    (newData: Record<string, any>) => {
-      setBookingData(prevData => {
-        if (
-          JSON.stringify(prevData.bookingDetails) ===
-          JSON.stringify(newData.bookingDetails)
-        )
-          return prevData
-        return { ...prevData, ...newData }
-      })
-    },
-    [setBookingData]
-  )
-
-  useEffect(() => {updateBookingData(newBookingDetails)}, [])
+  useEffect(() => {
+    setBookingData((prev: BookingData) => {
+      const nextBookingDetails = {
+        ...(prev?.bookingDetails ?? {}),
+        type: BOOKING_TYPE.villa,
+        title: content.title,
+        description: content.description,
+        price: content.price ?? 0,
+        body: content.body,
+        guests: 1,
+        location: "Finca Guarumo",
+      }
+      if (
+        JSON.stringify(prev.bookingDetails) ===
+        JSON.stringify(nextBookingDetails)
+      ) {
+        return prev
+      }
+      return { ...prev, bookingDetails: nextBookingDetails }
+    })
+  }, [content, setBookingData])
 
   return (
     <>
