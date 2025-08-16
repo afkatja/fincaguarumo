@@ -2,28 +2,31 @@ import { NextResponse } from "next/server"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
 import calculateTotal from "@/lib/calculateTotal"
 import calculateDuration from "@/lib/calculateDuration"
-import { IBookingType } from "../types"
+import { BOOKING_TYPE, BookingData } from "../types"
 
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_TOKEN || "",
 })
 
-export async function sendConfirmationEmail(request: Request) {
+export async function sendConfirmationEmail({
+  customerDetails,
+  bookingDetails,
+}: BookingData) {
+  if (!customerDetails || !bookingDetails) {
+    throw new Error("Missing customer or booking details")
+  }
   try {
-    const { customerDetails, bookingDetails } = await request.json()
-
     const getBookingType = () => {
-      return bookingDetails.type === IBookingType.villa ? "Villa" : "Tour"
+      return bookingDetails.type === BOOKING_TYPE.villa ? "Villa" : "Tour"
     }
 
     const getBookingDetails = () => {
       const commonDetails = `
         <li>Date: ${bookingDetails.date}</li>
         <li>Number of Guests: ${bookingDetails.guests}</li>
-        <li>Total Amount: $${calculateTotal(bookingDetails.price, bookingDetails.guests, bookingDetails.type)}</li>
-      `
+        <li>Total Amount: $${bookingDetails.totalPrice}</li>      `
 
-      if (bookingDetails.type === IBookingType.villa) {
+      if (bookingDetails.type === BOOKING_TYPE.villa) {
         return `
           <li>Check-in: ${bookingDetails.checkIn}</li>
           <li>Check-out: ${bookingDetails.checkOut}</li>
@@ -45,7 +48,7 @@ export async function sendConfirmationEmail(request: Request) {
         name: "Finca Guarumo",
       },
       subject:
-        bookingDetails.type === IBookingType.villa
+        bookingDetails.type === BOOKING_TYPE.villa
           ? "Your reservation at Villa Bruno is confirmed!"
           : `Your Finca Guarumo ${getBookingType()} Booking Confirmation`,
       text: `Dear ${customerDetails.name},
@@ -54,7 +57,7 @@ export async function sendConfirmationEmail(request: Request) {
 
             Booking Details:
             ${
-              bookingDetails.type === IBookingType.villa
+              bookingDetails.type === BOOKING_TYPE.villa
                 ? `- Check-in: ${bookingDetails.checkIn}
                   - Check-out: ${bookingDetails.checkOut}`
                 : `- Tour: ${bookingDetails.title}
@@ -62,17 +65,7 @@ export async function sendConfirmationEmail(request: Request) {
             }
             - Date: ${bookingDetails.date}
             - Number of Guests: ${bookingDetails.guests}
-            - Total Amount: $${calculateTotal(
-              bookingDetails.price,
-              bookingDetails.guests,
-              bookingDetails.type,
-              bookingDetails.type === IBookingType.villa
-                ? calculateDuration(
-                    bookingDetails.checkIn,
-                    bookingDetails.checkOut
-                  )
-                : undefined
-            )}
+            - Total Amount: $${bookingDetails.totalPrice}
 
             We look forward to welcoming you!
 
@@ -107,7 +100,7 @@ export async function sendConfirmationEmail(request: Request) {
 
             Booking Details:
             ${
-              bookingDetails.type === IBookingType.villa
+              bookingDetails.type === BOOKING_TYPE.villa
                 ? `- Check-in: ${bookingDetails.checkIn}
               - Check-out: ${bookingDetails.checkOut}`
                 : `- Tour: ${bookingDetails.title}
@@ -115,17 +108,7 @@ export async function sendConfirmationEmail(request: Request) {
               - Date: ${bookingDetails.date}`
             }
               - Number of Guests: ${bookingDetails.guests}
-              - Total Amount: $${calculateTotal(
-                bookingDetails.price,
-                bookingDetails.guests,
-                bookingDetails.type,
-                bookingDetails.type === IBookingType.villa
-                  ? calculateDuration(
-                      bookingDetails.checkIn,
-                      bookingDetails.checkOut
-                    )
-                  : undefined
-              )}`,
+              - Total Amount: $${bookingDetails.totalPrice}`,
       html: `
               <h1>New ${getBookingType()} Booking Received</h1>
               <h2>Customer Details:</h2>
@@ -142,33 +125,40 @@ export async function sendConfirmationEmail(request: Request) {
     }
 
     const customerEmailConfig = new EmailParams(customerMsg)
-      // .setFrom(new Sender(process.env.MAILERSEND_FROM_EMAIL!, "Finca Guarumo"))
-      // .setTo([new Recipient(customerDetails.email, customerDetails.name)])
-      // .setSubject(`Your Finca Guarumo ${getBookingType()} Booking Confirmation`)
+      .setFrom(new Sender(process.env.MAILERSEND_FROM_EMAIL!, "Finca Guarumo"))
+      .setTo([new Recipient(customerDetails.email, customerDetails.name)])
+      .setSubject(`Your Finca Guarumo ${getBookingType()} Booking Confirmation`)
       .setTemplateId(
-        bookingDetails.type === IBookingType.villa
+        bookingDetails.type === BOOKING_TYPE.villa
           ? "k68zxl2ek59lj905"
-          : "zr6ke4ne3234on12"
+          : "yzkq340kvv6gd796"
       )
       .setPersonalization([
         {
-          email: process.env.MAILERSEND_FROM_EMAIL!,
+          email: customerDetails.email!,
           data: {
             account_name: "Finca Guarumo",
+            account_slogan: "Forest of birds",
+            account_website: "https://fincaguarumo.com",
+            account_email: process.env.MAILERSEND_FROM_EMAIL!,
+            account_phone: process.env.CONTACT_PHONE!,
+            account_address: "Calle La Balsa, Puerto Jimenez, Costa Rica",
+            account_logo: "https://fincaguarumo.com/logo.png",
+            account_logo_single: "https://fincaguarumo.com/logo-single.png",
             name: customerDetails.name,
-            total: `$${calculateTotal(bookingDetails.price, bookingDetails.guests, bookingDetails.type)}`,
+            total_price: `$${bookingDetails.totalPrice}`,
             guests_number: bookingDetails.guests,
             support_mail: process.env.CONTACT_EMAIL!,
-            ...(bookingDetails.type === IBookingType.villa
+            ...(bookingDetails.type === BOOKING_TYPE.villa
               ? {
                   checkin: bookingDetails.checkIn,
                   checkout: bookingDetails.checkOut,
                 }
               : {
-                  tour: bookingDetails.title,
+                  tour_name: bookingDetails.title,
                   location: bookingDetails.location,
+                  date: bookingDetails.date,
                 }),
-            date: bookingDetails.date,
           },
         },
       ])
@@ -188,7 +178,7 @@ export async function sendConfirmationEmail(request: Request) {
       .setHtml(adminMsg.html)
 
     // Validate required environment variables
-    if (!process.env.MAILERSEND_API_KEY) {
+    if (!process.env.MAILERSEND_API_KEY && !process.env.MAILERSEND_TOKEN) {
       throw new Error("MAILERSEND_API_KEY is not configured")
     }
     if (!process.env.MAILERSEND_FROM_EMAIL) {
