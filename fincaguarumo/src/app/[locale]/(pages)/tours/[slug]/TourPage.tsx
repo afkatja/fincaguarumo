@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect } from "react"
+import React, { useCallback, useEffect } from "react"
 import Slideshow from "@/components/Slideshow"
 import DetailsPageLayout from "../../DetailsPageLayout"
 import { TTour } from "../data"
@@ -12,24 +12,39 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
   if (!tour || !tour.isPublished) notFound()
   const { bookingData, setBookingData } = useBooking()
 
+  const newBookingDetails = {
+    ...bookingData,
+    bookingDetails: {
+      ...bookingData.bookingDetails,
+      type: BOOKING_TYPE.tour,
+      title: tour.title,
+      description: tour.description,
+      price: tour.price,
+      totalPrice: tour.price,
+      duration: tour.duration ?? 0,
+      location: tour.location ?? "",
+      body: tour.body,
+      geo: tour.geo ?? { lat: 0, lng: 0 },
+    },
+  }
+
+  const updateBookingData = useCallback(
+    (newData: Record<string, any>) => {
+      setBookingData(prevData => {
+        if (
+          JSON.stringify(prevData.bookingDetails) ===
+          JSON.stringify(newData.bookingDetails)
+        )
+          return prevData
+        return { ...prevData, ...newData }
+      })
+    },
+    [setBookingData]
+  )
+
   useEffect(() => {
-    setBookingData({
-      ...bookingData,
-      bookingDetails: {
-        ...(bookingData || {}).bookingDetails,
-        type: BOOKING_TYPE.tour,
-        title: tour.title,
-        description: tour.description,
-        price: tour.price,
-        totalPrice: tour.price,
-        duration: tour.duration ?? 0,
-        location: tour.location ?? "",
-        body: tour.body,
-        guests: 1,
-        geo: tour.geo ?? { lat: 0, lng: 0 },
-      },
-    })
-  }, [bookingData, setBookingData, tour])
+    updateBookingData(newBookingDetails)
+  }, [])
 
   return (
     <DetailsPageLayout

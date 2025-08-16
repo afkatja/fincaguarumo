@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect } from "react"
+import React, { useCallback, useEffect } from "react"
 import RichText from "@/components/RichText"
 import { BookingOptions } from "@/components/BookingOptions"
 import { Button } from "@/components/ui/button"
@@ -34,21 +34,33 @@ const ClientPage = ({
   const { bookingData, setBookingData } = useBooking()
   const t = messages?.booking
 
-  useEffect(() => {
-    setBookingData({
-      ...bookingData,
-      bookingDetails: {
-        ...bookingData.bookingDetails,
-        type: BOOKING_TYPE.villa,
-        title: content.title,
-        description: content.description,
-        price: content.price ?? 0,
-        body: content.body,
-        guests: 1,
-        location: "Finca Guarumo",
-      },
-    })
-  }, [])
+  const newBookingDetails = {
+    bookingDetails: {
+      ...bookingData.bookingDetails,
+      type: BOOKING_TYPE.villa,
+      title: content.title,
+      description: content.description,
+      price: content.price ?? 0,
+      body: content.body,
+      guests: 1,
+      location: "Finca Guarumo",
+    },
+  }
+  const updateBookingData = useCallback(
+    (newData: Record<string, any>) => {
+      setBookingData(prevData => {
+        if (
+          JSON.stringify(prevData.bookingDetails) ===
+          JSON.stringify(newData.bookingDetails)
+        )
+          return prevData
+        return { ...prevData, ...newData }
+      })
+    },
+    [setBookingData]
+  )
+
+  useEffect(() => {updateBookingData(newBookingDetails)}, [])
 
   return (
     <>
