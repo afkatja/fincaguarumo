@@ -169,13 +169,23 @@ export default function CompletePage() {
       ) : (
         <PagesLayout
           pageName="paymentComplete"
-          title={`Dear ${bookingData.customerDetails?.name}, ${STATUS_CONTENT_MAP[status!].text}`}
-          subtitle={`You paid $ ${(paymentIntent?.amount || session.amount_total) / 100} for ${getBookingTitle()} at ${getBookingLocation()}`}
+          title={
+            status
+              ? `Dear ${bookingData.customerDetails?.name}, ${STATUS_CONTENT_MAP[status]?.text}`
+              : "Processing your payment..."
+          }
+          subtitle={
+            status
+              ? `You paid $ ${(paymentIntent?.amount || (session?.amount_total as number)) / 100} for ${getBookingTitle()} at ${getBookingLocation()}`
+              : ""
+          }
           description={getBookingDescription()}
         >
           <div className="w-11/12 mx-auto prose dark:prose-invert pb-8">
             <div className="flex">
-              <div className="mt-6">{STATUS_CONTENT_MAP[status!].icon}</div>
+              {status && (
+                <div className="mt-6">{STATUS_CONTENT_MAP[status].icon}</div>
+              )}
               {(status === Status.Success || status == Status.Complete) && (
                 <p>
                   Your booking of the <strong>{getBookingTitle()}</strong> for{" "}
