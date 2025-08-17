@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       checkOut: bookingDetails.checkOut,
       title: bookingDetails.title,
       location: bookingDetails.location,
-      body: bookingDetails.body,
+      body: "",
       duration: bookingDetails.duration,
       description: bookingDetails.description,
       currency: bookingDetails.currency,
