@@ -63,7 +63,7 @@ export default async function Home({ params }: { params: any }) {
       content: {
         [tour.slug.current]: (
           <TourItem
-            href={`/tours/${tour.slug.current}`}
+            href={`${locale}/tours/${tour.slug.current}`}
             mainImage={tour.mainImage}
             title={tour.title}
             isFeatured
@@ -82,7 +82,7 @@ export default async function Home({ params }: { params: any }) {
       content: {
         [slug.current]: (
           <TourItem
-            href={`/blog/${slug.current}`}
+            href={`${locale}/blog/${slug.current}`}
             mainImage={mainImage}
             title={title}
             slug={slug}

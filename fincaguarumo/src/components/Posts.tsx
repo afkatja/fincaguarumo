@@ -17,7 +17,7 @@ export function Posts({
       content: {
         [post.slug?.current as string]: (
           <TourItem
-            href={`/tours/${post?.slug?.current}`}
+            href={`${locale}/tours/${post?.slug?.current}`}
             mainImage={post?.mainImage as SanityImageObject & { alt: string }}
             title={post.title ?? ""}
             description={""}
