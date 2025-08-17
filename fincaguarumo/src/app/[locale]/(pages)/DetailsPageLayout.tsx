@@ -48,9 +48,8 @@ const DetailsPageLayout = ({
     loadTranslationsData()
   })
   const t = translations?.booking
-
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<Loading className="absolute" />}>
       <div className="content-wrap">
         <div className="w-11/12 mx-auto py-5">
           {parent && <Breadcrumbs title={title} parent={parent} />}

@@ -95,7 +95,7 @@ export default async function Home({ params }: { params: any }) {
 
   return (
     <VideoOpenZip>
-      <Suspense fallback={<Loading />}>
+      <Suspense fallback={<Loading className="absolute" />}>
         <div className="parallax-bg relative w-full h-screen">
           {content?.mediaUrl && (
             <Video

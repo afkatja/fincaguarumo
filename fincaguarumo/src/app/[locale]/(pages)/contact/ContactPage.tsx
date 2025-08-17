@@ -54,7 +54,7 @@ export default function Contact({
       description={content?.description}
       mainImage={content?.mainImage}
     >
-      <div className="w-11/12 mx-auto my-8 xl:grid xl:grid-cols-2 xl:gap-4 items-start">
+      <div className="w-11/12 my-8 !max-w-[60rem] mx-auto items-start">
         <Title
           title="Contact Us"
           titleClassName="text-3xl font-bold my-5 col-span-2"

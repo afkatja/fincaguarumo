@@ -20,7 +20,6 @@ export function Posts({
             href={`/tours/${post?.slug?.current}`}
             mainImage={post?.mainImage as SanityImageObject & { alt: string }}
             title={post.title ?? ""}
-            isFeatured={post.isPublished ?? false}
             description={""}
             slug={post.slug as { current: string }}
             isPublished={post.isPublished ?? false}

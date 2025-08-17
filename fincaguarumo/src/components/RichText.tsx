@@ -7,7 +7,15 @@ import { urlFor } from "../sanity/lib/image"
 import Link from "next/link"
 import ExternalLink from "./icons/ExternalLink"
 
-const RichText = ({ body, icon, className }: { body: any; icon?: string; className?: string }) => {
+const RichText = ({
+  body,
+  icon,
+  className,
+}: {
+  body: any
+  icon?: string
+  className?: string
+}) => {
   if (!body) return
   const components: Partial<PortableTextReactComponents> = {
     block: {
@@ -83,7 +91,9 @@ const RichText = ({ body, icon, className }: { body: any; icon?: string; classNa
   }
 
   return (
-    <div className={`"prose prose-lg !w-11/12 mx-auto py-2 leading-relaxed" ${className}`}>
+    <div
+      className={`prose prose-lg !w-11/12 mx-auto py-2 leading-relaxed ${className}`}
+    >
       <PortableText value={body} components={components} />
     </div>
   )

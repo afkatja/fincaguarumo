@@ -31,7 +31,7 @@ const Slideshow = ({
   }))
 
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<Loading className="absolute" />}>
       <div className="relative">
         <Carousel
           images={images}

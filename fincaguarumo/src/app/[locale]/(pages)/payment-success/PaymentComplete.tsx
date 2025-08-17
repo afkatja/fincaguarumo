@@ -163,9 +163,9 @@ export default function CompletePage() {
   }
 
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<Loading className="absolute" />}>
       {isLoading ? (
-        <Loading />
+        <Loading className="absolute" />
       ) : (
         <PagesLayout
           pageName="paymentComplete"
