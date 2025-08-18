@@ -12,12 +12,14 @@ import Loading from "../loading"
 import Title from "@/components/Title"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+if (!publishableKey)
+  console.warn(
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set. Stripe functionality will not work."
+  )
 
-const stripePromise =
-  publishableKey &&
-  loadStripe(publishableKey, {
-    betas: ["custom_checkout_adaptive_pricing_2"],
-  })
+const stripePromise = loadStripe(publishableKey, {
+  betas: ["custom_checkout_adaptive_pricing_2"],
+})
 
 const Payment = () => {
   const [clientSecret, setClientSecret] = useState<string | null>(null)

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { sendConfirmationEmail } from "@/lib/sendConfirmationEmail"
 
+export const runtime = "nodejs"
+
 export async function POST(request: NextRequest) {
   const stripeInstance = new Stripe(process.env.STRIPE_API_KEY ?? "")
   const endpointSecret =
@@ -9,25 +11,33 @@ export async function POST(request: NextRequest) {
       ? process.env.STRIPE_WEBHOOK_SECRET_LOCAL
       : process.env.STRIPE_WEBHOOK_SECRET
 
-  const buffer = await request.arrayBuffer()
+  const buffer = Buffer.from(await request.arrayBuffer())
   // Only verify the event if you have an endpoint secret defined.
   // Otherwise use the basic event deserialized with JSON.parse
-  if (endpointSecret) {
-    // Get the signature sent by Stripe
-    const signature = request.headers.get("stripe-signature") as string
+  if (!endpointSecret) {
+    console.error("Stripe webhook secret is not set.")
+    return NextResponse.json(
+      { error: "Webhook secret is not configured" },
+      { status: 500 }
+    )
+  }
 
-    let event: Stripe.Event
-    try {
-      event = stripeInstance.webhooks.constructEvent(
-        Buffer.from(buffer),
-        signature,
-        endpointSecret
-      )
-    } catch (err: any) {
-      console.log(`⚠️  Webhook signature verification failed.`, err.message)
-      return NextResponse.json({ error: "Webhook failed" }, { status: 400 })
-    }
+  // Get the signature sent by Stripe
+  const signature = request.headers.get("stripe-signature") as string
 
+  let event: Stripe.Event
+  try {
+    event = stripeInstance.webhooks.constructEvent(
+      buffer,
+      signature,
+      endpointSecret
+    )
+  } catch (err: any) {
+    console.log(`⚠️  Webhook signature verification failed.`, err.message)
+    return NextResponse.json({ error: "Webhook failed" }, { status: 400 })
+  }
+
+  try {
     // Handle the event
     switch (event.type) {
       case "checkout.session.completed": {
@@ -97,8 +107,10 @@ export async function POST(request: NextRequest) {
         // Unexpected event type
         console.log(`Unhandled event type ${event.type}.`)
     }
-
-    // Return a 200 response to acknowledge receipt of the event
-    return NextResponse.json({ received: true })
+  } catch (error: any) {
+    console.error("Error processing webhook event:", error.message)
+    return NextResponse.json({ error: "Handler error" }, { status: 500 })
   }
+  // Return a 200 response to acknowledge receipt of the event
+  return NextResponse.json({ received: true })
 }
