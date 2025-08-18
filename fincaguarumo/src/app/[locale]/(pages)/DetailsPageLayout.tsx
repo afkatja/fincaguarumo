@@ -1,46 +1,45 @@
 "use client"
 import React, { Suspense, useEffect, useState } from "react"
 
-import BookingDialog, { IDialog } from "./Dialog"
+import BookingDialog from "./BookingDialog"
 
 import Icon from "@/components/Icon"
 import { TTour } from "./tours/data"
-import Breadcrumbs from "../../../components/Breadcrumbs"
-import Title from "../../../components/Title"
-// import { PortableText } from "next-sanity"
+import Breadcrumbs from "@/components/Breadcrumbs"
+import Title from "@/components/Title"
 import Loading from "./loading"
-// import Image from "next/image"
-// import { urlFor } from "../../../sanity/lib/image"
-// import resolveConfig from "tailwindcss/resolveConfig"
-// import theme from "../../../../tailwind.config"
-import RichText from "../../../components/RichText"
-import { loadTranslations } from "../../../lib/utils"
+import RichText from "@/components/RichText"
+import { BookingType } from "../../../types"
+import { loadTranslations } from "@/lib/utils"
 
 const DetailsPageLayout = ({
-  title,
-  description,
-  duration,
-  location,
-  price,
+  bookingDetails,
+  bookingType,
   slideshow,
   parent,
-  body,
   icon,
   locale,
-  dialog,
-}: Omit<TTour, "slideshow" | "isPublished"> & {
+  dialogId,
+}: {
+  bookingDetails: Omit<
+    TTour,
+    "gallery" | "isPublished" | "slug" | "mainImage" | "slideshow"
+  >
+  bookingType: BookingType
   slideshow?: React.ReactNode
   parent?: { title: string; href: string }
   icon?: string
   locale: string
-  dialog?: IDialog
+  dialogId?: string
 }) => {
+  const { title, description, duration, location, price, body } = bookingDetails
   const [translations, setTranslations] = useState<{
     booking: {
       perPerson: string
       reserveButton: string
     }
   } | null>(null)
+
   useEffect(() => {
     const loadTranslationsData = async () => {
       const messages = await loadTranslations(locale)
@@ -49,9 +48,8 @@ const DetailsPageLayout = ({
     loadTranslationsData()
   })
   const t = translations?.booking
-
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<Loading className="absolute" />}>
       <div className="content-wrap">
         <div className="w-11/12 mx-auto py-5">
           {parent && <Breadcrumbs title={title} parent={parent} />}
@@ -89,18 +87,22 @@ const DetailsPageLayout = ({
             </div>
             <footer className="bg-muted dark:bg-gradient-to-br from-zinc-700 to-sky-900 rounded-lg p-6 md:p-8">
               <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-2xl font-bold">${price}</span>
-                  <span className="text-muted-foreground text-sm">
-                    /{t?.perPerson}
-                  </span>
-                </div>
+                {!!price ? (
+                  <div>
+                    <span className="text-2xl font-bold">${price}</span>
+                    <span className="text-muted-foreground text-sm">
+                      /{t?.perPerson}
+                    </span>
+                  </div>
+                ) : null}
                 <BookingDialog
-                  price={Number(price)}
-                  title={title}
-                  description={description}
-                  buttonText={t?.reserveButton}
-                  dialog={dialog}
+                  bookingType={bookingType}
+                  dialogOptions={{
+                    buttonText: t?.reserveButton || "Book now",
+                    buttonClassName: "ml-auto",
+                    title: t?.reserveButton || "Book now",
+                  }}
+                  dialogId={dialogId}
                   locale={locale}
                 />
               </div>

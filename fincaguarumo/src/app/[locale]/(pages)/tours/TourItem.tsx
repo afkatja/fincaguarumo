@@ -4,22 +4,24 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import Badge from "@/components/badge"
-import Icon from "../../../../components/Icon"
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
+import Icon from "@/components/Icon"
 import { urlFor } from "@/sanity/lib/image"
 import { titleCase, loadTranslations } from "../../../../lib/utils"
 import { useEffect, useState } from "react"
+import { SanityImageObject } from "../../../../types"
 
 export type TourType = {
   title: string
   description?: string
-  mainImage?: SanityImageObject & { alt: string }
+  mainImage?: (SanityImageObject & { alt: string }) | null
   slug: { current: string }
   dateAdded?: string
   isNew?: boolean
   isFeatured?: boolean
   isPublished: boolean
   href: string
+  /** lat/lng as decimal degrees in string form (e.g., "9.1234") */
+  geo?: { lat: string; lng: string }
 }
 
 const TourItem = ({
@@ -61,8 +63,8 @@ const TourItem = ({
   const t = translations?.cards || fallbackTranslations.cards
 
   return (
-    <Link href={href} className="group tour no-underline" prefetch>
-      <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border-background">
+    <Link href={href} className="group tour no-underline " prefetch>
+      <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border-background">
         <CardContent className="flex h-full flex-col justify-between p-6">
           <div className="relative">
             {isNew && <Badge text={t.new} />}

@@ -12,6 +12,10 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+.w-11\/12 {
+  max-width: 90rem;
+}
+
 .content-wrap {
   position: relative;
 }
@@ -273,6 +277,10 @@ img.mt-0 + .portable-text-p {
 .portable-text-p:has(+ ul),
 .portable-text-p:last-child:not(:has(+ img)) {
   grid-column: span 2;
+}
+
+input::-webkit-inner-spin-button {
+  display: none !important;
 }
 
 /* @media screen and (min-width: 1024px) {

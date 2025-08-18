@@ -3,10 +3,24 @@ import PagesLayout from "../pagesLayout"
 import { SanityDocument } from "sanity"
 import CardItem from "./CardItem"
 import Link from "next/link"
-import Icon from "../../../../components/Icon"
-import Title from "../../../../components/Title"
+import Icon from "@/components/Icon"
+import Title from "@/components/Title"
+import ContactForm from "./ContactForm"
 import { useEffect, useState } from "react"
-import { loadTranslations } from "../../../../lib/utils"
+import { loadTranslations } from "@/lib/utils"
+
+const safeBtoa = (s?: string) => {
+  if (typeof s !== "string") return ""
+  try {
+    const bytes = new TextEncoder().encode(s)
+    let binary = ""
+    for (let i = 0; i < bytes.length; i++)
+      binary += String.fromCharCode(bytes[i])
+    return btoa(binary)
+  } catch {
+    return ""
+  }
+}
 
 export default function Contact({
   locale,
@@ -15,39 +29,48 @@ export default function Contact({
 }: {
   locale: string
   content: SanityDocument
-  people: Record<string, any>
+  people: Record<string, any>[]
 }) {
   const [translations, setTranslations] = useState<{
     contact: {
       location: string
     }
   } | null>(null)
+
   useEffect(() => {
     const loadTranslationsData = async () => {
       const messages = await loadTranslations(locale)
       setTranslations(messages)
     }
     loadTranslationsData()
-  })
+  }, [locale])
+
   const t = translations?.contact
   return (
     <PagesLayout
       locale={locale}
-      pageName="about"
+      pageName="contact"
       title={content?.title}
       description={content?.description}
       mainImage={content?.mainImage}
     >
-      <div className="w-11/12 mx-auto grid gap-4 md:grid-flow-col auto-cols-min justify-center">
-        {people.map((person: Record<string, any>) => (
-          <CardItem
-            key={crypto.randomUUID()}
-            name={person.name}
-            avatar={person.avatar}
-            phoneNumber={btoa(person.phoneNumber)}
-            email={btoa(person.email)}
-          />
-        ))}
+      <div className="w-11/12 my-8 !max-w-[60rem] mx-auto items-start">
+        <Title
+          title="Contact Us"
+          titleClassName="text-3xl font-bold my-5 col-span-2"
+        />
+        <ContactForm />
+        <div className="grid gap-4 md:grid-cols-2 justify-center mt-6 lg:mt-4">
+          {people.map((person: Record<string, any>) => (
+            <CardItem
+              key={person.name}
+              name={person.name}
+              avatar={person.avatar}
+              phoneNumber={safeBtoa(person.phoneNumber)}
+              email={safeBtoa(person.email)}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="w-11/12 mx-auto my-4">
@@ -72,7 +95,7 @@ export default function Contact({
           src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d10818.29693270256!2d-83.33528678209937!3d8.4966841786644!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2scr!4v1730252681067!5m2!1sen!2scr"
           width="800"
           height="500"
-          className="border-0 w-full maxw-[100%] mx-auto"
+          className="border-0 w-full max-w-[100%] mx-auto"
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
         ></iframe>

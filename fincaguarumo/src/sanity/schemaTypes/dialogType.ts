@@ -7,7 +7,7 @@ export const dialogType = defineType({
   fields: [
     defineField({
       type: "internationalizedArrayString",
-      name: "CLA_button",
+      name: "CTA_button",
       initialValue: "Reserve",
       description: `Call to action, like "Reserve now"`,
     }),
@@ -55,6 +55,11 @@ export const dialogType = defineType({
     defineField({
       type: "internationalizedArrayString",
       name: "Paypal_label",
+    }),
+    defineField({
+      type: "internationalizedArrayString",
+      name: "Person_label",
+      description: "Label for 1 person",
     }),
     defineField({
       type: "internationalizedArrayString",

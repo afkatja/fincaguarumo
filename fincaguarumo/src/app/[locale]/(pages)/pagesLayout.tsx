@@ -1,18 +1,14 @@
 import { Suspense } from "react"
-import Image from "next/image"
+
 import { notFound } from "next/navigation"
-import { urlFor } from "@/sanity/lib/image"
 import Title from "@/components/Title"
 import Loading from "./loading"
 import RichText from "@/components/RichText"
 import Slideshow from "@/components/Slideshow"
-import { shuffle } from "../../../lib/utils"
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
-// import resolveConfig from "tailwindcss/resolveConfig"
-// import theme from "../../../../tailwind.config"
+import { shuffle } from "@/lib/utils"
+import { SanityImageObject } from "../../../types"
 
-const PageLayout = async ({
-  locale,
+const PageLayout = ({
   pageName,
   title,
   subtitle,
@@ -24,7 +20,6 @@ const PageLayout = async ({
   images,
   // ...props
 }: {
-  locale: string
   subtitle?: string
   pageName: string
   body?: any
@@ -34,9 +29,8 @@ const PageLayout = async ({
   [props: string]: any
 }) => {
   if (!pageName) notFound()
-
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<Loading className="absolute" />}>
       <div className="bg-zinc-50 dark:bg-zinc-900 pt-5 lg:pt-8 content-wrap z-10 flex-1">
         <div className="prose w-11/12 lg:prose-lg mx-auto relative z-20">
           <Title
@@ -55,15 +49,6 @@ const PageLayout = async ({
             />
           )}
         </div>
-        {/* {mainImage && (
-          <Image
-            src={urlFor(mainImage).width(1600).height(500).url()}
-            alt=""
-            height={700}
-            width={1600}
-            className="mb-5"
-          />
-        )} */}
         {(mainImage || images) && (
           <Slideshow
             images={

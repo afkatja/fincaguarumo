@@ -12,7 +12,7 @@ const UtilsNav = ({
   return (
     <nav className={`hidden md:flex items-center gap-5 mx-4 ${className}`}>
       {navItems.map(navItem => (
-        <NavItem key={crypto.randomUUID()} navItem={navItem} />
+        <NavItem key={navItem.title} navItem={navItem} />
       ))}
     </nav>
   )

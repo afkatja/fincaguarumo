@@ -1,32 +1,63 @@
 "use client"
-import React from "react"
+import React, { useCallback, useEffect } from "react"
 import Slideshow from "@/components/Slideshow"
 import DetailsPageLayout from "../../DetailsPageLayout"
 import { TTour } from "../data"
-import { titleCase } from "../../../../../lib/utils"
+import { titleCase } from "@/lib/utils"
 import { notFound } from "next/navigation"
+import { useBooking } from "../../../BookingProvider"
+import { BOOKING_TYPE, BookingData } from "../../../../../types"
 
 const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
   if (!tour || !tour.isPublished) notFound()
+  const { setBookingData } = useBooking()
+
+  useEffect(() => {
+    setBookingData((prev: BookingData) => {
+      const nextBookingDetails = {
+        ...(prev?.bookingDetails ?? {}),
+        type: BOOKING_TYPE.tour,
+        title: tour.title,
+        description: tour.description,
+        price: tour.price,
+        totalPrice: tour.price,
+        duration: tour.duration ?? 0,
+        location: tour.location ?? "",
+        body: tour.body,
+        geo: tour.geo ?? { lat: 0, lng: 0 },
+      }
+      if (
+        JSON.stringify(prev.bookingDetails) ===
+        JSON.stringify(nextBookingDetails)
+      ) {
+        return prev
+      }
+      return { ...prev, bookingDetails: nextBookingDetails }
+    })
+  }, [tour, setBookingData])
 
   return (
     <DetailsPageLayout
-      title={tour.title}
-      description={tour.description}
+      bookingDetails={{
+        title: tour.title,
+        description: tour.description,
+        duration: tour.duration,
+        location: tour.location,
+        price: tour.price,
+        body: tour.body,
+        geo: tour.geo,
+      }}
       slideshow={
         <Slideshow
           images={tour?.slideshow?.images ?? [tour.mainImage]}
           showExpand={false}
         />
       }
-      price={tour.price ?? "0"}
-      location={tour.location ?? ""}
-      duration={tour.duration ?? ""}
-      body={tour.body}
       parent={{ title: "Tours", href: "tours" }}
       icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
+      bookingType={BOOKING_TYPE.tour}
       locale={locale}
-      dialog={tour.dialog}
+      dialogId={tour.dialog?._ref}
     />
   )
 }

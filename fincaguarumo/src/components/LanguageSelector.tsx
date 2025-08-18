@@ -36,12 +36,12 @@ const LanguageSelector = ({
       }
       disabled={isPending}
     >
-      <SelectTrigger className="w-12 p-0 lg:w-[180px] focus:border-none active:border-none focus:ring-0 bg-transparent ml-2">
+      <SelectTrigger className="w-12 p-0 lg:w-[180px] focus:border-none active:border-none outline-none focus:ring-0 !bg-transparent ml-2">
         <SelectValue placeholder="Choose language" />
       </SelectTrigger>
       <SelectContent>
         {availableTranslations.map(version => (
-          <SelectItem key={crypto.randomUUID()} value={version.language}>
+          <SelectItem key={version.language} value={version.language}>
             <ReactCountryFlag
               countryCode={version.countryCode.toUpperCase()}
               svg

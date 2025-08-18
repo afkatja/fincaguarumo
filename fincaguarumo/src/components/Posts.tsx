@@ -1,36 +1,32 @@
-import Link from "next/link"
-import Image from "next/image"
-
 import { POSTS_QUERYResult } from "../../sanity.types"
-import { urlFor } from "../sanity/lib/image"
+import FeaturedContent from "./FeaturedContent"
+import TourItem from "../app/[locale]/(pages)/tours/TourItem"
+import { SanityImageObject } from "../types"
 
 export function Posts({
-  posts,
+  posts: postsProp,
   locale,
 }: {
   posts: POSTS_QUERYResult
   locale: string
 }) {
-  return (
-    <ul className="flex gap-2 w-11/12 mx-auto flex-wrap justify-center">
-      {posts.map(post => (
-        <li key={post._id} className="md:m-5 my-5 flex-initial md:w-56 w-full">
-          <Link
-            className="group no-underline flex flex-col items-center justify-content"
-            href={`/${locale}/blog/${post?.slug?.current}`}
-          >
-            {post?.mainImage && (
-              <Image
-                src={urlFor(post.mainImage).width(300).height(300).url()}
-                width={300}
-                height={300}
-                alt=""
-              />
-            )}
-            <h1 className="my-3">{post?.title}</h1>
-          </Link>
-        </li>
-      ))}
-    </ul>
-  )
+  const posts = postsProp
+    .filter(post => post.isPublished && post.slug?.current)
+    .map(post => ({
+      ...post,
+      content: {
+        [post.slug?.current as string]: (
+          <TourItem
+            href={`${locale}/tours/${post?.slug?.current}`}
+            mainImage={post?.mainImage as SanityImageObject & { alt: string }}
+            title={post.title ?? ""}
+            description={""}
+            slug={post.slug as { current: string }}
+            isPublished={post.isPublished ?? false}
+            locale={locale}
+          />
+        ),
+      },
+    }))
+  return <FeaturedContent href="tours" items={posts} />
 }

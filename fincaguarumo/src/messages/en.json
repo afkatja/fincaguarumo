@@ -53,6 +53,16 @@
     "bookOnBooking": "Book on Booking.com",
     "bookOnAirbnb": "Book on AirBnb",
     "bookOnExpedia": "Book on Expedia",
-    "bookNow": "Book now"
+    "bookNow": "Book now",
+    "bookOnOthers": "Book on other platforms",
+    "bookVilla": "Book your stay",
+    "emailLabel": "Your email *",
+    "emailError": "Please enter a valid email address",
+    "nameLabel": "Your name *",
+    "nameError": "Please enter your name",
+    "priceLabel": "Price for",
+    "rateLabel": "Price",
+    "phoneLabel": "Your phone number *",
+    "phoneError": "Please enter a valid phone number"
   }
 }

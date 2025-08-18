@@ -1,5 +1,3 @@
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
-
 import { sanityFetch } from "../../sanity/lib/client"
 import {
   FEATURED_POSTS_QUERY,
@@ -16,6 +14,7 @@ import { Suspense } from "react"
 import Loading from "./(pages)/loading"
 import RichText from "../../components/RichText"
 import VideoOpenZip from "./components/VideoOpenZip"
+import { SanityImageObject } from "../../types"
 
 export default async function Home({ params }: { params: any }) {
   const { locale } = await params
@@ -61,38 +60,42 @@ export default async function Home({ params }: { params: any }) {
     .filter(tour => tour.isPublished)
     .map(tour => ({
       ...tour,
-      content: (
-        <TourItem
-          href={`/tours/${tour.slug.current}`}
-          mainImage={tour.mainImage}
-          title={tour.title}
-          isFeatured
-          description={tour.description}
-          slug={tour.slug}
-          isPublished={tour.isPublished}
-          locale={locale}
-        />
-      ),
+      content: {
+        [tour.slug.current]: (
+          <TourItem
+            href={`${locale}/tours/${tour.slug.current}`}
+            mainImage={tour.mainImage}
+            title={tour.title}
+            isFeatured
+            description={tour.description}
+            slug={tour.slug}
+            isPublished={tour.isPublished}
+            locale={locale}
+          />
+        ),
+      },
     }))
   const featuredPosts = posts
     .filter(post => post.isPublished)
     .map(({ title, mainImage, slug, isPublished, ...post }) => ({
       ...post,
-      content: (
-        <TourItem
-          href={`/blog/${slug.current}`}
-          mainImage={mainImage}
-          title={title}
-          slug={slug}
-          isPublished={isPublished}
-          locale={locale}
-        />
-      ),
+      content: {
+        [slug.current]: (
+          <TourItem
+            href={`${locale}/blog/${slug.current}`}
+            mainImage={mainImage}
+            title={title}
+            slug={slug}
+            isPublished={isPublished}
+            locale={locale}
+          />
+        ),
+      },
     }))
 
   return (
     <VideoOpenZip>
-      <Suspense fallback={<Loading />}>
+      <Suspense fallback={<Loading className="absolute" />}>
         <div className="parallax-bg relative w-full h-screen">
           {content?.mediaUrl && (
             <Video

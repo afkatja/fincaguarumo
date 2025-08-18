@@ -1,11 +1,11 @@
 "use client"
 import React, { Suspense, useState } from "react"
-import { SanityImageObject } from "@sanity/image-url/lib/types/types"
 import Carousel from "@/components/Carousel"
 import { Button } from "@/components/ui/button"
 import Icon from "@/components/Icon"
 import Loading from "../app/[locale]/(pages)/loading"
 import { urlFor } from "../sanity/lib/image"
+import { SanityImageObject } from "../types"
 
 const Slideshow = ({
   images: imagesProp,
@@ -16,6 +16,8 @@ const Slideshow = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const images = imagesProp.map(img => ({
+    _type: img._type || "image",
+    asset: img.asset,
     src: urlFor(img)
       .width(2016)
       .height(1134)
@@ -23,13 +25,13 @@ const Slideshow = ({
       .quality(100)
       .format("webp")
       .url(),
-    alt: "",
     width: 2016,
     height: 1134,
+    alt: img.alt || "",
   }))
 
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<Loading className="absolute" />}>
       <div className="relative">
         <Carousel
           images={images}

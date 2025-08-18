@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react"
 // import { BookingService } from "../services/booking"
 import { ExpediaService } from "../services/expedia"
-import Datepicker from "./ui/datepicker"
-import SelectBox from "./ui/selectBox"
+import Datepicker from "@/components/DatePicker"
 import { Button } from "./ui/button"
 import { loadTranslations } from "../lib/utils"
+import SelectGuestsOptions from "../app/[locale]/(pages)/(payment)/SelectGuestsOptions"
+import { format } from "date-fns"
 
 interface BookingOptionsProps {
   propertyId: string
@@ -18,8 +19,8 @@ export function BookingOptions({
   expediaPropertyId,
   locale = "en",
 }: BookingOptionsProps) {
-  const [checkin, setCheckin] = useState(new Date())
-  const [checkout, setCheckout] = useState(new Date())
+  const [checkin, setCheckin] = useState(new Date(+new Date() + 86400000))
+  const [checkout, setCheckout] = useState(new Date(+new Date() + 259200000))
   const [guests, setGuests] = useState(2)
   const [translations, setTranslations] = useState<{
     booking: {
@@ -66,12 +67,12 @@ export function BookingOptions({
 
   const t = translations?.booking || fallbackTranslations.booking
 
-  const checkinStr = checkin.toISOString().split("T")[0]
-  const checkoutStr = checkout.toISOString().split("T")[0]
+  const checkinStr = format(checkin, "yyyy-MM-dd")
+  const checkoutStr = format(checkout, "yyyy-MM-dd")
 
   const handleBookingClick = () => {
     const url = `https://www.booking.com/hotel/cr/villa-bruno-a-hidden-jungle-gem.html?checkin=${checkinStr}&checkout=${checkoutStr}&group_adults=${guests}&group_children=0`
-    window.open(url, "_blank")
+    window.open(url, "_blank", "noopener, noreferrer")
   }
 
   const handleExpediaClick = () => {
@@ -81,12 +82,12 @@ export function BookingOptions({
       checkoutStr,
       guests.toString()
     )
-    window.open(url, "_blank")
+    window.open(url, "_blank", "noopener, noreferrer")
   }
 
   const handleAirbnbClick = () => {
     const url = `https://www.airbnb.com/rooms/1392758794880269478?check_in=${checkinStr}&guests=${guests}&adults=${guests}&check_out=${checkoutStr}`
-    window.open(url, "_blank")
+    window.open(url, "_blank", "noopener, noreferrer")
   }
 
   return (
@@ -96,32 +97,35 @@ export function BookingOptions({
           <div>
             <Datepicker
               label={t.checkIn}
-              placeholder={t.selectDate}
-              selectedDate={checkin}
+              selectedDate={checkin.toLocaleDateString(locale, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
               onSelectDate={date => setCheckin(date)}
             />
           </div>
-          <div>
+          <div className="mt-4 sm:mt-0">
             <Datepicker
               label={t.checkOut}
-              placeholder={t.checkoutDate}
-              selectedDate={checkout}
+              selectedDate={checkout.toLocaleDateString(locale, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
               onSelectDate={date => setCheckout(date)}
             />
           </div>
         </div>
 
         <div>
-          <SelectBox
-            label={t.guests}
-            placeholder={t.numberOfGuests}
-            onValueChange={value => setGuests(parseInt(value))}
-            values={[
-              { val: "1", text: `1 ${t.person}` },
-              { val: "2", text: `2 ${t.people}` },
-              { val: "3", text: `3 ${t.people}` },
-              { val: "4", text: `4 ${t.people}` },
-            ]}
+          <SelectGuestsOptions
+            onChange={value => {
+              const n = value
+              setGuests(Number.isFinite(n) && n > 0 ? n : 1)
+            }}
+            locale={locale}
+            guests={guests}
           />
         </div>
 

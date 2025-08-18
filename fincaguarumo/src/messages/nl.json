@@ -44,6 +44,15 @@
     "bookOnBooking": "Boek op Booking.com",
     "bookOnAirbnb": "Boek op AirBnb",
     "bookOnExpedia": "Boek op Expedia",
-    "bookNow": "Boek nu"
+    "bookNow": "Boek nu",
+    "bookOnOthers": "Boek op andere platformen",
+    "bookVilla": "Boek je verblijf",
+    "emailLabel": "Je e-mail *",
+    "emailError": "Voer een geldig e-mailadres in",
+    "nameLabel": "Je naam *",
+    "nameError": "Voer je naam in",
+    "priceLabel": "Prijs voor",
+    "phoneLabel": "Je telefoonnummer *",
+    "phoneError": "Voer een geldig telefoonnummer in"
   }
 }
