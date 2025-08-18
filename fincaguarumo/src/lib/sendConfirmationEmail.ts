@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
-import calculateTotal from "@/lib/calculateTotal"
-import calculateDuration from "@/lib/calculateDuration"
 import { BOOKING_TYPE, BookingData } from "../types"
 
 const mailerSend = new MailerSend({
@@ -131,7 +129,7 @@ export async function sendConfirmationEmail({
       .setTemplateId(
         bookingDetails.type === BOOKING_TYPE.villa
           ? "z3m5jgry77m4dpyo"
-          : "yzkq340kvv6gd796"
+          : "zr6ke4ne3234on12"
       )
       .setPersonalization([
         {
