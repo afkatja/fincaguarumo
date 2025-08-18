@@ -146,7 +146,7 @@ export async function sendConfirmationEmail({
             name: customerDetails.name,
             total_price: `$${bookingDetails.totalPrice}`,
             guests_number: bookingDetails.guests,
-            support_mail: process.env.CONTACT_EMAIL!,
+            support_email: process.env.CONTACT_EMAIL!,
             ...(bookingDetails.type === BOOKING_TYPE.villa
               ? {
                   checkin: bookingDetails.checkIn,
