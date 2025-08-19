@@ -99,11 +99,11 @@ export async function sendConfirmationEmail({
             Booking Details:
             ${
               bookingDetails.type === BOOKING_TYPE.villa
-                ? `- Check-in: ${bookingDetails.checkIn}
-              - Check-out: ${bookingDetails.checkOut}`
+                ? `- Check-in: ${bookingDetails.checkIn.toLocaleDateString()}
+              - Check-out: ${bookingDetails.checkOut.toLocaleDateString()}`
                 : `- Tour: ${bookingDetails.title}
               - Location: ${bookingDetails.location}
-              - Date: ${bookingDetails.date}`
+              - Date: ${bookingDetails.date.toLocaleDateString()}`
             }
               - Number of Guests: ${bookingDetails.guests}
               - Total Amount: $${bookingDetails.totalPrice}`,

@@ -14,7 +14,7 @@ interface IDatePicker {
   onOpen?: () => void
   onSelectDate: (date: Date) => void
   label: string
-  selectedDate: string
+  selectedDate: Date
   className?: string
 }
 
@@ -45,7 +45,9 @@ const DatePicker = ({
               <CalendarIcon size={16} className="mr-2" /> {label}
             </span>
           ) : (
-            <span className="font-normal">{selectedDate}</span>
+            <span className="font-normal">
+              {selectedDate.toLocaleDateString()}
+            </span>
           )}
         </Button>
       </PopoverTrigger>

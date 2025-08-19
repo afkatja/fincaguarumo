@@ -51,8 +51,7 @@ const BookingForm = ({
   // Calculate duration based on check-in and check-out dates
   const duration = calculateDuration(
     bookingData.bookingDetails.checkIn,
-    bookingData.bookingDetails.checkOut,
-    locale
+    bookingData.bookingDetails.checkOut
   )
 
   return (
@@ -150,11 +149,7 @@ const BookingForm = ({
                   ...bookingData,
                   bookingDetails: {
                     ...bookingData.bookingDetails,
-                    checkIn: new Date(date).toLocaleDateString(locale, {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    }),
+                    checkIn: new Date(date),
                   },
                 })
                 setActivePopover(null)
@@ -175,11 +170,7 @@ const BookingForm = ({
                     ...bookingData,
                     bookingDetails: {
                       ...bookingData.bookingDetails,
-                      checkOut: new Date(date).toLocaleDateString(locale, {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }),
+                      checkOut: new Date(date),
                     },
                   })
                   setActivePopover(null)
@@ -198,11 +189,7 @@ const BookingForm = ({
                   ...bookingData,
                   bookingDetails: {
                     ...bookingData.bookingDetails,
-                    date: new Date(date).toLocaleDateString(locale, {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    }),
+                    date,
                   },
                 })
                 setActivePopover(null)

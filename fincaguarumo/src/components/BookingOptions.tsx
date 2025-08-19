@@ -97,22 +97,14 @@ export function BookingOptions({
           <div>
             <Datepicker
               label={t.checkIn}
-              selectedDate={checkin.toLocaleDateString(locale, {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              selectedDate={checkin}
               onSelectDate={date => setCheckin(date)}
             />
           </div>
           <div className="mt-4 sm:mt-0">
             <Datepicker
               label={t.checkOut}
-              selectedDate={checkout.toLocaleDateString(locale, {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              selectedDate={checkout}
               onSelectDate={date => setCheckout(date)}
             />
           </div>
