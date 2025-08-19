@@ -43,7 +43,7 @@ const ImgSlider = React.memo(
         opts={options ?? (props as any).opts}
         // Use a stable plugin instance and merge user-provided plugins.
         plugins={[autoplayRef.current, ...(plugins ?? [])]}
-        className={`w-11/12 mx-auto md:max-h-[70dvh] flex flex-col ${className}`}
+        className={`w-11/12 mx-auto md:max-h-[90dvh] flex flex-col ${className}`}
       >
         <CarouselContent>
           {images.slice(0, 12).map((img, i) => (
