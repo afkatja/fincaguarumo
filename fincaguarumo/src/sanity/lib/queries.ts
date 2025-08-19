@@ -135,7 +135,7 @@ export const FEATURED_TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.curre
 `
 
 export const DIALOG_QUERY = groq`
-*[_type == 'dialog' && _id == $dialogId][0] {
+*[_type == 'dialog'][0] {
   'cta': CTA_button,
   'date': Date_label,
   'selectDate': Select_date,

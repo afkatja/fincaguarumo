@@ -48,14 +48,9 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchDialog = async () => {
-      if (!dialogId) {
-        setDialogData(null)
-        return
-      }
-
       setIsLoading(true)
       try {
-        const data = await clientSideFetch(DIALOG_QUERY, { dialogId })
+        const data = await clientSideFetch(DIALOG_QUERY)
 
         if (data) setDialogData(data)
       } catch (error) {
