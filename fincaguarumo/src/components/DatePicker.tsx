@@ -7,6 +7,7 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
 import CalendarIcon from "./icons/Calendar"
+import { useParams } from "next/navigation"
 
 interface IDatePicker {
   isOpen?: boolean
@@ -27,6 +28,7 @@ const DatePicker = ({
   selectedDate,
   className,
 }: IDatePicker) => {
+  const params = useParams()
   return (
     <Popover open={isOpen}>
       {isOpen && (
@@ -46,7 +48,11 @@ const DatePicker = ({
             </span>
           ) : (
             <span className="font-normal">
-              {selectedDate.toLocaleDateString()}
+              {new Date(selectedDate).toLocaleDateString(params.locale, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </span>
           )}
         </Button>
