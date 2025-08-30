@@ -46,7 +46,7 @@
     "gsap": "^3.13.0",
     "ics": "^3.8.1",
     "libphonenumber-js": "^1.12.10",
-    "lucide-react": "^0.395.0",
+    "lucide-react": "^0.542.0",
     "mailersend": "^2.6.0",
     "media": "^0.2.1",
     "next": "^15.4.6",
