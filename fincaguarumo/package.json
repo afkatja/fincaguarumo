@@ -27,7 +27,7 @@
     "@radix-ui/react-separator": "^1.1.0",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/themes": "^3.2.1",
-    "@react-spring/parallax": "^9.7.5",
+    "@react-spring/parallax": "^10.0.0",
     "@sanity/document-internationalization": "^3.3.3",
     "@sanity/image-url": "^1.1.0",
     "@sanity/vision": "^3.99.0",
