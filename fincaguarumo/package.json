@@ -71,7 +71,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@formatjs/intl-localematcher": "^0.5.10",
+    "@formatjs/intl-localematcher": "^0.6.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^20.19.10",
