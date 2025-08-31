@@ -65,7 +65,7 @@
     "sanity-plugin-media": "^2.4.2",
     "stripe": "^18.4.0",
     "styled-components": "^6.1.19",
-    "tailwind-merge": "^2.6.0",
+    "tailwind-merge": "^3.0.0",
     "tailwindcss-animate": "^1.0.7",
     "xml": "^1.0.1",
     "zod": "^4.0.0"
