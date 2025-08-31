@@ -28,7 +28,7 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/themes": "^3.2.1",
     "@react-spring/parallax": "^9.7.5",
-    "@sanity/document-internationalization": "^3.3.3",
+    "@sanity/document-internationalization": "^4.0.0",
     "@sanity/image-url": "^1.1.0",
     "@sanity/vision": "^3.99.0",
     "@stripe/react-stripe-js": "^3.9.0",
