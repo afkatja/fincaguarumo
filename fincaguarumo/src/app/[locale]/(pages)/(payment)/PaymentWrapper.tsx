@@ -11,7 +11,11 @@ if (!publishableKey) {
   )
 }
 
-const stripePromise = publishableKey && loadStripe(publishableKey)
+const stripePromise =
+  publishableKey &&
+  loadStripe(publishableKey, {
+    betas: ["custom_checkout_adaptive_pricing_2"],
+  })
 
 const PaymentWrapper = ({ children }: { children: React.ReactNode }) => {
   if (!stripePromise) return children

@@ -2,14 +2,10 @@
 import React, { useMemo, useState } from "react"
 import Image from "next/image"
 import { loadStripe } from "@stripe/stripe-js"
-import {
-  CheckoutProvider,
-  CurrencySelectorElement,
-} from "@stripe/react-stripe-js"
+import { CheckoutProvider } from "@stripe/react-stripe-js"
 import CheckoutForm from "./CheckoutForm"
 import { useBooking } from "../../BookingProvider"
 import Loading from "../loading"
-import Title from "@/components/Title"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 if (!publishableKey)
@@ -63,9 +59,6 @@ const Payment = () => {
     appearance,
   }
 
-  const currency = bookingData.bookingDetails.currency?.toUpperCase() ?? "USD"
-  const amount = Number(bookingData.bookingDetails.totalPrice || 0).toFixed(2)
-
   if (!stripePromise) return <Loading className="absolute" />
   if (!clientSecret) {
     return <Loading className="absolute" />
@@ -76,11 +69,10 @@ const Payment = () => {
         options={{
           fetchClientSecret: () => fetchData,
           elementsOptions: options,
+          adaptivePricing: { allowed: true }, // eslint-disable-line
         }}
         stripe={stripePromise}
       >
-        <CurrencySelectorElement />
-        <Title title={`Pay ${currency} ${amount}  now`} />
         <CheckoutForm />
       </CheckoutProvider>
       <Image

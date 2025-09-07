@@ -1,12 +1,21 @@
 "use client"
 import React, { FormEventHandler, useState } from "react"
-import { PaymentElement, useStripe, useCheckout } from "@stripe/react-stripe-js"
+import {
+  PaymentElement,
+  useStripe,
+  useCheckout,
+  CurrencySelectorElement,
+} from "@stripe/react-stripe-js"
 import { Button } from "@/components/ui/button"
 import Loading from "../loading"
+import Title from "@/components/Title"
+import { useBooking } from "../../BookingProvider"
 
 export default function CheckoutForm() {
   const stripe = useStripe()
   const checkout = useCheckout()
+
+  const { bookingData } = useBooking()
 
   const [message, setMessage] = useState<null | string | undefined>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -43,8 +52,14 @@ export default function CheckoutForm() {
     // layout: "accordion" as const,
   }
 
+  const currency = bookingData.bookingDetails.currency?.toUpperCase() ?? "USD"
+  const amount = Number(bookingData.bookingDetails.totalPrice || 0).toFixed(2)
+  console.log(checkout.currencyOptions)
+
   return (
     <>
+      <CurrencySelectorElement />
+      <Title title={`Pay ${checkout.total.total.amount} now`} />
       <form id="payment-form" onSubmit={handleSubmit} className="flex flex-col">
         {message && (
           <p className="mb-4" aria-live="polite" role="status">
