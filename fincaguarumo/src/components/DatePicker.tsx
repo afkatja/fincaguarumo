@@ -40,7 +40,7 @@ const DatePicker = ({
       <PopoverTrigger asChild onClick={onOpen}>
         <Button
           variant="outline"
-          className={`flex-col items-start w-full h-auto dark:bg-zinc-600 hover:dark:text-zinc-50 ${className}`}
+          className={`flex-col items-start w-full h-auto dark:bg-zinc-600 hover:dark:text-zinc-50 hover:transform-none ${className}`}
         >
           {!selectedDate ? (
             <span className="font-semibold flex items-center">
@@ -62,6 +62,7 @@ const DatePicker = ({
           mode="single"
           disabled={(date: Date) => date < new Date()}
           onSelect={(_, selectedDay) => onSelectDate(selectedDay)}
+          selected={selectedDate}
         />
       </PopoverContent>
     </Popover>

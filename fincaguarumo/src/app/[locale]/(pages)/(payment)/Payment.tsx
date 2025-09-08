@@ -17,7 +17,7 @@ const stripePromise = loadStripe(publishableKey, {
   betas: ["custom_checkout_adaptive_pricing_2"],
 })
 
-const Payment = () => {
+const Payment = ({ ...props }: { [prop: string]: any }) => {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const { bookingData } = useBooking()
   const fetchData = useMemo(async () => {
@@ -69,9 +69,10 @@ const Payment = () => {
         options={{
           fetchClientSecret: () => fetchData,
           elementsOptions: options,
-          adaptivePricing: { allowed: true }, // eslint-disable-line
+          // adaptivePricing: { allowed: true },
         }}
         stripe={stripePromise}
+        {...props}
       >
         <CheckoutForm />
       </CheckoutProvider>

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useRef } from "react"
 import {
   DialogContent,
   DialogHeader,
@@ -8,6 +8,7 @@ import {
 import Payment from "./(payment)/Payment"
 import BookingForm from "./(payment)/BookingForm"
 import { BookingType } from "../../../types"
+import { RemoveScroll } from "react-remove-scroll"
 
 interface BookingDialogContentProps {
   bookingData: Record<string, any>
@@ -28,6 +29,7 @@ const BookingDialogContent = ({
   bookingType,
   locale,
 }: BookingDialogContentProps) => {
+  const scrollableRef = useRef<HTMLDivElement>(null)
   if (!bookingData) return null
 
   const title = bookingData?.bookingDetails?.title ?? titleProp
@@ -42,12 +44,15 @@ const BookingDialogContent = ({
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <BookingForm
-            onSubmit={onBookingFormSubmit}
-            onCancel={onCancel}
-            bookingType={bookingType}
-            locale={locale}
-          />
+          <RemoveScroll shards={[scrollableRef]}>
+            <BookingForm
+              onSubmit={onBookingFormSubmit}
+              onCancel={onCancel}
+              bookingType={bookingType}
+              locale={locale}
+              ref={scrollableRef}
+            />
+          </RemoveScroll>
         </DialogContent>
       ) : (
         <DialogContent className="min-h-[500px] sm:max-w-[500px] dark:bg-gradient-to-br dark:from-zinc-700 dark:to-sky-900">
@@ -55,7 +60,9 @@ const BookingDialogContent = ({
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <Payment />
+          <RemoveScroll shards={[scrollableRef]}>
+            <Payment ref={scrollableRef} />
+          </RemoveScroll>
         </DialogContent>
       )}
     </>

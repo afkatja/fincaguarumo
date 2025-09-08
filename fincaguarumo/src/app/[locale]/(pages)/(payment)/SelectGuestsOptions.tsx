@@ -28,9 +28,6 @@ const SelectGuestsOptions = ({
       label={getInternationalizedValue(field?.guests, locale, "Guests")}
       placeholder={
         <div className="flex flex-col items-start">
-          <span className="font-semibold uppercase text-[0.65rem]">
-            {getInternationalizedValue(field?.guests, locale, "Guests")}
-          </span>
           <span className="font-normal">
             {String(guests)}{" "}
             {guests === 1

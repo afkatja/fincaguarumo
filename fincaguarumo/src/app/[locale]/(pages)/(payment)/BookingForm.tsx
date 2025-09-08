@@ -24,11 +24,13 @@ const BookingForm = ({
   onCancel,
   bookingType,
   locale,
+  ...props
 }: {
   onSubmit: () => void
   onCancel: () => void
   bookingType: BookingType
   locale: string
+  [prop: string]: any
 }) => {
   const [activePopover, setActivePopover] = useState<string | null>(null)
   const [translations, setTranslations] = useState<{
@@ -76,6 +78,7 @@ const BookingForm = ({
 
         onSubmit()
       }}
+      {...props}
     >
       <div className="grid gap-2">
         <div className="my-1">
@@ -150,6 +153,7 @@ const BookingForm = ({
                   bookingDetails: {
                     ...bookingData.bookingDetails,
                     checkIn: new Date(date),
+                    checkOut: new Date(date.setDate(date.getDate() + 1)),
                   },
                 })
                 setActivePopover(null)
@@ -158,7 +162,7 @@ const BookingForm = ({
               selectedDate={bookingData.bookingDetails.checkIn}
             />
 
-            <div className="ml-4 md:ml-0">
+            <div className="md:ml-4 mt-4 md:mt-0">
               <DatePicker
                 label={t?.checkoutDate || "Check-out date"}
                 selectedDate={bookingData.bookingDetails.checkOut}
