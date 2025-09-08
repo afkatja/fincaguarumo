@@ -24,7 +24,7 @@ const PriceCalculation = ({
 }) => {
   const { dialogData: dialog } = useDialog()
 
-  const { priceForPeople, total } = calculateTotal(
+  const { priceForPeople, priceWithVat, total } = calculateTotal(
     price,
     guests,
     bookingType,
@@ -46,8 +46,8 @@ const PriceCalculation = ({
 
   return (
     <div className="grid gap-2 flex-none w-full">
-      <div className="flex items-center justify-between">
-        <span className="text-muted-foreground">
+      <dl className="grid grid-cols-2 items-center justify-between">
+        <dt className="text-muted-foreground">
           {bookingType === BOOKING_TYPE.villa
             ? `${t?.priceLabel} ${guests} 
           ${getInternationalizedValue(
@@ -56,9 +56,13 @@ const PriceCalculation = ({
             "people"
           )}`
             : t?.rateLabel || "Price"}
-        </span>
-        <span>{currency(priceForPeople)}</span>
-      </div>
+        </dt>
+        <dd className="text-right">{currency(priceForPeople)}</dd>
+        <dt className="text-muted-foreground">
+          {t?.rateVATlabel || "Price (incl 13% VAT)"}
+        </dt>
+        <dd className="text-right">{currency(priceWithVat)}</dd>
+      </dl>
       <Separator />
       <div className="flex items-center justify-between font-medium">
         <span>{titleCase(totalDisplayed)}</span>
