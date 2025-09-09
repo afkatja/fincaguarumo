@@ -5,7 +5,13 @@
     "activities": "Actividades",
     "salsa": "Salsa",
     "about": "Sobre nosotros",
-    "contact": "Contacto"
+    "contact": "Contacto",
+    "camping": "Cámping",
+    "volunteer": "Voluntario",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "youtube": "YouTube",
+    "blog": "Blog"
   },
   "hero": {
     "title": "Descubre nuestros retiros",
@@ -54,6 +60,7 @@
     "priceLabel": "Precio para",
     "rateLabel": "Precio",
     "reserveButton": "Reserva ahora",
-    "selectDate": "Seleccionar fecha"
+    "selectDate": "Seleccionar fecha",
+    "rateVATlabel": "Tasa (incluido 13% de IVA)"
   }
 }

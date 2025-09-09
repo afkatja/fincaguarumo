@@ -63,6 +63,7 @@
     "priceLabel": "Preis für",
     "rateLabel": "Preis",
     "reserveButton": "Reserve now",
-    "selectDate": "Datum auswählen"
+    "selectDate": "Datum auswählen",
+    "rateVATlabel": "Rate (inkl. 13% Mehrwertsteuer)"
   }
 }
