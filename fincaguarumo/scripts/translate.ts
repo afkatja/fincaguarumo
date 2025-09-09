@@ -55,7 +55,7 @@ async function syncTranslations(): Promise<void> {
   const enData = JSON.parse(await fs.readFile(enPath, "utf-8"))
 
   for (const lang of languages) {
-    if (lang === "en") continue
+    if (lang.value === "en") continue
 
     const filePath = path.join(localesDir, `${lang}.json`)
     let data: Record<string, any> = {}
