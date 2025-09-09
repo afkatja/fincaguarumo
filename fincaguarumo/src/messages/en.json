@@ -15,7 +15,8 @@
   "cards": {
     "new": "New",
     "featured": "Featured",
-    "readMore": "Read more"
+    "readMore": "Read more",
+    "test": "test"
   },
   "booking": {
     "bookNow": "Book now",
