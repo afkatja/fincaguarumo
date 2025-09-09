@@ -38,6 +38,11 @@ export const homeType = defineType({
       title: "Video",
     }),
     defineField({
+      name: "background_media_poster",
+      type: "file",
+      title: "Video poster",
+    }),
+    defineField({
       name: "featured_content_title",
       type: "string",
     }),

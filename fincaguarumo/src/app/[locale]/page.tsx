@@ -1,3 +1,7 @@
+import React, { Suspense } from "react"
+import dynamic from "next/dynamic"
+import { ArrowDown } from "lucide-react"
+import Link from "next/link"
 import { sanityFetch } from "../../sanity/lib/client"
 import {
   FEATURED_POSTS_QUERY,
@@ -8,13 +12,11 @@ import TourItem from "./(pages)/tours/TourItem"
 import Video from "../../components/Video"
 import FeaturedContent from "../../components/FeaturedContent"
 import FadeInObserver from "../../components/FadeInObserver"
-import { ArrowDown } from "lucide-react"
-import Link from "next/link"
-import { Suspense } from "react"
 import Loading from "./(pages)/loading"
 import RichText from "../../components/RichText"
-import VideoOpenZip from "./components/VideoOpenZip"
 import { SanityImageObject } from "../../types"
+
+const VideoOpenZip = dynamic(() => import("./components/VideoOpenZip"))
 
 export default async function Home({ params }: { params: any }) {
   const { locale } = await params
@@ -26,7 +28,8 @@ export default async function Home({ params }: { params: any }) {
     featured_content_title?: string
     featured_blog_title?: string
     intro_body?: any
-    mediaUrl?: any
+    mediaUrl?: { url: string }
+    mediaPoster?: { url: string }
   } = await sanityFetch({
     query: HOME_QUERY,
     params: { language: locale },
@@ -94,8 +97,8 @@ export default async function Home({ params }: { params: any }) {
     }))
 
   return (
-    <VideoOpenZip>
-      <Suspense fallback={<Loading className="absolute" />}>
+    <Suspense fallback={<Loading className="absolute" />}>
+      <VideoOpenZip>
         <div className="parallax-bg relative w-full h-screen">
           {content?.mediaUrl && (
             <Video
@@ -103,7 +106,9 @@ export default async function Home({ params }: { params: any }) {
               autoPlay
               loop={false}
               muted
-              className="object-cover w-full h-full delay-2000 opacity-0 transition-opacity duration-700 animate-fade"
+              playsInline
+              poster={content?.mediaPoster?.url}
+              className="object-cover w-full h-full opacity-0 transition-opacity duration-700 animate-fade"
             />
           )}
           <div className="hero text-center text-zinc-50 drop-shadow-sharp">
@@ -148,7 +153,7 @@ export default async function Home({ params }: { params: any }) {
             />
           )}
         </div>
-      </Suspense>
-    </VideoOpenZip>
+      </VideoOpenZip>
+    </Suspense>
   )
 }

@@ -234,6 +234,7 @@ export const HOME_QUERY = groq`
     featured_blog_title, 
     slug, 
     'mediaUrl': background_media.asset->{url}, 
+    'mediaPoster': background_media_poster.asset->{url},
     intro_body[] {
       ...,
       markDefs[] {

@@ -50,16 +50,15 @@ const VideoOpenZip = ({ children }: { children: React.ReactNode }) => {
         )
 
       video.addEventListener("ended", () => {
-        tl
-          ?.to(
-            videoContainer,
-            {
-              delay: 2,
-              duration: 2,
-              height: "1px",
-            },
-            1
-          )
+        tl?.to(
+          videoContainer,
+          {
+            delay: 2,
+            duration: 2,
+            height: "1px",
+          },
+          1
+        )
           .to(
             videoContainer,
             {
@@ -133,6 +132,7 @@ const VideoOpenZip = ({ children }: { children: React.ReactNode }) => {
             ref={videoRef}
             className="w-11/12 mx-auto object-contain"
             muted
+            playsInline
           >
             <source src="/assets/title.mp4" type="video/mp4" />
             Your browser does not support the video tag.
