@@ -7,7 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "codegen": "npx sanity typegen generate"
+    "codegen": "npx sanity typegen generate",
+    "i18n:build": "npx tsc scripts/translate.ts --outDir dist --esModuleInterop --allowSyntheticDefaultImports",
+    "i18n:run": "npm run i18n:build && node dist/translate.js",
+    "i18n:watch": "nodemon --watch /src/messages/en.json --exec \"npm run i18n:run\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "src/messages/en.json": [
+      "npm run i18n:run"
+    ]
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -58,6 +67,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.62.0",
     "react-loading-skeleton": "^3.5.0",
+    "react-remove-scroll": "^2.7.1",
     "react-responsive": "^10.0.1",
     "react-select": "^5.10.2",
     "sanity": "^3.99.0",
@@ -72,20 +82,26 @@
   },
   "devDependencies": {
     "@formatjs/intl-localematcher": "^0.5.10",
+    "@next/bundle-analyzer": "^15.5.2",
     "@tailwindcss/typography": "^0.5.16",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^20.19.10",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
+    "@vitalets/google-translate-api": "^9.2.1",
     "eslint": "^8.57.1",
     "eslint-config-next": "14.2.4",
     "formatjs": "^0.1.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.6",
     "negotiator": "^0.6.4",
     "next-intl": "^3.26.5",
+    "nodemon": "^3.1.10",
     "postcss": "^8.5.6",
     "postcss-import": "^16.1.1",
     "tailwindcss": "^3.4.17",
     "tailwindcss-typography": "^3.1.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
     "uuid": "^10.0.0"
   }
