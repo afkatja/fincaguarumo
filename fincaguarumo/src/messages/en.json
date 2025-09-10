@@ -15,8 +15,7 @@
   "cards": {
     "new": "New",
     "featured": "Featured",
-    "readMore": "Read more",
-    "test": "test"
+    "readMore": "Read more"
   },
   "booking": {
     "bookNow": "Book now",
@@ -39,9 +38,9 @@
     "person": "person",
     "phoneError": "Please enter a valid phone number",
     "phoneLabel": "Your phone number *",
-    "priceLabel": "Rate (excl VAT) for",
-    "rateLabel": "Rate (excl VAT)",
-    "rateVATlabel": "Rate (incl 13% VAT)",
+    "priceLabel": "Price (excl. VAT) for",
+    "rateLabel": "Price (excl. VAT)",
+    "rateVATlabel": "Price (incl. 13% VAT)",
     "reserveButton": "Reserve now",
     "selectDate": "Select date"
   }

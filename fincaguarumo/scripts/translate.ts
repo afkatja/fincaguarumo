@@ -1,15 +1,30 @@
 import fs from "fs/promises"
 import path from "path"
 import { translate } from "@vitalets/google-translate-api"
+import { HttpProxyAgent } from "http-proxy-agent"
+
 import { languages } from "../src/config"
 
 type Lang = (typeof languages)[number]
+const agent = new HttpProxyAgent("http://97.74.87.226:80")
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 async function autoTranslate(text: string, target: Lang): Promise<string> {
   try {
-    const res = await translate(text, { to: target.value })
+    const res = await translate(text, {
+      to: target.value,
+      fetchOptions: { agent },
+    })
+    await sleep(500)
+    console.log("translated", res.text)
+
     return res.text
-  } catch {
+  } catch (err) {
+    console.log("error auto translating", err)
+
     return `__MISSING_${target.value.toUpperCase()}__`
   }
 }
@@ -57,7 +72,7 @@ async function syncTranslations(): Promise<void> {
   for (const lang of languages) {
     if (lang.value === "en") continue
 
-    const filePath = path.join(localesDir, `${lang}.json`)
+    const filePath = path.join(localesDir, `${lang.value}.json`)
     let data: Record<string, any> = {}
     try {
       data = JSON.parse(await fs.readFile(filePath, "utf-8"))
@@ -69,7 +84,7 @@ async function syncTranslations(): Promise<void> {
 
     if (updated) {
       await fs.writeFile(filePath, JSON.stringify(synced, null, 2) + "\n")
-      console.log(`✅ Updated translations for ${lang}.json`)
+      console.log(`✅ Updated translations for ${lang.value}.json`)
     }
   }
 }

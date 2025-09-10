@@ -5,7 +5,13 @@
     "activities": "Мероприятия",
     "salsa": "Сальса",
     "about": "О нас",
-    "contact": "Контакты"
+    "contact": "Контакты",
+    "camping": "Кемпинг",
+    "volunteer": "Волонтер",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "youtube": "YouTube",
+    "blog": "Блог"
   },
   "hero": {
     "title": "Откройте для себя наши ретриты",
@@ -54,6 +60,7 @@
     "priceLabel": "Цена за",
     "rateLabel": "Цена",
     "reserveButton": "Резервировать",
-    "selectDate": "Выберите дату"
+    "selectDate": "Выберите дату",
+    "rateVATlabel": "Цена (в том числе 13% НДС)"
   }
 }

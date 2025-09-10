@@ -5,7 +5,13 @@
     "activities": "Activiteiten",
     "salsa": "Salsa",
     "about": "Over ons",
-    "contact": "Contact"
+    "contact": "Contact",
+    "camping": "Camping",
+    "volunteer": "Vrijwilliger",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "youtube": "YouTube",
+    "blog": "Blog"
   },
   "hero": {
     "title": "Ontdek onze retraites",
@@ -54,6 +60,7 @@
     "priceLabel": "Prijs voor",
     "rateLabel": "Prijs",
     "reserveButton": "Boek nu",
-    "selectDate": "Selecteer datum"
+    "selectDate": "Selecteer datum",
+    "rateVATlabel": "Prijs (incl. 13% btw)"
   }
 }

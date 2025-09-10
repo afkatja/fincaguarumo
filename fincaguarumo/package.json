@@ -9,7 +9,7 @@
     "lint": "next lint",
     "codegen": "npx sanity typegen generate",
     "i18n:build": "npx tsc scripts/translate.ts --outDir dist --esModuleInterop --allowSyntheticDefaultImports",
-    "i18n:run": "npm run i18n:build && node dist/translate.js",
+    "i18n:run": "npm run i18n:build && node dist/scripts/translate.js",
     "i18n:watch": "nodemon --watch /src/messages/en.json --exec \"npm run i18n:run\"",
     "prepare": "husky"
   },
