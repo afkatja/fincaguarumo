@@ -113,10 +113,9 @@ export default async function Layout({
   if (!i18n.languages.map(lang => lang.id).includes(locale)) return null
 
   const draft = await draftMode()
-  const baseUrl = "https://fincaguarumo.com"
 
   return (
-    <html lang={locale} data-scroll-behavior="smooth">
+    <html lang={locale} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body
         className={cn(
           locale === "ru"
