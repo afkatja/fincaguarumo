@@ -1,10 +1,12 @@
 /** @type {import('next').NextConfig} */
 
 import createNextIntlPlugin from 'next-intl/plugin';
+import withBundleAnalyzer from '@next/bundle-analyzer'
 
 const nextConfig = {
   experimental: {
     taint: true,
+    optimizePackageImports: ['gsap', 'lucide-react'],
   },
   images: {
     remotePatterns: [
@@ -47,5 +49,9 @@ const nextConfig = {
  
 const withNextIntl = createNextIntlPlugin();
 
-export default withNextIntl(nextConfig);
+const withBundleOptimizer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
+
+export default withBundleOptimizer(withNextIntl(nextConfig));
 
