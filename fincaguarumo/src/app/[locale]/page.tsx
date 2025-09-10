@@ -104,7 +104,7 @@ export default async function Home({ params }: { params: any }) {
             <Video
               src={content?.mediaUrl?.url}
               autoPlay
-              loop={false}
+              loop
               muted
               playsInline
               poster={content?.mediaPoster?.url}
