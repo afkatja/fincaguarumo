@@ -18,7 +18,7 @@ const calculateTotal = (
     return {
       priceForPeople: priceWithoutVat,
       priceWithVat: priceWithoutVat * 1.13,
-      total: priceWithoutVat * guests,
+      total: priceWithoutVat * 1.13 * guests,
     }
   } else {
     const stay = duration ?? 1
@@ -28,7 +28,7 @@ const calculateTotal = (
       return {
         priceForPeople,
         priceWithVat: priceForPeople * 1.13,
-        total: priceForPeople * stay * 0.9,
+        total: priceForPeople * 1.13 * stay * 0.9,
       }
     }
     if (stay >= 30) {
@@ -36,14 +36,14 @@ const calculateTotal = (
       return {
         priceForPeople,
         priceWithVat: priceForPeople * 1.13,
-        total: priceForPeople * stay * 0.8,
+        total: priceForPeople * 1.13 * stay * 0.8,
       }
     }
     // no discount
     return {
       priceForPeople,
       priceWithVat: priceForPeople * 1.13,
-      total: priceForPeople * stay,
+      total: priceForPeople * 1.13 * stay,
     }
   }
 }
