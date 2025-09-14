@@ -42,8 +42,20 @@ const Video = ({
   const [showVideo, setShowVideo] = useState(false)
 
   useEffect(() => {
-    const id = requestIdleCallback(() => setShowVideo(true))
-    return () => cancelIdleCallback(id)
+    let id: number | ReturnType<typeof setTimeout> = 0
+    if (!window.requestIdleCallback) {
+      id = setTimeout(() => setShowVideo(true), 1)
+    } else {
+      id = requestIdleCallback(() => setShowVideo(true))
+    }
+
+    return () => {
+      if (!window.cancelIdleCallback) {
+        clearTimeout(id)
+      } else {
+        cancelIdleCallback(id as number)
+      }
+    }
   }, [])
 
   useEffect(() => {

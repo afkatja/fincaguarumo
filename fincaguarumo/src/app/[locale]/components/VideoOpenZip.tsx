@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import gsap from "gsap"
 import { useMediaQuery } from "react-responsive"
 
@@ -8,14 +8,16 @@ const VideoOpenZip = ({ children }: { children: React.ReactNode }) => {
   const videoContainerRef = useRef<HTMLDivElement>(null)
   const mainContentRef = useRef<HTMLDivElement>(null)
   const animationContainerRef = useRef<HTMLDivElement>(null)
-
-  const hasPlayed =
-    typeof window !== "undefined" &&
-    localStorage.getItem("videoPlayed") === "true"
+  const [hasPlayed, setHasPlayed] = useState(false)
 
   const isMobile = useMediaQuery({ query: "(max-width: 640px)" })
 
   useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      localStorage.getItem("videoPlayed") === "true"
+    )
+      setHasPlayed(true)
     if (hasPlayed) return
 
     const video = videoRef.current
@@ -98,7 +100,7 @@ const VideoOpenZip = ({ children }: { children: React.ReactNode }) => {
         tl.kill()
       }
     }
-  })
+  }, [hasPlayed])
 
   if (isMobile) return <div className="overflow-hidden flex-1">{children}</div>
 
