@@ -52,9 +52,9 @@ export default function CheckoutForm() {
     // layout: "accordion" as const,
   }
 
-  const currency = bookingData.bookingDetails.currency?.toUpperCase() ?? "USD"
-  const amount = Number(bookingData.bookingDetails.totalPrice || 0).toFixed(2)
-  console.log(checkout.currencyOptions)
+  // const currency = bookingData.bookingDetails.currency?.toUpperCase() ?? "USD"
+  // const amount = Number(bookingData.bookingDetails.totalPrice || 0).toFixed(2)
+  // console.log(checkout.currencyOptions)
 
   return (
     <>
