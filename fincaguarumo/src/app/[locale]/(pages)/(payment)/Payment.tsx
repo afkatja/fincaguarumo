@@ -6,6 +6,7 @@ import { CheckoutProvider } from "@stripe/react-stripe-js"
 import CheckoutForm from "./CheckoutForm"
 import { useBooking } from "../../BookingProvider"
 import Loading from "../loading"
+import { serializeBookingData } from "../../../../types"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 if (!publishableKey)
@@ -20,16 +21,18 @@ const stripePromise = loadStripe(publishableKey, {
 const Payment = ({ ...props }: { [prop: string]: any }) => {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const { bookingData } = useBooking()
+
   const fetchData = useMemo(async () => {
+    const serializedData = serializeBookingData(bookingData)
     try {
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerDetails: bookingData.customerDetails,
+          customerDetails: serializedData.customerDetails,
           bookingDetails: {
-            ...bookingData.bookingDetails,
-            type: bookingData.bookingDetails.type,
+            ...serializedData.bookingDetails,
+            type: serializedData.bookingDetails.type,
           },
         }),
       })

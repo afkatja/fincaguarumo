@@ -40,4 +40,63 @@ export const initialBookingData = {
     geo: { lat: 0, lng: 0 },
   },
 }
+
+type Serialize<T> = {
+  [K in keyof T]: T[K] extends Date
+    ? string
+    : T[K] extends object
+      ? Serialize<T[K]>
+      : T[K]
+}
+export type SerializedBookingData = Serialize<BookingData>
 export type BookingData = typeof initialBookingData
+
+export function serializeBookingData(data: BookingData): SerializedBookingData {
+  return {
+    ...data,
+    bookingDetails: {
+      ...data.bookingDetails,
+      date: data.bookingDetails.date.toISOString(),
+      checkIn: data.bookingDetails.checkIn.toISOString(),
+      checkOut: data.bookingDetails.checkOut.toISOString(),
+    },
+  }
+}
+
+export function deserializeBookingData(
+  data: SerializedBookingData
+): BookingData {
+  return {
+    ...data,
+    bookingDetails: {
+      ...data.bookingDetails,
+      date: new Date(data.bookingDetails.date),
+      checkIn: new Date(data.bookingDetails.checkIn),
+      checkOut: new Date(data.bookingDetails.checkOut),
+    },
+  }
+}
+
+// LocalStorage utilities that handle date conversion
+export function saveBookingDataToLocalStorage(data: BookingData): void {
+  if (typeof window !== "undefined") {
+    const serialized = serializeBookingData(data)
+    localStorage.setItem("bookingData", JSON.stringify(serialized))
+  }
+}
+
+export function loadBookingDataFromLocalStorage(): BookingData | null {
+  if (typeof window !== "undefined") {
+    const storedData = localStorage.getItem("bookingData")
+    if (storedData) {
+      try {
+        const parsed: SerializedBookingData = JSON.parse(storedData)
+        return deserializeBookingData(parsed)
+      } catch {
+        // ignore corrupted data
+        return null
+      }
+    }
+  }
+  return null
+}

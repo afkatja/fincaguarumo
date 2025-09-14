@@ -29,6 +29,7 @@ const DatePicker = ({
   className,
 }: IDatePicker) => {
   const params = useParams()
+
   return (
     <Popover open={isOpen}>
       {isOpen && (
@@ -48,7 +49,7 @@ const DatePicker = ({
             </span>
           ) : (
             <span className="font-normal">
-              {new Date(selectedDate).toLocaleDateString(params.locale, {
+              {(selectedDate ?? new Date()).toLocaleDateString(params.locale, {
                 year: "numeric",
                 month: "long",
                 day: "numeric",

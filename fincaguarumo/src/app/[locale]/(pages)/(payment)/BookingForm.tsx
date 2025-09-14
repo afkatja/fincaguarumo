@@ -174,7 +174,7 @@ const BookingForm = ({
                     ...bookingData,
                     bookingDetails: {
                       ...bookingData.bookingDetails,
-                      checkOut: new Date(date),
+                      checkOut: date,
                     },
                   })
                   setActivePopover(null)

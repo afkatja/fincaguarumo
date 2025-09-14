@@ -1,6 +1,11 @@
 "use client"
 import { createContext, useContext, useState, useEffect } from "react"
-import { BookingData, initialBookingData } from "../../types"
+import {
+  BookingData,
+  initialBookingData,
+  loadBookingDataFromLocalStorage,
+  saveBookingDataToLocalStorage,
+} from "../../types"
 
 const BookingContext = createContext<{
   bookingData: BookingData
@@ -18,22 +23,13 @@ export const BookingProvider = ({
   children: React.ReactNode
 }) => {
   const [bookingData, setBookingData] = useState<BookingData>(() => {
-    if (typeof window !== "undefined") {
-      const storedData = localStorage.getItem("bookingData")
-      if (storedData) {
-        try {
-          return JSON.parse(storedData)
-        } catch {
-          // ignore corrupted data
-        }
-      }
-    }
-    return initialBookingData
+    const storedData = loadBookingDataFromLocalStorage()
+    return storedData || initialBookingData
   })
 
   useEffect(() => {
     if (bookingData) {
-      localStorage.setItem("bookingData", JSON.stringify(bookingData))
+      saveBookingDataToLocalStorage(bookingData)
     }
   }, [bookingData])
 
