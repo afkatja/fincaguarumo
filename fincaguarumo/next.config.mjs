@@ -53,7 +53,29 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/villa-bruno',
+        destination: '/stay',
+        permanent: true, // 301 redirect for SEO
+      },
+      // You can also add variations
+      {
+        source: '/accommodation',
+        destination: '/stay',
+        permanent: true,
+      },
+      {
+        source: '/eco-villa',
+        destination: '/stay',
+        permanent: true,
+      }
+    ]
+  }
 };
+
+  
  
 const withNextIntl = createNextIntlPlugin();
 
