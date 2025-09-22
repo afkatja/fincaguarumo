@@ -58,16 +58,18 @@ const PageLayout = ({
             }
           />
         )}
-        <section className="!w-11/12 !pt-6 lg:py-2 prose lg:prose-lg mx-auto">
-          <Title
-            titleClassName="text-2xl font-bold text-guarumo-primary dark:text-zinc-50"
-            title={description}
-            Heading="h3"
-            icon={{
-              iconClassName: "fill-guarumo-accent dark:fill-zinc-50",
-            }}
-          />
-        </section>
+        {description && (
+          <section className="!w-11/12 !pt-6 lg:py-2 prose lg:prose-lg mx-auto">
+            <Title
+              titleClassName="text-2xl font-bold text-guarumo-primary dark:text-zinc-50"
+              title={description}
+              Heading="h3"
+              icon={{
+                iconClassName: "fill-guarumo-accent dark:fill-zinc-50",
+              }}
+            />
+          </section>
+        )}
         {body && <RichText body={body} icon={iconProp} />}
         {children}
       </div>

@@ -1,23 +1,7 @@
 "use client"
-import Script from "next/script"
 import React, { useMemo, useState } from "react"
 import { FAQType } from "../types"
 import { ChevronDown, ChevronUp } from "lucide-react"
-
-const jsonLd = (faq: FAQType) => ({
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
-      },
-    },
-  ],
-})
 
 /**
  * Render a single FAQ item.
@@ -94,17 +78,6 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
                           {faq.answer}
                         </dd>
                       </dl>
-                      <Script
-                        id={`json-ld-${faq.slug.current}`}
-                        strategy="afterInteractive"
-                        type="application/ld+json"
-                        dangerouslySetInnerHTML={{
-                          __html: JSON.stringify(jsonLd(faq)).replace(
-                            /</g,
-                            "\\u003c"
-                          ),
-                        }}
-                      />
                     </li>
                   ))}
                 </ul>

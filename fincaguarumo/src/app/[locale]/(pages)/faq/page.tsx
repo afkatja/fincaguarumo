@@ -1,10 +1,27 @@
 import React from "react"
 import { sanityFetch } from "@/sanity/lib/client"
 import { FAQ_QUERY } from "@/sanity/lib/queries"
+import Layout from "../pagesLayout"
 import NotFound from "../../not-found"
 import { FAQType } from "@/types"
 import FAQCategories from "@/components/FAQ"
 import { loadTranslations } from "@/lib/utils"
+import Title from "@/components/Title"
+import Script from "next/script"
+
+const jsonLd = (faqs: FAQType[]) => ({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map(faq => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.answer,
+    },
+    keywords: faq.keywords?.join(", "),
+  })),
+})
 
 const FAQpage = async ({ params }: { params: any }) => {
   const { locale } = await params
@@ -16,15 +33,24 @@ const FAQpage = async ({ params }: { params: any }) => {
   })
   if (!faqs) return NotFound()
 
-  console.log({ faqs })
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">
-        {messages.faq?.title ?? "Frequently Asked Questions"}
-      </h1>
-      <FAQCategories faqs={faqs} />
-    </div>
+    <Layout
+      locale={locale}
+      pageName="FAQ"
+      title={messages.faq?.title ?? "Frequently Asked Questions"}
+    >
+      <div className="w-11/12 mx-auto py-8">
+        <FAQCategories faqs={faqs} />
+      </div>
+      <Script
+        id={"json-ld-faq"}
+        strategy="afterInteractive"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd(faqs)).replace(/</g, "\\u003c"),
+        }}
+      />
+    </Layout>
   )
 }
 

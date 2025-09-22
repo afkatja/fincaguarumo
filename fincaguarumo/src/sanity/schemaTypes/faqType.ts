@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity"
+import { isUniqueOtherThanLanguage } from "../../lib/utils"
 
 export const faqType = defineType({
   name: "faq",
@@ -11,6 +12,12 @@ export const faqType = defineType({
       type: "string",
       description: "Internal title for reference (not displayed on site)",
       validation: Rule => Rule.required().max(100),
+    }),
+    defineField({
+      name: "language",
+      type: "string",
+      readOnly: true,
+      hidden: true,
     }),
     defineField({
       name: "category",
@@ -70,6 +77,7 @@ export const faqType = defineType({
       options: {
         source: "question",
         maxLength: 96,
+        isUnique: isUniqueOtherThanLanguage,
       },
       validation: Rule => Rule.required(),
     }),
