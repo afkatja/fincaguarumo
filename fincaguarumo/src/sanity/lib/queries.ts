@@ -9,7 +9,7 @@ export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][
 
 export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && language == $language][0] {
   title, subtitle, description, mainImage, body, language, slug, isPublished, showBookingOptions, showBookingDialog,
-  slideshow->{images}, price,
+  slideshow->{images}, price, faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category },
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -23,7 +23,8 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
         slug, 
         body,
         showBookingOptions,
-        showBookingDialog
+        showBookingDialog,
+        faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category },
       })
     }
 }`
@@ -60,8 +61,9 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
 
 export const PAGE_QUERY = groq`
   *[_type == 'page' && slug.current == $pageName && language == $language][0] {
-    title, subtitle, description, mainImage, body 
-    , language, isPublished,
+    title, subtitle, description, mainImage, body, language, isPublished, categories[]->title, showBookingOptions, showBookingDialog,
+    slideshow->{images}, price,
+    faq[]->{question, answer, slug},
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -72,7 +74,9 @@ export const PAGE_QUERY = groq`
         subtitle,
         mainImage,
         slug, 
-        body, isPublished
+        body, 
+        isPublished,
+        faq[]->{ question, answer, slug },
       })
     }
   }
@@ -260,5 +264,20 @@ export const HOME_QUERY = groq`
 export const GALLERY_QUERY = groq`
   *[_type == 'gallery' && $category in categories[] -> title][0] {
     title, images
+  }
+`
+
+export const FAQ_QUERY = groq`
+  *[_type == 'faq' && language == $language] | order(displayOrder asc) {
+    category, question, answer, keywords, showOnVillaBruno, slug, language,
+    "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->{
+        language,
+        category, question, answer, keywords, showOnVillaBruno, slug
+      })
+    }
   }
 `

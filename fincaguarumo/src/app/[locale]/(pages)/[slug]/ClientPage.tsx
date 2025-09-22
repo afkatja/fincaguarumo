@@ -9,10 +9,14 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { BOOKING_TYPE, BookingData } from "../../../../types"
+import { BOOKING_TYPE, BookingData, FAQType } from "@/types"
 import BookingDialog from "../BookingDialog"
 import { Content } from "./page"
 import { useBooking } from "../../BookingProvider"
+import FAQ from "@/components/FAQ"
+import Title from "@/components/Title"
+import Link from "next/link"
+import Icon from "../../../../components/Icon"
 
 type Messages = {
   booking?: {
@@ -59,6 +63,30 @@ const ClientPage = ({
   return (
     <>
       <RichText body={content?.body} />
+      <div className="w-11/12 mx-auto mt-3 mb-8 flex flex-col">
+        <Title
+          title="FAQ"
+          Heading="h2"
+          titleClassName="text-3xl font-bold text-guarumo-primary"
+          icon={{ title: "Guarumo" }}
+        />
+        <div className="flex items-center gap-2 mt-4">
+          {content?.faq && content?.faq.length > 0 && (
+            <FAQ faqs={content.faq} />
+          )}
+          <Link
+            href={`/${locale}/faq`}
+            className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
+          >
+            More FAQ
+            <Icon
+              icon="ArrowRight"
+              className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+              color="currentColor"
+            />
+          </Link>
+        </div>
+      </div>
       <footer className="w-11/12 flex justify-center gap-4 mx-auto my-3 sticky bottom-4">
         {content?.showBookingDialog && (
           <BookingDialog
