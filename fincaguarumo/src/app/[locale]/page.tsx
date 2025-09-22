@@ -15,8 +15,9 @@ import FadeInObserver from "../../components/FadeInObserver"
 import Loading from "./(pages)/loading"
 import RichText from "../../components/RichText"
 import { SanityImageObject } from "../../types"
+import HomeMap from "../../components/HomeMap"
 
-const VideoOpenZip = dynamic(() => import("./components/VideoOpenZip"))
+const VideoOpenZip = dynamic(() => import("../../components/VideoOpenZip"))
 
 export default async function Home({ params }: { params: any }) {
   const { locale } = await params
@@ -24,6 +25,7 @@ export default async function Home({ params }: { params: any }) {
   const content: {
     hero_title: string
     hero_slogan: string
+    hero_body?: any
     subtitle?: string
     featured_content_title?: string
     featured_blog_title?: string
@@ -121,6 +123,10 @@ export default async function Home({ params }: { params: any }) {
             <h3 className="text-xl leading-normal opacity-0 transition-opacity duration-700 delay-1000 animate-fade">
               {content?.subtitle}
             </h3>
+            <RichText
+              body={content?.hero_body}
+              className=" mx-auto  !text-zinc-50 mt-5 opacity-0 transition-opacity duration-700 delay-1000 animate-fade"
+            />
           </div>
           <div className="animate-slide transition-transform duration-1000 delay-1000">
             <FadeInObserver threshold={0.5} rootMargin="0px 0px -100px 0px">
@@ -139,6 +145,7 @@ export default async function Home({ params }: { params: any }) {
               <RichText body={content?.intro_body} className="mx-0" />
             ) : null}
           </div>
+          <HomeMap />
 
           <FeaturedContent
             href="tours"

@@ -228,6 +228,7 @@ export const HOME_QUERY = groq`
   *[_type=='home' && language == $language][0] {
     hero_title, 
     hero_slogan, 
+    hero_body,
     subtitle, 
     language, 
     featured_content_title,
@@ -250,7 +251,7 @@ export const HOME_QUERY = groq`
       ^._id in translations[].value._ref
     ][0].translations[]{
       ...(value->{
-        hero_title, hero_slogan, subtitle, language, featured_content_title, slug, featured_blog_title, intro_body
+        hero_title, hero_slogan, hero_body,subtitle, language, featured_content_title, slug, featured_blog_title, intro_body
       })
     }
   }

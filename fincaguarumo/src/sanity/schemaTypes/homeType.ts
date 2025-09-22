@@ -29,6 +29,10 @@ export const homeType = defineType({
       type: "string",
     }),
     defineField({
+      name: "hero_body",
+      type: "blockContent",
+    }),
+    defineField({
       name: "intro_body",
       type: "blockContent",
     }),
