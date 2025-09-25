@@ -16,6 +16,7 @@ import { documentInternationalization } from "@sanity/document-internationalizat
 import { i18n } from "./languages"
 import { internationalizedArray } from "sanity-plugin-internationalized-array"
 import { media } from "sanity-plugin-media"
+import { TranslateTool } from "./src/app/studio/tool/translate"
 
 export default defineConfig({
   basePath: "/studio",
@@ -23,6 +24,10 @@ export default defineConfig({
   dataset,
   // Add and edit the content schema in the './sanity/schema' folder
   schema,
+  deployment: {
+    appId: "ayjo3k7e4mt39zk8xwklkxtq",
+    autoUpdates: true,
+  },
   plugins: [
     structureTool(),
     // Vision is a tool that lets you query your content with GROQ in the studio
@@ -47,5 +52,14 @@ export default defineConfig({
       buttonAddAll: false,
     }),
     media(),
+  ],
+  tools: [
+    // Add custom translation tool
+    {
+      name: "translate",
+      title: "Auto Translate",
+      component: TranslateTool,
+      icon: () => "🌍",
+    },
   ],
 })
