@@ -9,13 +9,13 @@ import {
 import { Button } from "@/components/ui/button"
 import Loading from "../loading"
 import Title from "@/components/Title"
-import { useBooking } from "../../BookingProvider"
+// import { useBooking } from "../../BookingProvider"
 
 export default function CheckoutForm() {
   const stripe = useStripe()
   const checkout = useCheckout()
 
-  const { bookingData } = useBooking()
+  // const { bookingData } = useBooking()
 
   const [message, setMessage] = useState<null | string | undefined>(null)
   const [isLoading, setIsLoading] = useState(false)
