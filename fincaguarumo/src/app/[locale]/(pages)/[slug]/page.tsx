@@ -1,5 +1,6 @@
 import React from "react"
 import { notFound } from "next/navigation"
+import { Metadata } from "next"
 
 import { sanityFetch } from "@/sanity/lib/client"
 import { PAGES_QUERY } from "@/sanity/lib/queries"
@@ -49,12 +50,44 @@ export type Content = {
   faq?: FAQType[]
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: any
+}): Promise<Metadata> {
+  const { locale, slug } = await params
+
+  const content: Content = await sanityFetch({
+    query: PAGES_QUERY,
+    params: { slug, language: locale },
+    revalidate: 0,
+  })
+  return {
+    title: content?.title
+      ? `${content?.title} - Finca Guarumo`
+      : "Finca Guarumo",
+    description: content?.description
+      ? content?.description
+      : "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
+    openGraph: {
+      title: content?.title
+        ? `${content?.title} - Finca Guarumo`
+        : "Finca Guarumo",
+      description: content?.description
+        ? content?.description
+        : "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
+      url: `https://fincaguarumo.com/${slug.current}`,
+      siteName: "Finca Guarumo",
+    },
+  }
+}
+
 const Page = async ({ params }: { params: any }) => {
   const { locale, slug } = await params
 
   const content: Content = await sanityFetch({
     query: PAGES_QUERY,
-    params: { slug, language: "en" },
+    params: { slug, language: locale },
     revalidate: 0,
   })
 
