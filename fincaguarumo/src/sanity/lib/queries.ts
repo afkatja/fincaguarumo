@@ -46,12 +46,9 @@ export const FEATURED_POSTS_QUERY = groq`
     slug,
     isPublished,
     mainImage {
-      alt,
+      ...,
       "url": asset->url,
-      "metadata": asset->metadata {
-        lqip,
-        dimensions
-      }
+      "metadata": asset->metadata
     },
     'category': *[_type == 'category' && title == $category],
     "translations": *[
@@ -123,12 +120,9 @@ export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && la
   slug,
   title, 
   mainImage {
-    alt,
+    ...,
     "url": asset->url,
-    "metadata": asset->metadata {
-      lqip,
-      dimensions
-    }
+    "metadata": asset->metadata
   },
   description, 
   dateAdded,

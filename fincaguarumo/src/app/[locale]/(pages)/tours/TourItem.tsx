@@ -67,7 +67,6 @@ const TourItem = ({
   }
 
   const t = translations?.cards || fallbackTranslations.cards
-  console.log({ mainImage })
 
   return (
     <Link href={href} className="group tour no-underline " prefetch>
@@ -79,7 +78,7 @@ const TourItem = ({
             {mainImage && (
               <Image
                 src={mainImage.url}
-                alt={mainImage.alt ?? { title }}
+                alt={mainImage.alt ?? title}
                 width={800}
                 height={800}
                 className="mt-0 mb-3 max-h-52 object-cover"
