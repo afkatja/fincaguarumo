@@ -135,7 +135,9 @@ const VideoOpenZip = ({ children }: { children: React.ReactNode }) => {
             className="w-11/12 mx-auto object-contain"
             muted
             playsInline
+            preload="none"
           >
+            <source src="/assets/title.webm" type="video/webm" />
             <source src="/assets/title.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
