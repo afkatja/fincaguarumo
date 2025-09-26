@@ -4,7 +4,11 @@ import { urlFor } from "../../../../sanity/lib/image"
 import Image from "next/image"
 import { SanityImageObject } from "../../../../types"
 
-const Gallery = ({ gallery }: { gallery: { item: SanityImageObject }[] }) => {
+const Gallery = ({
+  gallery,
+}: {
+  gallery: { item: SanityImageObject & { metadata?: { lqip: string } } }[]
+}) => {
   const [active, setActive] = useState<null | number>(null)
 
   return (
@@ -28,6 +32,8 @@ const Gallery = ({ gallery }: { gallery: { item: SanityImageObject }[] }) => {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             loading="lazy"
             decoding="async"
+            placeholder="blur"
+            blurDataURL={item.item.metadata?.lqip}
           />
         </div>
       ))}
