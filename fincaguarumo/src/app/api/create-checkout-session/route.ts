@@ -6,7 +6,6 @@ import { BookingData, SerializedBookingData } from "../../../types"
 export async function POST(request: NextRequest) {
   const { customerDetails, bookingDetails }: SerializedBookingData =
     await getRequestBody(request)
-  console.log("BOOKING DETAILS", { bookingDetails })
 
   const stripeInstance = new Stripe(process.env.STRIPE_API_KEY ?? "")
 

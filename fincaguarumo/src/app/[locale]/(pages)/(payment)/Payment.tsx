@@ -72,7 +72,8 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
         options={{
           fetchClientSecret: () => fetchData,
           elementsOptions: options,
-          // adaptivePricing: { allowed: true },
+          // @ts-expect-error
+          adaptivePricing: { allowed: true },
         }}
         stripe={stripePromise}
         {...props}
