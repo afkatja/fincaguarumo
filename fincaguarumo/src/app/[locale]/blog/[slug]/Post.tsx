@@ -28,7 +28,7 @@ export function Post({
     >
       {parent && (
         <Breadcrumbs
-          className="max-w-[60rem] prose w-11/12 lg:prose-lg mx-auto"
+          className="max-w-[60rem] prose w-11/12 lg:prose-lg mx-auto mt-4"
           title={title as string}
           parent={parent}
         />
