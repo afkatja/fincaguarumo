@@ -56,7 +56,7 @@ export const PlaceProvider: React.FC<PlaceProviderProps> = ({
         }
 
         const result = await placeInstance.fetchFields(request)
-        console.log("Place details:", result.place)
+        // console.log("Place details:", result.place)
 
         // Extract the place details
         const placeDetails: PlaceDetails = {
