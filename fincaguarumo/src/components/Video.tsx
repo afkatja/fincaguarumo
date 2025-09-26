@@ -1,6 +1,8 @@
 "use client"
+import Head from "next/head"
 import Image from "next/image"
 import React, { useEffect, useRef, useState } from "react"
+import ImageFallback from "./imageFallback"
 
 const playPauseVideo = (videoElement: HTMLVideoElement) => {
   const options = {
@@ -30,24 +32,27 @@ const Video = ({
   loop,
   autoPlay,
   poster,
+  blurDataURL,
   ...props
 }: {
   src: string
   loop: boolean
   autoPlay: boolean
   poster?: string
+  blurDataURL?: string
   [prop: string]: any
 }) => {
   const ref = useRef(null)
   const [showVideo, setShowVideo] = useState(false)
+  const [videoVisible, setVideoVisible] = useState(false)
+  const rIC = (cb: FrameRequestCallback) =>
+    "requestIdleCallback" in window
+      ? (window as any).requestIdleCallback(cb)
+      : setTimeout(cb, 200)
 
   useEffect(() => {
     let id: number | ReturnType<typeof setTimeout> = 0
-    if (!window.requestIdleCallback) {
-      id = setTimeout(() => setShowVideo(true), 1)
-    } else {
-      id = requestIdleCallback(() => setShowVideo(true))
-    }
+    id = rIC(() => setShowVideo(true))
 
     return () => {
       if (!window.cancelIdleCallback) {
@@ -65,32 +70,25 @@ const Video = ({
 
   return (
     <>
+      <Head>
+        <link rel="preload" as="image" href={poster} />
+      </Head>
       {poster ? (
         <Image
           src={poster}
           alt="hero"
           width={1920}
           height={780}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
-            showVideo ? "opacity-0 pointer-events-none" : "opacity-100"
+            videoVisible ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
+          priority
+          placeholder="blur"
+          blurDataURL={blurDataURL}
         />
       ) : (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className={`text-muted-foreground/50 absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
-            showVideo ? "opacity-0 pointer-events-none" : "opacity-100"
-          }`}
-        >
-          <path
-            d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z"
-            fill="currentColor"
-          />
-        </svg>
+        <ImageFallback loading={!showVideo} />
       )}
       {showVideo && (
         <video
@@ -100,6 +98,12 @@ const Video = ({
           loop={loop}
           preload="none"
           poster={poster}
+          playsInline
+          onCanPlay={() => {
+            // fade-in the video over the poster
+            setVideoVisible(true)
+          }}
+          className={`object-cover transition-opacity duration-700 ${videoVisible ? "opacity-100" : "opacity-0"} ${props.className}`}
           {...props}
         />
       )}
