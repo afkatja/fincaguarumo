@@ -7,7 +7,6 @@ import RichText from "@/components/RichText"
 import Slideshow from "@/components/Slideshow"
 import { shuffle } from "@/lib/utils"
 import { SanityImageObject } from "../../../types"
-import Head from "next/head"
 
 const PageLayout = ({
   pageName,
@@ -30,16 +29,9 @@ const PageLayout = ({
   [props: string]: any
 }) => {
   if (!pageName) notFound()
+
   return (
     <>
-      <Head>
-        <link
-          rel="preconnect"
-          href="https://cdn.sanity.io"
-          crossOrigin="anonymous"
-        />
-      </Head>
-
       <Suspense fallback={<Loading className="absolute" />}>
         <div className="bg-zinc-50 dark:bg-zinc-900 pt-5 lg:pt-8 content-wrap z-10 flex-1">
           <div className="prose w-11/12 lg:prose-lg mx-auto relative z-20">
