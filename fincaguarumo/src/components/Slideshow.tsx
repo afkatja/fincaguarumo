@@ -11,13 +11,14 @@ const Slideshow = ({
   images: imagesProp,
   showExpand,
 }: {
-  images: SanityImageObject[]
+  images: (SanityImageObject & { metadata?: { lqip: string } })[]
   showExpand?: boolean
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const images = imagesProp.map(img => ({
     _type: img._type || "image",
     asset: img.asset,
+    metadata: img.metadata,
     src: urlFor(img)
       .width(2016)
       .height(1134)

@@ -29,6 +29,7 @@ const ImgSlider = React.memo(
       alt: string
       width?: number
       height?: number
+      metadata?: { lqip: string }
     })[]
     useArrows?: boolean
     options?: any
@@ -57,6 +58,8 @@ const ImgSlider = React.memo(
                 className="mx-auto object-cover"
                 priority={i === 0}
                 quality={100}
+                placeholder="blur"
+                blurDataURL={img.metadata?.lqip}
               />
             </CarouselItem>
           ))}

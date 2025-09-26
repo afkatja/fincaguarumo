@@ -1,4 +1,4 @@
-import React, { Suspense } from "react"
+import React from "react"
 import dynamic from "next/dynamic"
 import { ArrowDown } from "lucide-react"
 import Link from "next/link"
@@ -8,11 +8,10 @@ import {
   FEATURED_TOURS_QUERY,
   HOME_QUERY,
 } from "../../sanity/lib/queries"
-import TourItem from "./(pages)/tours/TourItem"
+import TourItem, { TourType } from "./(pages)/tours/TourItem"
 import Video from "../../components/Video"
 import FeaturedContent from "../../components/FeaturedContent"
 import FadeInObserver from "../../components/FadeInObserver"
-import Loading from "./(pages)/loading"
 import RichText from "../../components/RichText"
 import { SanityImageObject } from "../../types"
 import HomeMap from "../../components/HomeMap"
@@ -31,31 +30,20 @@ export default async function Home({ params }: { params: any }) {
     featured_blog_title?: string
     intro_body?: any
     mediaUrl?: { url: string }
-    mediaPoster?: { url: string }
+    mediaPoster?: { url: string; metadata?: { lqip?: string } }
   } = await sanityFetch({
     query: HOME_QUERY,
     params: { language: locale },
     revalidate: 0,
   })
 
-  const tours: {
-    title: string
-    description?: string
-    mainImage?: SanityImageObject & { alt: string }
-    slug: { current: string }
-    isPublished: boolean
-  }[] = await sanityFetch({
+  const tours: TourType[] = await sanityFetch({
     query: FEATURED_TOURS_QUERY,
     params: { language: locale },
     revalidate: 0,
   })
 
-  const posts: {
-    title: string
-    slug: { current: string }
-    mainImage?: SanityImageObject & { alt: string }
-    isPublished: boolean
-  }[] = await sanityFetch({
+  const posts: TourType[] = await sanityFetch({
     query: FEATURED_POSTS_QUERY,
     params: { category: "featured", language: locale },
     revalidate: 0,
@@ -99,7 +87,7 @@ export default async function Home({ params }: { params: any }) {
     }))
 
   return (
-    <Suspense fallback={<Loading className="absolute" />}>
+    <>
       <VideoOpenZip>
         <div className="parallax-bg relative w-full h-screen">
           {content?.mediaUrl && (
@@ -109,7 +97,8 @@ export default async function Home({ params }: { params: any }) {
               loop
               muted
               playsInline
-              poster={content?.mediaPoster?.url}
+              poster={`${content?.mediaPoster?.url}?auto=format`}
+              blurDataURL={content?.mediaPoster?.metadata?.lqip}
               className="object-cover w-full h-full opacity-0 transition-opacity duration-700 animate-fade"
             />
           )}
@@ -161,6 +150,6 @@ export default async function Home({ params }: { params: any }) {
           )}
         </div>
       </VideoOpenZip>
-    </Suspense>
+    </>
   )
 }

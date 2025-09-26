@@ -25,7 +25,7 @@ const Gallery = ({ gallery }: { gallery: { item: SanityImageObject }[] }) => {
             alt={item.item.alt || ""}
             width={1200}
             height={700}
-            sizes="(min-width: 1024px) 1200px, 100vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             loading="lazy"
             decoding="async"
           />
