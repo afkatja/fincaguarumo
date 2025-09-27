@@ -41,6 +41,7 @@ const Slideshow = ({
         />
         {showExpand && (
           <Button
+            name="expand-button"
             variant="outline"
             size="sm"
             className="absolute top-4 right-8 md:right-16 bg-background/50 hover:bg-background dark:bg-transparent dark:hover:bg-zinc-700 z-50 drop-shadow-md"
@@ -56,6 +57,7 @@ const Slideshow = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="relative w-full max-w-6xl max-h-[90vh] overflow-auto">
             <Button
+              name="close-button"
               variant="outline"
               size="sm"
               className="absolute top-2 right-4 bg-background/50 hover:bg-background z-10"

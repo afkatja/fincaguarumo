@@ -39,6 +39,7 @@ const datepicker = ({
           <Button
             variant="outline"
             className="flex-col items-start w-full h-auto"
+            name="select-date-button"
           >
             <span className="font-semibold uppercase text-[0.65rem]">
               {placeholder}

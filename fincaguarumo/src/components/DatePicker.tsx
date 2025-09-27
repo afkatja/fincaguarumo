@@ -42,6 +42,7 @@ const DatePicker = ({
         <Button
           variant="outline"
           className={`flex-col items-start w-full h-auto dark:bg-zinc-600 hover:dark:text-zinc-50 hover:transform-none ${className}`}
+          name="select-date-button"
         >
           {!selectedDate ? (
             <span className="font-semibold flex items-center">

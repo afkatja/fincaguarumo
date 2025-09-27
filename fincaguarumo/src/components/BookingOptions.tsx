@@ -123,18 +123,21 @@ export function BookingOptions({
 
         <div className="grid grid-cols-3 gap-4 mt-6">
           <Button
+            name="book-on-others-button"
             onClick={handleBookingClick}
             className="col-span-3 md:col-span-1"
           >
             {t.bookOnBooking}
           </Button>
           <Button
+            name="book-on-airbnb-button"
             onClick={handleAirbnbClick}
             className="col-span-3 md:col-span-1"
           >
             {t.bookOnAirbnb}
           </Button>
           <Button
+            name="book-on-expedia-button"
             onClick={handleExpediaClick}
             className="col-span-3 md:col-span-1"
           >

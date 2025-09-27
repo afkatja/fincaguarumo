@@ -101,7 +101,7 @@ const ClientPage = ({
         {content?.showBookingOptions && (
           <Dialog>
             <DialogTrigger asChild>
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" name="book-on-others-button">
                 {t?.bookOnOthers}
               </Button>
             </DialogTrigger>

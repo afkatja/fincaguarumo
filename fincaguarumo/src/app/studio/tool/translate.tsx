@@ -76,7 +76,8 @@ export function TranslateTool() {
           placeholder="Select a document to translate"
           value={selectedDoc?._id || ""}
           onChange={event => {
-            const doc = documents.find(d => d._id === event.target.value)
+            const target = event.target as HTMLSelectElement
+            const doc = documents.find(d => d._id === target.value) || null
             setSelectedDoc(doc)
           }}
         >

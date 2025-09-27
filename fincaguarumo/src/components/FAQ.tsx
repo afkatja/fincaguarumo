@@ -48,6 +48,7 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
             className="rounded-xl border border-zinc-200 bg-zinc-50 shadow-sm overflow-hidden transition-all"
           >
             <button
+              name="faq-category-button"
               className="w-full text-left p-5 bg-zinc-50 hover:bg-zinc-100 transition-colors flex items-center justify-between"
               onClick={() => setOpenKey(prev => (prev === key ? null : key))}
               aria-expanded={isOpen}
