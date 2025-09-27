@@ -33,6 +33,7 @@ const Video = ({
   autoPlay,
   poster,
   blurDataURL,
+  critical = false,
   ...props
 }: {
   src: string
@@ -40,6 +41,7 @@ const Video = ({
   autoPlay: boolean
   poster?: string
   blurDataURL?: string
+  critical?: boolean
   [prop: string]: any
 }) => {
   const ref = useRef(null)
@@ -51,6 +53,10 @@ const Video = ({
       : setTimeout(cb, 200)
 
   useEffect(() => {
+    if (critical) {
+      setShowVideo(true)
+      return
+    }
     let id: number | ReturnType<typeof setTimeout> = 0
     id = rIC(() => setShowVideo(true))
 
@@ -61,7 +67,7 @@ const Video = ({
         cancelIdleCallback(id as number)
       }
     }
-  }, [])
+  }, [critical])
 
   useEffect(() => {
     const vid = ref?.current
@@ -81,14 +87,15 @@ const Video = ({
           height={780}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
-            videoVisible ? "opacity-0 pointer-events-none" : "opacity-100"
+            videoVisible ? "opacity-0" : "opacity-100"
           }`}
           priority
+          fetchPriority="high"
           placeholder="blur"
           blurDataURL={blurDataURL}
         />
       ) : (
-        <ImageFallback loading={!showVideo} />
+        <ImageFallback loading={!videoVisible} />
       )}
       {showVideo && (
         <video
@@ -96,10 +103,10 @@ const Video = ({
           src={src}
           autoPlay={autoPlay}
           loop={loop}
-          preload="none"
+          preload="auto"
           poster={poster}
           playsInline
-          onCanPlay={() => {
+          onCanPlayThrough={() => {
             // fade-in the video over the poster
             setVideoVisible(true)
           }}
