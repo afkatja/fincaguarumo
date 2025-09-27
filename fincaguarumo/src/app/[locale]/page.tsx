@@ -1,22 +1,7 @@
 import React from "react"
-import dynamic from "next/dynamic"
-import { ArrowDown } from "lucide-react"
-import Link from "next/link"
 import { sanityFetch } from "../../sanity/lib/client"
-import {
-  FEATURED_POSTS_QUERY,
-  FEATURED_TOURS_QUERY,
-  HOME_QUERY,
-} from "../../sanity/lib/queries"
-import TourItem, { TourType } from "./(pages)/tours/TourItem"
-import Video from "../../components/Video"
-import FeaturedContent from "../../components/FeaturedContent"
-import FadeInObserver from "../../components/FadeInObserver"
-import RichText from "../../components/RichText"
-import { SanityImageObject } from "../../types"
-import HomeMap from "../../components/HomeMap"
-
-const VideoOpenZip = dynamic(() => import("../../components/VideoOpenZip"))
+import { HOME_QUERY } from "../../sanity/lib/queries"
+import HomePage from "./HomePage"
 
 export default async function Home({ params }: { params: any }) {
   const { locale } = await params
@@ -34,122 +19,8 @@ export default async function Home({ params }: { params: any }) {
   } = await sanityFetch({
     query: HOME_QUERY,
     params: { language: locale },
-    revalidate: 0,
+    revalidate: 60,
   })
 
-  const tours: TourType[] = await sanityFetch({
-    query: FEATURED_TOURS_QUERY,
-    params: { language: locale },
-    revalidate: 0,
-  })
-
-  const posts: TourType[] = await sanityFetch({
-    query: FEATURED_POSTS_QUERY,
-    params: { category: "featured", language: locale },
-    revalidate: 0,
-  })
-
-  const featuredTours = tours
-    .filter(tour => tour.isPublished)
-    .map(tour => ({
-      ...tour,
-      content: {
-        [tour.slug.current]: (
-          <TourItem
-            href={`${locale}/tours/${tour.slug.current}`}
-            mainImage={tour.mainImage}
-            title={tour.title}
-            isFeatured
-            description={tour.description}
-            slug={tour.slug}
-            isPublished={tour.isPublished}
-            locale={locale}
-          />
-        ),
-      },
-    }))
-  const featuredPosts = posts
-    .filter(post => post.isPublished)
-    .map(({ title, mainImage, slug, isPublished, ...post }) => ({
-      ...post,
-      content: {
-        [slug.current]: (
-          <TourItem
-            href={`${locale}/blog/${slug.current}`}
-            mainImage={mainImage}
-            title={title}
-            slug={slug}
-            isPublished={isPublished}
-            locale={locale}
-          />
-        ),
-      },
-    }))
-
-  return (
-    <>
-      <VideoOpenZip>
-        <div className="parallax-bg relative w-full h-screen">
-          {content?.mediaUrl && (
-            <Video
-              src={content?.mediaUrl?.url}
-              autoPlay
-              loop
-              muted
-              playsInline
-              poster={`${content?.mediaPoster?.url}?auto=format`}
-              blurDataURL={content?.mediaPoster?.metadata?.lqip}
-              className="object-cover w-full h-full opacity-0 transition-opacity duration-700 animate-fade"
-            />
-          )}
-          <div className="hero text-center text-zinc-50 drop-shadow-sharp">
-            <h1 className="text-6xl leading-normal font-black opacity-0 transition-opacity duration-700 animate-fade delay-500">
-              {content?.hero_title}
-            </h1>
-            <h2 className="text-3xl mb-5 font-semibold opacity-0 transition-opacity duration-700 delay-700 animate-fade">
-              {content?.hero_slogan}
-            </h2>
-            <h3 className="text-xl leading-normal opacity-0 transition-opacity duration-700 delay-1000 animate-fade">
-              {content?.subtitle}
-            </h3>
-            <RichText
-              body={content?.hero_body}
-              className=" mx-auto  !text-zinc-50 mt-5 opacity-0 transition-opacity duration-700 delay-1000 animate-fade"
-            />
-          </div>
-          <div className="animate-slide transition-transform duration-1000 delay-1000">
-            <FadeInObserver threshold={0.5} rootMargin="0px 0px -100px 0px">
-              <Link
-                href="#intro"
-                className="fade-from-view absolute bottom-8 left-1/2 -translate-x-1/2"
-              >
-                <ArrowDown className="animate-bounce stroke-zinc-50" />
-              </Link>
-            </FadeInObserver>
-          </div>
-        </div>
-        <div className="content-wrap">
-          <div id="intro" className="prose prose-lg w-11/12 mx-auto">
-            {content?.intro_body ? (
-              <RichText body={content?.intro_body} className="mx-0" />
-            ) : null}
-          </div>
-          <HomeMap />
-
-          <FeaturedContent
-            href="tours"
-            featuredContentTitle={content?.featured_content_title}
-            items={featuredTours}
-          />
-          {!!featuredPosts.length && (
-            <FeaturedContent
-              href="blog"
-              featuredContentTitle={content?.featured_blog_title}
-              items={featuredPosts}
-            />
-          )}
-        </div>
-      </VideoOpenZip>
-    </>
-  )
+  return <HomePage locale={locale} content={content} />
 }
