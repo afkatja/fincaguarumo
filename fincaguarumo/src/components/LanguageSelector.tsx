@@ -9,9 +9,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useRouter, usePathname } from "../navigation"
-import ReactCountryFlag from "react-country-flag"
 
 import { useTranslations, Translation } from "../lib/translationsUtil"
+import Icon from "./Icon"
 
 const LanguageSelector = ({
   locale,
@@ -42,12 +42,15 @@ const LanguageSelector = ({
       <SelectContent>
         {availableTranslations.map(version => (
           <SelectItem key={version.language} value={version.language}>
-            <ReactCountryFlag
-              countryCode={version.countryCode.toUpperCase()}
-              svg
-              style={{ marginRight: 5, fontSize: "1.5rem" }}
-            />
-            <span className="hidden lg:inline">{version.title}</span>
+            <div className="flex gap-2 items-center">
+              <Icon
+                icon={version.glyph}
+                size={20}
+                color="#9d1f60"
+                className="fill-guarumo-accent dark:fill-slate-50"
+              />
+              <span className="hidden lg:block">{version.title}</span>
+            </div>
           </SelectItem>
         ))}
       </SelectContent>
