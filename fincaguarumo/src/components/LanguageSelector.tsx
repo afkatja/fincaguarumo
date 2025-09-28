@@ -45,9 +45,9 @@ const LanguageSelector = ({
             <div className="flex gap-2 items-center">
               <Icon
                 icon={version.glyph}
-                size={20}
+                size={26}
                 color="#9d1f60"
-                className="fill-guarumo-accent dark:fill-zinc-50"
+                className="fill-guarumo-accent dark:fill-zinc-50 rounded-full border-zinc-50 border p-1"
               />
               <span className="hidden lg:block">{version.title}</span>
             </div>
