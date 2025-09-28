@@ -72,7 +72,7 @@ const BookingDialog = ({
     <Dialog open={open} onOpenChange={() => closeHandler()} key="order-dialog">
       <DialogTrigger asChild>
         <Button
-        name='booking-button'
+          name="booking-button"
           size="lg"
           className={dialogOptions.buttonClassName}
           variant="secondary"

@@ -61,14 +61,8 @@ const nextConfig = {
         destination: '/stay',
         permanent: true, // 301 redirect for SEO
       },
-      // You can also add variations
       {
         source: '/accommodation',
-        destination: '/stay',
-        permanent: true,
-      },
-      {
-        source: '/eco-villa',
         destination: '/stay',
         permanent: true,
       }

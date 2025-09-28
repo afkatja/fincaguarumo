@@ -7,6 +7,7 @@ import SocialNav from "./SocialNav"
 import { i18n } from "../../languages"
 import navigation from "../lib/navigation"
 import Logo from "./Logo"
+import HeaderBookButton from "./HeaderBookButton"
 
 const Header = async ({
   locale,
@@ -33,6 +34,7 @@ const Header = async ({
       <div className="flex items-center justify-between nav w-11/12 mx-auto">
         <Logo />
         <MainNav className="mx-5" navItems={mainNav} />
+        <HeaderBookButton />
         <div className="flex items-center gap-2 ml-auto">
           <UtilsNav navItems={utilsNav} />
           <SocialNav className="md:hidden" />

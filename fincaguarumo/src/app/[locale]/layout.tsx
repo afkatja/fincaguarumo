@@ -86,10 +86,9 @@ export default async function Layout({
         <NextIntlClientProvider locale={locale}>
           <TransitionProvider>
             <div className="flex flex-col min-h-[calc(100dvh-var(--header-height))] animation-container">
-              <Header locale={locale} />
-
               <BookingProvider>
-                <DialogProvider>
+                <DialogProvider locale={locale}>
+                  <Header locale={locale} />
                   <main className="flex-1 flex flex-col">
                     {draft?.isEnabled && (
                       <a
