@@ -1,5 +1,5 @@
 "use client"
-import React from "react"
+import React, { Suspense } from "react"
 import dynamic from "next/dynamic"
 import { ArrowDown } from "lucide-react"
 import Link from "next/link"
@@ -8,6 +8,7 @@ import FadeInObserver from "../../components/FadeInObserver"
 import RichText from "../../components/RichText"
 import FeaturedContentLoader from "./FeaturedContentLoader"
 import LazyLoad from "../../components/LazyLoad"
+import Loading from "./(pages)/loading"
 
 const HomeMap = dynamic(() => import("../../components/HomeMap"), {
   ssr: false,
@@ -22,18 +23,20 @@ const HomePage = ({ locale, content }: { locale: string; content: any }) => {
       <VideoOpenZip>
         <div className="parallax-bg relative w-full h-screen">
           {content?.mediaUrl && (
-            <Video
-              src={content?.mediaUrl?.url}
-              autoPlay
-              loop
-              muted
-              playsInline
-              poster={`${content?.mediaPoster?.url}?auto=format`}
-              placeholder="blur"
-              blurDataURL={content?.mediaPoster?.metadata?.lqip}
-              className="object-cover w-full h-full opacity-0 transition-opacity duration-700 animate-fade"
-              critical
-            />
+            <Suspense fallback={<Loading />}>
+              <Video
+                src={content?.mediaUrl?.url}
+                autoPlay
+                loop
+                muted
+                playsInline
+                poster={`${content?.mediaPoster?.url}?auto=format`}
+                placeholder="blur"
+                blurDataURL={content?.mediaPoster?.metadata?.lqip}
+                className="object-cover w-full h-full opacity-0 transition-opacity duration-700 animate-fade"
+                critical
+              />
+            </Suspense>
           )}
           <div className="hero text-center text-zinc-50 drop-shadow-sharp">
             <h1 className="text-6xl leading-normal font-black opacity-0 transition-opacity duration-700 animate-fade delay-500">
