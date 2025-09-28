@@ -1,5 +1,4 @@
 "use client"
-import Head from "next/head"
 import Image from "next/image"
 import React, { useEffect, useRef, useState } from "react"
 import ImageFallback from "./imageFallback"
@@ -8,23 +7,23 @@ const playPauseVideo = (videoElement: HTMLVideoElement) => {
   const options = {
     root: null,
     rootMargin: "0px",
-    threshold: 0.5,
+    threshold: [0, 0.5, 1], // finer control
   }
+
   const callback: IntersectionObserverCallback = entries => {
     entries.forEach(entry => {
-      const visiblePct = `${Math.floor(entry.intersectionRatio * 100)}%`
-      // console.log({ entry, visiblePct })
-      if (entry.isIntersecting) {
-        // @ts-expect-error
-        entry.target.play()
+      if (entry.intersectionRatio >= 0.5) {
+        ;(entry.target as HTMLVideoElement).play()
       } else {
-        // @ts-expect-error
-        entry.target.pause()
+        ;(entry.target as HTMLVideoElement).pause()
       }
     })
   }
+
   const observer = new IntersectionObserver(callback, options)
   observer.observe(videoElement)
+
+  return observer
 }
 
 const Video = ({
@@ -71,14 +70,16 @@ const Video = ({
 
   useEffect(() => {
     const vid = ref?.current
-    if (vid && autoPlay && showVideo) playPauseVideo(vid)
-  })
+    if (vid && autoPlay && showVideo) {
+      const observer = playPauseVideo(vid)
+      return () => observer.disconnect()
+    }
+  }, [autoPlay, showVideo])
+
+  console.log({ showVideo, videoVisible })
 
   return (
     <>
-      <Head>
-        <link rel="preload" as="image" href={poster} />
-      </Head>
       {poster ? (
         <Image
           src={poster}
