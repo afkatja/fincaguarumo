@@ -47,7 +47,7 @@ const LanguageSelector = ({
                 icon={version.glyph}
                 size={20}
                 color="#9d1f60"
-                className="fill-guarumo-accent dark:fill-slate-50"
+                className="fill-guarumo-accent dark:fill-zinc-50"
               />
               <span className="hidden lg:block">{version.title}</span>
             </div>
