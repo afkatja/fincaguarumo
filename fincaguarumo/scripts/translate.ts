@@ -6,7 +6,7 @@ import { HttpProxyAgent } from "http-proxy-agent"
 import { languages } from "../src/config"
 
 type Lang = (typeof languages)[number]
-const agent = new HttpProxyAgent("http://66.29.154.103:3128") //("http://97.74.87.226:80")
+const agent = new HttpProxyAgent(process.env.TRANSLATION_PROXY!)
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
