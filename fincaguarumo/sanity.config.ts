@@ -53,7 +53,8 @@ export default defineConfig({
     }),
     media(),
   ],
-  tools: [
+  tools: prev => [
+    ...prev,
     // Add custom translation tool
     {
       name: "translate",
