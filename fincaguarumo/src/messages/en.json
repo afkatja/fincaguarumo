@@ -43,5 +43,9 @@
     "rateVATlabel": "Price (incl. 13% VAT)",
     "reserveButton": "Book now",
     "selectDate": "Select date"
+  },
+  "page": {
+    "moreFAQ": "More FAQ",
+    "FAQ": "FAQ"
   }
 }
