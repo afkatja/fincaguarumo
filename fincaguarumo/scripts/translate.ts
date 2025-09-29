@@ -6,13 +6,16 @@ import { HttpProxyAgent } from "http-proxy-agent"
 import { languages } from "../src/config"
 
 type Lang = (typeof languages)[number]
-const agent = new HttpProxyAgent("http://97.74.87.226:80")
+const agent = new HttpProxyAgent("http://66.29.154.103:3128") //("http://97.74.87.226:80")
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-async function autoTranslate(text: string, target: Lang): Promise<string> {
+async function autoTranslate(
+  text: string,
+  target: Lang
+): Promise<string | null> {
   try {
     const res = await translate(text, {
       to: target.value,
@@ -25,7 +28,7 @@ async function autoTranslate(text: string, target: Lang): Promise<string> {
   } catch (err) {
     console.log("error auto translating", err)
 
-    return `__MISSING_${target.value.toUpperCase()}__`
+    return null // `__MISSING_${target.value.toUpperCase()}__`
   }
 }
 
@@ -41,7 +44,7 @@ async function syncObject(
 
   for (const [key, value] of Object.entries(enObj)) {
     if (typeof value === "string") {
-      if (!(key in langObj)) {
+      if (!(key in langObj) || value === null || langObj[key] === null) {
         langObj[key] = await autoTranslate(value, lang)
         updated = true
       }
