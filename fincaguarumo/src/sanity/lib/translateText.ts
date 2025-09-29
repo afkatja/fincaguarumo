@@ -12,7 +12,6 @@ async function translateText(
   }
 
   const url = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`
-  console.log({ text })
 
   const response = await fetch(url, {
     method: "POST",
@@ -28,13 +27,10 @@ async function translateText(
   })
   if (!response.ok) {
     const error = await response.json()
-    throw new Error(
-      `Google Translate API error: ${error.error?.message || "Unknown error"}`
-    )
+    throw new Error(`Google Translate API error: ${error || "Unknown error"}`)
   }
 
   const data = await response.json()
-  console.log({ data })
 
   return data.data.translations[0].translatedText
 }
