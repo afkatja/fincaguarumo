@@ -65,7 +65,7 @@ const ClientPage = ({
       <RichText body={content?.body} />
       <div className="w-11/12 mx-auto mt-3 mb-8 flex flex-col">
         <Title
-          title="FAQ"
+          title={t?.page?.FAQ || "FAQ"}
           Heading="h2"
           titleClassName="text-3xl font-bold text-guarumo-primary"
           icon={{ title: "Guarumo" }}
@@ -78,7 +78,7 @@ const ClientPage = ({
             href={`/${locale}/faq`}
             className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
           >
-            More FAQ
+            {t?.page?.moreFAQ || "More FAQ"}
             <Icon
               icon="ArrowRight"
               className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
