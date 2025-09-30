@@ -77,6 +77,33 @@ export async function POST(request: NextRequest) {
             { status: 500 }
           )
         }
+
+        try {
+          const bookingResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/bookings`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                checkIn: bookingDetails.checkIn,
+                checkOut: bookingDetails.checkOut,
+                guestName: customerDetails.name,
+                source: "direct",
+                uid: event.data.object.id,
+              }),
+            }
+          )
+          console.log(
+            "Booking created in Sanity successfully.",
+            bookingResponse
+          )
+        } catch (error) {
+          console.error("Failed to create booking in Sanity:", error)
+          return NextResponse.json(
+            { error: "Failed to create booking in Sanity" },
+            { status: 500 }
+          )
+        }
         break
       }
       case "payment_intent.succeeded": {

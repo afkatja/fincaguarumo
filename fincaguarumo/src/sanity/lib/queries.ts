@@ -261,3 +261,7 @@ export const GALLERY_QUERY = groq`
     title, images
   }
 `
+
+export const BOOKINGS_QUERY = groq`*[_type == "booking" && checkOut > now() && source == "direct"]{
+  uid, checkIn, checkOut, guestName
+}`
