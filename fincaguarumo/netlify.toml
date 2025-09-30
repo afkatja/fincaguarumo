@@ -14,21 +14,14 @@
 
 [[redirects]]
   from = "/villa-bruno"
-  to = "/.netlify/functions/next"
+  to = "/stay"
   status = 301
   force = true
 
 [[redirects]]
   from = "/accommodation"
-  to = "/.netlify/functions/next"
+  to = "/stay"
   status = 301
-  force = true
-
-# Catch-all for Next.js App Router routes
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/next"
-  status = 200
   force = true
 
 # Global headers
