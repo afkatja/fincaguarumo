@@ -1,4 +1,5 @@
 import { client } from "../sanity/lib/client"
+import { BOOKINGS_QUERY } from "../sanity/lib/queries"
 
 export type Booking = {
   uid?: string
@@ -34,14 +35,15 @@ export async function setBookings({
     return booking
   } catch (error) {
     console.error("Error setting booking:", error)
-    return Response.json({ error: "Failed to set booking" }, { status: 500 })
+    throw new Error(
+      "Failed to set booking: " +
+        (error instanceof Error ? error.message : String(error))
+    )
   }
 }
 
 export async function getSanityBookings(): Promise<Booking[]> {
-  const bookings = await client.fetch(
-    `*[_type == "booking" && !(_id in path("drafts.**"))]{checkIn, checkOut, guestName, source, uid}`
-  )
+  const bookings = await client.fetch(BOOKINGS_QUERY)
   return bookings.map((booking: any) => ({
     uid: booking.uid,
     start: new Date(booking.checkIn).toISOString(),
