@@ -15,13 +15,13 @@
 [[redirects]]
   from = "/villa-bruno"
   to = "/stay"
-  status = 301
+  status = 200
   force = true
 
 [[redirects]]
   from = "/accommodation"
   to = "/stay"
-  status = 301
+  status = 200
   force = true
 
 # Global headers
