@@ -5,6 +5,9 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+[functions]
+directory = "netlify/functions"
+
 # Force HTTPS
 [[redirects]]
   from = "http://*"
