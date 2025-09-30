@@ -18,6 +18,7 @@ import { useBooking } from "../../BookingProvider"
 import { useDialog } from "../../DialogProvider"
 import SelectGuestsOptions from "./SelectGuestsOptions"
 import PhoneInput from "../../../../components/PhoneInput"
+import BookingCalendar from "../../../../components/BookingCalendar"
 
 const BookingForm = ({
   onSubmit,
@@ -142,46 +143,43 @@ const BookingForm = ({
         </div>
 
         {bookingType === BOOKING_TYPE.villa ? (
-          <div className="md:grid md:grid-cols-2 gap-2">
-            <DatePicker
-              isOpen={activePopover === "check-in"}
-              onClose={() => setActivePopover(null)}
-              onOpen={() => setActivePopover("check-in")}
-              onSelectDate={date => {
+          <BookingCalendar
+            onSelectDate={(date: Date, type: string) => {
+              if (type === "check-in") {
+                const checkInDate = new Date(date)
+                const checkOutDate = new Date(date)
+                checkOutDate.setDate(checkOutDate.getDate() + 1)
                 setBookingData({
                   ...bookingData,
                   bookingDetails: {
                     ...bookingData.bookingDetails,
-                    checkIn: new Date(date),
-                    checkOut: new Date(date.setDate(date.getDate() + 1)),
+                    checkIn: checkInDate,
+                    checkOut:
+                      bookingData.bookingDetails.checkOut &&
+                      bookingData.bookingDetails.checkOut > checkInDate
+                        ? bookingData.bookingDetails.checkOut
+                        : checkOutDate,
                   },
                 })
-                setActivePopover(null)
-              }}
-              label={t?.checkinDate || "Check-in date"}
-              selectedDate={bookingData.bookingDetails.checkIn}
-            />
-
-            <div className="md:ml-4 mt-4 md:mt-0">
-              <DatePicker
-                label={t?.checkoutDate || "Check-out date"}
-                selectedDate={bookingData.bookingDetails.checkOut}
-                isOpen={activePopover === "check-out"}
-                onClose={() => setActivePopover(null)}
-                onOpen={() => setActivePopover("check-out")}
-                onSelectDate={date => {
-                  setBookingData({
-                    ...bookingData,
-                    bookingDetails: {
-                      ...bookingData.bookingDetails,
-                      checkOut: date,
-                    },
-                  })
-                  setActivePopover(null)
-                }}
-              />
-            </div>
-          </div>
+              } else {
+                setBookingData({
+                  ...bookingData,
+                  bookingDetails: {
+                    ...bookingData.bookingDetails,
+                    checkOut: new Date(date),
+                  },
+                })
+              }
+            }}
+            selectedDates={{
+              checkIn: bookingData.bookingDetails.checkIn,
+              checkOut: bookingData.bookingDetails.checkOut,
+            }}
+            labels={{
+              checkinDate: t?.checkinDate ?? "Check-in date",
+              checkoutDate: t?.checkoutDate ?? "Check-out date",
+            }}
+          />
         ) : (
           <>
             <DatePicker
