@@ -8,7 +8,7 @@ const Review = ({ review }: { review: google.maps.places.Review }) => {
   const stars = Array.from({ length: review?.rating || 0 }, (_, i) => i + 1)
   return (
     <div
-      className="bg-zinc-50 rounded-lg shadow-sm p-4"
+      className="bg-zinc-50 rounded-lg shadow-sm p-4 my-4 md:my-0"
       data-id="cfcd208495d565ef66e7dff9f98764da"
     >
       <div className="flex items-center gap-2">
@@ -23,7 +23,7 @@ const Review = ({ review }: { review: google.maps.places.Review }) => {
           loading="lazy"
         />
         <div>
-          <p className="text-guarumo-primary font-bold text-lg truncate max-w-40">
+          <p className="text-guarumo-primary font-bold text-lg truncate max-w-24">
             {review?.authorAttribution?.displayName}
           </p>
           <p className="text-zinc-400 text-sm">

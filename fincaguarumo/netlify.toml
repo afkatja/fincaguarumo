@@ -15,6 +15,18 @@ directory = "netlify/functions"
   status = 301
   force = true
 
+[[redirects]]
+  from = "/villa-bruno"
+  to = "/stay"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/accommodation"
+  to = "/stay"
+  status = 301
+  force = true
+
 # Global headers
 [[headers]]
   for = "/*"
