@@ -1,4 +1,4 @@
-import { Posts } from "@/components/Posts"
+import { Posts } from "@/app/[locale]/blog/Posts"
 import { PAGE_QUERY, POSTS_QUERY } from "../../../sanity/lib/queries"
 import { sanityFetch } from "../../../sanity/lib/client"
 import { POSTS_QUERYResult } from "../../../../sanity.types"

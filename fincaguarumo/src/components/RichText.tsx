@@ -36,7 +36,7 @@ const RichText = ({
       ),
       h2: ({ children }) => (
         <Title
-          titleClassName="col-span-2 dark:text-zinc-50 !my-6"
+          titleClassName="text-2xl font-bold text-guarumo-primary col-span-2 dark:text-zinc-50 !my-6"
           title={children}
           icon={{
             iconClassName: "fill-guarumo-accent dark:fill-zinc-50",

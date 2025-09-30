@@ -62,5 +62,9 @@
     "reserveButton": "Reserva ahora",
     "selectDate": "Seleccionar fecha",
     "rateVATlabel": "Tasa (incluido 13% de IVA)"
+  },
+  "page": {
+    "moreFAQ": "Más preguntas frecuentes",
+    "FAQ": "Preguntas frecuentes"
   }
 }

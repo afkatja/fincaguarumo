@@ -9,6 +9,7 @@ const nextConfig = {
     optimizePackageImports: ['gsap', 'lucide-react'],
   },
   images: {
+    qualities: [50, 75, 100],
     remotePatterns: [
       {
         protocol: 'https',
@@ -35,6 +36,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdn.sanity.io",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.trustindex.io",
+      },
+      {
+        protocol: "https",
+        hostname: "*.googleusercontent.com",
+      },
     ],
   },
   async rewrites() {
@@ -45,7 +54,23 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/villa-bruno',
+        destination: '/stay',
+        permanent: true, // 301 redirect for SEO
+      },
+      {
+        source: '/accommodation',
+        destination: '/stay',
+        permanent: true,
+      }
+    ]
+  }
 };
+
+  
  
 const withNextIntl = createNextIntlPlugin();
 

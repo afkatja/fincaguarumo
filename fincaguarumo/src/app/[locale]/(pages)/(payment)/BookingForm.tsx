@@ -235,6 +235,7 @@ const BookingForm = ({
           <div className="mt-5 flex justify-end gap-2 w-full flex-none">
             <div>
               <Button
+                name="booking-cancel-button"
                 type="button"
                 variant="outline"
                 onClick={() => {
@@ -247,6 +248,7 @@ const BookingForm = ({
               </Button>
             </div>
             <Button
+              name="booking-submit-button"
               type="submit"
               className="group-invalid:pointer-events-none group-invalid:opacity-30"
             >

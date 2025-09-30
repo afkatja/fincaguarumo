@@ -10,6 +10,7 @@ export type Translation = {
   language: string
   title: string
   countryCode: string
+  glyph: string
 }
 
 export const useTranslations = (translations: Translation[]) => {

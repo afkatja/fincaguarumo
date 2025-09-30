@@ -21,6 +21,8 @@ const CarouselContentContent = ({
               className="w-full h-[400px] md:h-[500px] object-cover"
               width={size}
               height={size}
+              placeholder="blur"
+              blurDataURL={image.src}
             />
           )}
         </CarouselItem>

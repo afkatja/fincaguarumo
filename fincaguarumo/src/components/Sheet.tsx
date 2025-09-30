@@ -19,6 +19,7 @@ const SheetPane = ({
           size="icon"
           className="md:hidden"
           onClick={() => setOpen(true)}
+          name="toggle-navigation-menu-button"
         >
           <Icon icon="Menu" className="w-6 h-6 dark:stroke-zinc-50" />
           <span className="sr-only">Toggle navigation menu</span>

@@ -34,6 +34,11 @@ import ExternalLink from "./ExternalLink"
 import Success from "./Success"
 import Error from "./Error"
 import Info from "./Info"
+import LetterIj from "./LetterIj"
+import LetterN from "./LetterN"
+import LetterW from "./LetterW"
+import LetterYa from "./LetterYa"
+import LetterEszet from "./LetterEszet"
 
 const icons = {
   Aracari,
@@ -72,6 +77,11 @@ const icons = {
   Success,
   Error,
   Info,
+  LetterIj,
+  LetterN,
+  LetterW,
+  LetterYa,
+  LetterEszet,
 }
 
 const headerIcons = {

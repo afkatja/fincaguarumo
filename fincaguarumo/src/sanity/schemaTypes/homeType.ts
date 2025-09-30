@@ -29,6 +29,10 @@ export const homeType = defineType({
       type: "string",
     }),
     defineField({
+      name: "hero_body",
+      type: "blockContent",
+    }),
+    defineField({
       name: "intro_body",
       type: "blockContent",
     }),
@@ -39,8 +43,11 @@ export const homeType = defineType({
     }),
     defineField({
       name: "background_media_poster",
-      type: "file",
+      type: "image",
       title: "Video poster",
+      options: {
+        hotspot: true,
+      },
     }),
     defineField({
       name: "featured_content_title",

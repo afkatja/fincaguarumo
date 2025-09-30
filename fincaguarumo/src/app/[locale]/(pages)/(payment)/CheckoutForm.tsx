@@ -77,6 +77,7 @@ export default function CheckoutForm() {
         />
         <footer className="flex flex-wrap mt-auto pt-4">
           <Button
+            name="pay-now-button"
             disabled={
               isLoading || !stripe || !isElementReady || !isFormComplete
             }
