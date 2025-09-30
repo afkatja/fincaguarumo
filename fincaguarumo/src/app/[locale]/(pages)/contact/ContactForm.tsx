@@ -100,6 +100,7 @@ export default function ContactForm() {
       </div>
 
       <Button
+        name="send-message-button"
         type="submit"
         className="group-invalid:pointer-events-none group-invalid:opacity-30"
       >

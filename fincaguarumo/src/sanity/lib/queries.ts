@@ -1,37 +1,63 @@
 import { groq } from "next-sanity"
 
 export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...12]{
-  _id, title, slug, mainImage, _createdAt, _updatedAt, isPublished
+  _id, title, slug, 
+  mainImage {
+    ..., 
+      "url": asset->url,
+    'metadata': asset->metadata
+  },
+  _createdAt, _updatedAt, isPublished
 }`
 export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][0...12]{
   _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished
 }`
 
 export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && language == $language][0] {
-  title, subtitle, description, mainImage, body, language, slug, isPublished, showBookingOptions, showBookingDialog,
-  slideshow->{images}, price,
-    "translations": *[
-      _type == "translation.metadata" && 
-      ^._id in translations[].value._ref
-    ][0].translations[]{
+  title, subtitle, description, 
+  mainImage {
+    ..., 
+    'metadata': asset->metadata
+  }, 
+  body, language, slug, isPublished, showBookingOptions, showBookingDialog,
+  slideshow->{
+  images[]{
+    ...,
+    'metadata': asset->metadata
+  }
+},
+  price, faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category },
+  "translations": coalesce(
+    *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{
       ...(value->{
         language,
         title,
         subtitle,
         description,
-        mainImage,
+        mainImage {..., 'metadata': asset->metadata},
         slug, 
         body,
         showBookingOptions,
-        showBookingDialog
+        showBookingDialog,
+        faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category }
       })
-    }
+    },
+    []
+  )
 }`
 
 export const FEATURED_POSTS_QUERY = groq`
-  *[_type == 'post' && defined(slug.current) && $category in categories[] -> title && language == $language] {
-    title, slug, mainImage, isPublished, 'category': *[_type == 'category' && title == $category],
-     "translations": *[
+  *[_type == 'post' && defined(slug.current) && $category in categories[]->title && language == $language] {
+    title,
+    slug,
+    isPublished,
+    mainImage {
+      ...,
+      "url": asset->url,
+      "metadata": asset->metadata
+    },
+    'category': *[_type == 'category' && title == $category],
+    "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
     ][0].translations[]{
@@ -45,7 +71,12 @@ export const FEATURED_POSTS_QUERY = groq`
 `
 
 export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
-  title, body, mainImage, language, isPublished, slug,
+  title, body, 
+  mainImage {
+    ...,
+    "url": asset->url,
+    'metadata': asset->metadata
+  }, language, isPublished, slug,
   "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -60,8 +91,9 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
 
 export const PAGE_QUERY = groq`
   *[_type == 'page' && slug.current == $pageName && language == $language][0] {
-    title, subtitle, description, mainImage, body 
-    , language, isPublished,
+    title, subtitle, description, mainImage, body, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,
+    slideshow->{images}, price,
+    faq[]->{question, answer, slug},
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -72,7 +104,9 @@ export const PAGE_QUERY = groq`
         subtitle,
         mainImage,
         slug, 
-        body, isPublished
+        body, 
+        isPublished,
+        faq[]->{ question, answer, slug },
       })
     }
   }
@@ -96,7 +130,11 @@ export const NAV_QUERY = groq`
 export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && language == $language]{
   slug,
   title, 
-  mainImage,
+  mainImage {
+    ...,
+    "url": asset->url,
+    "metadata": asset->metadata
+  },
   description, 
   dateAdded,
   language,
@@ -119,7 +157,14 @@ export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && la
 export const FEATURED_TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && isFeatured && language == $language]{
   slug,
   title, 
-  mainImage,
+  mainImage {
+    alt,
+    "url": asset->url,
+    "metadata": asset->metadata {
+      lqip,
+      dimensions
+    }
+  },
   description, isPublished,
    "translations": *[
       _type == "translation.metadata" && 
@@ -185,7 +230,15 @@ export const TOUR_QUERY = groq`
   title, 
   slug, 
   description, 
-  mainImage, isPublished,
+  mainImage {
+    alt,
+    "url": asset->url,
+    "metadata": asset->metadata {
+      lqip,
+      dimensions
+    }
+  },
+  isPublished,
   slideshow->{images}, 
   price, 
   location, 
@@ -228,13 +281,19 @@ export const HOME_QUERY = groq`
   *[_type=='home' && language == $language][0] {
     hero_title, 
     hero_slogan, 
+    hero_body,
     subtitle, 
     language, 
     featured_content_title,
     featured_blog_title, 
     slug, 
     'mediaUrl': background_media.asset->{url}, 
-    'mediaPoster': background_media_poster.asset->{url},
+    'mediaPoster': background_media_poster.asset->{
+      url, 
+      metadata {
+        lqip
+      }
+    },
     intro_body[] {
       ...,
       markDefs[] {
@@ -250,7 +309,7 @@ export const HOME_QUERY = groq`
       ^._id in translations[].value._ref
     ][0].translations[]{
       ...(value->{
-        hero_title, hero_slogan, subtitle, language, featured_content_title, slug, featured_blog_title, intro_body
+        hero_title, hero_slogan, hero_body,subtitle, language, featured_content_title, slug, featured_blog_title, intro_body
       })
     }
   }
@@ -258,6 +317,24 @@ export const HOME_QUERY = groq`
 
 export const GALLERY_QUERY = groq`
   *[_type == 'gallery' && $category in categories[] -> title][0] {
-    title, images
+    title, images[] {
+      ...,
+      "metadata": asset->metadata
+    }
+  }
+`
+
+export const FAQ_QUERY = groq`
+  *[_type == 'faq' && language == $language] | order(displayOrder asc) {
+    category, question, answer, keywords, showOnVillaBruno, slug, language,
+    "translations": *[
+      _type == "translation.metadata" && 
+      ^._id in translations[].value._ref
+    ][0].translations[]{
+      ...(value->{
+        language,
+        category, question, answer, keywords, showOnVillaBruno, slug
+      })
+    }
   }
 `

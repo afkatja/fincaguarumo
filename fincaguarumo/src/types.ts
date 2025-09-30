@@ -16,6 +16,15 @@ type SanityImageObject = {
 } & SanityImageSource & { alt: string }
 export type { SanityImageObject }
 
+export interface FAQType {
+  slug: { current: string }
+  question: string
+  answer: string
+  keywords: string[]
+  showOnVillaBruno: boolean
+  category: string
+}
+
 const today = new Date()
 const tomorrow = new Date(+today + 86400000)
 const later = new Date(+today + 259200000)

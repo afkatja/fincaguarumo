@@ -22,7 +22,7 @@ const GalleryPage = async ({ params }: { params: any }) => {
     params: { language: locale, pageName: "gallery" },
   })
 
-  const gallery: { title: string; images: SanityImageObject[] } =
+  const gallery: { title: string; images: (SanityImageObject & {metadata?: { lqip: string }})[] } =
     await sanityFetch({
       query: GALLERY_QUERY,
       revalidate: 0,
@@ -32,6 +32,7 @@ const GalleryPage = async ({ params }: { params: any }) => {
   const images = gallery?.images.map(item => ({
     _type: item._type || "image",
     asset: item.asset,
+    metadata: item.metadata,
     alt: item.alt || "",
     src: urlFor(item)
       .width(2016)

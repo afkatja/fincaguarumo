@@ -62,5 +62,9 @@
     "reserveButton": "Boek nu",
     "selectDate": "Selecteer datum",
     "rateVATlabel": "Prijs (incl. 13% btw)"
+  },
+  "page": {
+    "moreFAQ": "Meer veelgestelde vragen",
+    "FAQ": "FAQ"
   }
 }

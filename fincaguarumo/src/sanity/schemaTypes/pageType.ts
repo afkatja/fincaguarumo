@@ -79,6 +79,30 @@ export const pageType = defineType({
       initialValue: false,
     }),
     defineField({
+      name: "showFAQ",
+      type: "boolean",
+      title: "Show FAQ",
+      description: "Enable to display FAQ section on this page",
+      initialValue: false,
+    }),
+    defineField({
+      name: "faq",
+      type: "array",
+      of: [{ type: "reference", to: { type: "faq" } }],
+      validation: rule =>
+        rule.custom((faqs, context) => {
+          const showFAQ = context.document?.showFAQ
+          if (
+            showFAQ &&
+            (!faqs || (Array.isArray(faqs) && faqs.length === 0))
+          ) {
+            return "Please select an FAQ when 'Show FAQ' is enabled"
+          }
+          return true
+        }),
+      hidden: ({ document }) => !document?.showFAQ,
+    }),
+    defineField({
       name: "showBookingDialog",
       type: "boolean",
       title: "Show Booking Dialog",

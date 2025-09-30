@@ -13,7 +13,13 @@ import { SanityImageObject } from "../../../../types"
 export type TourType = {
   title: string
   description?: string
-  mainImage?: (SanityImageObject & { alt: string }) | null
+  mainImage?:
+    | (SanityImageObject & {
+        url: string
+        alt: string
+        metadata?: { lqip: string }
+      })
+    | null
   slug: { current: string }
   dateAdded?: string
   isNew?: boolean
@@ -63,7 +69,7 @@ const TourItem = ({
   const t = translations?.cards || fallbackTranslations.cards
 
   return (
-    <Link href={href} className="group tour no-underline " prefetch>
+    <Link href={href} className="group tour no-underline" prefetch>
       <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border-background">
         <CardContent className="flex h-full flex-col justify-between p-6">
           <div className="relative">
@@ -71,11 +77,13 @@ const TourItem = ({
             {isFeatured && <Badge text={t.featured} />}
             {mainImage && (
               <Image
-                src={urlFor(mainImage).url()}
-                alt={mainImage.alt ?? ""}
+                src={mainImage.url}
+                alt={mainImage.alt ?? title}
                 width={800}
                 height={800}
                 className="mt-0 mb-3 max-h-52 object-cover"
+                placeholder="blur"
+                blurDataURL={mainImage.metadata?.lqip}
               />
             )}
             <h3 className="text-xl font-semibold">
