@@ -34,6 +34,7 @@ const BookingForm = ({
   [prop: string]: any
 }) => {
   const [activePopover, setActivePopover] = useState<string | null>(null)
+  const [dateError, setDateError] = useState<string>("")
   const [translations, setTranslations] = useState<{
     booking: Record<string, string>
   } | null>(null)
@@ -145,6 +146,7 @@ const BookingForm = ({
         {bookingType === BOOKING_TYPE.villa ? (
           <BookingCalendar
             onSelectDate={(date: Date, type: string) => {
+              setDateError("")
               if (type === "check-in") {
                 const checkInDate = new Date(date)
                 const checkOutDate = new Date(date)
@@ -156,17 +158,30 @@ const BookingForm = ({
                     checkIn: checkInDate,
                     checkOut:
                       bookingData.bookingDetails.checkOut &&
-                      bookingData.bookingDetails.checkOut > checkInDate
+                      bookingData.bookingDetails.checkOut.getTime() >
+                        checkInDate.getTime()
                         ? bookingData.bookingDetails.checkOut
                         : checkOutDate,
                   },
                 })
               } else {
+                const newCheckOut = new Date(date)
+                const checkInTime = bookingData.bookingDetails.checkIn.getTime()
+                const checkOutTime = newCheckOut.getTime()
+
+                if (checkOutTime <= checkInTime) {
+                  setDateError(
+                    t?.checkOutAfterCheckIn ??
+                      "Check-out date must be after check-in date"
+                  )
+                  return
+                }
+
                 setBookingData({
                   ...bookingData,
                   bookingDetails: {
                     ...bookingData.bookingDetails,
-                    checkOut: new Date(date),
+                    checkOut: newCheckOut,
                   },
                 })
               }
@@ -179,6 +194,7 @@ const BookingForm = ({
               checkinDate: t?.checkinDate ?? "Check-in date",
               checkoutDate: t?.checkoutDate ?? "Check-out date",
             }}
+            error={dateError}
           />
         ) : (
           <>

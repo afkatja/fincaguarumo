@@ -6,7 +6,19 @@ export const bookingType = defineType({
   title: "Booking",
   fields: [
     { name: "checkIn", type: "datetime", title: "Check-in" },
-    { name: "checkOut", type: "datetime", title: "Check-out" },
+    {
+      name: "checkOut",
+      type: "datetime",
+      title: "Check-out",
+      validation: (Rule: any) =>
+        Rule.required().custom((checkOut: string, context: any) => {
+          const checkIn = context.document?.checkIn
+          if (checkIn && checkOut && new Date(checkOut) <= new Date(checkIn)) {
+            return "Check-out must be after check-in"
+          }
+          return true
+        }),
+    },
     { name: "guestName", type: "string", title: "Guest Name" },
     {
       name: "source",
