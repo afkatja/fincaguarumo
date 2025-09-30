@@ -215,14 +215,19 @@ export default function CompletePage() {
             <div className="mt-4">
               <AddToCalendar
                 event={{
+                  uid: paymentIntent?.id || session?.id,
+                  source: "direct",
                   title: getBookingTitle(),
                   description: getBookingDescription(),
-                  start:
+                  checkIn:
                     bookingData.bookingDetails?.checkIn ??
                     bookingData.bookingDetails?.date,
-                  duration: bookingData.bookingDetails?.duration,
+                  checkOut:
+                    bookingData.bookingDetails?.checkOut ??
+                    bookingData.bookingDetails?.date,
+                  url:
+                    typeof window !== "undefined" ? window.location.href : "",
                   location: getBookingLocation(),
-                  geo: bookingData.bookingDetails?.geo,
                 }}
               />
             </div>

@@ -3,14 +3,7 @@ import IcalExpander from "ical-expander"
 import { addDays } from "date-fns"
 import bookingToNights from "@/lib/bookingToNights"
 import crypto from "crypto"
-
-type Booking = {
-  uid?: string
-  start: string
-  end: string
-  summary?: string
-  source?: string
-}
+import { Booking, getSanityBookings } from "../../../../lib/setBookings"
 
 const FEEDS: Record<string, string | undefined> = {
   airbnb: process.env.AIRBNB_ICAL,
@@ -121,6 +114,15 @@ export async function GET() {
 
     const allBookings: Booking[] = []
 
+    // Fetch Sanity bookings
+    try {
+      const sanityBookings = await getSanityBookings()
+      allBookings.push(...sanityBookings)
+    } catch (err) {
+      console.error("Error fetching Sanity bookings:", err)
+    }
+
+    // Fetch iCal feeds
     for (const [name, url] of feeds) {
       try {
         const key = `ical_${name}`
@@ -148,7 +150,7 @@ export async function GET() {
 
     return NextResponse.json({ bookings: deduped, merged })
   } catch (err) {
-    console.error("API error:", err)
+    console.error("API error merging bookings:", err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }

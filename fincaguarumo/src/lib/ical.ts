@@ -1,6 +1,10 @@
 import { createEvent, EventAttributes } from "ics"
 
 export type Booking = {
+  title?: string
+  description?: string
+  location?: string
+  url?: string
   uid: string
   checkIn: Date
   checkOut: Date
@@ -9,12 +13,12 @@ export type Booking = {
 }
 
 export function bookingToIcsEvent(b: Booking): string {
-  const start = [
+  const start: [number, number, number] = [
     b.checkIn.getFullYear(),
     b.checkIn.getMonth() + 1,
     b.checkIn.getDate(),
   ]
-  const end = [
+  const end: [number, number, number] = [
     b.checkOut.getFullYear(),
     b.checkOut.getMonth() + 1,
     b.checkOut.getDate(),
@@ -30,7 +34,7 @@ export function bookingToIcsEvent(b: Booking): string {
 
   const { error, value } = createEvent(event)
   if (error) throw error
-  return value
+  return value ?? ""
 }
 
 export function bookingsToCalendar(bookings: Booking[]): string {
