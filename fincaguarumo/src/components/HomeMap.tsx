@@ -30,9 +30,9 @@ const PlaceReviews = () => {
 
   return (
     <div className="py-5 lg:px-40 mt-5">
-      <h2 className="text-3xl mt-5 mb-4">What our guests say</h2>
+      <h2 className="text-3xl mt-5 mb-4 px-4">What our guests say</h2>
       {place.reviews && place.reviews.length > 0 && (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="p-4 lg:p-0 md:grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {place.reviews.map(
             (review: google.maps.places.Review, index: number) => (
               <Review key={index} review={review} />
