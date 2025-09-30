@@ -54,20 +54,6 @@ const nextConfig = {
       },
     ];
   },
-  async redirects() {
-    return [
-      {
-        source: '/villa-bruno',
-        destination: '/stay',
-        permanent: true, // 301 redirect for SEO
-      },
-      {
-        source: '/accommodation',
-        destination: '/stay',
-        permanent: true,
-      }
-    ]
-  }
 };
 
   
