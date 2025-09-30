@@ -8,10 +8,12 @@ const BookingCalendar = ({
     checkoutDate: "Check-out date",
   },
   selectedDates,
+  error,
 }: {
   onSelectDate: (date: Date, type: string) => void
   labels: { checkinDate: string; checkoutDate: string }
   selectedDates: { checkIn: Date; checkOut: Date }
+  error?: string
 }) => {
   const [loading, setLoading] = useState(false)
   const [activePopover, setActivePopover] = useState<string | null>(null)
@@ -37,6 +39,9 @@ const BookingCalendar = ({
 
   return (
     <>
+      <div className="space-y-2">
+        {error && <div className="text-red-500 text-sm">{error}</div>}
+      </div>
       <div className="md:grid md:grid-cols-2 gap-2">
         <DatePicker
           isOpen={activePopover === "check-in"}

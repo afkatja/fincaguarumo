@@ -139,7 +139,10 @@ export async function POST(request: NextRequest) {
         } catch (error) {
           console.error("Failed to create booking in Sanity:", error)
           return NextResponse.json(
-            { error: "Failed to create booking in Sanity" },
+            {
+              error: "Failed to create booking in Sanity",
+              details: error instanceof Error ? error.message : String(error),
+            },
             { status: 500 }
           )
         }
