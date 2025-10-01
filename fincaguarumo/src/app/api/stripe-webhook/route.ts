@@ -1,11 +1,45 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { sendConfirmationEmail } from "@/lib/sendConfirmationEmail"
+import { setBookings } from "../../../lib/setBookings"
 
 export const runtime = "nodejs"
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
 export async function POST(request: NextRequest) {
-  const stripeInstance = new Stripe(process.env.STRIPE_API_KEY ?? "")
+  console.log("WEBHOOK RECEIVED")
+  if (!process.env.STRIPE_API_KEY) {
+    return NextResponse.json(
+      { error: "Stripe API key not configured" },
+      { status: 500 }
+    )
+  }
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json(
+      { error: "Stripe Secret key not configured" },
+      { status: 500 }
+    )
+  }
+  if (
+    !process.env.STRIPE_WEBHOOK_SECRET &&
+    !process.env.STRIPE_WEBHOOK_SECRET_LOCAL
+  ) {
+    return NextResponse.json(
+      { error: "Stripe Webhook secret not configured" },
+      { status: 500 }
+    )
+  }
+  const stripeInstance = new Stripe(process.env.STRIPE_API_KEY)
+
+  console.error("Webhook secrets?", {
+    stripeKey: !!process.env.STRIPE_SECRET_KEY,
+    webhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
+  })
   const endpointSecret =
     process.env.NODE_ENV === "development"
       ? process.env.STRIPE_WEBHOOK_SECRET_LOCAL
@@ -24,7 +58,9 @@ export async function POST(request: NextRequest) {
 
   // Get the signature sent by Stripe
   const signature = request.headers.get("stripe-signature") as string
-
+  if (!signature) {
+    return NextResponse.json({ error: "Missing signature" }, { status: 400 })
+  }
   let event: Stripe.Event
   try {
     event = stripeInstance.webhooks.constructEvent(
@@ -34,7 +70,10 @@ export async function POST(request: NextRequest) {
     )
   } catch (err: any) {
     console.log(`⚠️  Webhook signature verification failed.`, err.message)
-    return NextResponse.json({ error: "Webhook failed" }, { status: 400 })
+    return NextResponse.json(
+      { error: "Webhook failed", details: err.message },
+      { status: 400 }
+    )
   }
 
   try {
@@ -65,15 +104,45 @@ export async function POST(request: NextRequest) {
           geo: metadata?.geo ? JSON.parse(metadata.geo) : {},
         }
         try {
-          const response = await sendConfirmationEmail({
-            customerDetails,
-            bookingDetails,
-          })
-          console.log("Confirmation email sent successfully.", response)
+          if (process.env.NODE_ENV === "production") {
+            const response = await sendConfirmationEmail({
+              customerDetails,
+              bookingDetails,
+            })
+            console.log("Confirmation email sent successfully.", response)
+          } else {
+            console.log("Skipping email in development mode", {
+              customerDetails,
+              bookingDetails,
+            })
+          }
         } catch (error) {
           console.error("Failed to send confirmation email:", error)
           return NextResponse.json(
             { error: "Failed to send confirmation email" },
+            { status: 500 }
+          )
+        }
+
+        try {
+          const bookingResponse = await setBookings({
+            checkIn: bookingDetails.checkIn,
+            checkOut: bookingDetails.checkOut,
+            guestName: customerDetails.name,
+            source: "direct",
+            uid: event.data.object.id,
+          })
+          console.log(
+            "Booking created in Sanity successfully.",
+            bookingResponse
+          )
+        } catch (error) {
+          console.error("Failed to create booking in Sanity:", error)
+          return NextResponse.json(
+            {
+              error: "Failed to create booking in Sanity",
+              details: error instanceof Error ? error.message : String(error),
+            },
             { status: 500 }
           )
         }
@@ -109,7 +178,10 @@ export async function POST(request: NextRequest) {
     }
   } catch (error: any) {
     console.error("Error processing webhook event:", error.message)
-    return NextResponse.json({ error: "Handler error" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Handler error", details: error.message },
+      { status: 500 }
+    )
   }
   // Return a 200 response to acknowledge receipt of the event
   return NextResponse.json({ received: true })

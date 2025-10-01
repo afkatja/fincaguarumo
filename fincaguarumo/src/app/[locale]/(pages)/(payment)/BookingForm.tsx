@@ -18,6 +18,7 @@ import { useBooking } from "../../BookingProvider"
 import { useDialog } from "../../DialogProvider"
 import SelectGuestsOptions from "./SelectGuestsOptions"
 import PhoneInput from "../../../../components/PhoneInput"
+import BookingCalendar from "../../../../components/BookingCalendar"
 
 const BookingForm = ({
   onSubmit,
@@ -33,6 +34,7 @@ const BookingForm = ({
   [prop: string]: any
 }) => {
   const [activePopover, setActivePopover] = useState<string | null>(null)
+  const [dateError, setDateError] = useState<string>("")
   const [translations, setTranslations] = useState<{
     booking: Record<string, string>
   } | null>(null)
@@ -142,46 +144,58 @@ const BookingForm = ({
         </div>
 
         {bookingType === BOOKING_TYPE.villa ? (
-          <div className="md:grid md:grid-cols-2 gap-2">
-            <DatePicker
-              isOpen={activePopover === "check-in"}
-              onClose={() => setActivePopover(null)}
-              onOpen={() => setActivePopover("check-in")}
-              onSelectDate={date => {
+          <BookingCalendar
+            onSelectDate={(date: Date, type: string) => {
+              setDateError("")
+              if (type === "check-in") {
+                const checkInDate = new Date(date)
+                const checkOutDate = new Date(date)
+                checkOutDate.setDate(checkOutDate.getDate() + 1)
                 setBookingData({
                   ...bookingData,
                   bookingDetails: {
                     ...bookingData.bookingDetails,
-                    checkIn: new Date(date),
-                    checkOut: new Date(date.setDate(date.getDate() + 1)),
+                    checkIn: checkInDate,
+                    checkOut:
+                      bookingData.bookingDetails.checkOut &&
+                      bookingData.bookingDetails.checkOut.getTime() >
+                        checkInDate.getTime()
+                        ? bookingData.bookingDetails.checkOut
+                        : checkOutDate,
                   },
                 })
-                setActivePopover(null)
-              }}
-              label={t?.checkinDate || "Check-in date"}
-              selectedDate={bookingData.bookingDetails.checkIn}
-            />
+              } else {
+                const newCheckOut = new Date(date)
+                const checkInTime = bookingData.bookingDetails.checkIn.getTime()
+                const checkOutTime = newCheckOut.getTime()
 
-            <div className="md:ml-4 mt-4 md:mt-0">
-              <DatePicker
-                label={t?.checkoutDate || "Check-out date"}
-                selectedDate={bookingData.bookingDetails.checkOut}
-                isOpen={activePopover === "check-out"}
-                onClose={() => setActivePopover(null)}
-                onOpen={() => setActivePopover("check-out")}
-                onSelectDate={date => {
-                  setBookingData({
-                    ...bookingData,
-                    bookingDetails: {
-                      ...bookingData.bookingDetails,
-                      checkOut: date,
-                    },
-                  })
-                  setActivePopover(null)
-                }}
-              />
-            </div>
-          </div>
+                if (checkOutTime <= checkInTime) {
+                  setDateError(
+                    t?.checkOutAfterCheckIn ??
+                      "Check-out date must be after check-in date"
+                  )
+                  return
+                }
+
+                setBookingData({
+                  ...bookingData,
+                  bookingDetails: {
+                    ...bookingData.bookingDetails,
+                    checkOut: newCheckOut,
+                  },
+                })
+              }
+            }}
+            selectedDates={{
+              checkIn: bookingData.bookingDetails.checkIn,
+              checkOut: bookingData.bookingDetails.checkOut,
+            }}
+            labels={{
+              checkinDate: t?.checkinDate ?? "Check-in date",
+              checkoutDate: t?.checkoutDate ?? "Check-out date",
+            }}
+            error={dateError}
+          />
         ) : (
           <>
             <DatePicker

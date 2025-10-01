@@ -1,3 +1,4 @@
+"use client"
 import React from "react"
 import {
   Popover,
@@ -8,6 +9,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
 import CalendarIcon from "./icons/Calendar"
 import { useParams } from "next/navigation"
+import Loading from "../app/[locale]/(pages)/loading"
 
 interface IDatePicker {
   isOpen?: boolean
@@ -17,6 +19,8 @@ interface IDatePicker {
   label: string
   selectedDate: Date
   className?: string
+  disabledDates?: Date[]
+  loading?: boolean
 }
 
 const DatePicker = ({
@@ -27,8 +31,18 @@ const DatePicker = ({
   label,
   selectedDate,
   className,
+  disabledDates,
+  loading,
 }: IDatePicker) => {
   const params = useParams()
+  const setDisabledDates = (date: Date) => {
+    if (date < new Date()) return true
+    return (disabledDates || []).some(
+      d => d.toDateString() === date.toDateString()
+    )
+  }
+
+  if (loading) return <Loading />
 
   return (
     <Popover open={isOpen}>
@@ -62,7 +76,7 @@ const DatePicker = ({
       <PopoverContent className="p-0 max-w-[276px]">
         <Calendar
           mode="single"
-          disabled={(date: Date) => date < new Date()}
+          disabled={date => setDisabledDates(date)}
           onSelect={(_, selectedDay) => onSelectDate(selectedDay)}
           selected={selectedDate}
         />
