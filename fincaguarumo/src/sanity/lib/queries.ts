@@ -312,7 +312,31 @@ export const HOME_QUERY = groq`
       ^._id in translations[].value._ref
     ][0].translations[]{
       ...(value->{
-        hero_title, hero_slogan, hero_body,subtitle, language, featured_content_title, slug, featured_blog_title, intro_body
+        hero_title, 
+        hero_slogan, 
+        hero_body,
+        subtitle, 
+        language, 
+        featured_content_title,
+        featured_blog_title, 
+        slug,
+        'mediaUrl': background_media.asset->{url}, 
+        'mediaPoster': background_media_poster.asset->{
+          url, 
+          metadata {
+            lqip
+          }
+        },
+        intro_body[] {
+          ...,
+          markDefs[] {
+            ...,
+            _type == "internalLink" => {
+              ...,
+              "slug": @.reference-> slug
+            }
+          }
+        }
       })
     }
   }
