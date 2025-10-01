@@ -1,5 +1,6 @@
+"use client"
 import { useState, useEffect } from "react"
-import { Card, Button, Text, Select, Spinner, Stack, Box } from "@sanity/ui"
+import { Button, Text, Select, Spinner, Stack, Box } from "@sanity/ui"
 import { useClient } from "sanity"
 import { locales } from "../../../config"
 import { SanityDocument } from "next-sanity"
@@ -9,7 +10,9 @@ export function TranslateTool() {
   const [selectedDoc, setSelectedDoc] = useState<SanityDocument | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
   const [message, setMessage] = useState("")
-  const client = useClient()
+  const client = useClient({
+    apiVersion: process.env.NEXT_PUBLIC_SANITY_STUDIO_API_VERSION!,
+  })
 
   useEffect(() => {
     // Fetch documents that need translation
@@ -20,8 +23,21 @@ export function TranslateTool() {
           _type,
           title,
           question,
-          answer, subtitle, description, body,
-          "hasTranslations": count(*[__i18n_base == ^._id])
+          answer, 
+          subtitle, 
+          description, 
+          body,
+          hero_body,
+          hero_slogan,
+          hero_title,
+          intro_body,
+          featured_content_title,
+          featured_blog_title,
+            "hasTranslations": count(*[
+              _type == ^._type && 
+              slug.current == ^.slug.current && 
+              language != 'en'
+            ])
         }
       `)
       setDocuments(docs)
@@ -48,8 +64,6 @@ export function TranslateTool() {
       })
 
       const result = await response.json()
-
-      console.log({ result })
 
       if (result.success) {
         setMessage(
