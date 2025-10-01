@@ -239,8 +239,11 @@ export const TOUR_QUERY = groq`
     }
   },
   isPublished,
-  slideshow->{images}, 
-  price, 
+  slideshow->{images[] {
+    ...,
+    'metadata': asset->metadata
+  }}, 
+  "price": coalesce(price, 0),
   location, 
   geo,
   duration,

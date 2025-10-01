@@ -76,8 +76,6 @@ const Video = ({
     }
   }, [autoPlay, showVideo])
 
-  console.log({ showVideo, videoVisible })
-
   return (
     <>
       {poster ? (

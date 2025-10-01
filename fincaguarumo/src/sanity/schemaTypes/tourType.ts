@@ -39,7 +39,7 @@ export const tourType = defineType({
     }),
     defineField({
       name: "price",
-      type: "string",
+      type: "number",
     }),
     defineField({
       name: "location",

@@ -82,6 +82,10 @@ export function deserializeBookingData(
       date: new Date(data.bookingDetails.date),
       checkIn: new Date(data.bookingDetails.checkIn),
       checkOut: new Date(data.bookingDetails.checkOut),
+      price: Number(data.bookingDetails.price),
+      totalPrice: Number(data.bookingDetails.totalPrice),
+      duration: Number(data.bookingDetails.duration),
+      guests: Number(data.bookingDetails.guests),
     },
   }
 }
