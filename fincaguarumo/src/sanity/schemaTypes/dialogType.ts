@@ -6,6 +6,11 @@ export const dialogType = defineType({
   type: "document",
   fields: [
     defineField({
+      name: "title",
+      type: "string",
+      title: "Title",
+    }),
+    defineField({
       type: "internationalizedArrayString",
       name: "CTA_button",
       initialValue: "Reserve",
@@ -79,4 +84,12 @@ export const dialogType = defineType({
       name: "Cancel_button_label",
     }),
   ],
+  preview: {
+    select: {
+      title: "Title",
+    },
+    prepare(selection) {
+      return { ...selection }
+    },
+  },
 })
