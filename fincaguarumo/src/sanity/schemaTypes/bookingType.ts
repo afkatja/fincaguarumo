@@ -34,6 +34,13 @@ export const bookingType = defineType({
         layout: "dropdown",
       },
     },
-    { name: "uid", type: "string", title: "UID" },
+    {
+      name: "uid",
+      type: "string",
+      title: "UID",
+      description:
+        "Stable external id (e.g., Stripe object id) for idempotency.",
+      validation: (Rule: any) => Rule.required(),
+    },
   ],
 })

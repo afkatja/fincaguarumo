@@ -23,15 +23,17 @@ export async function setBookings({
   uid: string
 }) {
   try {
-    const booking = await client.create({
+    const bookingDoc = {
       _type: "booking",
+      _id: `booking-${uid}`,
       checkIn,
       checkOut,
       guestName,
       source,
       uid,
-    })
+    }
 
+    const booking = await client.createIfNotExists(bookingDoc)
     return booking
   } catch (error) {
     console.error("Error setting booking:", error)

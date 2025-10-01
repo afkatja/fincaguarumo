@@ -339,6 +339,10 @@ export const FAQ_QUERY = groq`
   }
 `
 
-export const BOOKINGS_QUERY = groq`*[_type == "booking" && dateTime(checkOut) > dateTime(now()) && source == "direct"]{
-  uid, checkIn, checkOut, guestName
+export const BOOKINGS_QUERY = groq`*[
+  _type == "booking" && 
+  dateTime(checkOut) > dateTime(now()) && 
+  !(_id in path("drafts.**"))
+]{
+  uid, checkIn, checkOut, guestName, source
 }`
