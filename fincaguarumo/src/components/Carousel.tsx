@@ -38,6 +38,7 @@ const ImgSlider = React.memo(
     [prop: string]: any
   }) => {
     const autoplayRef = React.useRef(Autoplay(options ?? {}))
+
     return (
       <Carousel
         {...props}

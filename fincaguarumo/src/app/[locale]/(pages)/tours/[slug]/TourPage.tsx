@@ -32,6 +32,7 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
       ) {
         return prev
       }
+
       return { ...prev, bookingDetails: nextBookingDetails }
     })
   }, [tour, setBookingData])
@@ -48,10 +49,12 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
         geo: tour.geo,
       }}
       slideshow={
-        <Slideshow
-          images={tour?.slideshow?.images ?? [tour.mainImage]}
-          showExpand={false}
-        />
+        tour?.slideshow?.images.length || tour.mainImage ? (
+          <Slideshow
+            images={tour?.slideshow?.images ?? [tour.mainImage]}
+            showExpand={false}
+          />
+        ) : null
       }
       parent={{ title: "Tours", href: "tours" }}
       icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}

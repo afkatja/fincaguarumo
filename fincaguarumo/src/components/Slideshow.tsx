@@ -15,6 +15,8 @@ const Slideshow = ({
   showExpand?: boolean
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
+  if (!imagesProp || imagesProp.length === 0) return null
+
   const images = imagesProp.map(img => ({
     _type: img._type || "image",
     asset: img.asset,
