@@ -4,6 +4,10 @@ import { Button, Text, Select, Spinner, Stack, Box } from "@sanity/ui"
 import { useClient } from "sanity"
 import { locales } from "../../../config"
 import { SanityDocument } from "next-sanity"
+import {
+  getUntranslatedDocumentsQuery,
+  translatableTypes,
+} from "../../../sanity/lib/translationQueries"
 
 export function TranslateTool() {
   const [documents, setDocuments] = useState<SanityDocument[]>([])
@@ -17,29 +21,9 @@ export function TranslateTool() {
   useEffect(() => {
     // Fetch documents that need translation
     const fetchDocuments = async () => {
-      const docs = await client.fetch(`
-        *[_type in ['faq', 'page', 'post', 'home', 'tour'] && language == 'en'] {
-          _id,
-          _type,
-          title,
-          question,
-          answer, 
-          subtitle, 
-          description, 
-          body,
-          hero_body,
-          hero_slogan,
-          hero_title,
-          intro_body,
-          featured_content_title,
-          featured_blog_title,
-            "hasTranslations": count(*[
-              _type == ^._type && 
-              slug.current == ^.slug.current && 
-              language != 'en'
-            ])
-        }
-      `)
+      const docs = await client.fetch(getUntranslatedDocumentsQuery, {
+        types: translatableTypes,
+      })
       setDocuments(docs)
     }
 
@@ -97,8 +81,8 @@ export function TranslateTool() {
         >
           {documents.map(doc => (
             <option key={doc._id} value={doc._id}>
-              {doc.title || doc.question || "Untitled"} ({doc._type}) -{" "}
-              {doc.hasTranslations} translations
+              {doc.displayTitle} ({doc._type}) - {doc.hasTranslations}{" "}
+              translations
             </option>
           ))}
         </Select>

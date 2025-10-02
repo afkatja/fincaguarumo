@@ -7,12 +7,13 @@ import {
   StructureBuilder,
 } from "sanity/structure"
 import { i18n } from "../languages"
+import { hasTranslationQuery } from "../src/sanity/lib/translationQueries"
 
 const getTranslationItems = (
   S: StructureBuilder,
   schemaType: string,
   title: string,
-  queryType: "slug" | "reference" | "standalone" = "slug"
+  queryType: "metadata" | "standalone" = "metadata"
 ) => {
   return S.documentList()
     .title(title)
@@ -39,17 +40,9 @@ const getTranslationItems = (
                   // For home page - typically only one document
                   filter = "_type == $type && language == $lang"
                   break
-                case "reference":
-                  // For FAQ and other types that use references
-                  filter = `_type == $type && language == $lang && (
-                    _id in *[_type == "translation.metadata" && $id in translations[].value._ref][0].translations[].value._ref ||
-                    slug.current == *[_id == $id][0].slug.current
-                  )`
-                  break
-                case "slug":
+                case "metadata":
                 default:
-                  // For pages, posts, tours that use slug matching
-                  filter = `_type == $type && language == $lang && _id in *[_type == "translation.metadata" && $id in translations[].value._ref][0].translations[].value._ref`
+                  filter = `_type == $type && (${hasTranslationQuery})`
                   break
               }
 
@@ -84,16 +77,16 @@ export const structure: StructureResolver = S => {
         .child(getTranslationItems(S, "home", "Home", "standalone")),
       S.listItem()
         .title("Pages")
-        .child(getTranslationItems(S, "page", "Pages", "slug")),
+        .child(getTranslationItems(S, "page", "Pages", "metadata")),
       S.listItem()
         .title("Tours")
-        .child(getTranslationItems(S, "tour", "Tours", "slug")),
+        .child(getTranslationItems(S, "tour", "Tours", "metadata")),
       S.listItem()
         .title("Posts")
-        .child(getTranslationItems(S, "post", "Posts", "slug")),
+        .child(getTranslationItems(S, "post", "Posts", "metadata")),
       S.listItem()
         .title("FAQ")
-        .child(getTranslationItems(S, "faq", "FAQ", "reference")),
+        .child(getTranslationItems(S, "faq", "FAQ", "metadata")),
 
       S.divider(),
       S.listItem()

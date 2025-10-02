@@ -17,6 +17,13 @@ export function portableTextToPlain(blocks: PortableTextBlock[]): string {
 }
 
 /**
+ * Generate a random key for Sanity
+ */
+function generateKey(): string {
+  return Math.random().toString(36).substring(2, 15)
+}
+
+/**
  * Reconstruct Portable Text blocks with translated text
  * Preserves structure but replaces text content
  */
@@ -41,9 +48,10 @@ export function plainToPortableText(
       ...block,
       children: [
         {
+          _key: generateKey(),
           _type: "span",
           text: translatedParagraph,
-          marks: [], // Reset marks for simplicity, or preserve if needed
+          marks: [], // Reset marks for simplicity
         },
       ],
     }

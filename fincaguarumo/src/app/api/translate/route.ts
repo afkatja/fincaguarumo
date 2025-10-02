@@ -77,10 +77,7 @@ export async function POST(request: Request) {
 
     // Get source document with slug
     const sourceDoc = await client.fetch(
-      `*[_type == $docType && _id == $docId][0]{
-        ...,
-        "slug": slug.current
-      }`,
+      `*[_type == $docType && _id == $docId][0]`,
       { docId, docType }
     )
 
@@ -100,7 +97,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const sourceSlug = sourceDoc.slug
+    const sourceSlug = sourceDoc.slug?.current
     if (!sourceSlug) {
       return NextResponse.json(
         { error: "Source document must have a slug" },
@@ -126,71 +123,7 @@ export async function POST(request: Request) {
           { docType, slug: sourceSlug, targetLang }
         )
 
-        if (existingDoc) {
-          console.log(
-            `⚠️  Translation for ${targetLang} already exists (ID: ${existingDoc._id})`
-          )
-          results.push({
-            language: targetLang,
-            skipped: true,
-            reason: "Translation already exists",
-            docId: existingDoc._id,
-          })
-          createdDocIds.push(existingDoc._id)
-          continue
-        }
-
-        console.log(`🔄 Translating to ${targetLang}...`)
-        const translatedFields: { [key: string]: any } = {}
-
-        // Translate each field
-        for (const field of fieldsToTranslate) {
-          if (sourceDoc[field]) {
-            try {
-              const fieldValue = sourceDoc[field]
-
-              if (isPortableText(fieldValue)) {
-                console.log(`📝 ${field} is Portable Text`)
-                const plainText = portableTextToPlain(fieldValue)
-
-                if (!plainText.trim()) {
-                  console.log(`⚠️  ${field} is empty, skipping`)
-                  translatedFields[field] = fieldValue
-                  continue
-                }
-
-                const translatedText = await translateText(
-                  plainText,
-                  sourceLanguage,
-                  targetLang
-                )
-
-                translatedFields[field] = plainToPortableText(
-                  fieldValue,
-                  translatedText
-                )
-                console.log(`✅ Translated ${field}`)
-              } else if (typeof fieldValue === "string") {
-                const translatedText = await translateText(
-                  fieldValue,
-                  sourceLanguage,
-                  targetLang
-                )
-                translatedFields[field] = translatedText
-                console.log(`✅ Translated ${field}`)
-              } else {
-                translatedFields[field] = fieldValue
-              }
-            } catch (error) {
-              console.error(`❌ Failed to translate ${field}:`, error)
-              throw new Error(`Failed to translate field: ${field}`)
-            }
-          }
-        }
-
-        console.log(`💾 Creating translated document for ${targetLang}`)
-
-        // Get base fields
+        // Get base fields (non-translatable fields)
         const baseFields = Object.fromEntries(
           Object.entries(sourceDoc).filter(([key]) => {
             return (
@@ -202,25 +135,123 @@ export async function POST(request: Request) {
           })
         )
 
-        // Create the translated document with same slug
-        const translatedDoc = await client.create({
-          _type: docType,
-          language: targetLang,
-          slug: {
-            _type: "slug",
-            current: sourceSlug, // Same slug, different language
-          },
-          ...baseFields,
-          ...translatedFields,
-        })
+        console.log(`🔄 Translating to ${targetLang}...`)
 
-        console.log(`✅ Created ${translatedDoc._id}`)
-        createdDocIds.push(translatedDoc._id)
-        results.push({
-          language: targetLang,
-          doc: translatedDoc,
-          success: true,
-        })
+        // Translate fields
+        const translatedFields: { [key: string]: any } = {}
+        const fieldsToUpdate = existingDoc
+          ? fieldsToTranslate.filter(
+              field =>
+                !existingDoc[field] ||
+                (Array.isArray(existingDoc[field]) &&
+                  existingDoc[field].length === 0)
+            )
+          : fieldsToTranslate
+
+        if (existingDoc && fieldsToUpdate.length === 0) {
+          console.log(
+            `⚠️  Translation for ${targetLang} already exists and is complete`
+          )
+          results.push({
+            language: targetLang,
+            skipped: true,
+            reason: "Translation already exists",
+            docId: existingDoc._id,
+          })
+          createdDocIds.push(existingDoc._id)
+          continue
+        }
+
+        // Translate required fields
+        for (const field of fieldsToUpdate) {
+          if (sourceDoc[field]) {
+            try {
+              const fieldValue = sourceDoc[field]
+
+              if (isPortableText(fieldValue)) {
+                console.log(`📝 Translating Portable Text field: ${field}`)
+                const plainText = portableTextToPlain(fieldValue)
+
+                if (!plainText.trim()) {
+                  console.log(`⚠️  ${field} is empty, copying original`)
+                  translatedFields[field] = fieldValue
+                  continue
+                }
+
+                const translatedText = await translateText(
+                  plainText,
+                  sourceLanguage,
+                  targetLang
+                )
+                translatedFields[field] = plainToPortableText(
+                  fieldValue,
+                  translatedText
+                )
+              } else if (typeof fieldValue === "string") {
+                const translatedText = await translateText(
+                  fieldValue,
+                  sourceLanguage,
+                  targetLang
+                )
+                translatedFields[field] = translatedText
+              } else {
+                translatedFields[field] = fieldValue
+              }
+              console.log(`✅ Translated ${field}`)
+            } catch (error) {
+              console.error(`❌ Failed to translate ${field}:`, error)
+              throw new Error(`Failed to translate field: ${field}`)
+            }
+          }
+        }
+
+        if (existingDoc) {
+          console.log(
+            `🔄 Updating translation for ${targetLang} with fields: ${Object.keys(translatedFields).join(", ")}`
+          )
+
+          const updatedDoc = await client
+            .patch(existingDoc._id)
+            .set({
+              ...translatedFields,
+              _type: docType,
+              language: targetLang,
+              slug: {
+                _type: "slug",
+                current: sourceSlug,
+              },
+            })
+            .commit()
+
+          console.log(`✅ Updated ${updatedDoc._id}`)
+          createdDocIds.push(updatedDoc._id)
+          results.push({
+            language: targetLang,
+            doc: updatedDoc,
+            success: true,
+            updated: true,
+          })
+        } else {
+          console.log(`📝 Creating new translation for ${targetLang}`)
+          const translatedDoc = await client.create({
+            _type: docType,
+            language: targetLang,
+            slug: {
+              _type: "slug",
+              current: sourceSlug,
+            },
+            ...baseFields,
+            ...translatedFields,
+          })
+
+          console.log(`✅ Created ${translatedDoc._id}`)
+          createdDocIds.push(translatedDoc._id)
+          results.push({
+            language: targetLang,
+            doc: translatedDoc,
+            success: true,
+          })
+        }
       } catch (error) {
         console.error(`❌ Failed to translate to ${targetLang}:`, error)
         errors.push({
