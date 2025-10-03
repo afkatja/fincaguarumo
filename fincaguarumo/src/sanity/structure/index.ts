@@ -6,8 +6,8 @@ import {
   Divider,
   StructureBuilder,
 } from "sanity/structure"
-import { i18n } from "../languages"
-import { hasTranslationQuery } from "../src/sanity/lib/translationQueries"
+import { i18n } from "../../../languages"
+import { hasTranslationQuery } from "../lib/translationQueries"
 
 const getTranslationItems = (
   S: StructureBuilder,

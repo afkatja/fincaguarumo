@@ -17,7 +17,7 @@ import { i18n } from "./languages"
 import { internationalizedArray } from "sanity-plugin-internationalized-array"
 import { media } from "sanity-plugin-media"
 import { TranslateTool } from "./src/app/studio/tool/translate"
-import { structure } from "./structure"
+import { structure } from "./src/sanity/structure"
 
 export default defineConfig({
   basePath: "/studio",
