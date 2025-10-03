@@ -17,14 +17,14 @@ import TransitionProvider from "./providers"
 import { BookingProvider } from "./BookingProvider"
 import { DialogProvider } from "./DialogProvider"
 
-import { metadata as meta } from "./meta"
+import { generateMetadata } from "./meta"
 import { i18n } from "../../../languages"
 import Header from "../../components/header"
 import { cn } from "../../lib/utils"
 import Script from "next/script"
 import { jsonLd } from "../../lib/json-ld"
 
-export const metadata = meta
+export { generateMetadata }
 
 export const viewport: Viewport = {
   width: "device-width",

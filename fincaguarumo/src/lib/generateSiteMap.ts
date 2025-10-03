@@ -1,11 +1,14 @@
 import { SanityDocument } from "next-sanity"
 import { sanityFetch } from "../sanity/lib/client"
-import xml from "xml"
 import {
   ALL_PAGES_QUERY,
   POSTS_QUERY,
   TOURS_QUERY,
 } from "../sanity/lib/queries"
+import { MetadataRoute } from "next"
+import { locales } from "../config"
+
+const baseUrl = "https://fincaguarumo.com"
 
 const fetchContent = async (): Promise<{
   posts: SanityDocument[]
@@ -23,48 +26,101 @@ const fetchContent = async (): Promise<{
   return { posts, tours, pages }
 }
 
-const locales = ["en", "es", "ru", "nl", "de"]
-const generateLocalizedUrls = (type: string, item: SanityDocument) => {
-  return locales.map(locale => ({
-    url: `/${locale}/${type}/${item.slug.current}`,
-    lastmod: new Date(item._updatedAt).toISOString(),
-    changefreq: "weekly",
-    priority: 0.7,
-  }))
-}
-
 export const generateSitemap = async () => {
   const { posts, tours, pages } = await fetchContent()
 
-  // Add main gallery page
-  const mainGalleryUrl = () => {
-    return locales.map(locale => ({
-      url: `${locale}/gallery`,
-      lastmod: new Date().toISOString(),
-      changefreq: "weekly",
-      priority: 0.7,
-    }))
-  }
+  const urls: MetadataRoute.Sitemap = []
 
-  const mainPages = () => {
-    return locales.map(locale => ({
-      url: `/${locale}`,
-      lastmod: new Date().toISOString(),
-      changefreq: "daily",
+  // Homepage for all locales
+  locales.forEach(locale => {
+    const url = locale === "en" ? baseUrl : `${baseUrl}/${locale}`
+    urls.push({
+      url,
+      lastModified: new Date(),
+      alternates: {
+        languages: Object.fromEntries(
+          locales.map(loc => [
+            loc,
+            loc === "en" ? baseUrl : `${baseUrl}/${loc}`,
+          ])
+        ),
+      },
+      changeFrequency: "daily" as const,
       priority: 1.0,
-    }))
-  }
-  const urls = [
-    ...mainPages(),
-    ...posts.flatMap(post => generateLocalizedUrls("blog", post)),
-    ...tours.flatMap(tour => generateLocalizedUrls("tours", tour)),
-    ...pages.flatMap(page => generateLocalizedUrls("pages", page)),
-    ...mainGalleryUrl(),
-  ]
-
-  const sitemap = xml({
-    urls,
+    })
   })
 
-  return sitemap.toString()
+  // Gallery (not translated - English only for now)
+  urls.push({
+    url: `${baseUrl}/gallery`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  })
+
+  // Blog posts (English only - not translated)
+  posts.forEach(post => {
+    urls.push({
+      url: `${baseUrl}/blog/${post.slug.current}`,
+      lastModified: new Date(post._updatedAt),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    })
+  })
+
+  // Tours (translated - all locales)
+  tours.forEach(tour => {
+    locales.forEach(locale => {
+      const url =
+        locale === "en"
+          ? `${baseUrl}/tours/${tour.slug.current}`
+          : `${baseUrl}/${locale}/tours/${tour.slug.current}`
+
+      urls.push({
+        url,
+        lastModified: new Date(tour._updatedAt),
+        alternates: {
+          languages: Object.fromEntries(
+            locales.map(loc => [
+              loc,
+              loc === "en"
+                ? `${baseUrl}/tours/${tour.slug.current}`
+                : `${baseUrl}/${loc}/tours/${tour.slug.current}`,
+            ])
+          ),
+        },
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      })
+    })
+  })
+
+  // Pages (assuming translated - all locales)
+  pages.forEach(page => {
+    locales.forEach(locale => {
+      const url =
+        locale === "en"
+          ? `${baseUrl}/pages/${page.slug.current}`
+          : `${baseUrl}/${locale}/pages/${page.slug.current}`
+
+      urls.push({
+        url,
+        lastModified: new Date(page._updatedAt),
+        alternates: {
+          languages: Object.fromEntries(
+            locales.map(loc => [
+              loc,
+              loc === "en"
+                ? `${baseUrl}/pages/${page.slug.current}`
+                : `${baseUrl}/${loc}/pages/${page.slug.current}`,
+            ])
+          ),
+        },
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      })
+    })
+  })
+
+  return urls
 }

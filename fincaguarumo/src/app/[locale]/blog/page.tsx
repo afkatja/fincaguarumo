@@ -5,6 +5,7 @@ import { POSTS_QUERYResult } from "../../../../sanity.types"
 import PagesLayout from "../(pages)/pagesLayout"
 import { SanityDocument } from "next-sanity"
 import { Metadata } from "next"
+import { locales } from "../../../config"
 
 // Generate metadata for the blog page
 export async function generateMetadata({
@@ -30,11 +31,13 @@ export async function generateMetadata({
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        en: `${baseUrl}/en/blog`,
-        es: `${baseUrl}/es/blog`,
-        ru: `${baseUrl}/ru/blog`,
-        nl: `${baseUrl}/nl/blog`,
-        de: `${baseUrl}/de/blog`,
+        "x-default": `${baseUrl}/blog`,
+        ...Object.fromEntries(
+          locales.map(loc => [
+            loc,
+            loc === "en" ? `${baseUrl}/blog` : `${baseUrl}/${loc}/blog`,
+          ])
+        ),
       },
     },
     openGraph: {

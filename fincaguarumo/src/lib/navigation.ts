@@ -16,7 +16,7 @@ const navigation = async ({ locale }: { locale: string }) => {
   })
 
   const main = mainNav
-    .map(item => ({ href: `/${locale}/${item?.slug.current}`, ...item }))
+    .map(item => ({ ...item, href: `/${item.slug.current}` }))
     .filter(item => item.isPublished)
     .sort((a, b) => {
       if (a.title < b.title) return -1
@@ -32,7 +32,7 @@ const navigation = async ({ locale }: { locale: string }) => {
 
   const utils = utilsNav
     .filter(item => item.isPublished)
-    .map(item => ({ href: `/${locale}/${item?.slug.current}`, ...item }))
+    .map(item => ({ ...item, href: `/${item.slug.current}` }))
 
   const navItems = [...main, ...utils]
 
