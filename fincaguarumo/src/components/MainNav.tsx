@@ -12,7 +12,7 @@ const MainNav = async ({
   return (
     <nav className={`hidden md:flex items-center gap-5 ${className}`}>
       {navItems.map(navItem => (
-        <NavItem key={navItem.title} navItem={navItem} />
+        <NavItem key={navItem.href} navItem={navItem} />
       ))}
     </nav>
   )

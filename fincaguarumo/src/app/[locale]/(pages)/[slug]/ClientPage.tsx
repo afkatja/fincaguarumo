@@ -1,5 +1,6 @@
 "use client"
-import React, { useCallback, useEffect } from "react"
+import React, { useEffect } from "react"
+import { createNavigation } from "next-intl/navigation"
 import RichText from "@/components/RichText"
 import { BookingOptions } from "@/components/BookingOptions"
 import { Button } from "@/components/ui/button"
@@ -15,7 +16,6 @@ import { Content } from "./page"
 import { useBooking } from "../../BookingProvider"
 import FAQ from "@/components/FAQ"
 import Title from "@/components/Title"
-import Link from "next/link"
 import Icon from "../../../../components/Icon"
 
 type Messages = {
@@ -36,6 +36,7 @@ const ClientPage = ({
   messages: Messages
 }) => {
   const { setBookingData } = useBooking()
+  const { Link } = createNavigation()
   const t = messages?.booking
 
   useEffect(() => {
@@ -75,7 +76,7 @@ const ClientPage = ({
             <FAQ faqs={content.faq} />
           )}
           <Link
-            href={`/${locale}/faq`}
+            href={`/faq`}
             className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
           >
             {t?.page?.moreFAQ || "More FAQ"}

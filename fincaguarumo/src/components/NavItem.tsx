@@ -1,9 +1,9 @@
 "use client"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { createNavigation } from "next-intl/navigation"
 import React from "react"
 
 const NavItem = ({ navItem }: { navItem: { href: string; title: string } }) => {
+  const { Link, usePathname } = createNavigation()
   const pathname = usePathname()
 
   return (

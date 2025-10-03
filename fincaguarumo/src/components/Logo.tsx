@@ -1,8 +1,9 @@
 import React from "react"
-import Link from "next/link"
+import { createNavigation } from "next-intl/navigation"
 import Icon from "./Icon"
 
 const Logo = () => {
+  const { Link } = createNavigation()
   return (
     <Link href="/" className="block py-3 h-full logo-link" prefetch>
       <Icon

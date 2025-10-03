@@ -5,12 +5,8 @@ import { useStripe } from "@stripe/react-stripe-js"
 import PagesLayout from "../pagesLayout"
 import icons from "@/components/icons"
 import Loading from "../loading"
-import {
-  useParams,
-  usePathname,
-  useRouter,
-  useSearchParams,
-} from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
+import { createNavigation } from "next-intl/navigation"
 import AddToCalendar from "@/components/AddToCalendar"
 import { useBooking } from "../../BookingProvider"
 
@@ -56,15 +52,15 @@ const STATUS_CONTENT_MAP: Record<
 }
 
 export default function CompletePage() {
+  const { usePathname, useRouter, redirect } = createNavigation()
+  const pathname = usePathname()
+  const router = useRouter()
   const { locale } = useParams()
   const searchParams = useSearchParams()
 
   const stripe = useStripe()
 
   const { bookingData } = useBooking()
-
-  const pathname = usePathname()
-  const router = useRouter()
 
   const [status, setStatus] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -138,12 +134,12 @@ export default function CompletePage() {
     // Check if this is a page reload
     const isReload = sessionStorage.getItem("payment-success-loaded")
     if (isReload) {
-      router.replace(`/${locale}`)
+      redirect({ href: "/", locale: (locale as string) ?? "en" })
       sessionStorage.removeItem("payment-success-loaded")
     } else {
       sessionStorage.setItem("payment-success-loaded", "true")
     }
-    if (pathname !== `/${locale}/payment-success`) {
+    if (pathname !== `/payment-success`) {
       setSession(null)
       setStatus(null)
       setPaymentIntent(null)

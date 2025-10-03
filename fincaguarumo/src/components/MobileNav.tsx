@@ -1,13 +1,13 @@
-import Link from "next/link"
 import { randomUUID } from "crypto"
 import Sheet from "./Sheet"
-
+import { createNavigation } from "next-intl/navigation"
 const MobileNav = ({
   navItems,
 }: {
   navItems: { title: string; href: string }[]
 }) => {
   if (!navItems || !navItems.length) return
+  const { Link } = createNavigation()
   return (
     <Sheet>
       {navItems.map(navItem => (

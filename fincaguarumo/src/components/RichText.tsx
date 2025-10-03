@@ -7,6 +7,8 @@ import { urlFor } from "../sanity/lib/image"
 import Link from "next/link"
 import ExternalLink from "./icons/ExternalLink"
 
+import { createNavigation } from "next-intl/navigation"
+
 const RichText = ({
   body,
   icon,
@@ -17,6 +19,7 @@ const RichText = ({
   className?: string
 }) => {
   if (!body) return
+  const { Link: IntlLink } = createNavigation()
   const components: Partial<PortableTextReactComponents> = {
     block: {
       normal: ({ children }) => (
@@ -59,12 +62,12 @@ const RichText = ({
 
     marks: {
       internalLink: ({ value, children }) => (
-        <Link
+        <IntlLink
           href={value.slug.current}
           className="fancy-underline dark:text-zinc-100"
         >
           {children}
-        </Link>
+        </IntlLink>
       ),
       link: ({ value, children }) => {
         const { blank, href } = value

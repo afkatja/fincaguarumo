@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react"
 import Title from "./Title"
 import Icon from "./Icon"
-import Link from "next/link"
+import { createNavigation } from "next-intl/navigation"
 import FadeInObserver from "./FadeInObserver"
 
 const FeaturedContent = ({
@@ -13,6 +13,7 @@ const FeaturedContent = ({
   items: { content: { [key: string]: ReactNode } }[]
   href: string
 }) => {
+  const { Link } = createNavigation()
   return (
     <article className="relative z-10">
       <div className="w-11/12 mx-auto py-5 lg:px-40">

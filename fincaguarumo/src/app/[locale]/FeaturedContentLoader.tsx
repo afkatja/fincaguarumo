@@ -33,7 +33,7 @@ export default function FeaturedContentLoader({ locale }: { locale: string }) {
         content: {
           [tour.slug.current]: (
             <TourItem
-              href={`${locale}/tours/${tour.slug.current}`}
+              href={`/tours/${tour.slug.current}`}
               mainImage={tour.mainImage}
               title={tour.title}
               isFeatured
@@ -54,7 +54,7 @@ export default function FeaturedContentLoader({ locale }: { locale: string }) {
         content: {
           [post.slug.current]: (
             <TourItem
-              href={`${locale}/blog/${post.slug.current}`}
+              href={`/blog/${post.slug.current}`}
               mainImage={post.mainImage}
               title={post.title}
               slug={post.slug}

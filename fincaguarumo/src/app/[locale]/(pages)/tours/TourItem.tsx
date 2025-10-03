@@ -1,11 +1,10 @@
 "use client"
 
-import Link from "next/link"
+import { createNavigation } from "next-intl/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import Badge from "@/components/badge"
 import Icon from "@/components/Icon"
-import { urlFor } from "@/sanity/lib/image"
 import { titleCase, loadTranslations } from "../../../../lib/utils"
 import { useEffect, useState } from "react"
 import { SanityImageObject } from "../../../../types"
@@ -48,6 +47,8 @@ const TourItem = ({
       readMore: string
     }
   } | null>(null)
+
+  const { Link } = createNavigation()
 
   useEffect(() => {
     const loadTranslationsData = async () => {
