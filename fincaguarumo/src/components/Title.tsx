@@ -7,6 +7,7 @@ interface ITitle {
   Heading?: React.ElementType<{ className?: string }>
   title: React.ReactNode
   titleClassName?: string
+  id?: string
   icon?: {
     title?: string
     iconClassName?: string
@@ -16,7 +17,7 @@ interface ITitle {
 }
 
 const Title = React.memo(
-  ({ title, titleClassName, Heading = "h2", icon: iconProp = {} }: ITitle) => {
+  ({ title, titleClassName, Heading = "h2", icon: iconProp = {}, id }: ITitle) => {
     const {
       iconClassName = "",
       size = 40,
@@ -30,7 +31,7 @@ const Title = React.memo(
     }, [])
 
     return (
-      <Heading className={titleClassName}>
+      <Heading className={titleClassName} id={id}>
         {!!Object.keys(iconProp).length && (
           <Icon
             icon={iconTitle ?? icon}

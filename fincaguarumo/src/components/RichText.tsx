@@ -45,6 +45,7 @@ const RichText = ({
             iconClassName: "fill-guarumo-accent dark:fill-zinc-50",
             title: icon,
           }}
+          id={String(children).toLowerCase().split(" ")[0]}
         />
       ),
     },

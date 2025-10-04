@@ -3,10 +3,10 @@ User-agent: *
 
 # Allow all bots to access the main site
 Allow: /
-Allow: /api/sitemap
+Allow: /sitemap
 
 # Block admin pages
-Disallow: /admin/
+Disallow: /studio/
 Disallow: /login/
 Disallow: /register/
 
@@ -21,4 +21,4 @@ Disallow: /*.pdf$
 Disallow: /*.doc$
 
 # Specify the location of the sitemap
-Sitemap: https://fincaguarumo.com/api/sitemap
+Sitemap: https://fincaguarumo.com/sitemap

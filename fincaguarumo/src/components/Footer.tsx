@@ -12,6 +12,12 @@ const Footer = () => {
       icon: "Waze",
       className: "col-span-4",
     },
+    {
+      title: "Sustainability commitment",
+      href: "/about#sustainability",
+      icon: "Guarumo",
+      className: "col-span-4",
+    },
     ...navItems,
   ]
   const items = links.map(item => ({
