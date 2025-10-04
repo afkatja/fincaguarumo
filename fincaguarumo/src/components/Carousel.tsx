@@ -59,8 +59,10 @@ const ImgSlider = React.memo(
                 className="mx-auto object-cover"
                 priority={i === 0}
                 quality={100}
-                placeholder="blur"
-                blurDataURL={img.metadata?.lqip}
+                {...(img.metadata && {
+                  placeholder: "blur",
+                  blurDataURL: img.metadata?.lqip,
+                })}
               />
             </CarouselItem>
           ))}
