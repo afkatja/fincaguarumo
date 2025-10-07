@@ -62,9 +62,9 @@ const Tours = async ({ params }: { params: any }) => {
     params: { pageName: "tours", language: locale },
     revalidate: 0,
   })
+  const tours = toursContent.filter(tour => tour.isPublished)
 
-  const headerImage =
-    toursContent[Math.floor(Math.random() * toursContent.length)].mainImage
+  const headerImage = tours[Math.floor(Math.random() * tours.length)].mainImage
 
   return (
     <Layout
@@ -74,7 +74,7 @@ const Tours = async ({ params }: { params: any }) => {
       description={pageContent?.description}
       mainImage={headerImage}
     >
-      <ClientPage tours={toursContent} locale={locale} />
+      <ClientPage tours={tours} locale={locale} />
     </Layout>
   )
 }

@@ -2,7 +2,7 @@
 import { POSTS_QUERYResult } from "../../../../sanity.types"
 import FeaturedContent from "../../../components/FeaturedContent"
 import TourItem from "../(pages)/tours/TourItem"
-import { usePathname } from "next/navigation"
+import { createNavigation } from "next-intl/navigation"
 
 export function Posts({
   posts: postsProp,
@@ -11,6 +11,7 @@ export function Posts({
   posts: POSTS_QUERYResult
   locale: string
 }) {
+  const {  usePathname } = createNavigation()
   const pathname = usePathname()
 
   const posts = postsProp

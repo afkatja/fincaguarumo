@@ -1,7 +1,7 @@
 "use client"
 import React from "react"
-import { useParams, usePathname } from "next/navigation"
 import Tour, { TourType } from "./TourItem"
+import { createNavigation } from "next-intl/navigation"
 
 const ClientPage = ({
   tours: toursProp,
@@ -10,14 +10,13 @@ const ClientPage = ({
   tours: TourType[]
   locale: string
 }) => {
+  const { usePathname } = createNavigation()
   const pathname = usePathname()
 
-  const tours = toursProp
-    .filter((tour: TourType) => tour.isPublished)
-    .map((tour: Omit<TourType, "href">) => ({
-      href: `${pathname}/${tour.slug.current}`,
-      ...tour,
-    }))
+  const tours = toursProp.map((tour: Omit<TourType, "href">) => ({
+    href: `${pathname}/${tour.slug.current}`,
+    ...tour,
+  }))
   const part1 = tours.slice(0, tours.length / 3)
   const part2 = tours.slice(tours.length / 3, (tours.length / 3) * 2)
   const part3 = tours.slice((tours.length / 3) * 2, tours.length)
