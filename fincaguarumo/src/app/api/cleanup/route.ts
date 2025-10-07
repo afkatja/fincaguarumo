@@ -1,20 +1,19 @@
 import {
   findAndDeleteDuplicates,
   fixMalformedSlugs,
+  forceDeleteDocumentById,
 } from "../../../../scripts/cleanup"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
-// In your Sanity Studio or via API
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const docId = new URLSearchParams(request.url).get("docId")
+  if (docId) {
+    await forceDeleteDocumentById(docId)
+    return NextResponse.json({ success: true })
+  }
   console.log("🔧 Starting cleanup process...")
-
-  // First fix malformed slugs
   await fixMalformedSlugs()
-
-  // Then delete duplicates
   await findAndDeleteDuplicates()
-
   console.log("🎉 Cleanup completed!")
-
   return NextResponse.json({ success: true })
 }
