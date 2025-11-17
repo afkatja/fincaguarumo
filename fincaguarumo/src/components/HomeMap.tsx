@@ -5,44 +5,11 @@ import {
   Map,
   MapCameraChangedEvent,
   AdvancedMarker,
-  useMap,
 } from "@vis.gl/react-google-maps"
 import Image from "next/image"
-import Review from "./Review"
-import { PlaceProvider, usePlace } from "../app/providers/PlaceProvider"
-
-type Review = {
-  authorAttribution: {
-    displayName: string
-    uri: string
-  }
-  rating: number
-  text: string
-}
-
-const placeId = "ChIJM5QhUwBhpI8RJqrQASxdNE0" // Villa Bruno, not Finca Guarumo
-const coords = { lat: 8.496420632614996, lng: -83.3341457939961 }
-
-const PlaceReviews = () => {
-  const { place } = usePlace()
-
-  if (!place) return null
-
-  return (
-    <div className="py-5 lg:px-40 mt-5">
-      <h2 className="text-3xl mt-5 mb-4 px-4">What our guests say</h2>
-      {place.reviews && place.reviews.length > 0 && (
-        <div className="p-4 lg:p-0 md:grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {place.reviews.map(
-            (review: google.maps.places.Review, index: number) => (
-              <Review key={index} review={review} />
-            )
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
+import { PlaceProvider } from "../app/providers/PlaceProvider"
+import { PlaceReviews } from "./PlaceReviews"
+import { coords, placeId } from "../../data/geo"
 
 const HomeMap = () => {
   return (

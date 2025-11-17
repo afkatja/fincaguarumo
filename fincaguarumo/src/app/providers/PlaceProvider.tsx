@@ -39,7 +39,7 @@ export const PlaceProvider: React.FC<PlaceProviderProps> = ({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!lib || !map) return
+    if (!lib) return
 
     const fetchPlaceDetails = async () => {
       try {
