@@ -5,10 +5,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import Payment from "./(payment)/Payment"
-import BookingForm from "./(payment)/BookingForm"
-import { BookingType } from "../../../types"
 import { RemoveScroll } from "react-remove-scroll"
+import BookingForm from "../[locale]/(pages)/(payment)/BookingForm"
+import Payment from "../[locale]/(pages)/(payment)/Payment"
+import { BookingType } from "../../types"
 
 interface BookingDialogContentProps {
   bookingData: Record<string, any>

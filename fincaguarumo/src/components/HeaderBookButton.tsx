@@ -1,6 +1,6 @@
 "use client"
 import React from "react"
-import { useDialog } from "../app/[locale]/DialogProvider"
+import { useDialog } from "../app/providers/DialogProvider"
 import { Button } from "./ui/button"
 import { usePathname, useRouter } from "next/navigation"
 

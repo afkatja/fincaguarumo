@@ -14,8 +14,8 @@ import {
   BOOKING_TYPE,
   initialBookingData,
 } from "../../../../types"
-import { useBooking } from "../../BookingProvider"
-import { useDialog } from "../../DialogProvider"
+import { useBooking } from "../../../providers/BookingProvider"
+import { useDialog } from "../../../providers/DialogProvider"
 import SelectGuestsOptions from "./SelectGuestsOptions"
 import PhoneInput from "../../../../components/PhoneInput"
 import BookingCalendar from "../../../../components/BookingCalendar"
