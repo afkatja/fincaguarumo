@@ -21,4 +21,4 @@ Disallow: /*.pdf$
 Disallow: /*.doc$
 
 # Specify the location of the sitemap
-Sitemap: https://fincaguarumo.com/sitemap
+Sitemap: https://fincaguarumo.com/sitemap.xml
