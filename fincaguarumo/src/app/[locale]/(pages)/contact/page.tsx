@@ -3,7 +3,39 @@ import { sanityFetch } from "../../../../sanity/lib/client"
 import { PAGE_QUERY } from "../../../../sanity/lib/queries"
 
 import ContactPage from "./ContactPage"
-import { IContactFormData } from "./ContactForm"
+import Script from "next/script"
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "TouristDestination",
+  name: "Villa Bruno at Finca Guarumo Eco-Lodge",
+  description:
+    "Sustainable eco-lodge in the Osa Peninsula offering wildlife viewing and rainforest experiences",
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: "8.496420632614996",
+    longitude: "-83.3341457939961",
+  },
+  touristType: [
+    "Eco-tourists",
+    "Nature photographers",
+    "Birdwatchers",
+    "Wildlife enthusiasts",
+    "Sustainable travelers",
+  ],
+  includesAttraction: [
+    {
+      "@type": "TouristAttraction",
+      name: "Corcovado National Park",
+      description: "One of the most biodiverse places on Earth",
+    },
+    {
+      "@type": "TouristAttraction",
+      name: "Scarlet Macaw Viewing",
+      description: "Daily sightings of endangered scarlet macaws",
+    },
+  ],
+}
 
 const people = [
   {
@@ -28,7 +60,19 @@ const Contact = async ({ params }: { params: any }) => {
     params: { pageName: "contact", language: locale },
   })
 
-  return <ContactPage locale={locale} content={content} people={people} />
+  return (
+    <>
+      <ContactPage locale={locale} content={content} people={people} />
+      <Script
+        id="json-ld"
+        strategy="afterInteractive"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schema).replace(/</g, "\\u003c"),
+        }}
+      />
+    </>
+  )
 }
 
 export default Contact
