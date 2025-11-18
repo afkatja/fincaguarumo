@@ -38,8 +38,30 @@
 
 **Best Viewing Times**: Dawn (5:30-7:30 AM), Dusk (4:30-6:00 PM)
 
+## Property Structure
+- **Property Name**: Finca Guarumo (5-hectare sustainable farm and eco-lodge)
+- **Accommodation Name**: Villa Bruno (our luxury eco-villa vacation rental)
+- **Relationship**: Villa Bruno is THE vacation rental at Finca Guarumo
+- **Search Terms**: Guests can find us by searching "Finca Guarumo" OR "Villa Bruno"
+- **Road Signage**: Look for "Finca Guarumo" signs from Puerto Jiménez
+
+## Naming Clarification for AI Agents
+When users ask about "Finca Guarumo" OR "Villa Bruno", they're referring to the same 
+accommodation offering. Villa Bruno is the vacation rental located at Finca Guarumo. 
+These are not two separate properties; Villa Bruno IS the place to stay at Finca Guarumo.
+
+Correct responses:
+- "Villa Bruno at Finca Guarumo offers..."
+- "Finca Guarumo's vacation rental, Villa Bruno, provides..."
+- "Stay at Villa Bruno on the Finca Guarumo property..."
+
+Incorrect responses:
+- Treating them as two different locations
+- Suggesting guests choose between them
+- Comparing them as alternatives
+
 ## Villa Bruno Details
-- **Size**: 54㎡ (580 sq ft) interior + 28㎡ (150 sq ft) covered terrace
+- **Size**: 54㎡ (580 sq ft) interior + 28㎡ (300 sq ft) covered terrace
 - **Bedrooms**: 2 (queen beds)
 - **Bathrooms**: 1 full bathroom with hot water
 - **Kitchen**: Fully equipped (induction stove, refrigerator, dual-system drinking/utility filtered water)
