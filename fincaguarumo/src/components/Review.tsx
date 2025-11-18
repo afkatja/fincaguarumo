@@ -50,7 +50,7 @@ const Review = ({ review }: { review: TReview }) => {
   const authorName =
     review?.authorAttribution?.displayName || review?.author?.name || "Guest"
 
-  const schemaScriptId = `json-ld-${authorName.replace(/\s+/g, "-").toLowerCase()}-${normalizedRating}-${Date.now()}`
+  const schemaScriptId = `json-ld-review-${platform}-${authorName.replace(/\s+/g, "-").toLowerCase()}-${normalizedRating}-${publishDate || "no-date"}`
 
   const stars = Array.from({ length: normalizedRating }, (_, i) => i + 1)
 
