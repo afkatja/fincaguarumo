@@ -10,7 +10,7 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { BOOKING_TYPE, BookingData, FAQType } from "@/types"
+import { BOOKING_TYPE, BookingData } from "@/types"
 import BookingDialog from "../BookingDialog"
 import { Content } from "./page"
 import { useBooking } from "../../../providers/BookingProvider"

@@ -154,12 +154,20 @@ export const orgSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Finca Guarumo",
-  alternateName: "Finca Guarumo Osa",
+  alternateName: [
+    "Finca Guarumo Osa",
+    "Finca Guarumo Osa Peninsula",
+    "Finca Guarumo Costa Rica",
+  ],
   url: "https://fincaguarumo.com",
   logo: "https://fincaguarumo.com/logo.png",
   description:
     "Sustainable eco-lodge in Costa Rica's Osa Peninsula offering off-grid luxury accommodation near Corcovado National Park",
-  foundingDate: "[Your founding year]",
+  foundingDate: "2023",
+  owns: {
+    "@type": "LodgingBusiness",
+    "@id": "https://fincaguarumo.com/villa-bruno",
+  },
   address: {
     "@type": "PostalAddress",
     streetAddress: "6 km from Puerto Jiménez",
@@ -178,12 +186,11 @@ export const orgSchema = {
     telephone: "+506-87495341",
     contactType: "reservations",
     email: "info@fincaguarumo.com",
-    availableLanguage: ["English", "Spanish"],
+    availableLanguage: ["English", "Spanish", "Dutch"],
   },
   sameAs: [
     "https://www.instagram.com/fincaguarumo.osa",
     "https://www.facebook.com/fincaguarumoosa",
     "[Google Business Profile URL]",
-    "[TripAdvisor URL if you have one]",
   ],
 }
