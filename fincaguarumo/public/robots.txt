@@ -3,7 +3,7 @@ User-agent: *
 
 # Allow all bots to access the main site
 Allow: /
-Allow: /sitemap
+Allow: /sitemap.xml
 
 # Block admin pages
 Disallow: /studio/

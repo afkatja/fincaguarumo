@@ -14,7 +14,10 @@ export const PlaceReviews = ({ count }: { count?: number }) => {
   if (!place) return null
   const reviewsToShow = count
     ? shuffle([...(place.reviews ?? []), ...reviews, ...bookingReviews])
-        .filter(review => (review?.text || review?.reviewText).length > 100)
+        .filter(review => {
+          const text = review?.text ?? review?.reviewText ?? ""
+          return text.length > 100
+        })
         .slice(0, count)
     : ([...(place.reviews ?? []), ...reviews, ...bookingReviews] as TReview[])
 
@@ -28,8 +31,11 @@ export const PlaceReviews = ({ count }: { count?: number }) => {
       />
       {reviewsToShow.length > 0 && (
         <div className="p-4 lg:p-0 md:grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {reviewsToShow.map((review, index) => (
-            <Review key={index} review={review} />
+          {reviewsToShow.map((review: TReview, index) => (
+            <Review
+              key={`${review?.date}-${review?.author?.name || review?.authorAttribution?.displayName}-${index}`}
+              review={review}
+            />
           ))}
         </div>
       )}

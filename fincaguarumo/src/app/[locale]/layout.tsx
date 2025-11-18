@@ -115,7 +115,7 @@ export default async function Layout({
           }}
         />
         <Script
-          id="json-ld"
+          id="json-ld-org"
           strategy="afterInteractive"
           type="application/ld+json"
           dangerouslySetInnerHTML={{

@@ -60,11 +60,17 @@ export const generateSitemap = async () => {
 
   // Blog posts (English only - not translated)
   posts.forEach(post => {
-    urls.push({
-      url: `${baseUrl}/blog/${post.slug.current}`,
-      lastModified: new Date(post._updatedAt),
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
+    locales.forEach(locale => {
+      urls.push({
+        url:
+          locale === "en"
+            ? `${baseUrl}/blog/${post.slug.current}`
+            : `${baseUrl}/${locale}/blog/${post.slug.current}`,
+        lastModified: new Date(post._updatedAt),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      })
+      return urls
     })
   })
 
@@ -137,8 +143,6 @@ export const generateSitemap = async () => {
       changeFrequency: "weekly" as const,
     },
     { path: "/contact", priority: 0.8, changeFrequency: "monthly" as const },
-    { path: "/gallery", priority: 0.75, changeFrequency: "weekly" as const },
-    { path: "/blog", priority: 0.8, changeFrequency: "daily" as const },
   ]
 
   staticPages.forEach(({ path, priority, changeFrequency }) => {

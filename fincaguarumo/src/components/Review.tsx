@@ -28,15 +28,31 @@ const defaultUserIcon = {
 const Review = ({ review }: { review: TReview }) => {
   const { locale } = useParams()
   const platform = review.platform || "google"
-  const stars = Array.from(
-    {
-      length:
-        platform === "booking" && review?.rating
-          ? Math.ceil(review?.rating / 2)
-          : review?.rating || 0,
-    },
-    (_, i) => i + 1
-  )
+
+  // Centralized derived values
+  const normalizedRating =
+    platform === "booking" && review?.rating
+      ? Math.ceil(review?.rating / 2)
+      : review?.rating || 0
+
+  const publishDate = (() => {
+    const dateValue = review?.publishTime || review?.date
+    if (!dateValue) return ""
+    try {
+      const date = dateValue instanceof Date ? dateValue : new Date(dateValue)
+      if (isNaN(date.getTime())) return ""
+      return date.toISOString()
+    } catch {
+      return ""
+    }
+  })()
+
+  const authorName =
+    review?.authorAttribution?.displayName || review?.author?.name || "Guest"
+
+  const schemaScriptId = `json-ld-${authorName.replace(/\s+/g, "-").toLowerCase()}-${normalizedRating}-${Date.now()}`
+
+  const stars = Array.from({ length: normalizedRating }, (_, i) => i + 1)
 
   const schema = {
     "@context": "https://schema.org",
@@ -48,19 +64,15 @@ const Review = ({ review }: { review: TReview }) => {
     },
     author: {
       "@type": "Person",
-      name:
-        review?.authorAttribution?.displayName ||
-        review?.author?.name ||
-        "Guest",
+      name: authorName,
     },
     reviewRating: {
       "@type": "Rating",
-      ratingValue: review?.rating?.toString() || "0",
+      ratingValue: normalizedRating.toString(),
       bestRating: "5",
       worstRating: "1",
     },
-    datePublished:
-      review?.publishTime || review?.date || new Date().toISOString(),
+    ...(publishDate && { datePublished: publishDate }),
     reviewBody: review?.text || review?.reviewText || "",
     publisher: {
       "@type": "Organization",
@@ -96,20 +108,17 @@ const Review = ({ review }: { review: TReview }) => {
         </div>
         <div>
           <p className="text-guarumo-primary font-bold text-lg truncate max-w-24">
-            {review?.authorAttribution?.displayName || review?.author?.name}
+            {authorName}
           </p>
-          <p className="text-zinc-400 text-sm">
-            {review?.publishTime?.toLocaleDateString(locale, {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }) ||
-              new Date(review?.date ?? "").toLocaleDateString(locale, {
+          {publishDate && (
+            <p className="text-zinc-400 text-sm">
+              {new Date(publishDate).toLocaleDateString(locale, {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
               })}
-          </p>
+            </p>
+          )}
         </div>
         <Image
           src={platformIcons[platform]}
@@ -122,12 +131,12 @@ const Review = ({ review }: { review: TReview }) => {
       </div>
       <div
         className="flex items-center my-4"
-        aria-label={`Rating: ${review?.rating} out of 5`}
+        aria-label={`Rating: ${normalizedRating} out of 5`}
         itemProp="reviewRating"
         itemScope
         itemType="https://schema.org/Rating"
       >
-        <meta itemProp="ratingValue" content={review?.rating?.toString()} />
+        <meta itemProp="ratingValue" content={normalizedRating.toString()} />
         <meta itemProp="bestRating" content="5" />
         <meta itemProp="worstRating" content="1" />
         {stars.map((n, i) => (
@@ -135,12 +144,12 @@ const Review = ({ review }: { review: TReview }) => {
             key={n}
             className="ti-star"
             src={
-              review?.rating && n <= review?.rating
+              normalizedRating && n <= normalizedRating
                 ? starIcons.filled
                 : starIcons.empty
             }
             alt={
-              review?.rating && n <= review?.rating
+              normalizedRating && n <= normalizedRating
                 ? "Filled star"
                 : "Empty star"
             }
@@ -152,7 +161,7 @@ const Review = ({ review }: { review: TReview }) => {
       </div>
       <div className="text-zinc-800">{review?.text || review?.reviewText}</div>
       <Script
-        id="json-ld"
+        id={schemaScriptId}
         strategy="afterInteractive"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
