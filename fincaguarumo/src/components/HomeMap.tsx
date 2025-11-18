@@ -15,7 +15,7 @@ const HomeMap = () => {
   return (
     <APIProvider
       apiKey={process.env.NEXT_PUBLIC_GMAPS_API_KEY as string}
-      onLoad={() => console.log("Maps API has loaded.")}
+      // onLoad={() => console.log("Maps API has loaded.")}
     >
       <div className="max-w-[60rem] mx-auto my-8">
         <div className="!w-11/12 mx-auto relative">

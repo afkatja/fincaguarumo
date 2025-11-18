@@ -10,7 +10,7 @@ const ClientPage = () => {
   return (
     <APIProvider
       apiKey={process.env.NEXT_PUBLIC_GMAPS_API_KEY as string}
-      onLoad={() => console.log("Maps API has loaded.")}
+      // onLoad={() => console.log("Maps API has loaded.")}
     >
       <PlaceProvider placeId={placeId}>
         <PlaceReviews />

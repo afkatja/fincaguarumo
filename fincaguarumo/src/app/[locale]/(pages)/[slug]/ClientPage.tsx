@@ -40,7 +40,7 @@ const ClientPage = ({
   locale: string
   messages: Messages
 }) => {
-  const { setBookingData } = useBooking()
+  const { bookingData, setBookingData } = useBooking()
   const { Link } = createNavigation()
   const t = messages?.booking
 
@@ -65,21 +65,25 @@ const ClientPage = ({
       return { ...prev, bookingDetails: nextBookingDetails }
     })
   }, [content, setBookingData])
-  const { total } = calculateTotal(content.price ?? 0, 2, BOOKING_TYPE.villa)
+  const { total } = calculateTotal(
+    content.price ?? 0,
+    bookingData.bookingDetails.guests ?? 2,
+    BOOKING_TYPE.villa
+  )
   return (
     <>
       <RichText body={content?.body} />
       <div className="w-11/12 mx-auto my-8">
         <APIProvider
           apiKey={process.env.NEXT_PUBLIC_GMAPS_API_KEY as string}
-          onLoad={() => console.log("Maps API has loaded.")}
+          // onLoad={() => console.log("Maps API has loaded.")}
         >
           <PlaceProvider placeId={placeId}>
             <PlaceReviews count={4} />
           </PlaceProvider>
         </APIProvider>
         <Link
-          href={`/faq`}
+          href={`/reviews`}
           className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
         >
           Read more reviews
@@ -148,7 +152,6 @@ const ClientPage = ({
                   <div className="mt-8">
                     <BookingOptions
                       locale={locale}
-                      propertyId="your-booking-property-id"
                       expediaPropertyId={
                         process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
                       }

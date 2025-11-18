@@ -70,7 +70,6 @@ export const generateSitemap = async () => {
         changeFrequency: "weekly" as const,
         priority: 0.8,
       })
-      return urls
     })
   })
 
