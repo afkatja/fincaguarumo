@@ -114,48 +114,50 @@ const ClientPage = ({
           </Link>
         </div>
       </div>
-      <footer className="w-11/12 mx-auto pt-4 pb-6 sticky bottom-0 bg-zinc-50 dark:bg-zinc-800">
-        {content?.showBookingDialog && (
-          <p className="font-bold text-center mb-4">
-            Price starting from $ {Math.floor(total)} (for 2 people)
-          </p>
-        )}
-        <div className="flex items-center justify-center gap-4">
+      <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-to-br from-zinc-50 to-sunrise-color dark:bg-zinc-800">
+        <div className="w-11/12 mx-auto">
           {content?.showBookingDialog && (
-            <BookingDialog
-              bookingType={BOOKING_TYPE.villa}
-              dialogOptions={{
-                buttonText: t?.bookNow || "Book now",
-                title: t?.bookNow || "Reserve Villa Bruno directly",
-              }}
-              locale={locale}
-            />
+            <p className="font-bold text-center mb-4">
+              Price starting from $ {Math.floor(total)} (for 2 people)
+            </p>
           )}
-          {content?.showBookingOptions && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  name="book-on-others-button"
-                >
-                  {t?.bookOnOthers}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
-                <DialogTitle>{t?.bookVilla}</DialogTitle>
-                <div className="mt-8">
-                  <BookingOptions
-                    locale={locale}
-                    propertyId="your-booking-property-id"
-                    expediaPropertyId={
-                      process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
-                    }
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
+          <div className="flex items-center justify-center gap-4">
+            {content?.showBookingDialog && (
+              <BookingDialog
+                bookingType={BOOKING_TYPE.villa}
+                dialogOptions={{
+                  buttonText: t?.bookNow || "Book now",
+                  title: t?.bookNow || "Reserve Villa Bruno directly",
+                }}
+                locale={locale}
+              />
+            )}
+            {content?.showBookingOptions && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    name="book-on-others-button"
+                  >
+                    {t?.bookOnOthers}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
+                  <DialogTitle>{t?.bookVilla}</DialogTitle>
+                  <div className="mt-8">
+                    <BookingOptions
+                      locale={locale}
+                      propertyId="your-booking-property-id"
+                      expediaPropertyId={
+                        process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
+                      }
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         </div>
       </footer>
     </>
