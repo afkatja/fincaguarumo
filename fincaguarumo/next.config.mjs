@@ -7,8 +7,10 @@ const nextConfig = {
   experimental: {
     taint: true,
     optimizePackageImports: ['gsap', 'lucide-react'],
+    serverActions: {
+      allowedOrigins: ['https://fincaguarumo.com', 'https://www.fincaguarumo.com', 'http://localhost:3000', 'https://fincaguarumo.local:3000'],
+    }
   },
-  allowedOrigins: ['https://fincaguarumo.com', 'https://www.fincaguarumo.com', 'http://localhost:3000', 'https://fincaguarumo.local:3000'],
   images: {
     qualities: [50, 75, 100],
     remotePatterns: [
