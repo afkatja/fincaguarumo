@@ -18,7 +18,7 @@
     "readMore": "Read more"
   },
   "booking": {
-    "bookNow": "Book now",
+    "bookNow": "Book Villa Bruno now",
     "bookOnAirbnb": "Book on AirBnb.com",
     "bookOnBooking": "Book on Booking.com",
     "bookOnExpedia": "Book on Expedia",
@@ -41,7 +41,7 @@
     "priceLabel": "Price (excl. VAT) for",
     "rateLabel": "Price (excl. VAT)",
     "rateVATlabel": "Price (incl. 13% VAT)",
-    "reserveButton": "Book now",
+    "reserveButton": "Book Villa Bruno now",
     "selectDate": "Select date"
   },
   "page": {

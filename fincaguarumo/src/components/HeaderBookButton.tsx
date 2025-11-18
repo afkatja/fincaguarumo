@@ -23,7 +23,7 @@ const HeaderBookButton = () => {
       variant="secondary"
       onClick={() => router.push("/villa-bruno")}
     >
-      {t?.reserveButton || "Book now"}
+      {t?.reserveButton || "Book Villa Bruno now"}
     </Button>
   )
 }
