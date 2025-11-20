@@ -4,11 +4,11 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 
 import { Button } from "@/components/ui/button"
 
-import { useBooking } from "../BookingProvider"
-import { useDialog } from "../DialogProvider"
+import { useBooking } from "../../providers/BookingProvider"
+import { useDialog } from "../../providers/DialogProvider"
 import { BookingType } from "../../../types"
 import { getInternationalizedValue } from "../../../lib/utils"
-import BookingDialogContent from "./BookingDialogContent"
+import BookingDialogContent from "../../providers/BookingDialogContent"
 
 export type IField = {
   _key: string

@@ -8,7 +8,7 @@ import Loading from "../loading"
 import { useParams, useSearchParams } from "next/navigation"
 import { createNavigation } from "next-intl/navigation"
 import AddToCalendar from "@/components/AddToCalendar"
-import { useBooking } from "../../BookingProvider"
+import { useBooking } from "../../../providers/BookingProvider"
 
 const { Success, Info, Error } = icons
 

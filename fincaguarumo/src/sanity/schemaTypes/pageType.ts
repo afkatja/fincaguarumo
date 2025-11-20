@@ -127,6 +127,13 @@ export const pageType = defineType({
             return true
           }),
     }),
+    defineField({
+      name: "displayReviews",
+      type: "boolean",
+      title: "Display featured reviews",
+      description: "Enable to display featured reviews on this page",
+      initialValue: false,
+    }),
   ],
   initialValue: {
     isPublished: true,

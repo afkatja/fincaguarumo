@@ -10,13 +10,18 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { BOOKING_TYPE, BookingData, FAQType } from "@/types"
+import { BOOKING_TYPE, BookingData } from "@/types"
 import BookingDialog from "../BookingDialog"
 import { Content } from "./page"
-import { useBooking } from "../../BookingProvider"
+import { useBooking } from "../../../providers/BookingProvider"
 import FAQ from "@/components/FAQ"
 import Title from "@/components/Title"
 import Icon from "../../../../components/Icon"
+import { APIProvider } from "@vis.gl/react-google-maps"
+import { PlaceProvider } from "../../../providers/PlaceProvider"
+import { placeId } from "../../../../../data/geo"
+import { PlaceReviews } from "../../../../components/PlaceReviews"
+import calculateTotal from "../../../../lib/calculateTotal"
 
 type Messages = {
   booking?: {
@@ -35,9 +40,11 @@ const ClientPage = ({
   locale: string
   messages: Messages
 }) => {
-  const { setBookingData } = useBooking()
+  const { bookingData, setBookingData } = useBooking()
   const { Link } = createNavigation()
   const t = messages?.booking
+
+  const googleMapsKey = process.env.NEXT_PUBLIC_GMAPS_API_KEY as string
 
   useEffect(() => {
     setBookingData((prev: BookingData) => {
@@ -61,23 +68,55 @@ const ClientPage = ({
     })
   }, [content, setBookingData])
 
+  const guestsRaw = bookingData?.bookingDetails?.guests
+  const guests = typeof guestsRaw === "number" && guestsRaw > 0 ? guestsRaw : 1
+
+  const { total } = calculateTotal(
+    content.price ?? 0,
+    guests,
+    BOOKING_TYPE.villa
+  )
+
   return (
     <>
       <RichText body={content?.body} />
+      {googleMapsKey && (
+        <div className="w-11/12 mx-auto my-8">
+          <APIProvider
+            apiKey={googleMapsKey}
+            // onLoad={() => console.log("Maps API has loaded.")}
+          >
+            <PlaceProvider placeId={placeId}>
+              <PlaceReviews count={4} />
+            </PlaceProvider>
+          </APIProvider>
+          <Link
+            href={`/reviews`}
+            className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
+          >
+            Read more reviews
+            <Icon
+              icon="ArrowRight"
+              className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+              color="currentColor"
+            />
+          </Link>
+        </div>
+      )}
       <div className="w-11/12 mx-auto mt-3 mb-8 flex flex-col">
         <Title
           title={t?.page?.FAQ || "FAQ"}
           Heading="h2"
-          titleClassName="text-3xl font-bold text-guarumo-primary"
+          titleClassName="text-3xl font-bold text-guarumo-primary dark:text-zinc-50"
           icon={{ title: "Guarumo" }}
         />
-        <div className="flex items-center gap-2 mt-4">
+        <div className="md:grid md:col-span-2 items-center gap-2 mt-4">
           {content?.faq && content?.faq.length > 0 && (
             <FAQ faqs={content.faq} />
           )}
           <Link
             href={`/faq`}
-            className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
+            className="w-80 inline-flex items-center justify-center h-full group no-underline"
           >
             {t?.page?.moreFAQ || "More FAQ"}
             <Icon
@@ -88,39 +127,50 @@ const ClientPage = ({
           </Link>
         </div>
       </div>
-      <footer className="w-11/12 flex justify-center gap-4 mx-auto my-3 sticky bottom-4">
-        {content?.showBookingDialog && (
-          <BookingDialog
-            bookingType={BOOKING_TYPE.villa}
-            dialogOptions={{
-              buttonText: t?.bookNow || "Book now",
-              title: t?.bookNow || "Reserve Villa Bruno directly",
-            }}
-            locale={locale}
-          />
-        )}
-        {content?.showBookingOptions && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button size="lg" variant="outline" name="book-on-others-button">
-                {t?.bookOnOthers}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
-              <DialogTitle>{t?.bookVilla}</DialogTitle>
-              <div className="mt-8">
-                <BookingOptions
-                  locale={locale}
-                  propertyId="your-booking-property-id"
-                  expediaPropertyId={
-                    process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
-                  }
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
-      </footer>
+      {content?.showBookingDialog && (
+        <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-to-br from-zinc-50/100 via-zinc-50/100 to-sunrise to-70% dark:bg-zinc-800">
+          <div className="w-11/12 mx-auto">
+            <p className="font-bold text-center mb-4">
+              Price starting from $ {Math.floor(total)} (for {guests}{" "}
+              {guests === 1 ? "person" : "people"})
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <BookingDialog
+                bookingType={BOOKING_TYPE.villa}
+                dialogOptions={{
+                  buttonText: t?.bookNow || "Book now",
+                  title: t?.bookNow || "Reserve Villa Bruno directly",
+                }}
+                locale={locale}
+              />
+              {content?.showBookingOptions && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      name="book-on-others-button"
+                    >
+                      {t?.bookOnOthers}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
+                    <DialogTitle>{t?.bookVilla}</DialogTitle>
+                    <div className="mt-8">
+                      <BookingOptions
+                        locale={locale}
+                        expediaPropertyId={
+                          process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
+                        }
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+          </div>
+        </footer>
+      )}
     </>
   )
 }

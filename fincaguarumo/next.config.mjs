@@ -7,6 +7,9 @@ const nextConfig = {
   experimental: {
     taint: true,
     optimizePackageImports: ['gsap', 'lucide-react'],
+    serverActions: {
+      allowedOrigins: ['https://fincaguarumo.com', 'https://www.fincaguarumo.com', 'http://localhost:3000', 'https://fincaguarumo.local:3000'],
+    }
   },
   images: {
     qualities: [50, 75, 100],
@@ -43,6 +46,18 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "*.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.muscache.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.freebiesupply.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.bstatic.com",
       },
     ],
   },

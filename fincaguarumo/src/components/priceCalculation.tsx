@@ -1,5 +1,5 @@
 "use client"
-import { useDialog } from "../app/[locale]/DialogProvider"
+import { useDialog } from "../app/providers/DialogProvider"
 import calculateTotal from "../lib/calculateTotal"
 import { getInternationalizedValue, titleCase } from "../lib/utils"
 import { BOOKING_TYPE, BookingType } from "../types"

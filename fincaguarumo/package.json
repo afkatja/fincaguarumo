@@ -9,10 +9,11 @@
     "start": "next start",
     "lint": "next lint",
     "codegen": "npx sanity typegen generate",
-    "i18n:build": "npx tsc scripts/translate.ts --outDir dist --esModuleInterop --allowSyntheticDefaultImports",
+    "i18n:build": "npx tsc scripts/translate.ts --outDir dist --esModuleInterop --allowSyntheticDefaultImports --module NodeNext --moduleResolution NodeNext --skipLibCheck",
     "i18n:run": "npm run i18n:build && node dist/scripts/translate.js",
     "i18n:watch": "nodemon --watch /src/messages/en.json --exec \"npm run i18n:run\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "translate": "npm run i18n:run"
   },
   "lint-staged": {
     "src/messages/en.json": [
@@ -22,7 +23,7 @@
   "dependencies": {
     "@google-cloud/translate": "^9.2.0",
     "@hookform/resolvers": "^3.10.0",
-    "@netlify/plugin-nextjs": "^5.13.4",
+    "@netlify/plugin-nextjs": "^5.14.6",
     "@portabletext/react": "^3.2.4",
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-collapsible": "^1.1.0",
@@ -62,7 +63,7 @@
     "lucide-react": "^0.395.0",
     "mailersend": "^2.6.0",
     "media": "^0.2.1",
-    "next": "^15.5.4",
+    "next": "^15.5.6",
     "next-sanity": "^9.12.3",
     "next-transition-router": "^0.2.11",
     "react": "^18.3.1",

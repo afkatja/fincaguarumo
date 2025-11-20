@@ -14,6 +14,16 @@ const jsonLd = (data: { title: string; slug: { current: string } }) => ({
   "@context": "https://schema.org",
   "@type": "LodgingBusiness",
   name: `${data.title} - Finca Guarumo`,
+  alternateName: ["Villa Bruno", "Villa Bruno at Finca Guarumo"],
+  partOf: {
+    "@type": "Organization",
+    name: "Finca Guarumo",
+    url: "https://fincaguarumo.com",
+  },
+  branchOf: {
+    "@type": "Organization",
+    name: "Finca Guarumo",
+  },
   description:
     "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
   url: `https://fincaguarumo.com/${data.slug.current}`,

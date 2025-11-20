@@ -2,7 +2,7 @@
 import React from "react"
 import SelectBox from "../../../../components/ui/selectBox"
 import { getInternationalizedValue } from "../../../../lib/utils"
-import { useDialog } from "../../DialogProvider"
+import { useDialog } from "../../../providers/DialogProvider"
 
 const DEFAULT_GUEST_OPTIONS = ["1", "2", "3", "4"] as const
 

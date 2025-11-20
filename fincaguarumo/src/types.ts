@@ -113,3 +113,27 @@ export function loadBookingDataFromLocalStorage(): BookingData | null {
   }
   return null
 }
+
+interface ReviewAuthor {
+  displayName?: string
+  photoURI?: string
+  name?: string
+  location?: string
+}
+
+export type TReview = {
+  authorAttribution?: {
+    displayName: string
+    photoURI: string
+  }
+  publishTime?: Date
+  rating?: number
+  text?: string
+
+  // Universal format (for Airbnb, Booking.com, etc.)
+  author?: ReviewAuthor
+  date?: string
+  reviewText?: string
+  platform?: "google" | "airbnb" | "booking"
+  photoUrl?: string
+}
