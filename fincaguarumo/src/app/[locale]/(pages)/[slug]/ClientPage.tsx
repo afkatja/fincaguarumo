@@ -65,11 +65,16 @@ const ClientPage = ({
       return { ...prev, bookingDetails: nextBookingDetails }
     })
   }, [content, setBookingData])
+
+  const guestsRaw = bookingData?.bookingDetails?.guests
+  const guests = typeof guestsRaw === "number" && guestsRaw > 0 ? guestsRaw : 2
+
   const { total } = calculateTotal(
     content.price ?? 0,
-    bookingData.bookingDetails.guests ?? 2,
+    guests,
     BOOKING_TYPE.villa
   )
+
   return (
     <>
       <RichText body={content?.body} />
@@ -118,15 +123,14 @@ const ClientPage = ({
           </Link>
         </div>
       </div>
-      <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-to-br from-zinc-50 to-sunrise-color dark:bg-zinc-800">
-        <div className="w-11/12 mx-auto">
-          {content?.showBookingDialog && (
+      {content?.showBookingDialog && (
+        <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-to-br from-zinc-50/100 via-zinc-50/100 to-sunrise to-70% dark:bg-zinc-800">
+          <div className="w-11/12 mx-auto">
             <p className="font-bold text-center mb-4">
-              Price starting from $ {Math.floor(total)} (for 2 people)
+              Price starting from $ {Math.floor(total)} (for {guests}{" "}
+              {guests === 1 ? "person" : "people"})
             </p>
-          )}
-          <div className="flex items-center justify-center gap-4">
-            {content?.showBookingDialog && (
+            <div className="flex items-center justify-center gap-4">
               <BookingDialog
                 bookingType={BOOKING_TYPE.villa}
                 dialogOptions={{
@@ -135,34 +139,34 @@ const ClientPage = ({
                 }}
                 locale={locale}
               />
-            )}
-            {content?.showBookingOptions && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    name="book-on-others-button"
-                  >
-                    {t?.bookOnOthers}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
-                  <DialogTitle>{t?.bookVilla}</DialogTitle>
-                  <div className="mt-8">
-                    <BookingOptions
-                      locale={locale}
-                      expediaPropertyId={
-                        process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
-                      }
-                    />
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
+              {content?.showBookingOptions && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      name="book-on-others-button"
+                    >
+                      {t?.bookOnOthers}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
+                    <DialogTitle>{t?.bookVilla}</DialogTitle>
+                    <div className="mt-8">
+                      <BookingOptions
+                        locale={locale}
+                        expediaPropertyId={
+                          process.env.NEXT_PUBLIC_EXPEDIA_PROPERTY_ID || ""
+                        }
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </>
   )
 }
