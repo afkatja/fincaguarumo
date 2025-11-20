@@ -5,7 +5,7 @@ import DetailsPageLayout from "../../DetailsPageLayout"
 import { TTour } from "../data"
 import { titleCase } from "@/lib/utils"
 import { notFound } from "next/navigation"
-import { useBooking } from "../../../BookingProvider"
+import { useBooking } from "../../../../providers/BookingProvider"
 import { BOOKING_TYPE, BookingData } from "../../../../../types"
 
 const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {

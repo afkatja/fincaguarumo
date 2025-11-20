@@ -3,10 +3,12 @@ import path from "path"
 import { translate } from "@vitalets/google-translate-api"
 import { HttpProxyAgent } from "http-proxy-agent"
 
-import { languages } from "../src/config"
+import { languages } from "../src/config.js"
 
 type Lang = (typeof languages)[number]
-const agent = new HttpProxyAgent(process.env.TRANSLATION_PROXY!)
+const agent = process.env.TRANSLATION_PROXY
+  ? new HttpProxyAgent(process.env.TRANSLATION_PROXY)
+  : undefined
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -19,7 +21,7 @@ async function autoTranslate(
   try {
     const res = await translate(text, {
       to: target.value,
-      fetchOptions: { agent },
+      fetchOptions: agent ? { agent } : undefined,
     })
     await sleep(500)
     console.log("translated", res.text)
@@ -92,7 +94,11 @@ async function syncTranslations(): Promise<void> {
   }
 }
 
-if (require.main === module) {
+import { fileURLToPath } from "url"
+
+const __filename = fileURLToPath(import.meta.url)
+
+if (process.argv[1] === __filename) {
   syncTranslations().catch(err => {
     console.error(err)
     process.exit(1)

@@ -14,15 +14,15 @@ import { locales } from "../../config"
 import Footer from "../../components/Footer"
 import TransitionProvider from "./providers"
 
-import { BookingProvider } from "./BookingProvider"
-import { DialogProvider } from "./DialogProvider"
+import { BookingProvider } from "../providers/BookingProvider"
+import { DialogProvider } from "../providers/DialogProvider"
 
 import { generateMetadata } from "./meta"
 import { i18n } from "../../../languages"
 import Header from "../../components/header"
 import { cn } from "../../lib/utils"
 import Script from "next/script"
-import { jsonLd } from "../../lib/json-ld"
+import { jsonLd, orgSchema } from "../../lib/json-ld"
 
 export { generateMetadata }
 
@@ -112,6 +112,14 @@ export default async function Layout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
+        <Script
+          id="json-ld-org"
+          strategy="afterInteractive"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(orgSchema).replace(/</g, "\\u003c"),
           }}
         />
       </body>

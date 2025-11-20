@@ -60,64 +60,107 @@ export const generateSitemap = async () => {
 
   // Blog posts (English only - not translated)
   posts.forEach(post => {
-    urls.push({
-      url: `${baseUrl}/blog/${post.slug.current}`,
-      lastModified: new Date(post._updatedAt),
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    })
-  })
-
-  // Tours (translated - all locales)
-  tours.forEach(tour => {
     locales.forEach(locale => {
-      const url =
-        locale === "en"
-          ? `${baseUrl}/tours/${tour.slug.current}`
-          : `${baseUrl}/${locale}/tours/${tour.slug.current}`
-
       urls.push({
-        url,
-        lastModified: new Date(tour._updatedAt),
-        alternates: {
-          languages: Object.fromEntries(
-            locales.map(loc => [
-              loc,
-              loc === "en"
-                ? `${baseUrl}/tours/${tour.slug.current}`
-                : `${baseUrl}/${loc}/tours/${tour.slug.current}`,
-            ])
-          ),
-        },
+        url:
+          locale === "en"
+            ? `${baseUrl}/blog/${post.slug.current}`
+            : `${baseUrl}/${locale}/blog/${post.slug.current}`,
+        lastModified: new Date(post._updatedAt),
         changeFrequency: "weekly" as const,
         priority: 0.8,
       })
     })
   })
 
+  // Tours (translated - all locales)
+  tours
+    .filter(tour => tour.isPublished)
+    .forEach(tour => {
+      locales.forEach(locale => {
+        const url =
+          locale === "en"
+            ? `${baseUrl}/tours/${tour.slug.current}`
+            : `${baseUrl}/${locale}/tours/${tour.slug.current}`
+
+        urls.push({
+          url,
+          lastModified: new Date(tour._updatedAt),
+          alternates: {
+            languages: Object.fromEntries(
+              locales.map(loc => [
+                loc,
+                loc === "en"
+                  ? `${baseUrl}/tours/${tour.slug.current}`
+                  : `${baseUrl}/${loc}/tours/${tour.slug.current}`,
+              ])
+            ),
+          },
+          changeFrequency: "weekly" as const,
+          priority: 0.8,
+        })
+      })
+    })
+
   // Pages (assuming translated - all locales)
-  pages.forEach(page => {
+  pages
+    .filter(page => page.isPublished)
+    .forEach(page => {
+      locales.forEach(locale => {
+        const url =
+          locale === "en"
+            ? `${baseUrl}/${page.slug.current}`
+            : `${baseUrl}/${locale}/${page.slug.current}`
+
+        urls.push({
+          url,
+          lastModified: new Date(page._updatedAt),
+          alternates: {
+            languages: Object.fromEntries(
+              locales.map(loc => [
+                loc,
+                loc === "en"
+                  ? `${baseUrl}/${page.slug.current}`
+                  : `${baseUrl}/${loc}/${page.slug.current}`,
+              ])
+            ),
+          },
+          changeFrequency: "weekly" as const,
+          priority: 0.7,
+        })
+      })
+    })
+
+  // Static pages (hardcoded routes not in Sanity)
+  const staticPages = [
+    { path: "about", priority: 0.9, changeFrequency: "monthly" as const },
+    { path: "faq", priority: 0.85, changeFrequency: "weekly" as const },
+    { path: "reviews", priority: 0.9, changeFrequency: "weekly" as const },
+    {
+      path: "tours",
+      priority: 0.85,
+      changeFrequency: "weekly" as const,
+    },
+    { path: "contact", priority: 0.8, changeFrequency: "monthly" as const },
+  ]
+
+  staticPages.forEach(({ path, priority, changeFrequency }) => {
     locales.forEach(locale => {
       const url =
-        locale === "en"
-          ? `${baseUrl}/pages/${page.slug.current}`
-          : `${baseUrl}/${locale}/pages/${page.slug.current}`
-
+        locale === "en" ? `${baseUrl}/${path}` : `${baseUrl}/${locale}/${path}`
       urls.push({
         url,
-        lastModified: new Date(page._updatedAt),
+        lastModified: new Date(),
         alternates: {
           languages: Object.fromEntries(
             locales.map(loc => [
               loc,
-              loc === "en"
-                ? `${baseUrl}/pages/${page.slug.current}`
-                : `${baseUrl}/${loc}/pages/${page.slug.current}`,
+              loc === "en" ? `${baseUrl}/${path}` : `${baseUrl}/${loc}/${path}`,
             ])
           ),
         },
-        changeFrequency: "weekly" as const,
-        priority: 0.7,
+        changeFrequency,
+        priority,
       })
     })
   })

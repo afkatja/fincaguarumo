@@ -9,13 +9,11 @@ import SelectGuestsOptions from "../app/[locale]/(pages)/(payment)/SelectGuestsO
 import { format } from "date-fns"
 
 interface BookingOptionsProps {
-  propertyId: string
   expediaPropertyId: string
   locale?: string
 }
 
 export function BookingOptions({
-  propertyId,
   expediaPropertyId,
   locale = "en",
 }: BookingOptionsProps) {

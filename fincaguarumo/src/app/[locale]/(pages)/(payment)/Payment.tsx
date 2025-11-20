@@ -4,7 +4,7 @@ import Image from "next/image"
 import { loadStripe } from "@stripe/stripe-js"
 import { CheckoutProvider } from "@stripe/react-stripe-js"
 import CheckoutForm from "./CheckoutForm"
-import { useBooking } from "../../BookingProvider"
+import { useBooking } from "../../../providers/BookingProvider"
 import Loading from "../loading"
 import { serializeBookingData } from "../../../../types"
 

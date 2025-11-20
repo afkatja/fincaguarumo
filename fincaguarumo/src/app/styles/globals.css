@@ -66,6 +66,10 @@
     transition: opacity 0.3s ease-in-out;
   }
 }
+/* 
+@theme {
+  --color-sunrise: #f9f2d8;
+} */
 
 :root {
   --background: 0 0% 100%;

@@ -9,7 +9,7 @@ export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...
   },
   _createdAt, _updatedAt, isPublished
 }`
-export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][0...12]{
+export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][]{
   _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished
 }`
 
