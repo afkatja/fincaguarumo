@@ -44,6 +44,8 @@ const ClientPage = ({
   const { Link } = createNavigation()
   const t = messages?.booking
 
+  const googleMapsKey = process.env.NEXT_PUBLIC_GMAPS_API_KEY as string
+
   useEffect(() => {
     setBookingData((prev: BookingData) => {
       const nextBookingDetails = {
@@ -67,7 +69,7 @@ const ClientPage = ({
   }, [content, setBookingData])
 
   const guestsRaw = bookingData?.bookingDetails?.guests
-  const guests = typeof guestsRaw === "number" && guestsRaw > 0 ? guestsRaw : 2
+  const guests = typeof guestsRaw === "number" && guestsRaw > 0 ? guestsRaw : 1
 
   const { total } = calculateTotal(
     content.price ?? 0,
@@ -78,27 +80,29 @@ const ClientPage = ({
   return (
     <>
       <RichText body={content?.body} />
-      <div className="w-11/12 mx-auto my-8">
-        <APIProvider
-          apiKey={process.env.NEXT_PUBLIC_GMAPS_API_KEY as string}
-          // onLoad={() => console.log("Maps API has loaded.")}
-        >
-          <PlaceProvider placeId={placeId}>
-            <PlaceReviews count={4} />
-          </PlaceProvider>
-        </APIProvider>
-        <Link
-          href={`/reviews`}
-          className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
-        >
-          Read more reviews
-          <Icon
-            icon="ArrowRight"
-            className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
-            color="currentColor"
-          />
-        </Link>
-      </div>
+      {googleMapsKey && (
+        <div className="w-11/12 mx-auto my-8">
+          <APIProvider
+            apiKey={googleMapsKey}
+            // onLoad={() => console.log("Maps API has loaded.")}
+          >
+            <PlaceProvider placeId={placeId}>
+              <PlaceReviews count={4} />
+            </PlaceProvider>
+          </APIProvider>
+          <Link
+            href={`/reviews`}
+            className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
+          >
+            Read more reviews
+            <Icon
+              icon="ArrowRight"
+              className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+              color="currentColor"
+            />
+          </Link>
+        </div>
+      )}
       <div className="w-11/12 mx-auto mt-3 mb-8 flex flex-col">
         <Title
           title={t?.page?.FAQ || "FAQ"}
