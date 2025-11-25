@@ -6,7 +6,6 @@ import NotFound from "../../not-found"
 import { FAQType } from "@/types"
 import FAQCategories from "@/components/FAQ"
 import { loadTranslations } from "@/lib/utils"
-import Title from "@/components/Title"
 import Script from "next/script"
 
 const jsonLd = (faqs: FAQType[]) => ({
