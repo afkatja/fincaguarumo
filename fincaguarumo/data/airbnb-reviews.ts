@@ -1,6 +1,21 @@
 const reviews = [
   {
     author: {
+      name: "Ellie",
+      location: "London, UK",
+      photoURI:
+        "https://a0.muscache.com/im/pictures/user/User-82924159/original/5fd952e6-fa2f-461f-ace9-4dfc2ff16167.png?im_w=240",
+    },
+    rating: 5,
+    date: "2025-11-19",
+    reviewText:
+      "Katja and Peter’s home is just what we wanted, something off grid where we could switch off and enjoy the beautiful surroundings. We were very lucky to see squirrel monkeys, mealy parrots and of course the famous Bruno! The views are beautiful and we spent every evening on the verandah, joined by their lovely cats one evening too. The shower was hot and powerful and the beds were very comfy. The hosts were very hospitable, offering fresh coconuts and bananas from their garden and advice for activities and nearby walks. 10/10 hosts thank you!",
+    platform: "airbnb",
+    photoUrl:
+      "https://a0.muscache.com/im/pictures/user/User/original/7fe9b0b1-4ac5-423f-a0de-91e793e43178.jpeg?im_w=240",
+  },
+  {
+    author: {
       name: "Eric",
       location: "Williston, Vermont",
       photoURI:
@@ -17,7 +32,7 @@ const reviews = [
   {
     author: {
       name: "Magda",
-      location: "10 years on Airbnb",
+      location: "London, UK",
       photoURI:
         "https://a0.muscache.com/im/pictures/user/5475b24f-2cb3-4056-9672-9c713fdf608a.jpg?im_w=240",
     },
