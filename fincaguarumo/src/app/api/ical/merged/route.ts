@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server"
 import IcalExpander from "ical-expander"
 import { addDays } from "date-fns"
-import bookingToNights from "@/lib/bookingToNights"
 import crypto from "crypto"
-import { Booking, getSanityBookings } from "../../../../lib/setBookings"
+import bookingToNights from "@/lib/bookingToNights"
 
 const FEEDS: Record<string, string | undefined> = {
   airbnb: process.env.AIRBNB_ICAL,
@@ -11,7 +10,6 @@ const FEEDS: Record<string, string | undefined> = {
   // expedia: process.env.ICAL_EXPEDIA,
 }
 
-// Simple in-memory cache for example. Replace with Redis / DB for production.
 const memoryCache: {
   hash: string
   ics: Record<string, string>
@@ -81,11 +79,16 @@ function parseIcsToBookings(
 
 function mergeBookings(bookings: Booking[]) {
   if (!bookings.length) return []
-  // map to simple ranges and sort by start
+
+  // Convert all dates to UTC Date objects and sort by start
   const ranges = bookings
-    .map(b => ({ start: new Date(b.start), end: new Date(b.end) }))
+    .map(b => ({
+      start: new Date(b.start),
+      end: new Date(b.end),
+    }))
     .sort((a, b) => +a.start - +b.start)
 
+  // Merge overlapping ranges
   const merged: { start: Date; end: Date }[] = [{ ...ranges[0] }]
   for (let i = 1; i < ranges.length; i++) {
     const cur = ranges[i]
@@ -101,7 +104,7 @@ function mergeBookings(bookings: Booking[]) {
   return merged.map(m => ({
     start: m.start.toISOString(),
     end: m.end.toISOString(),
-    blocked: bookingToNights(m.start.toISOString(), m.end.toISOString()),
+    blocked: bookingToNights(m.start, m.end),
   }))
 }
 

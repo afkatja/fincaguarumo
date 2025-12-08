@@ -1,9 +1,8 @@
-export default function bookingToNights(startIso: string, endIso: string) {
-  const nights: string[] = []
-  const cur = new Date(startIso)
-  const end = new Date(endIso)
-  while (cur <= end) {
-    nights.push(cur.toISOString().slice(0, 10)) // 'YYYY-MM-DD'
+export default function bookingToNights(start: Date, end: Date) {
+  const nights: Date[] = []
+  const cur = new Date(start)
+  while (cur < end) {
+    nights.push(new Date(cur))
     cur.setUTCDate(cur.getUTCDate() + 1)
   }
   return nights
