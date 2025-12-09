@@ -4,7 +4,7 @@ import Icon from "./Icon"
 import { headerIcons } from "./icons"
 
 interface ITitle {
-  Heading?: React.ElementType<{ className?: string }>
+  Heading?: React.ElementType<{ className?: string; children?: React.ReactNode }>
   title: React.ReactNode
   titleClassName?: string
   id?: string
