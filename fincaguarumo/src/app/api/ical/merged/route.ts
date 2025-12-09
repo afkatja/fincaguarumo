@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import IcalExpander from "ical-expander"
 import { addDays } from "date-fns"
 import crypto from "crypto"
+import { Booking, getSanityBookings } from "@/lib/setBookings"
 import bookingToNights from "@/lib/bookingToNights"
 
 const FEEDS: Record<string, string | undefined> = {
