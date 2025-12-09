@@ -30,9 +30,18 @@ const navigation = async ({ locale }: { locale: string }) => {
     params: { language: locale, category: "utilsNav" },
   })
 
-  const utils = utilsNav
-    .filter(item => item.isPublished)
-    .map(item => ({ ...item, href: `/${item.slug.current}` }))
+  const utils = [
+    ...utilsNav
+      .filter(item => item.isPublished)
+      .map(item => ({ ...item, href: `/${item.slug.current}` })),
+    {
+      title: "FAQ",
+      slug: { current: "faq" },
+      href: "faq",
+      language: locale,
+      isPublished: true,
+    },
+  ]
 
   const navItems = [...main, ...utils]
 
