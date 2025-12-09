@@ -22,16 +22,8 @@ export const faqType = defineType({
     defineField({
       name: "category",
       title: "FAQ Category",
-      type: "string",
-      options: {
-        list: [
-          { title: "Power & Connectivity", value: "power" },
-          { title: "Location & Access", value: "location" },
-          { title: "Wildlife & Safety", value: "wildlife" },
-          { title: "Amenities & Comfort", value: "amenities" },
-          { title: "Weather & Seasons", value: "weather" },
-        ],
-      },
+      type: "reference",
+      to: { type: "faqCategory" },
       validation: Rule => Rule.required(),
     }),
     defineField({
@@ -85,7 +77,7 @@ export const faqType = defineType({
   preview: {
     select: {
       title: "question",
-      subtitle: "category",
+      subtitle: "faqCategory",
     },
   },
   orderings: [
@@ -97,7 +89,7 @@ export const faqType = defineType({
     {
       title: "Category",
       name: "categoryAsc",
-      by: [{ field: "category", direction: "asc" }],
+      by: [{ field: "faqCategory", direction: "asc" }],
     },
   ],
 })

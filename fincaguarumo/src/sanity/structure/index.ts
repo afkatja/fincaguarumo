@@ -83,6 +83,7 @@ export const structure: StructureResolver = S => {
       S.listItem()
         .title("Posts")
         .child(getTranslationItems(S, "post", "Posts")),
+
       S.listItem()
         .title("FAQ")
         .child(getTranslationItems(S, "faq", "FAQ", "metadata")),
@@ -107,6 +108,11 @@ export const structure: StructureResolver = S => {
             .schemaType("category")
             .filter('_type == "category"')
             .apiVersion("v2025-02-19")
+        ),
+      S.listItem()
+        .title("FAQ Categories")
+        .child(
+          getTranslationItems(S, "faqCategory", "FAQ categories", "metadata")
         ),
       S.listItem()
         .title("Authors")

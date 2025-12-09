@@ -11,7 +11,7 @@ import { ChevronDown, ChevronUp } from "lucide-react"
 export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
   const grouped = useMemo(() => {
     return faqs.reduce<Record<string, FAQType[]>>((acc, item) => {
-      const key = item.category || "other"
+      const key = item.category?.slug?.current || "other"
       if (!acc[key]) acc[key] = []
       acc[key].push(item)
       return acc
@@ -20,21 +20,11 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
 
   const [openKey, setOpenKey] = useState<string | null>(null)
 
-  const prettyTitle = (key: string) => {
-    switch (key) {
-      case "power":
-        return "Power & Connectivity"
-      case "location":
-        return "Location & Access"
-      case "wildlife":
-        return "Wildlife & Safety"
-      case "amenities":
-        return "Amenities & Comfort"
-      case "weather":
-        return "Weather & Seasons"
-      default:
-        return key
-    }
+  const getCategoryTitle = (key: string) => {
+    const faqWithCategory = faqs.find(
+      faq => faq.category?.slug?.current === key
+    )
+    return faqWithCategory?.category?.title || key
   }
 
   return (
@@ -55,7 +45,7 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
               aria-controls={`panel-${key}`}
             >
               <span className="text-lg font-semibold text-zinc-900">
-                {prettyTitle(key)}
+                {getCategoryTitle(key)}
               </span>
               {!isOpen ? (
                 <ChevronDown className="w-6 h-6 text-zinc-400" />

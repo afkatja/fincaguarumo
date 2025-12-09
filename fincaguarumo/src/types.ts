@@ -22,7 +22,11 @@ export interface FAQType {
   answer: string
   keywords: string[]
   showOnVillaBruno: boolean
-  category: string
+  category: {
+    title: string
+    slug: { current: string }
+    language: string
+  }
 }
 
 const today = new Date()

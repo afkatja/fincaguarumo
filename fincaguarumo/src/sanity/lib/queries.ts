@@ -26,7 +26,7 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
     'metadata': asset->metadata
   }
 },
-  price, faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category },
+  price, faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} },
   "translations": coalesce(
     *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{
       ...(value->{
@@ -39,7 +39,7 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
         body,
         showBookingOptions,
         showBookingDialog,
-        faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category }
+        faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} }
       })
     },
     []
@@ -353,14 +353,14 @@ export const GALLERY_QUERY = groq`
 
 export const FAQ_QUERY = groq`
   *[_type == 'faq' && language == $language] | order(displayOrder asc) {
-    category, question, answer, keywords, showOnVillaBruno, slug, language,
+    category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug, language,
     "translations": *[
-      _type == "translation.metadata" && 
+      _type == "translation.metadata" &&
       ^._id in translations[].value._ref
     ][0].translations[]{
       ...(value->{
         language,
-        category, question, answer, keywords, showOnVillaBruno, slug
+        category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug
       })
     }
   }

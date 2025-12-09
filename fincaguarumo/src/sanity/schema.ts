@@ -13,6 +13,7 @@ import { dialogType } from "./schemaTypes/dialogType"
 import { galleryType } from "./schemaTypes/galleryType"
 import { bookingType } from "./schemaTypes/bookingType"
 import { faqType } from "./schemaTypes/faqType"
+import { faqCategoryType } from "./schemaTypes/faqCategoryType"
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -29,5 +30,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     galleryType,
     bookingType,
     faqType,
+    faqCategoryType,
   ],
 }
