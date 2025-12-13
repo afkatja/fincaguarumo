@@ -21,6 +21,8 @@ interface IDatePicker {
   className?: string
   disabledDates?: Date[]
   loading?: boolean
+  minDate?: Date
+  month?: Date
 }
 
 const DatePicker = ({
@@ -33,10 +35,13 @@ const DatePicker = ({
   className,
   disabledDates,
   loading,
+  minDate,
+  month,
 }: IDatePicker) => {
   const params = useParams()
   const setDisabledDates = (date: Date) => {
     if (date < new Date()) return true
+    if (minDate && date < minDate) return true
     return (disabledDates || []).some(
       d => d.toDateString() === date.toDateString()
     )
@@ -79,6 +84,7 @@ const DatePicker = ({
           disabled={date => setDisabledDates(date)}
           onSelect={(_, selectedDay) => onSelectDate(selectedDay)}
           selected={selectedDate}
+          month={month}
         />
       </PopoverContent>
     </Popover>

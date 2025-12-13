@@ -27,6 +27,7 @@ const BookingCalendar = ({
       const json = await data.json()
 
       if (!json?.merged) return
+
       setBlockedDates(
         json.merged.flatMap((d: Record<string, any>) =>
           d.blocked.map((date: string) => new Date(date))
@@ -70,6 +71,8 @@ const BookingCalendar = ({
             }}
             disabledDates={blockedDates}
             loading={loading}
+            minDate={selectedDates.checkIn}
+            month={selectedDates.checkIn || new Date()}
           />
         </div>
       </div>
