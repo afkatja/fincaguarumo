@@ -95,7 +95,6 @@ function mergeBookings(bookings: Booking[]) {
     const cur = ranges[i]
     const last = merged[merged.length - 1]
     if (cur.start <= last.end) {
-      // overlap -> extend end if needed
       if (cur.end > last.end) last.end = cur.end
     } else {
       merged.push({ ...cur })
