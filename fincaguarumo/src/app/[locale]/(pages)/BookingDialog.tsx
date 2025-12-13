@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 
 import { useBooking } from "../../providers/BookingProvider"
 import { useDialog } from "../../providers/DialogProvider"
-import { BookingType } from "../../../types"
+import { BookingType, initialBookingData } from "../../../types"
 import { getInternationalizedValue } from "../../../lib/utils"
 import BookingDialogContent from "../../providers/BookingDialogContent"
 
@@ -51,7 +51,7 @@ const BookingDialog = ({
   const [open, setOpen] = useState(false)
   const [paymentStep, setPaymentStep] = useState(false)
 
-  const { bookingData } = useBooking()
+  const { bookingData, setBookingData } = useBooking()
   const { dialogData, setDialogId, isLoading } = useDialog()
 
   // Set dialog ID when component mounts
@@ -60,6 +60,15 @@ const BookingDialog = ({
   }, [dialogId, setDialogId])
 
   const closeHandler = () => {
+    // Reset checkIn and checkOut dates when dialog is closed
+    setBookingData({
+      ...bookingData,
+      bookingDetails: {
+        ...bookingData.bookingDetails,
+        checkIn: initialBookingData.bookingDetails.checkIn,
+        checkOut: initialBookingData.bookingDetails.checkOut,
+      },
+    })
     setOpen(!open)
     setPaymentStep(false)
   }
