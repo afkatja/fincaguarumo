@@ -1,6 +1,19 @@
 const reviews = [
   {
     author: {
+      name: "Alice McLeod",
+      location: "Reno, NV, USA",
+      photoURI:
+        "https://a0.muscache.com/im/pictures/user/User-112753884/original/ba65ff60-2181-4887-829d-fb73f4c439cf.jpeg?im_w=240",
+    },
+    rating: 5,
+    date: "2025-12-26",
+    reviewText:
+      "The jungle villa was just the place for relaxation and beauty!  We really enjoyed the sounds of nature out on the deck- it was our favorite spot!  Katja and Peter greeted us upon arrival and were super friendly and welcoming.  They had also set up a horseback ride for us with a local neighbor which was super special.  I would definitely recommend driving up to the villa in a 4x4 vs. a car; we were in a car and although it was so-doable, it was slow going a nerve wracking because we were in a rental . However, we loved staying up high outside of town and would definitely stay again!",
+    platform: "airbnb",
+  },
+  {
+    author: {
       name: "Ellie",
       location: "London, UK",
       photoURI:
@@ -11,8 +24,6 @@ const reviews = [
     reviewText:
       "Katja and Peter’s home is just what we wanted, something off grid where we could switch off and enjoy the beautiful surroundings. We were very lucky to see squirrel monkeys, mealy parrots and of course the famous Bruno! The views are beautiful and we spent every evening on the verandah, joined by their lovely cats one evening too. The shower was hot and powerful and the beds were very comfy. The hosts were very hospitable, offering fresh coconuts and bananas from their garden and advice for activities and nearby walks. 10/10 hosts thank you!",
     platform: "airbnb",
-    photoUrl:
-      "https://a0.muscache.com/im/pictures/user/User/original/7fe9b0b1-4ac5-423f-a0de-91e793e43178.jpeg?im_w=240",
   },
   {
     author: {
