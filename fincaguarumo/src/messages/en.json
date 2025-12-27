@@ -42,6 +42,7 @@
     "rateLabel": "Price (excl. VAT)",
     "rateVATlabel": "Price (incl. 13% VAT)",
     "reserveButton": "Book Villa Bruno now",
+    "reserveButtonTour": "Book now",
     "selectDate": "Select date"
   },
   "page": {

@@ -36,7 +36,9 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
           },
         }),
       })
+
       const { clientSecret: clientSecretData } = await response.json()
+      console.log({ clientSecretData })
 
       setClientSecret(clientSecretData)
       return clientSecretData
@@ -70,7 +72,17 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
     <>
       <CheckoutProvider
         options={{
-          fetchClientSecret: () => fetchData,
+          fetchClientSecret: async () => {
+            try {
+              const result = await fetchData
+              console.log("Session id request", { result })
+
+              return result || ""
+            } catch (err) {
+              console.error("Session id request error", err)
+              return "error"
+            }
+          },
           elementsOptions: options,
           // @ts-expect-error
           adaptivePricing: { allowed: true },

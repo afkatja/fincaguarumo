@@ -4,6 +4,7 @@ import getRequestBody from "../../../lib/getRequestBody"
 import { BookingData, SerializedBookingData } from "../../../types"
 
 export async function POST(request: NextRequest) {
+  try {
   const { customerDetails, bookingDetails }: SerializedBookingData =
     await getRequestBody(request)
 
@@ -63,4 +64,12 @@ export async function POST(request: NextRequest) {
   return Response.json({
     clientSecret: session.client_secret,
   })
+} catch(error) {
+  console.error('Error creating a checkout session', error)
+  return Response.json(
+    { error: "Error creating checkout session" },
+    { status: 500 }
+  );
+  
+}
 }

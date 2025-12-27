@@ -9,7 +9,7 @@ import Breadcrumbs from "@/components/Breadcrumbs"
 import Title from "@/components/Title"
 import Loading from "./loading"
 import RichText from "@/components/RichText"
-import { BookingType } from "../../../types"
+import { BOOKING_TYPE, BookingType } from "../../../types"
 import { loadTranslations } from "@/lib/utils"
 
 const DetailsPageLayout = ({
@@ -37,6 +37,7 @@ const DetailsPageLayout = ({
     booking: {
       perPerson: string
       reserveButton: string
+      reserveButtonTour: string
     }
   } | null>(null)
 
@@ -98,7 +99,10 @@ const DetailsPageLayout = ({
                 <BookingDialog
                   bookingType={bookingType}
                   dialogOptions={{
-                    buttonText: t?.reserveButton || "Book now",
+                    buttonText:
+                      bookingType === BOOKING_TYPE.tour
+                        ? t?.reserveButtonTour
+                        : t?.reserveButton || "Book now",
                     buttonClassName: "ml-auto",
                     title: t?.reserveButton || "Book now",
                   }}
