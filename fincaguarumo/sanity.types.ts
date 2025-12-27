@@ -1347,13 +1347,28 @@ export type FAQ_QUERYResult = Array<{
   }> | null;
 }>;
 // Variable: BOOKINGS_QUERY
-// Query: *[  _type == "booking" &&   dateTime(checkOut) > dateTime(now()) &&   !(_id in path("drafts.**"))]{  uid, checkIn, checkOut, guestName, source}
+// Query: *[  _type == "booking" &&  dateTime(checkOut) > dateTime(now()) &&  !(_id in path("drafts.**"))]{  uid, checkIn, checkOut, guestName, source}
 export type BOOKINGS_QUERYResult = Array<{
   uid: string | null;
   checkIn: string | null;
   checkOut: string | null;
   guestName: string | null;
   source: "airbnb" | "booking" | "direct" | "expedia" | null;
+}>;
+// Variable: REVIEWS_QUERY
+// Query: *[_type == "review"] | order(date desc){  _id,  platform,  author,  rating,  date,  reviewText,  photoUrl}
+export type REVIEWS_QUERYResult = Array<{
+  _id: string;
+  platform: "airbnb" | "booking" | null;
+  author: {
+    name?: string;
+    location?: string;
+    photoURI?: string;
+  } | null;
+  rating: number | null;
+  date: string | null;
+  reviewText: string | null;
+  photoUrl: string | null;
 }>;
 
 // Query TypeMap
@@ -1375,6 +1390,7 @@ declare module "@sanity/client" {
     "\n  *[_type=='home' && language == $language][0] {\n    hero_title, \n    hero_slogan, \n    hero_body,\n    subtitle, \n    language, \n    featured_content_title,\n    featured_blog_title, \n    slug, \n    'mediaUrl': background_media.asset->{url}, \n    'mediaPoster': background_media_poster.asset->{\n      url, \n      metadata {\n        lqip\n      }\n    },\n    intro_body[] {\n      ...,\n      markDefs[] {\n        ...,\n        _type == \"internalLink\" => {\n          ...,\n          \"slug\": @.reference-> slug\n        }\n      }\n    },\n    'translations': *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        hero_title, \n        hero_slogan, \n        hero_body,\n        subtitle, \n        language, \n        featured_content_title,\n        featured_blog_title, \n        slug,\n        'mediaUrl': background_media.asset->{url}, \n        'mediaPoster': background_media_poster.asset->{\n          url, \n          metadata {\n            lqip\n          }\n        },\n        intro_body[] {\n          ...,\n          markDefs[] {\n            ...,\n            _type == \"internalLink\" => {\n              ...,\n              \"slug\": @.reference-> slug\n            }\n          }\n        }\n      })\n    }\n  }\n": HOME_QUERYResult;
     "\n  *[_type == 'gallery' && $category in categories[] -> title][0] {\n    title, images[] {\n      ...,\n      \"metadata\": asset->metadata\n    }\n  }\n": GALLERY_QUERYResult;
     "\n  *[_type == 'faq' && language == $language] | order(displayOrder asc) {\n    category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug, language,\n    \"translations\": *[\n      _type == \"translation.metadata\" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug\n      })\n    }\n  }\n": FAQ_QUERYResult;
-    "*[\n  _type == \"booking\" && \n  dateTime(checkOut) > dateTime(now()) && \n  !(_id in path(\"drafts.**\"))\n]{\n  uid, checkIn, checkOut, guestName, source\n}": BOOKINGS_QUERYResult;
+    "*[\n  _type == \"booking\" &&\n  dateTime(checkOut) > dateTime(now()) &&\n  !(_id in path(\"drafts.**\"))\n]{\n  uid, checkIn, checkOut, guestName, source\n}": BOOKINGS_QUERYResult;
+    "*[_type == \"review\"] | order(date desc){\n  _id,\n  platform,\n  author,\n  rating,\n  date,\n  reviewText,\n  photoUrl\n}": REVIEWS_QUERYResult;
   }
 }

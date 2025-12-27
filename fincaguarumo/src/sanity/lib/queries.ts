@@ -367,9 +367,19 @@ export const FAQ_QUERY = groq`
 `
 
 export const BOOKINGS_QUERY = groq`*[
-  _type == "booking" && 
-  dateTime(checkOut) > dateTime(now()) && 
+  _type == "booking" &&
+  dateTime(checkOut) > dateTime(now()) &&
   !(_id in path("drafts.**"))
 ]{
   uid, checkIn, checkOut, guestName, source
+}`
+
+export const REVIEWS_QUERY = groq`*[_type == "review"] | order(date desc){
+  _id,
+  platform,
+  author,
+  rating,
+  date,
+  reviewText,
+  photoUrl
 }`

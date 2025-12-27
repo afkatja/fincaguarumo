@@ -97,10 +97,11 @@ const Review = ({ review }: { review: TReview }) => {
           <Image
             src={
               review?.authorAttribution?.photoURI ||
+              review?.author?.photoURI ||
               review?.photoUrl ||
               defaultUserIcon[platform]
             }
-            alt={review?.authorAttribution?.displayName || "Reviewer"}
+            alt={review?.authorAttribution?.displayName || review?.author?.name || "Reviewer"}
             width="40"
             height="40"
             loading="lazy"
