@@ -1,38 +1,44 @@
 /** @type {import('next').NextConfig} */
 
-import createNextIntlPlugin from 'next-intl/plugin';
-import withBundleAnalyzer from '@next/bundle-analyzer'
+import createNextIntlPlugin from "next-intl/plugin"
+import withBundleAnalyzer from "@next/bundle-analyzer"
 
 const nextConfig = {
   experimental: {
     taint: true,
-    optimizePackageImports: ['gsap', 'lucide-react'],
-    serverActions: {
-      allowedOrigins: ['https://fincaguarumo.com', 'https://www.fincaguarumo.com', 'http://localhost:3000', 'https://fincaguarumo.local:3000'],
-    }
+  },
+  reactCompiler: true,
+  optimizePackageImports: ["gsap", "lucide-react"],
+  serverActions: {
+    allowedOrigins: [
+      "https://fincaguarumo.com",
+      "https://www.fincaguarumo.com",
+      "http://localhost:3000",
+      "https://fincaguarumo.local:3000",
+    ],
   },
   images: {
     qualities: [50, 75, 100],
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
+        protocol: "https",
+        hostname: "picsum.photos",
+        port: "",
       },
       {
-        protocol: 'http',
-        hostname: '**.wikipedia.org',
-        port: '',
+        protocol: "http",
+        hostname: "**.wikipedia.org",
+        port: "",
       },
       {
-        protocol: 'https',
-        hostname: '**.wikipedia.org',
-        port: '',
+        protocol: "https",
+        hostname: "**.wikipedia.org",
+        port: "",
       },
       {
-        protocol: 'https',
-        hostname: '**.wikimedia.org',
-        port: '',
+        protocol: "https",
+        hostname: "**.wikimedia.org",
+        port: "",
       },
 
       {
@@ -64,20 +70,17 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/robots.txt',
-        destination: '/robots.txt',
+        source: "/robots.txt",
+        destination: "/robots.txt",
       },
-    ];
+    ]
   },
-};
+}
 
-  
- 
-const withNextIntl = createNextIntlPlugin();
+const withNextIntl = createNextIntlPlugin()
 
 const withBundleOptimizer = withBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
+  enabled: process.env.ANALYZE === "true",
 })
 
-export default withBundleOptimizer(withNextIntl(nextConfig));
-
+export default withBundleOptimizer(withNextIntl(nextConfig))
