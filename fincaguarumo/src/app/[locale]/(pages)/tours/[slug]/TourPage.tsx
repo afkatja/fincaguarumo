@@ -1,5 +1,5 @@
 "use client"
-import React, { useCallback, useEffect } from "react"
+import React, { useEffect } from "react"
 import Slideshow from "@/components/Slideshow"
 import DetailsPageLayout from "../../DetailsPageLayout"
 import { TTour } from "../data"

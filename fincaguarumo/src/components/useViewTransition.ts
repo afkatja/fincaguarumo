@@ -1,6 +1,5 @@
 "use client"
 
-import { useCallback } from "react"
 import { startTransition as reactStartTransition } from "react"
 
 interface ViewTransitionOptions {
@@ -13,50 +12,47 @@ export const useViewTransition = () => {
   const supportsViewTransitions =
     typeof document !== "undefined" && "startViewTransition" in document
 
-  const startTransition = useCallback(
-    async (
-      callback: () => void | Promise<void>,
-      options: ViewTransitionOptions = {}
-    ) => {
-      if (supportsViewTransitions) {
-        try {
-          options.onStart?.()
-          // React 19's startTransition for better integration
-          reactStartTransition(() => {
-            const transition = document.startViewTransition(async () => {
-              await callback()
-            })
-
-            transition.finished
-              .then(() => {
-                options.onFinish?.()
-              })
-              .catch((error) => {
-                options.onAbort?.()
-                console.error("View transition failed:", error)
-              })
-          })
-        } catch (error) {
-          options.onAbort?.()
-          console.error("View transition failed:", error)
-        }
-      } else {
-        // Fallback: use React 19's startTransition for non-view-transition browsers
+  const startTransition = async (
+    callback: () => void | Promise<void>,
+    options: ViewTransitionOptions = {}
+  ) => {
+    if (supportsViewTransitions) {
+      try {
+        options.onStart?.()
+        // React 19's startTransition for better integration
         reactStartTransition(() => {
-          options.onStart?.()
-          Promise.resolve(callback())
+          const transition = document.startViewTransition(async () => {
+            await callback()
+          })
+
+          transition.finished
             .then(() => {
               options.onFinish?.()
             })
-            .catch((error) => {
+            .catch(error => {
               options.onAbort?.()
-              console.error("Transition callback failed:", error)
+              console.error("View transition failed:", error)
             })
         })
+      } catch (error) {
+        options.onAbort?.()
+        console.error("View transition failed:", error)
       }
-    },
-    [supportsViewTransitions]
-  )
+    } else {
+      // Fallback: use React 19's startTransition for non-view-transition browsers
+      reactStartTransition(() => {
+        options.onStart?.()
+        Promise.resolve(callback())
+          .then(() => {
+            options.onFinish?.()
+          })
+          .catch(error => {
+            options.onAbort?.()
+            console.error("Transition callback failed:", error)
+          })
+      })
+    }
+  }
 
   return {
     supportsViewTransitions,

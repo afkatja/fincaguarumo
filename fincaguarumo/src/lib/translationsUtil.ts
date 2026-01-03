@@ -1,4 +1,4 @@
-import { TransitionFunction, useMemo, useTransition } from "react"
+import { TransitionFunction, useTransition } from "react"
 import { i18n } from "../../languages"
 
 export interface Params {
@@ -37,15 +37,14 @@ export const useTranslations = (translations: Translation[]) => {
       )
     })
   }
-  const availableTranslations = useMemo<Translation[]>(
-    () =>
-      i18n.languages.reduce<Translation[]>((acc, cur) => {
-        const availableTranslation = translations.find(
-          translation => translation.language === cur.id
-        )
-        return availableTranslation ? [...acc, availableTranslation] : acc
-      }, []),
-    [translations]
+  const availableTranslations = i18n.languages.reduce<Translation[]>(
+    (acc, cur) => {
+      const availableTranslation = translations.find(
+        translation => translation.language === cur.id
+      )
+      return availableTranslation ? [...acc, availableTranslation] : acc
+    },
+    []
   )
   return { availableTranslations, onSelectChange }
 }
