@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback } from "react"
+import { startTransition as reactStartTransition } from "react"
 
 interface ViewTransitionOptions {
   onStart?: () => void
@@ -20,21 +21,38 @@ export const useViewTransition = () => {
       if (supportsViewTransitions) {
         try {
           options.onStart?.()
-          const transition = document.startViewTransition(async () => {
-            await callback()
-          })
+          // React 19's startTransition for better integration
+          reactStartTransition(() => {
+            const transition = document.startViewTransition(async () => {
+              await callback()
+            })
 
-          await transition.finished
-          options.onFinish?.()
+            transition.finished
+              .then(() => {
+                options.onFinish?.()
+              })
+              .catch((error) => {
+                options.onAbort?.()
+                console.error("View transition failed:", error)
+              })
+          })
         } catch (error) {
           options.onAbort?.()
           console.error("View transition failed:", error)
         }
       } else {
-        // Fallback: execute callback directly
-        options.onStart?.()
-        await callback()
-        options.onFinish?.()
+        // Fallback: use React 19's startTransition for non-view-transition browsers
+        reactStartTransition(() => {
+          options.onStart?.()
+          Promise.resolve(callback())
+            .then(() => {
+              options.onFinish?.()
+            })
+            .catch((error) => {
+              options.onAbort?.()
+              console.error("Transition callback failed:", error)
+            })
+        })
       }
     },
     [supportsViewTransitions]
