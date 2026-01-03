@@ -86,7 +86,7 @@ const DetailsPageLayout = ({
                 )}
               </div>
             </div>
-            <footer className="bg-muted dark:bg-gradient-to-br from-zinc-700 to-sky-900 rounded-lg p-6 md:p-8">
+            <footer className="bg-muted dark:bg-linear-to-br from-zinc-700 to-sky-900 rounded-lg p-6 md:p-8">
               <div className="flex items-center justify-between">
                 {!!price ? (
                   <div>

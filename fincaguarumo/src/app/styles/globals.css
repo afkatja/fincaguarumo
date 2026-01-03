@@ -1,8 +1,6 @@
-@import "tailwindcss/base";
+@import "tailwindcss";
+@config "../../../tailwind.config.ts";
 @import "@radix-ui/themes/styles";
-
-@tailwind components;
-@tailwind utilities;
 
 @keyframes fade-out {
   100% {
@@ -17,11 +15,6 @@
 
 /* View Transitions API Support */
 @supports (view-transition-name: none) {
-  @view-transition {
-    navigation: auto;
-  }
-
-  /* Define view transition names for key elements */
   .animation-container {
     view-transition-name: page-content;
   }
@@ -35,15 +28,15 @@
   }
 
   /* Custom transition styles */
-  ::view-transition-old,
-  ::view-transition-new {
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
     animation-duration: 0.8s;
     animation-timing-function: ease-in-out;
   }
-  ::view-transition-old {
+  ::view-transition-old(*) {
     animation: fade-out;
   }
-  ::view-transition-new {
+  ::view-transition-new(*) {
     animation: fade-in;
   }
 
@@ -66,10 +59,6 @@
     transition: opacity 0.3s ease-in-out;
   }
 }
-/* 
-@theme {
-  --color-sunrise: #f9f2d8;
-} */
 
 :root {
   --background: 0 0% 100%;

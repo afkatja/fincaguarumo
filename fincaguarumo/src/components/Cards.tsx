@@ -13,7 +13,7 @@ const Cards = () => {
             alt="Retreat 1"
             width={400}
             height={300}
-            className="aspect-[4/3] object-cover rounded-md"
+            className="aspect-4/3 object-cover rounded-md"
           />
           <div className="grid gap-2">
             <h3 className="text-xl font-semibold">Mountain Retreat</h3>

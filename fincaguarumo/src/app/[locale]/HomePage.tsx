@@ -56,7 +56,7 @@ const HomePage = ({ locale, content }: { locale: string; content: any }) => {
               >
                 <RichText
                   body={content?.hero_body}
-                  className="mx-auto !text-zinc-50 mt-5 opacity-0 transition-opacity duration-700 delay-900 animate-fade line-clamp-3 md:line-clamp-none"
+                  className="mx-auto text-zinc-50! mt-5 opacity-0 transition-opacity duration-700 delay-900 animate-fade line-clamp-3 md:line-clamp-none"
                 />
               </FadeInObserver>
             </div>

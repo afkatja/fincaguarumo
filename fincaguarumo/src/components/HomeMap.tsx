@@ -17,8 +17,8 @@ const HomeMap = () => {
       apiKey={process.env.NEXT_PUBLIC_GMAPS_API_KEY as string}
       // onLoad={() => console.log("Maps API has loaded.")}
     >
-      <div className="max-w-[60rem] mx-auto my-8">
-        <div className="!w-11/12 mx-auto relative">
+      <div className="max-w-240 mx-auto my-8">
+        <div className="w-11/12! mx-auto relative">
           <h2 className="text-3xl my-5">Location</h2>
           <div className="h-96 mt-4">
             <Map

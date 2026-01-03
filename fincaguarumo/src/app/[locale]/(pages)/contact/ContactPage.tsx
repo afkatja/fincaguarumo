@@ -54,7 +54,7 @@ export default function Contact({
       description={content?.description}
       mainImage={content?.mainImage}
     >
-      <div className="w-11/12 my-8 !max-w-[60rem] mx-auto items-start">
+      <div className="w-11/12 my-8 max-w-240! mx-auto items-start">
         <Title
           title="Contact Us"
           titleClassName="text-3xl font-bold my-5 col-span-2"
@@ -95,7 +95,7 @@ export default function Contact({
           src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d10818.29693270256!2d-83.33528678209937!3d8.4966841786644!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2scr!4v1730252681067!5m2!1sen!2scr"
           width="800"
           height="500"
-          className="border-0 w-full max-w-[100%] mx-auto"
+          className="border-0 w-full max-w-full mx-auto"
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
         ></iframe>

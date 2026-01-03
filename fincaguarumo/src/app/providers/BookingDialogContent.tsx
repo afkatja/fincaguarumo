@@ -39,7 +39,7 @@ const BookingDialogContent = ({
   return (
     <>
       {!paymentStep ? (
-        <DialogContent className="min-h-[500px] sm:max-w-[500px] dark:bg-gradient-to-br dark:from-zinc-700 dark:to-sky-900 ">
+        <DialogContent className="min-h-[500px] sm:max-w-[500px] dark:bg-linear-to-br dark:from-zinc-700 dark:to-sky-900 ">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
@@ -55,7 +55,7 @@ const BookingDialogContent = ({
           </RemoveScroll>
         </DialogContent>
       ) : (
-        <DialogContent className="min-h-[500px] sm:max-w-[500px] dark:bg-gradient-to-br dark:from-zinc-700 dark:to-sky-900">
+        <DialogContent className="min-h-[500px] sm:max-w-[500px] dark:bg-linear-to-br dark:from-zinc-700 dark:to-sky-900">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
