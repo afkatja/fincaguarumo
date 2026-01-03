@@ -17,6 +17,7 @@ const nextConfig = {
       "https://fincaguarumo.local:3000",
     ],
   },
+  allowedDevOrigins: ["http://localhost:3000", "fincaguarumo.local"],
   images: {
     qualities: [50, 75, 100],
     remotePatterns: [
