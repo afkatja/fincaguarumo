@@ -1,7 +1,5 @@
-import { fontFamily } from "tailwindcss/defaultTheme"
-
-/** @type {import('tailwindcss').Config} */
-const theme = {
+// @ts-ignore
+const config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -10,8 +8,13 @@ const theme = {
   theme: {
     extend: {
       fontFamily: {
-        heading: ["var(--font-heading)", ...fontFamily.sans],
-        body: ["var(--font-body)", ...fontFamily.sans],
+        heading: [
+          "var(--font-heading)",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+        body: ["var(--font-body)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -65,27 +68,17 @@ const theme = {
       },
       keyframes: {
         fade: {
-          from: { opacity: 0 },
-          to: { opacity: 1 },
+          from: { opacity: "0" },
+          to: { opacity: "1" },
         },
         slide: {
           from: { transform: "translateY(8.5rem)" },
           to: { transform: "translateY(0)" },
         },
-        //   "accordion-down": {
-        //     from: { height: 0 },
-        //     to: { height: "var(--radix-accordion-content-height)" },
-        //   },
-        //   "accordion-up": {
-        //     from: { height: "var(--radix-accordion-content-height)" },
-        //     to: { height: 0 },
-        //   },
       },
       animation: {
         fade: "fade linear forwards",
         slide: "slide linear forwards",
-        //   "accordion-down": "accordion-down 0.2s ease-out",
-        //   "accordion-up": "accordion-up 0.2s ease-out",
       },
       dropShadow: {
         sharp: "2px 2px 0 rgba(0,0,0, .8)",
@@ -93,6 +86,7 @@ const theme = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [require("@tailwindcss/typography")],
 }
-export default theme
+
+export default config
