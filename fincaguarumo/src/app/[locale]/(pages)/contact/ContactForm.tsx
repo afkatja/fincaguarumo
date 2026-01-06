@@ -95,7 +95,7 @@ export default function ContactForm() {
           required
           rows={4}
           placeholder="message"
-          className="w-full px-3 py-2 rounded-sm outline outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900"
+          className="w-full px-3 py-2 rounded-sm outline outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900"
         />
       </div>
 

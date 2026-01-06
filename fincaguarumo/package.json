@@ -4,7 +4,7 @@
   "private": false,
   "type": "module",
   "scripts": {
-    "dev": "next dev --experimental-https",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -13,7 +13,10 @@
     "i18n:run": "npm run i18n:build && node dist/scripts/translate.js",
     "i18n:watch": "nodemon --watch /src/messages/en.json --exec \"npm run i18n:run\"",
     "prepare": "husky",
-    "translate": "npm run i18n:run"
+    "translate": "npm run i18n:run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "lint-staged": {
     "src/messages/en.json": [
@@ -89,6 +92,7 @@
   "devDependencies": {
     "@formatjs/intl-localematcher": "^0.5.10",
     "@next/bundle-analyzer": "16.1.1",
+    "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^25.0.3",

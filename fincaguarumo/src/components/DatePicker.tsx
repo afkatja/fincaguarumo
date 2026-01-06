@@ -78,7 +78,7 @@ const DatePicker = ({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 max-w-[276px]">
+      <PopoverContent className="p-0 max-w-69">
         <Calendar
           mode="single"
           disabled={date => setDisabledDates(date)}

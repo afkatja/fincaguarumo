@@ -91,7 +91,7 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
         src="/images/stripe-badge.png"
         width={450}
         height={50}
-        alt="stripe badge"
+        alt="stripe"
         className="w-full h-auto"
       />
     </>

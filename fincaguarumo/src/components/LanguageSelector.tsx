@@ -36,7 +36,10 @@ const LanguageSelector = ({
       }
       disabled={isPending}
     >
-      <SelectTrigger className="w-12 p-0 lg:w-[180px] focus:border-none active:border-none outline-none focus:ring-0 bg-transparent! ml-2">
+      <SelectTrigger
+        className="w-12 p-0 lg:w-45 focus:border-none active:border-none outline-none focus:ring-0 bg-transparent! ml-2"
+        data-testid="language-selector"
+      >
         <SelectValue placeholder="Choose language" />
       </SelectTrigger>
       <SelectContent>
