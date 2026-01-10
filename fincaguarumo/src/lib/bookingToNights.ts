@@ -3,7 +3,7 @@ export default function bookingToNights(start: Date, end: Date) {
 
   // Start from the day after check-in (check-out/check-in day)
   const cur = new Date(start)
-  cur.setUTCDate(cur.getUTCDate() + 1)
+  cur.setUTCDate(cur.getUTCDate())
 
   // End at the day before check-out (check-out/check-in day)
   const checkoutExclusive = new Date(end)

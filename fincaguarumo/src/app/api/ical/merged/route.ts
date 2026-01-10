@@ -8,6 +8,8 @@ import bookingToNights from "@/lib/bookingToNights"
 const FEEDS: Record<string, string | undefined> = {
   airbnb: process.env.AIRBNB_ICAL,
   booking: process.env.BOOKING_ICAL,
+  vrbo: process.env.VRBO_ICAL,
+  yourrentals: process.env.YOURRENTALS_ICAL,
   // expedia: process.env.ICAL_EXPEDIA,
 }
 
@@ -25,6 +27,7 @@ async function fetchIcsWithConditional(url: string, cacheKey: string) {
   const headers: Record<string, string> = {}
 
   const res = await fetch(url, { headers })
+
   if (res.status === 304) {
     // not changed
     return { changed: false, ics: memoryCache.ics[cacheKey] }
@@ -132,6 +135,7 @@ export async function GET() {
         const { ics } = await fetchIcsWithConditional(url!, key)
         if (!ics) continue
         const bookings = parseIcsToBookings(ics!, name)
+
         allBookings.push(...bookings)
       } catch (err) {
         console.error(`Error fetching/parsing ${name}:`, err)
