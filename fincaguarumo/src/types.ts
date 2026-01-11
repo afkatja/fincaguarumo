@@ -179,6 +179,7 @@ export type IDialog = {
   creditCard?: IField[]
   paypal?: IField[]
   people?: IField[]
+  person?: IField[]
   total?: IField[]
   ok?: IField[]
   cancel?: IField[]
