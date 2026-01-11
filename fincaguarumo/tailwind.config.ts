@@ -55,7 +55,7 @@ const theme = {
         },
       },
       backgroundImage: {
-        "gradient-dark": "var(--gradient)",
+        "gradient-dark": "var(--guarumo-gradient)",
       },
       borderRadius: {
         xl: `calc(var(--radius) + 4px)`,
