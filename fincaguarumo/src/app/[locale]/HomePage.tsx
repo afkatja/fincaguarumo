@@ -33,22 +33,22 @@ const HomePage = ({ locale, content }: { locale: string; content: any }) => {
                 poster={`${content?.mediaPoster?.url}?auto=format`}
                 placeholder="blur"
                 blurDataURL={content?.mediaPoster?.metadata?.lqip}
-                className="object-cover w-full h-full opacity-0 transition-opacity duration-700 animate-fade"
+                className="object-cover w-full h-full transition-opacity duration-1500"
                 critical
               />
             </Suspense>
           )}
           <div className="hero text-center text-zinc-50 drop-shadow-sharp">
-            <h1 className="text-6xl leading-normal font-black opacity-0 transition-opacity duration-700 animate-fade delay-500">
+            <h1 className="text-6xl leading-normal font-black opacity-0 transition-opacity animation-duration-500 animate-fade animation-delay-2500">
               {content?.hero_title}
             </h1>
-            <h2 className="text-3xl mb-5 font-semibold opacity-0 transition-opacity duration-700 delay-600 animate-fade">
+            <h2 className="text-3xl mb-5 font-semibold opacity-0 transition-opacity animation-duration-700 animation-delay-2700 animate-fade">
               {content?.hero_slogan}
             </h2>
-            <h3 className="text-xl leading-normal opacity-0 transition-opacity duration-700 delay-700 animate-fade">
+            <h3 className="text-xl leading-normal opacity-0 transition-opacity animation-duration-700 animation-delay-2800 animate-fade">
               {content?.subtitle}
             </h3>
-            <div className="animate-slide transition-transform duration-1000 delay-800">
+            <div className="animate-slide transition-transform animation-duration-700 animation-delay-3000">
               <FadeInObserver
                 threshold={0.5}
                 rootMargin="0px 0px -100px 0px"
@@ -56,7 +56,7 @@ const HomePage = ({ locale, content }: { locale: string; content: any }) => {
               >
                 <RichText
                   body={content?.hero_body}
-                  className="mx-auto text-zinc-50! mt-5 opacity-0 transition-opacity duration-700 delay-900 animate-fade line-clamp-3 md:line-clamp-none"
+                  className="mx-auto text-zinc-50! mt-5 opacity-0 transition-opacity animation-duration-700 animation-delay-3500 animate-fade line-clamp-3 md:line-clamp-none"
                 />
               </FadeInObserver>
             </div>
