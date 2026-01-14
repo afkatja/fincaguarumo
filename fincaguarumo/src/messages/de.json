@@ -62,5 +62,19 @@
   },
   "map": {
     "location": "Standort"
+  },
+  "contactForm": {
+    "successMessage": "Nachricht erfolgreich gesendet!",
+    "errorMessage": "Fehler beim Senden der Nachricht. Bitte versuchen Sie es erneut.",
+    "nameLabel": "Name",
+    "nameError": "Bitte geben Sie Ihren Namen ein",
+    "namePlaceholder": "Max Mustermann",
+    "emailLabel": "E-Mail",
+    "emailError": "Bitte geben Sie Ihre E-Mail ein",
+    "emailPlaceholder": "max@mustermann.de",
+    "messageLabel": "Nachricht",
+    "messagePlaceholder": "Nachricht",
+    "sending": "Wird gesendet...",
+    "sendMessage": "Nachricht senden"
   }
 }

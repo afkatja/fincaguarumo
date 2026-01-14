@@ -70,5 +70,19 @@
   },
   "map": {
     "location": "Ubicación"
+  },
+  "contactForm": {
+    "successMessage": "¡Mensaje enviado exitosamente!",
+    "errorMessage": "No se pudo enviar el mensaje. Por favor inténtalo de nuevo.",
+    "nameLabel": "Nombre",
+    "nameError": "Por favor ingresa tu nombre",
+    "namePlaceholder": "Jane Doe",
+    "emailLabel": "Correo electrónico",
+    "emailError": "Por favor ingrese su correo electrónico",
+    "emailPlaceholder": "jane@doe.com",
+    "messageLabel": "Mensaje",
+    "messagePlaceholder": "mensaje",
+    "sending": "Envío...",
+    "sendMessage": "Enviar mensaje"
   }
 }

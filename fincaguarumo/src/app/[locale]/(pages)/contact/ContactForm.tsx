@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import Input from "../../../../components/Input"
 import { Label } from "../../../../components/ui/label"
 import { Button } from "../../../../components/ui/button"
@@ -19,6 +20,8 @@ export default function ContactForm() {
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle")
+
+  const t = useTranslations("contactForm")
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -54,21 +57,21 @@ export default function ContactForm() {
     <form onSubmit={handleSubmit} className="space-y-4 group">
       {status === "success" && (
         <p className="text-guarumo-primary font-bold text-center">
-          Message sent successfully!
+          {t("successMessage") || "Message sent successfully!"}
         </p>
       )}
       {status === "error" && (
         <p className="text-destructive text-center font-bold">
-          Failed to send message. Please try again.
+          {t("errorMessage") || "There was an error sending your message."}
         </p>
       )}
       <Input
         id="name"
         type="text"
-        labelText="Name"
+        labelText={t("nameLabel") || "Name"}
         onChangeHandler={handleChange}
-        errorMessage="Please enter your name"
-        placeholder="Jane Doe"
+        errorMessage={t("nameError") || "Please enter your name"}
+        placeholder={t("namePlaceholder") || "Jane Doe"}
         required
         value={formData.name}
       />
@@ -77,15 +80,15 @@ export default function ContactForm() {
         type="email"
         value={formData.email}
         onChangeHandler={handleChange}
-        labelText="Email"
-        errorMessage="Please enter your email"
-        placeholder="jane@doe.com"
+        labelText={t("emailLabel") || "Email Address"}
+        errorMessage={t("emailError") || "Please enter a valid email address"}
+        placeholder={t("emailPlaceholder") || "jane@doe.com"}
         required
       />
 
       <div>
         <Label htmlFor="message" className="block text-sm font-medium mb-1">
-          Message
+          {t("messageLabel") || "Message"}
         </Label>
         <textarea
           id="message"
@@ -94,8 +97,8 @@ export default function ContactForm() {
           onChange={handleChange}
           required
           rows={4}
-          placeholder="message"
-          className="w-full px-3 py-2 rounded-sm outline outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900"
+          placeholder={t("messagePlaceholder") || "Your message here..."}
+          className="w-full px-3 py-2 rounded-sm outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900 bg-zinc-50"
         />
       </div>
 
@@ -104,7 +107,7 @@ export default function ContactForm() {
         type="submit"
         className="group-invalid:pointer-events-none group-invalid:opacity-30"
       >
-        {status === "loading" ? "Sending..." : "Send Message"}
+        {status === "loading" ? t("loadingMessage") : t("sendMessage")}
       </Button>
     </form>
   )
