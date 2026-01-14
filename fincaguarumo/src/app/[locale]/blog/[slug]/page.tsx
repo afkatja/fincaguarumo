@@ -1,6 +1,4 @@
-import {
-  POST_QUERY_RESULT,
-} from "../../../../../sanity.types"
+import { POST_QUERY_RESULT } from "../../../../../sanity.types"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { POST_QUERY } from "../../../../sanity/lib/queries"
 import { notFound } from "next/navigation"
@@ -10,7 +8,7 @@ export default async function Page({ params }: { params: any }) {
   const { locale, slug } = await params
   const post = await sanityFetch<POST_QUERY_RESULT>({
     query: POST_QUERY,
-    params: { slug, lanaguage: locale },
+    params: { slug, language: locale },
     revalidate: 0,
   })
   if (!post) return notFound()
