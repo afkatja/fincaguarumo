@@ -1,4 +1,3 @@
-import React from "react"
 import { sanityFetch } from "@/sanity/lib/client"
 import { FAQ_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
