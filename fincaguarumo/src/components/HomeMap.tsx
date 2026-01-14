@@ -15,7 +15,7 @@ import { coords, placeId } from "../../data/geo"
 const HomeMap = () => {
   const t = useTranslations("map")
   const apiIsLoaded = useApiIsLoaded()
-  if (apiIsLoaded) return null
+  if (!apiIsLoaded) return null
   return (
     <APIProvider
       apiKey={process.env.NEXT_PUBLIC_GMAPS_API_KEY as string}
