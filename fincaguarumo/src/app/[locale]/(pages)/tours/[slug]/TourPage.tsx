@@ -2,11 +2,10 @@
 import React, { useEffect } from "react"
 import Slideshow from "@/components/Slideshow"
 import DetailsPageLayout from "../../DetailsPageLayout"
-import { TTour } from "../data"
 import { titleCase } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import { useBooking } from "../../../../providers/BookingProvider"
-import { BOOKING_TYPE, BookingData } from "../../../../../types"
+import { BOOKING_TYPE, BookingData, TTour } from "../../../../../types"
 
 const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
   if (!tour || !tour.isPublished) notFound()
@@ -60,7 +59,7 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
       icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
       bookingType={BOOKING_TYPE.tour}
       locale={locale}
-      dialogId={tour.dialog?._ref}
+      dialogId={tour.dialog?._id}
     />
   )
 }

@@ -168,6 +168,11 @@
       color(from var(--guarumo-sunset) srgb r g b / 0.6),
       color(from var(--guarumo-sky) srgb r g b / 0.6) 40%
     );
+    --guarumo-gradient: radial-gradient(
+      circle at center top,
+      color(from var(--guarumo-sunset) srgb r g b / 0.9),
+      color(from var(--guarumo-sky) srgb r g b / 0.9) 40%
+    );
   }
 }
 

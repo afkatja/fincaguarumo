@@ -1,7 +1,7 @@
-import { sanityFetch } from "../../../../../sanity/lib/client"
-import { TOUR_QUERY } from "../../../../../sanity/lib/queries"
+import { sanityFetch } from "@/sanity/lib/client"
+import { DIALOG_QUERY, TOUR_QUERY } from "@/sanity/lib/queries"
+import { IDialog, TTour } from "@/types"
 import TourPage from "./TourPage"
-import { TTour } from "../data"
 
 const Page = async ({ params }: { params: any }) => {
   const { slug, locale } = await params
@@ -10,6 +10,11 @@ const Page = async ({ params }: { params: any }) => {
     params: { slug, language: locale },
     revalidate: 0,
   })
+  const dialog = await sanityFetch<IDialog>({
+    query: DIALOG_QUERY,
+    revalidate: 0,
+  })
+  tour.dialog = dialog
 
   return <TourPage tour={tour} locale={locale} />
 }

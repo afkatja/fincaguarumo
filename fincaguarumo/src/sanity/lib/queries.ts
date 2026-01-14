@@ -179,47 +179,24 @@ export const FEATURED_TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.curre
 }
 `
 
-export const DIALOG_QUERY = groq`
-*[_type == 'dialog'][0] {
-  'cta': CTA_button,
-  'date': Date_label,
-  'selectDate': Select_date,
-  'guests': Guests_label,
-  'adults': Adults_label,
-  'adult': Adult_label,
-  'child': Child_label,
-  'other': Other_label,
-  'paymentMethod': Payment_method_label,
-  'creditCard': Credit_card_label,
-  'paypal': Paypal_label,
-  'people': People_label,
-  'person': Person_label,
-  'total': Total_label,
-  'ok': OK_button_label,
-  'cancel': Cancel_button_label,
-  "translations": *[
-      _type == "translation.metadata" && 
-      ^._id in translations[].value._ref
-    ][0].translations[]{
-      ...(value->{
-          'cta': CTA_button,
-          'date': Date_label,
-          'selectDate': Select_date,
-          'guests': Guests_label,
-          'adults': Adults_label,
-          'adult': Adult_label,
-          'child': Child_label,
-          'other': Other_label,
-          'paymentMethod': Payment_method_label,
-          'creditCard': Credit_card_label,
-          'paypal': Paypal_label,
-          'people': People_label,
-          'person': Person_label,
-          'total': Total_label,
-          'ok': OK_button_label,
-          'cancel': Cancel_button_label,
-      })
-    }
+export const DIALOG_QUERY = groq`*[_type == 'dialog'][0] {
+  _id,
+  'cta': "CTA_button",
+  'date': "Date_label",
+  'selectDate': "Select_date",
+  'guests': "Guests_label",
+  'adults': "Adults_label",
+  'adult': "Adult_label",
+  'child': "Child_label",
+  'other': "Other_label",
+  'paymentMethod': "Payment_method_label",
+  'creditCard': "Credit_card_label",
+  'paypal': "Paypal_label",
+  'people': "People_label",
+  'person': "Person_label",
+  'total': "Total_label",
+  'ok': "OK_button_label",
+  'cancel': "Cancel_button_label",
 }
 `
 
@@ -248,7 +225,6 @@ export const TOUR_QUERY = groq`
   geo,
   duration,
   body,
-  dialog,
   "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref

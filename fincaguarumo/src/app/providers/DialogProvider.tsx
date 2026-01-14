@@ -3,30 +3,7 @@ import { createContext, useContext, useState, useEffect } from "react"
 import { clientSideFetch } from "../../sanity/lib/clientSide"
 import { DIALOG_QUERY } from "../../sanity/lib/queries"
 import { loadTranslations } from "../../lib/utils"
-
-export type IField = {
-  _key: string
-  value: string
-}
-
-export type IDialog = {
-  cta?: IField[]
-  date?: IField[]
-  selectDate?: IField[]
-  guests?: IField[]
-  adults?: IField[]
-  adult?: IField[]
-  child?: IField[]
-  other?: IField[]
-  paymentMethod?: IField[]
-  creditCard?: IField[]
-  paypal?: IField[]
-  person?: IField[]
-  people?: IField[]
-  total?: IField[]
-  ok?: IField[]
-  cancel?: IField[]
-}
+import { IDialog } from "../../types"
 
 interface DialogContextType {
   dialogData: IDialog | null

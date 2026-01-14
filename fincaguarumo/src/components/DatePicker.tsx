@@ -78,13 +78,13 @@ const DatePicker = ({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 max-w-[276px]">
+      <PopoverContent className="p-0 ">
         <Calendar
           mode="single"
           disabled={date => setDisabledDates(date)}
           onSelect={(_, selectedDay) => onSelectDate(selectedDay)}
           selected={selectedDate}
-          month={month}
+          startMonth={selectedDate ?? new Date()}
         />
       </PopoverContent>
     </Popover>

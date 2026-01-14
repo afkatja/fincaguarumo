@@ -10,29 +10,6 @@ import { BookingType, initialBookingData } from "../../../types"
 import { getInternationalizedValue } from "../../../lib/utils"
 import BookingDialogContent from "../../providers/BookingDialogContent"
 
-export type IField = {
-  _key: string
-  value: string
-}
-
-export type IDialog = {
-  cta?: IField[]
-  date?: IField[]
-  selectDate?: IField[]
-  guests?: IField[]
-  adults?: IField[]
-  adult?: IField[]
-  child?: IField[]
-  other?: IField[]
-  paymentMethod?: IField[]
-  creditCard?: IField[]
-  paypal?: IField[]
-  people?: IField[]
-  total?: IField[]
-  ok?: IField[]
-  cancel?: IField[]
-}
-
 const BookingDialog = ({
   bookingType,
   dialogOptions,
