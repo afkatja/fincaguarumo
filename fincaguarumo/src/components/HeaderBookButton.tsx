@@ -1,5 +1,4 @@
 "use client"
-import React from "react"
 import { useDialog } from "../app/providers/DialogProvider"
 import { Button } from "./ui/button"
 import { usePathname, useRouter } from "next/navigation"
@@ -9,9 +8,9 @@ const HeaderBookButton = () => {
   const { t } = useDialog()
   const pathname = usePathname()
   if (
-    pathname === "/villa-bruno" ||
-    pathname === "/stay" ||
-    pathname === "/accommodation"
+    pathname.includes("/villa-bruno") ||
+    pathname.includes("/stay") ||
+    pathname.includes("/accommodation")
   )
     return null
 
