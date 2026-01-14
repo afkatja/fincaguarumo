@@ -128,7 +128,7 @@ const ClientPage = ({
         </div>
       </div>
       {content?.showBookingDialog && (
-        <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-dark">
+        <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-dark shadow-sm">
           <div className="w-11/12 mx-auto">
             <p className="font-bold text-center mb-4">
               Price starting from $ {Math.floor(total)} (for {guests}{" "}

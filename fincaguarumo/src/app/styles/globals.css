@@ -29,7 +29,11 @@
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
-
+  --gradient: radial-gradient(
+    circle at center top,
+    color(from var(--color-sunrise) srgb r g b / 0.9),
+    color(from var(--color-white) srgb r g b / 0.9) 40%
+  );
   --background-image-gradient-dark: var(--gradient);
 
   --border-radius-xl: calc(var(--radius) + 4px);
