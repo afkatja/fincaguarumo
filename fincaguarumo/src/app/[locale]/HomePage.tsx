@@ -33,7 +33,7 @@ const HomePage = ({ locale, content }: { locale: string; content: any }) => {
                 poster={`${content?.mediaPoster?.url}?auto=format`}
                 placeholder="blur"
                 blurDataURL={content?.mediaPoster?.metadata?.lqip}
-                className="object-cover w-full h-full transition-opacity duration-1500"
+                className="object-cover w-full h-full transition-opacity duration-1000"
                 critical
               />
             </Suspense>
