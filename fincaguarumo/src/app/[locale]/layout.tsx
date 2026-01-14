@@ -88,6 +88,7 @@ export default async function Layout({
               <BookingProvider>
                 <DialogProvider locale={locale}>
                   <Header locale={locale} />
+                  <main className="flex-1 flex flex-col relative">
                     {draft?.isEnabled && (
                       <a
                         className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
