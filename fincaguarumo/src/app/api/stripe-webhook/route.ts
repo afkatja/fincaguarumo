@@ -98,18 +98,18 @@ export async function POST(request: NextRequest) {
           geo: metadata?.geo ? JSON.parse(metadata.geo) : {},
         }
         try {
-          // if (process.env.NODE_ENV === "production") {
-          const response = await sendConfirmationEmail({
-            customerDetails,
-            bookingDetails,
-          })
-          console.log("Confirmation email sent successfully.", response)
-          // } else {
-          //   console.log("Skipping email in development mode", {
-          //     customerDetails,
-          //     bookingDetails,
-          //   })
-          // }
+          if (process.env.NODE_ENV === "production") {
+            const response = await sendConfirmationEmail({
+              customerDetails,
+              bookingDetails,
+            })
+            console.log("Confirmation email sent successfully.", response)
+          } else {
+            console.log("Skipping email in development mode", {
+              customerDetails,
+              bookingDetails,
+            })
+          }
         } catch (error) {
           console.error("Failed to send confirmation email:", error)
           return NextResponse.json(
