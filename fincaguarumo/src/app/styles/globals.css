@@ -173,6 +173,7 @@
       color(from var(--guarumo-sunset) srgb r g b / 0.9),
       color(from var(--guarumo-sky) srgb r g b / 0.9) 40%
     );
+    --gradient-dark: var(--guarumo-gradient);
   }
 }
 
