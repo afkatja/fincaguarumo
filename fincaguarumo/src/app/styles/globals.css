@@ -36,10 +36,10 @@
   );
   --background-image-gradient-dark: var(--gradient);
 
-  --border-radius-xl: calc(var(--radius) + 4px);
-  --border-radius-lg: var(--radius);
-  --border-radius-md: calc(var(--radius) - 2px);
-  --border-radius-sm: calc(var(--radius) - 4px);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 
   --animate-fade: fade linear forwards;
   --animate-slide: slide linear forwards;
