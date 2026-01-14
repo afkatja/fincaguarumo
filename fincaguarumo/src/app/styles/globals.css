@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@radix-ui/themes/styles";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --font-family-heading:
@@ -46,6 +47,23 @@
 
   --drop-shadow-sharp: 2px 2px 0 rgba(0, 0, 0, 0.8);
   --drop-shadow-dots: 1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes slide {
+  from {
+    transform: translateY(8.5rem);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 @keyframes fade-out {
@@ -199,6 +217,13 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+@utility animation-delay-* {
+  animation-delay: --value(number)ms;
+}
+@utility animation-duration-* {
+  animation-duration: --value(number)ms;
 }
 
 @layer select {
