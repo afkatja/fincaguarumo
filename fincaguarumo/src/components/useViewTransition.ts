@@ -18,9 +18,9 @@ export const useViewTransition = () => {
   ) => {
     if (supportsViewTransitions) {
       try {
-        options.onStart?.()
         // React 19's startTransition for better integration
         reactStartTransition(() => {
+          options.onStart?.()
           const transition = document.startViewTransition(async () => {
             await callback()
           })
