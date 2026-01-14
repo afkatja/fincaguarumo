@@ -94,7 +94,7 @@
   /* Custom transition styles */
   ::view-transition-old(*),
   ::view-transition-new(*) {
-    animation-duration: 0.8s;
+    animation-duration: 1.8s;
     animation-timing-function: ease-in-out;
   }
   ::view-transition-old(*) {
@@ -120,7 +120,7 @@
 /* GSAP Fallback for browsers without View Transitions API */
 @supports not (view-transition-name: none) {
   .animation-container {
-    transition: opacity 0.3s ease-in-out;
+    transition: opacity 0.8s ease-in-out;
   }
 }
 
@@ -220,10 +220,10 @@ body {
 }
 
 @utility animation-delay-* {
-  animation-delay: --value(number)ms;
+  animation-delay: --value(number) ms;
 }
 @utility animation-duration-* {
-  animation-duration: --value(number)ms;
+  animation-duration: --value(number) ms;
 }
 
 @layer select {
