@@ -1,10 +1,10 @@
 "use client"
-import React from "react"
 import {
   APIProvider,
   Map,
   MapCameraChangedEvent,
   AdvancedMarker,
+  useApiIsLoaded,
 } from "@vis.gl/react-google-maps"
 import Image from "next/image"
 import { PlaceProvider } from "../app/providers/PlaceProvider"
@@ -12,6 +12,8 @@ import { PlaceReviews } from "./PlaceReviews"
 import { coords, placeId } from "../../data/geo"
 
 const HomeMap = () => {
+  const apiIsLoaded = useApiIsLoaded()
+  if (apiIsLoaded) return null
   return (
     <APIProvider
       apiKey={process.env.NEXT_PUBLIC_GMAPS_API_KEY as string}
