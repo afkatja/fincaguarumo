@@ -6,17 +6,18 @@ import withBundleAnalyzer from "@next/bundle-analyzer"
 const nextConfig = {
   experimental: {
     taint: true,
+    optimizePackageImports: ["gsap", "lucide-react"],
+    serverActions: {
+      allowedOrigins: [
+        "https://fincaguarumo.com",
+        "https://www.fincaguarumo.com",
+        "http://localhost:3000",
+        "https://fincaguarumo.local:3000",
+      ],
+    },
   },
   reactCompiler: true,
-  optimizePackageImports: ["gsap", "lucide-react"],
-  serverActions: {
-    allowedOrigins: [
-      "https://fincaguarumo.com",
-      "https://www.fincaguarumo.com",
-      "http://localhost:3000",
-      "https://fincaguarumo.local:3000",
-    ],
-  },
+
   allowedDevOrigins: ["http://localhost:3000", "fincaguarumo.local"],
   images: {
     qualities: [50, 75, 100],
