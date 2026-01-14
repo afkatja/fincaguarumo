@@ -12,28 +12,17 @@
     "youtube": "Youtube",
     "blog": "Blog"
   },
-  "hero": {
-    "title": "Discover Our Retreats",
-    "description": "Explore our collection of curated retreats, each offering a unique blend of natural beauty, adventure, and relaxation."
-  },
+  "hero": {},
   "upcoming": {
-    "title": "Upcoming Retreats",
-    "description": "Check out our upcoming retreats and plan your next getaway."
+    "title": "Upcoming Retreats"
   },
   "about": {
     "title": "Über uns",
     "description": "Über Finca Guarumo",
     "body": "blabla"
   },
-  "contact": {
-    "title": "Contact Us",
-    "description": "Have a question or want to learn more about our retreats? Get in touch with us.",
-    "location": "Our location"
-  },
-  "tours": {
-    "title": "Tours",
-    "description": "Get off the beaten path and discover Osa Peninsula from within, lead by the locals, on the following tours"
-  },
+  "contact": {},
+  "tours": {},
   "cards": {
     "new": "Neu",
     "featured": "Empfohlen",
@@ -62,10 +51,10 @@
     "phoneLabel": "Ihre Telefonnummer *",
     "priceLabel": "Preis für",
     "rateLabel": "Preis",
-    "reserveButton": "Reserve now",
     "selectDate": "Datum auswählen",
     "rateVATlabel": "Rate (inkl. 13% Mehrwertsteuer)",
-    "reserveButtonTour": "Buchen Sie jetzt"
+    "reserveButtonTour": "Buchen Sie jetzt",
+    "reserveButton": "Buchen Sie jetzt"
   },
   "page": {
     "moreFAQ": "Mehr FAQ",
