@@ -61,10 +61,14 @@
     "rateLabel": "Prijs",
     "reserveButton": "Boek nu",
     "selectDate": "Selecteer datum",
-    "rateVATlabel": "Prijs (incl. 13% btw)"
+    "rateVATlabel": "Prijs (incl. 13% btw)",
+    "reserveButtonTour": "Boek nu"
   },
   "page": {
     "moreFAQ": "Meer veelgestelde vragen",
     "FAQ": "FAQ"
+  },
+  "map": {
+    "location": "Locatie"
   }
 }

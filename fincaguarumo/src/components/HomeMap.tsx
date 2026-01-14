@@ -7,11 +7,13 @@ import {
   useApiIsLoaded,
 } from "@vis.gl/react-google-maps"
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 import { PlaceProvider } from "../app/providers/PlaceProvider"
 import { PlaceReviews } from "./PlaceReviews"
 import { coords, placeId } from "../../data/geo"
 
 const HomeMap = () => {
+  const t = useTranslations("map")
   const apiIsLoaded = useApiIsLoaded()
   if (apiIsLoaded) return null
   return (
@@ -21,7 +23,7 @@ const HomeMap = () => {
     >
       <div className="max-w-240 mx-auto my-8">
         <div className="w-11/12! mx-auto relative">
-          <h2 className="text-3xl my-5">Location</h2>
+          <h2 className="text-3xl my-5">{t("location")}</h2>
           <div className="h-96 mt-4">
             <Map
               mapId={process.env.NEXT_PUBLIC_GMAPS_MAP_ID as string}

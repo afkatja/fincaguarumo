@@ -64,10 +64,14 @@
     "rateLabel": "Preis",
     "reserveButton": "Reserve now",
     "selectDate": "Datum auswählen",
-    "rateVATlabel": "Rate (inkl. 13% Mehrwertsteuer)"
+    "rateVATlabel": "Rate (inkl. 13% Mehrwertsteuer)",
+    "reserveButtonTour": "Buchen Sie jetzt"
   },
   "page": {
     "moreFAQ": "Mehr FAQ",
     "FAQ": "FAQ"
+  },
+  "map": {
+    "location": "Standort"
   }
 }

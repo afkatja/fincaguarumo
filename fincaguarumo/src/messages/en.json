@@ -48,5 +48,8 @@
   "page": {
     "moreFAQ": "More FAQ",
     "FAQ": "FAQ"
+  },
+  "map": {
+    "location": "Location"
   }
 }

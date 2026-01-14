@@ -61,10 +61,14 @@
     "rateLabel": "Цена",
     "reserveButton": "Резервировать",
     "selectDate": "Выберите дату",
-    "rateVATlabel": "Цена (в том числе 13% НДС)"
+    "rateVATlabel": "Цена (в том числе 13% НДС)",
+    "reserveButtonTour": "Забронируйте сейчас"
   },
   "page": {
     "moreFAQ": "Еще вопросы",
     "FAQ": "Часто задаваемые вопросы"
+  },
+  "map": {
+    "location": "Расположение"
   }
 }
