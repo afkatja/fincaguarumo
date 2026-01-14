@@ -7,7 +7,6 @@ import Icon from "@/components/Icon"
 import { TTour } from "./tours/data"
 import Breadcrumbs from "@/components/Breadcrumbs"
 import Title from "@/components/Title"
-import Loading from "./loading"
 import RichText from "@/components/RichText"
 import { BOOKING_TYPE, BookingType } from "../../../types"
 import { loadTranslations } from "@/lib/utils"
@@ -50,7 +49,7 @@ const DetailsPageLayout = ({
   })
   const t = translations?.booking
   return (
-    <Suspense fallback={<Loading className="absolute" />}>
+    <>
       <div className="content-wrap">
         <div className="w-11/12 mx-auto py-5">
           {parent && <Breadcrumbs title={title} parent={parent} />}
@@ -115,7 +114,7 @@ const DetailsPageLayout = ({
           <RichText body={body} icon={icon} className="mx-0" />
         </section>
       </div>
-    </Suspense>
+    </>
   )
 }
 
