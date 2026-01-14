@@ -81,6 +81,14 @@ export const getInternationalizedValue = (
 ): string => {
   if (!field || !Array.isArray(field)) return fallback || ""
 
-  const value = field.find(item => item._key === currentLanguage)?.value
-  return value || fallback || ""
+  // First try the current language
+  let value = field.find(item => item._key === currentLanguage)?.value
+  if (value) return value
+
+  // Fall back to English
+  value = field.find(item => item._key === "en")?.value
+  if (value) return value
+
+  // Finally, use the provided fallback
+  return fallback || ""
 }

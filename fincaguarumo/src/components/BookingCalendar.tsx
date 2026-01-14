@@ -72,7 +72,6 @@ const BookingCalendar = ({
             disabledDates={blockedDates}
             loading={loading}
             minDate={selectedDates.checkIn}
-            month={selectedDates.checkIn || new Date()}
           />
         </div>
       </div>

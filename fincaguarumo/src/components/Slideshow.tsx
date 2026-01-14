@@ -11,23 +11,26 @@ const Slideshow = ({
   images: imagesProp,
   showExpand,
 }: {
-  images: (SanityImageObject & { metadata?: { lqip: string } })[]
+  images: (SanityImageObject & { metadata?: { lqip: string }; url?: string })[]
   showExpand?: boolean
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
+
   if (!imagesProp || imagesProp.length === 0) return null
 
   const images = imagesProp.map(img => ({
     _type: img._type || "image",
     asset: img.asset,
     metadata: img.metadata,
-    src: urlFor(img)
-      .width(2016)
-      .height(1134)
-      .fit("crop")
-      .quality(100)
-      .format("webp")
-      .url(),
+    src: img?.url
+      ? `${img.url}?w=2016&h=1134&fit=crop&q=100&fm=webp`
+      : urlFor(img)
+          .width(2016)
+          .height(1134)
+          .fit("crop")
+          .quality(100)
+          .format("webp")
+          .url(),
     width: 2016,
     height: 1134,
     alt: img.alt || "",
