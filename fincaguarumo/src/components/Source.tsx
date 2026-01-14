@@ -1,7 +1,7 @@
 import { ImageProps, getImageProps } from "next/image"
 import { forwardRef } from "react"
 
-type SourceProps = Omit<JSX.IntrinsicElements["source"], "srcSet" | "src"> &
+type SourceProps = Omit<React.ComponentProps<"source">, "srcSet" | "src"> &
   Pick<ImageProps, "src" | "loader" | "unoptimized" | "quality">
 
 export const Source = forwardRef<HTMLSourceElement, SourceProps>(

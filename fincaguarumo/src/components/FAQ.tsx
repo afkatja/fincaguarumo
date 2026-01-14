@@ -6,7 +6,7 @@ import { ChevronDown, ChevronUp } from "lucide-react"
 /**
  * Render a single FAQ item.
  * @param {{ faq: FAQType }} props - An object containing the FAQ item to render.
- * @returns {JSX.Element} A JSX element representing the FAQ item.
+ * @returns {React.ReactElement} A JSX element representing the FAQ item.
  */
 export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
   const grouped = faqs.reduce<Record<string, FAQType[]>>((acc, item) => {
