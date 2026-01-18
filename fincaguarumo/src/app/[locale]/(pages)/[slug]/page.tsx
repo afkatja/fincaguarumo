@@ -6,7 +6,7 @@ import { sanityFetch } from "@/sanity/lib/client"
 import { PAGES_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import ClientPage from "./ClientPage"
-import { loadTranslations } from "@/lib/utils"
+import { getTranslations } from "next-intl/server"
 import { FAQType, SanityImageObject } from "@/types"
 import Script from "next/script"
 
@@ -104,7 +104,7 @@ const Page = async ({ params }: { params: any }) => {
   if (!content?.isPublished) notFound()
 
   // Load translations
-  const messages = await loadTranslations(locale)
+  const messages = await getTranslations(locale)
 
   return (
     <Layout
@@ -116,14 +116,14 @@ const Page = async ({ params }: { params: any }) => {
       mainImage={content?.mainImage}
       images={content?.slideshow?.images}
     >
-      <ClientPage content={content} locale={locale} messages={messages} />
+      <ClientPage content={content} locale={locale} />
       <Script
         id={"json-ld-page"}
         strategy="afterInteractive"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
-            jsonLd({ title: content?.title, slug: content?.slug })
+            jsonLd({ title: content?.title, slug: content?.slug }),
           ).replace(/</g, "\\u003c"),
         }}
       />

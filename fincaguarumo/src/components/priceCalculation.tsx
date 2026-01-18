@@ -20,7 +20,7 @@ const PriceCalculation = ({
   locale: string
   duration?: number
   currency?: string
-  t: Record<string, string> | undefined
+  t: ((key: string) => string) | undefined
 }) => {
   const { dialogData: dialog } = useDialog()
 
@@ -28,7 +28,7 @@ const PriceCalculation = ({
     price,
     guests,
     bookingType,
-    duration
+    duration,
   )
 
   const currency = (toFormat: number) =>
@@ -49,17 +49,19 @@ const PriceCalculation = ({
       <dl className="grid grid-cols-2 items-center justify-between">
         <dt className="text-muted-foreground">
           {bookingType === BOOKING_TYPE.villa
-            ? `${t?.priceLabel} ${guests} 
+            ? `${t?.("priceLabel")} ${guests}
           ${getInternationalizedValue(
             guests === 1 ? dialog?.person : dialog?.people,
             locale,
-            "people"
+            "people",
           )}`
-            : t?.rateLabel || "Price"}
+            : // @ts-ignore
+              t("rateLabel", { defaultValue: "Price" })}
         </dt>
         <dd className="text-right">{currency(priceForPeople)}</dd>
         <dt className="text-muted-foreground">
-          {t?.rateVATlabel || "Price (incl 13% VAT)"}
+          {/* @ts-ignore */}
+          {t("rateVATlabel", { defaultValue: "Price (incl 13% VAT)" })}
         </dt>
         <dd className="text-right">{currency(priceWithVat)}</dd>
       </dl>

@@ -24,7 +24,7 @@ export default function ContactForm() {
   const t = useTranslations("contactForm")
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target
 
@@ -57,7 +57,8 @@ export default function ContactForm() {
     <form onSubmit={handleSubmit} className="space-y-4 group">
       {status === "success" && (
         <p className="text-guarumo-primary font-bold text-center">
-          {t("successMessage") || "Message sent successfully!"}
+          {/* @ts-ignore */}
+          {t("successMessage", { defaultValue: "Message sent successfully!" })}
         </p>
       )}
       {status === "error" && (

@@ -1,11 +1,11 @@
 "use client"
-import { useDialog } from "../app/providers/DialogProvider"
+import { useTranslations } from "next-intl"
 import { Button } from "./ui/button"
 import { usePathname, useRouter } from "next/navigation"
 
 const HeaderBookButton = () => {
   const router = useRouter()
-  const { t } = useDialog()
+  const t = useTranslations("booking")
   const pathname = usePathname()
   if (
     pathname.includes("/villa-bruno") ||
@@ -22,7 +22,7 @@ const HeaderBookButton = () => {
       variant="secondary"
       onClick={() => router.push("/villa-bruno")}
     >
-      {t?.reserveButton || "Book Villa Bruno now"}
+      {t("reserveButton", { defaultValue: "Book Villa Bruno now" })}
     </Button>
   )
 }

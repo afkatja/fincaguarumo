@@ -1,5 +1,5 @@
 "use client"
-import React, { Suspense, useEffect, useState } from "react"
+import React, { Suspense } from "react"
 
 import BookingDialog from "./BookingDialog"
 
@@ -9,7 +9,7 @@ import Breadcrumbs from "@/components/Breadcrumbs"
 import Title from "@/components/Title"
 import RichText from "@/components/RichText"
 import { BOOKING_TYPE, BookingType } from "../../../types"
-import { loadTranslations } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 const DetailsPageLayout = ({
   bookingDetails,
@@ -32,22 +32,7 @@ const DetailsPageLayout = ({
   dialogId?: string
 }) => {
   const { title, description, duration, location, price, body } = bookingDetails
-  const [translations, setTranslations] = useState<{
-    booking: {
-      perPerson: string
-      reserveButton: string
-      reserveButtonTour: string
-    }
-  } | null>(null)
-
-  useEffect(() => {
-    const loadTranslationsData = async () => {
-      const messages = await loadTranslations(locale)
-      setTranslations(messages)
-    }
-    loadTranslationsData()
-  })
-  const t = translations?.booking
+  const t = useTranslations("booking")
   return (
     <>
       <div className="content-wrap">
@@ -91,7 +76,7 @@ const DetailsPageLayout = ({
                   <div>
                     <span className="text-2xl font-bold">${price}</span>
                     <span className="text-muted-foreground text-sm">
-                      /{t?.perPerson}
+                      /{t("perPerson")}
                     </span>
                   </div>
                 ) : null}
@@ -100,10 +85,10 @@ const DetailsPageLayout = ({
                   dialogOptions={{
                     buttonText:
                       bookingType === BOOKING_TYPE.tour
-                        ? t?.reserveButtonTour
-                        : t?.reserveButton || "Book now",
+                        ? t("reserveButtonTour")
+                        : t("reserveButton", { defaultValue: "Book now" }),
                     buttonClassName: "ml-auto",
-                    title: t?.reserveButton || "Book now",
+                    title: t("reserveButton", { defaultValue: "Book now" }),
                   }}
                   dialogId={dialogId}
                   locale={locale}
