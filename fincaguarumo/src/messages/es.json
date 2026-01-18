@@ -82,7 +82,7 @@
     "emailPlaceholder": "jane@doe.com",
     "messageLabel": "Mensaje",
     "messagePlaceholder": "mensaje",
-    "sending": "Envío...",
+    "sending": "Enviando...",
     "sendMessage": "Enviar mensaje"
   }
 }

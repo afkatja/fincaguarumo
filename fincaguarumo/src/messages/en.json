@@ -52,6 +52,9 @@
   "map": {
     "location": "Location"
   },
+  "contact": {
+    "location": "Location"
+  },
   "contactForm": {
     "successMessage": "Message sent successfully!",
     "errorMessage": "Failed to send message. Please try again.",

@@ -21,7 +21,9 @@
     "description": "Über Finca Guarumo",
     "body": "blabla"
   },
-  "contact": {},
+  "contact": {
+    "location": "Standort"
+  },
   "tours": {},
   "cards": {
     "new": "Neu",
