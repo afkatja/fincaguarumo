@@ -28,7 +28,7 @@ const jsonLd = {
 
 const page = async ({ params }: { params: any }) => {
   const { locale } = await params
-  const messages = await getTranslations(locale)
+  const messages = await getTranslations()
 
   return (
     <Layout

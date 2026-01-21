@@ -130,8 +130,8 @@ const ClientPage = ({
               <BookingDialog
                 bookingType={BOOKING_TYPE.villa}
                 dialogOptions={{
-                  buttonText: t("bookNow") || "Book now",
-                  title: t("bookNow") || "Reserve Villa Bruno directly",
+                  buttonText: t("bookNow") || "Book Villa Bruno now",
+                  title: t("bookNow") || "Book Villa Bruno now",
                 }}
                 locale={locale}
               />
@@ -143,11 +143,13 @@ const ClientPage = ({
                       variant="outline"
                       name="book-on-others-button"
                     >
-                      {t("bookOnOthers")}
+                      {t("bookOnOthers") || "Book on other platforms"}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
-                    <DialogTitle>{t("bookVilla")}</DialogTitle>
+                    <DialogTitle>
+                      {t("bookVilla") || "Book your stay"}
+                    </DialogTitle>
                     <div className="mt-8">
                       <BookingOptions
                         locale={locale}
