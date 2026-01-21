@@ -64,7 +64,9 @@
     "rateLabel": "Preis",
     "reserveButton": "Reserve now",
     "selectDate": "Datum auswählen",
-    "rateVATlabel": "Rate (inkl. 13% Mehrwertsteuer)"
+    "rateVATlabel": "Rate (inkl. 13% Mehrwertsteuer)",
+    "discount10": "Rabatt (10% für Aufenthalte ab 7+ Nächten)",
+    "discount20": "Rabatt (20% für Aufenthalte ab 28+ Nächten)"
   },
   "page": {
     "moreFAQ": "Mehr FAQ",

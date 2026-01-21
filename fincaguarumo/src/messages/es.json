@@ -61,7 +61,9 @@
     "rateLabel": "Precio",
     "reserveButton": "Reserva ahora",
     "selectDate": "Seleccionar fecha",
-    "rateVATlabel": "Tasa (incluido 13% de IVA)"
+    "rateVATlabel": "Tasa (incluido 13% de IVA)",
+    "discount10": "Descuento (10% por estancias de 7+ noches)",
+    "discount20": "Descuento (20% por estancias de 28+ noches)"
   },
   "page": {
     "moreFAQ": "Más preguntas frecuentes",

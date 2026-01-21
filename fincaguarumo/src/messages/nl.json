@@ -61,7 +61,9 @@
     "rateLabel": "Prijs",
     "reserveButton": "Boek nu",
     "selectDate": "Selecteer datum",
-    "rateVATlabel": "Prijs (incl. 13% btw)"
+    "rateVATlabel": "Prijs (incl. 13% btw)",
+    "discount10": "Korting (10% voor verblijven van 7+ nachten)",
+    "discount20": "Korting (20% voor verblijven van 28+ nachten)"
   },
   "page": {
     "moreFAQ": "Meer veelgestelde vragen",
