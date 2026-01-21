@@ -57,22 +57,25 @@ export default function ContactForm() {
     <form onSubmit={handleSubmit} className="space-y-4 group">
       {status === "success" && (
         <p className="text-guarumo-primary font-bold text-center">
-          {/* @ts-ignore */}
           {t("successMessage", { defaultValue: "Message sent successfully!" })}
         </p>
       )}
       {status === "error" && (
         <p className="text-destructive text-center font-bold">
-          {t("errorMessage") || "There was an error sending your message."}
+          {t("errorMessage", {
+            defaultValue: "There was an error sending your message.",
+          })}
         </p>
       )}
       <Input
         id="name"
         type="text"
-        labelText={t("nameLabel") || "Name"}
+        labelText={t("nameLabel", { defaultValue: "Name" })}
         onChangeHandler={handleChange}
-        errorMessage={t("nameError") || "Please enter your name"}
-        placeholder={t("namePlaceholder") || "Jane Doe"}
+        errorMessage={t("nameError", {
+          defaultValue: "Please enter your name",
+        })}
+        placeholder={t("namePlaceholder", { defaultValue: "Jane Doe" })}
         required
         value={formData.name}
       />
@@ -81,15 +84,17 @@ export default function ContactForm() {
         type="email"
         value={formData.email}
         onChangeHandler={handleChange}
-        labelText={t("emailLabel") || "Email Address"}
-        errorMessage={t("emailError") || "Please enter a valid email address"}
-        placeholder={t("emailPlaceholder") || "jane@doe.com"}
+        labelText={t("emailLabel", { defaultValue: "Email Address" })}
+        errorMessage={t("emailError", {
+          defaultValue: "Please enter a valid email address",
+        })}
+        placeholder={t("emailPlaceholder", { defaultValue: "jane@doe.com" })}
         required
       />
 
       <div>
         <Label htmlFor="message" className="block text-sm font-medium mb-1">
-          {t("messageLabel") || "Message"}
+          {t("messageLabel", { defaultValue: "Message" })}
         </Label>
         <textarea
           id="message"
@@ -98,7 +103,9 @@ export default function ContactForm() {
           onChange={handleChange}
           required
           rows={4}
-          placeholder={t("messagePlaceholder") || "Your message here..."}
+          placeholder={t("messagePlaceholder", {
+            defaultValue: "Your message here...",
+          })}
           className="w-full px-3 py-2 rounded-sm outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900 bg-zinc-50"
         />
       </div>

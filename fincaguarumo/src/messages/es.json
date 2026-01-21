@@ -80,7 +80,7 @@
     "nameError": "Por favor ingresa tu nombre",
     "namePlaceholder": "Jane Doe",
     "emailLabel": "Correo electrónico",
-    "emailError": "Por favor ingrese su correo electrónico",
+    "emailError": "Por favor ingresa tu correo electrónico",
     "emailPlaceholder": "jane@doe.com",
     "messageLabel": "Mensaje",
     "messagePlaceholder": "mensaje",
