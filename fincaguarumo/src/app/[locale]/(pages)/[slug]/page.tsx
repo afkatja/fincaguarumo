@@ -85,7 +85,7 @@ export async function generateMetadata({
       description: content?.description
         ? content?.description
         : "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
-      url: `https://fincaguarumo.com/${slug.current}`,
+      url: `https://fincaguarumo.com/${slug}`,
       siteName: "Finca Guarumo",
     },
   }
