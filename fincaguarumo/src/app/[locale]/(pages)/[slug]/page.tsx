@@ -6,7 +6,6 @@ import { sanityFetch } from "@/sanity/lib/client"
 import { PAGES_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import ClientPage from "./ClientPage"
-import { getTranslations } from "next-intl/server"
 import { FAQType, SanityImageObject } from "@/types"
 import Script from "next/script"
 
@@ -102,9 +101,6 @@ const Page = async ({ params }: { params: any }) => {
   })
 
   if (!content?.isPublished) notFound()
-
-  // Load translations
-  const messages = await getTranslations(locale)
 
   return (
     <Layout
