@@ -31,6 +31,11 @@ const PriceCalculation = ({
     duration,
   )
 
+  const discountAmount =
+    duration && duration >= 7
+      ? priceWithVat * duration * (duration >= 28 ? 0.2 : 0.1)
+      : 0
+
   const currency = (toFormat: number) =>
     new Intl.NumberFormat(locale, {
       style: "currency",
@@ -64,6 +69,17 @@ const PriceCalculation = ({
           {t("rateVATlabel", { defaultValue: "Price (incl 13% VAT)" })}
         </dt>
         <dd className="text-right">{currency(priceWithVat)}</dd>
+        {discountAmount > 0 && (
+          <>
+            <dt className="text-muted-foreground">
+              {(duration! >= 28 ? t?.discount20 : t?.discount10) ||
+                (duration! >= 28
+                  ? "Discount (20% for stays 28+ nights)"
+                  : "Discount (10% for stays 7+ nights)")}
+            </dt>
+            <dd className="text-right">-{currency(discountAmount)}</dd>
+          </>
+        )}
       </dl>
       <Separator />
       <div className="flex items-center justify-between font-medium">

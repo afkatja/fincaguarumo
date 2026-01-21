@@ -1,17 +1,22 @@
 export default function bookingToNights(start: Date, end: Date) {
   const nights: Date[] = []
 
-  // Start from the day after check-in (check-out/check-in day)
-  const cur = new Date(start)
-  cur.setUTCDate(cur.getUTCDate())
+  // Normalize dates to noon to avoid timezone and daylight saving issues
+  const startNormalized = new Date(start)
+  startNormalized.setHours(12, 0, 0, 0)
+  const endNormalized = new Date(end)
+  endNormalized.setHours(12, 0, 0, 0)
 
-  // End at the day before check-out (check-out/check-in day)
-  const checkoutExclusive = new Date(end)
-  checkoutExclusive.setUTCDate(checkoutExclusive.getUTCDate() - 1)
+  // Start from the day after check-in
+  const cur = new Date(startNormalized)
+  cur.setDate(cur.getDate() + 1)
 
-  while (cur <= checkoutExclusive) {
+  // End at the day of check-out
+  const checkoutExclusive = new Date(endNormalized)
+
+  while (cur < checkoutExclusive) {
     nights.push(new Date(cur))
-    cur.setUTCDate(cur.getUTCDate() + 1)
+    cur.setDate(cur.getDate() + 1)
   }
   return nights
 }
