@@ -24,19 +24,19 @@ const calculateTotal = (
     const stay = duration ?? 1
     // apply a discount for longer stays
     if (stay >= 7) {
-      // 10% discount
+      // 13% discount
       return {
         priceForPeople,
         priceWithVat: priceForPeople * 1.13,
-        total: priceForPeople * 1.13 * stay * 0.9,
+        total: priceForPeople * 1.13 * stay * 0.87,
       }
     }
     if (stay >= 28) {
-      // 20% discount
+      // 33% discount
       return {
         priceForPeople,
         priceWithVat: priceForPeople * 1.13,
-        total: priceForPeople * 1.13 * stay * 0.8,
+        total: priceForPeople * 1.13 * stay * 0.67,
       }
     }
     // no discount
