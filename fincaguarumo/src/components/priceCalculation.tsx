@@ -20,7 +20,8 @@ const PriceCalculation = ({
   locale: string
   duration?: number
   currency?: string
-  t: ((key: string) => string) | undefined
+  t?: Record<string, any> &
+    ((key: string, values?: Record<string, any>) => string)
 }) => {
   const { dialogData: dialog } = useDialog()
 
@@ -60,13 +61,11 @@ const PriceCalculation = ({
             locale,
             "people",
           )}`
-            : // @ts-ignore
-              t("rateLabel", { defaultValue: "Price" })}
+            : t?.("rateLabel", { defaultValue: "Price" })}
         </dt>
         <dd className="text-right">{currency(priceForPeople)}</dd>
         <dt className="text-muted-foreground">
-          {/* @ts-ignore */}
-          {t("rateVATlabel", { defaultValue: "Price (incl 13% VAT)" })}
+          {t?.("rateVATlabel", { defaultValue: "Price (incl 13% VAT)" })}
         </dt>
         <dd className="text-right">{currency(priceWithVat)}</dd>
         {discountAmount > 0 && (
