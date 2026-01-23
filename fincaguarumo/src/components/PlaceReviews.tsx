@@ -13,17 +13,19 @@ export const PlaceReviews = ({ count }: { count?: number }) => {
   const { place } = usePlace()
   const { data: sanityReviews } = useSWR(REVIEWS_QUERY, clientSideFetch)
 
-  if (!place) return null
+  // Compute stable review array and dependency key
+  const stableAllReviews = React.useMemo(() => {
+    if (!place) return []
+    return [...(place.reviews ?? []), ...(sanityReviews ?? [])] as TReview[]
+  }, [place, JSON.stringify(place?.reviews), JSON.stringify(sanityReviews)])
 
-  const allReviews = [
-    ...(place.reviews ?? []),
-    ...(sanityReviews ?? []),
-  ] as TReview[]
-
+  // Memoize shuffled reviews
   const memoizedShuffled = React.useMemo(
-    () => shuffle(allReviews),
-    [allReviews],
+    () => shuffle(stableAllReviews),
+    [stableAllReviews],
   )
+
+  if (!place) return null
 
   const reviewsToShow = count
     ? memoizedShuffled
@@ -32,7 +34,7 @@ export const PlaceReviews = ({ count }: { count?: number }) => {
           return text.length > 100
         })
         .slice(0, count)
-    : allReviews
+    : stableAllReviews
 
   return (
     <div className="py-5 lg:px-40 mt-5">
