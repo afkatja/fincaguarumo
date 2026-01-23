@@ -13,6 +13,496 @@
  */
 
 // Source: schema.json
+export type Review = {
+  _id: string;
+  _type: "review";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  platform?: "airbnb" | "booking";
+  author?: {
+    name?: string;
+    location?: string;
+    photoURI?: string;
+  };
+  rating?: number;
+  date?: string;
+  reviewText?: string;
+  photoUrl?: string;
+};
+
+export type Booking = {
+  _id: string;
+  _type: "booking";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  checkIn?: string;
+  checkOut?: string;
+  guestName?: string;
+  source?: "direct" | "airbnb" | "booking" | "expedia";
+  uid?: string;
+};
+
+export type Category = {
+  _id: string;
+  _type: "category";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: string;
+  description?: string;
+};
+
+export type BlockContent = Array<
+  | {
+      children?: Array<{
+        marks?: Array<string>;
+        text?: string;
+        _type: "span";
+        _key: string;
+      }>;
+      style?: "normal" | "h1" | "h2" | "h3" | "h4" | "blockquote";
+      listItem?: "bullet";
+      markDefs?: Array<
+        | {
+            href?: string;
+            blank?: boolean;
+            _type: "link";
+            _key: string;
+          }
+        | {
+            reference?:
+              | {
+                  _ref: string;
+                  _type: "reference";
+                  _weak?: boolean;
+                  [internalGroqTypeReferenceTo]?: "post";
+                }
+              | {
+                  _ref: string;
+                  _type: "reference";
+                  _weak?: boolean;
+                  [internalGroqTypeReferenceTo]?: "page";
+                }
+              | {
+                  _ref: string;
+                  _type: "reference";
+                  _weak?: boolean;
+                  [internalGroqTypeReferenceTo]?: "tour";
+                };
+            _type: "internalLink";
+            _key: string;
+          }
+      >;
+      level?: number;
+      _type: "block";
+      _key: string;
+    }
+  | {
+      asset?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+      };
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      alt?: string;
+      _type: "image";
+      _key: string;
+    }
+>;
+
+export type MediaTag = {
+  _id: string;
+  _type: "media.tag";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: Slug;
+};
+
+export type InternationalizedArrayStringValue = {
+  _type: "internationalizedArrayStringValue";
+  value?: string;
+};
+
+export type InternationalizedArrayString = Array<
+  {
+    _key: string;
+  } & InternationalizedArrayStringValue
+>;
+
+export type TranslationMetadata = {
+  _id: string;
+  _type: "translation.metadata";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  translations?: Array<
+    {
+      _key: string;
+    } & InternationalizedArrayReferenceValue
+  >;
+  schemaTypes?: Array<string>;
+};
+
+export type InternationalizedArrayReferenceValue = {
+  _type: "internationalizedArrayReferenceValue";
+  value?:
+    | {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "page";
+      }
+    | {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "post";
+      }
+    | {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "tour";
+      }
+    | {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "home";
+      }
+    | {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "faq";
+      }
+    | {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "faqCategory";
+      };
+};
+
+export type Faq = {
+  _id: string;
+  _type: "faq";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: string;
+  language?: string;
+  category?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "faqCategory";
+  };
+  question?: string;
+  answer?: string;
+  keywords?: Array<string>;
+  displayOrder?: number;
+  showOnVillaBruno?: boolean;
+  slug?: Slug;
+};
+
+export type FaqCategory = {
+  _id: string;
+  _type: "faqCategory";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: string;
+  language?: string;
+  slug?: Slug;
+  displayOrder?: number;
+};
+
+export type Home = {
+  _id: string;
+  _type: "home";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title?: string;
+  hero_title?: string;
+  hero_slogan?: string;
+  subtitle?: string;
+  hero_body?: BlockContent;
+  intro_body?: BlockContent;
+  background_media?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
+    };
+    media?: unknown;
+    _type: "file";
+  };
+  background_media_poster?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  featured_content_title?: string;
+  featured_blog_title?: string;
+};
+
+export type Page = {
+  _id: string;
+  _type: "page";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  slug?: Slug;
+  mainImage?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  };
+  slideshow?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "gallery";
+  };
+  categories?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "category";
+  }>;
+  body?: BlockContent;
+  isPublished?: boolean;
+  showBookingOptions?: boolean;
+  showFAQ?: boolean;
+  faq?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "faq";
+  }>;
+  showBookingDialog?: boolean;
+  price?: number;
+  displayReviews?: boolean;
+};
+
+export type Post = {
+  _id: string;
+  _type: "post";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title?: string;
+  slug?: Slug;
+  author?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "author";
+  };
+  mainImage?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  };
+  categories?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "category";
+  }>;
+  publishedAt?: string;
+  body?: BlockContent;
+  isPublished?: boolean;
+};
+
+export type Tour = {
+  _id: string;
+  _type: "tour";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title?: string;
+  isFeatured?: boolean;
+  isNew?: boolean;
+  isPublished?: boolean;
+  description?: string;
+  dateAdded?: string;
+  price?: number;
+  location?: string;
+  geo?: Geopoint;
+  duration?: string;
+  slug?: Slug;
+  mainImage?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  };
+  slideshow?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "gallery";
+  };
+  body?: BlockContent;
+  dialog?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "dialog";
+  };
+};
+
+export type Dialog = {
+  _id: string;
+  _type: "dialog";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: string;
+  CTA_button?: InternationalizedArrayString;
+  Date_label?: InternationalizedArrayString;
+  Select_date?: InternationalizedArrayString;
+  Guests_label?: InternationalizedArrayString;
+  Adults_label?: InternationalizedArrayString;
+  Adult_label?: InternationalizedArrayString;
+  Child_label?: InternationalizedArrayString;
+  Other_label?: InternationalizedArrayString;
+  Payment_method_label?: InternationalizedArrayString;
+  Credit_card_label?: InternationalizedArrayString;
+  Paypal_label?: InternationalizedArrayString;
+  Person_label?: InternationalizedArrayString;
+  People_label?: InternationalizedArrayString;
+  Total_label?: InternationalizedArrayString;
+  OK_button_label?: InternationalizedArrayString;
+  Cancel_button_label?: InternationalizedArrayString;
+};
+
+export type Author = {
+  _id: string;
+  _type: "author";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  slug?: Slug;
+  image?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  };
+  bio?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal";
+    listItem?: never;
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+};
+
+export type Gallery = {
+  _id: string;
+  _type: "gallery";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: string;
+  categories?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "category";
+  }>;
+  images?: Array<{
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+    _key: string;
+  }>;
+};
+
+export type InternationalizedArrayReference = Array<
+  {
+    _key: string;
+  } & InternationalizedArrayReferenceValue
+>;
+
 export type SanityImagePaletteSwatch = {
   _type: "sanity.imagePaletteSwatch";
   background?: string;
@@ -39,6 +529,22 @@ export type SanityImageDimensions = {
   aspectRatio?: number;
 };
 
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x?: number;
+  y?: number;
+  height?: number;
+  width?: number;
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+};
+
 export type SanityFileAsset = {
   _id: string;
   _type: "sanity.fileAsset";
@@ -59,188 +565,6 @@ export type SanityFileAsset = {
   path?: string;
   url?: string;
   source?: SanityAssetSourceData;
-};
-
-export type Geopoint = {
-  _type: "geopoint";
-  lat?: number;
-  lng?: number;
-  alt?: number;
-};
-
-export type Post = {
-  _id: string;
-  _type: "post";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  title?: string;
-  slug?: Slug;
-  author?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "author";
-  };
-  mainImage?: {
-    asset?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
-    };
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    alt?: string;
-    _type: "image";
-  };
-  categories?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "category";
-  }>;
-  publishedAt?: string;
-  body?: Array<
-    | {
-        children?: Array<{
-          marks?: Array<string>;
-          text?: string;
-          _type: "span";
-          _key: string;
-        }>;
-        style?: "normal" | "h1" | "h2" | "h3" | "h4" | "blockquote";
-        listItem?: "bullet";
-        markDefs?: Array<{
-          href?: string;
-          _type: "link";
-          _key: string;
-        }>;
-        level?: number;
-        _type: "block";
-        _key: string;
-      }
-    | {
-        asset?: {
-          _ref: string;
-          _type: "reference";
-          _weak?: boolean;
-          [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
-        };
-        hotspot?: SanityImageHotspot;
-        crop?: SanityImageCrop;
-        alt?: string;
-        _type: "image";
-        _key: string;
-      }
-  >;
-};
-
-export type Author = {
-  _id: string;
-  _type: "author";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  name?: string;
-  slug?: Slug;
-  image?: {
-    asset?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
-    };
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    alt?: string;
-    _type: "image";
-  };
-  bio?: Array<{
-    children?: Array<{
-      marks?: Array<string>;
-      text?: string;
-      _type: "span";
-      _key: string;
-    }>;
-    style?: "normal";
-    listItem?: never;
-    markDefs?: Array<{
-      href?: string;
-      _type: "link";
-      _key: string;
-    }>;
-    level?: number;
-    _type: "block";
-    _key: string;
-  }>;
-};
-
-export type Slug = {
-  _type: "slug";
-  current?: string;
-  source?: string;
-};
-
-export type Category = {
-  _id: string;
-  _type: "category";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  title?: string;
-  description?: string;
-};
-
-export type BlockContent = Array<
-  | {
-      children?: Array<{
-        marks?: Array<string>;
-        text?: string;
-        _type: "span";
-        _key: string;
-      }>;
-      style?: "normal" | "h1" | "h2" | "h3" | "h4" | "blockquote";
-      listItem?: "bullet";
-      markDefs?: Array<{
-        href?: string;
-        _type: "link";
-        _key: string;
-      }>;
-      level?: number;
-      _type: "block";
-      _key: string;
-    }
-  | {
-      asset?: {
-        _ref: string;
-        _type: "reference";
-        _weak?: boolean;
-        [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
-      };
-      hotspot?: SanityImageHotspot;
-      crop?: SanityImageCrop;
-      alt?: string;
-      _type: "image";
-      _key: string;
-    }
->;
-
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top?: number;
-  bottom?: number;
-  left?: number;
-  right?: number;
-};
-
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x?: number;
-  y?: number;
-  height?: number;
-  width?: number;
 };
 
 export type SanityImageAsset = {
@@ -266,13 +590,6 @@ export type SanityImageAsset = {
   source?: SanityAssetSourceData;
 };
 
-export type SanityAssetSourceData = {
-  _type: "sanity.assetSourceData";
-  name?: string;
-  id?: string;
-  url?: string;
-};
-
 export type SanityImageMetadata = {
   _type: "sanity.imageMetadata";
   location?: Geopoint;
@@ -284,24 +601,65 @@ export type SanityImageMetadata = {
   isOpaque?: boolean;
 };
 
+export type Geopoint = {
+  _type: "geopoint";
+  lat?: number;
+  lng?: number;
+  alt?: number;
+};
+
+export type Slug = {
+  _type: "slug";
+  current?: string;
+  source?: string;
+};
+
+export type SanityAssetSourceData = {
+  _type: "sanity.assetSourceData";
+  name?: string;
+  id?: string;
+  url?: string;
+};
+
 export type AllSanitySchemaTypes =
+  | Review
+  | Booking
+  | Category
+  | BlockContent
+  | MediaTag
+  | InternationalizedArrayStringValue
+  | InternationalizedArrayString
+  | TranslationMetadata
+  | InternationalizedArrayReferenceValue
+  | Faq
+  | FaqCategory
+  | Home
+  | Page
+  | Post
+  | Tour
+  | Dialog
+  | Author
+  | Gallery
+  | InternationalizedArrayReference
   | SanityImagePaletteSwatch
   | SanityImagePalette
   | SanityImageDimensions
-  | SanityFileAsset
-  | Geopoint
-  | Post
-  | Author
-  | Slug
-  | Category
-  | BlockContent
-  | SanityImageCrop
   | SanityImageHotspot
+  | SanityImageCrop
+  | SanityFileAsset
   | SanityImageAsset
-  | SanityAssetSourceData
-  | SanityImageMetadata;
+  | SanityImageMetadata
+  | Geopoint
+  | Slug
+  | SanityAssetSourceData;
 
 export declare const internalGroqTypeReferenceTo: unique symbol;
+
+type ArrayOf<T> = Array<
+  T & {
+    _key: string;
+  }
+>;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: POSTS_QUERY
@@ -317,6 +675,7 @@ export type POSTS_QUERY_RESULT = Array<{
       _weak?: boolean;
       [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
     };
+    media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     alt?: string;
@@ -326,26 +685,30 @@ export type POSTS_QUERY_RESULT = Array<{
   } | null;
   _createdAt: string;
   _updatedAt: string;
-  isPublished: null;
+  isPublished: boolean | null;
 }>;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: ALL_PAGES_QUERY
 // Query: *[_type == "page" && defined(slug.current)][]{  _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished}
-export type ALL_PAGES_QUERY_RESULT = Array<never>;
+export type ALL_PAGES_QUERY_RESULT = Array<{
+  _id: string;
+  title: string | null;
+  slug: Slug | null;
+  subtitle: string | null;
+  body: BlockContent | null;
+  _createdAt: string;
+  _updatedAt: string;
+  isPublished: boolean | null;
+}>;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: PAGES_QUERY
 // Query: *[_type == "page" && slug.current == $slug && language == $language][0] {  title, subtitle, description,   mainImage {    ...,     'metadata': asset->metadata  },   body, language, slug, isPublished, showBookingOptions, showBookingDialog,  slideshow->{  images[]{    ...,    'metadata': asset->metadata  }},  price, faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} },  "translations": coalesce(    *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{      ...(value->{        language,        title,        subtitle,        description,        mainImage {..., 'metadata': asset->metadata},        slug,         body,        showBookingOptions,        showBookingDialog,        faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} }      })    },    []  )}
-export type PAGES_QUERY_RESULT = null;
-
-// Source: src/sanity/lib/queries.ts
-// Variable: FEATURED_POSTS_QUERY
-// Query: *[_type == 'post' && defined(slug.current) && $category in categories[]->title && language == $language] {    title,    slug,    isPublished,    mainImage {      ...,      "url": asset->url,      "metadata": asset->metadata    },    'category': *[_type == 'category' && title == $category],    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
-export type FEATURED_POSTS_QUERY_RESULT = Array<{
+export type PAGES_QUERY_RESULT = {
   title: string | null;
-  slug: Slug | null;
-  isPublished: null;
+  subtitle: string | null;
+  description: string | null;
   mainImage: {
     asset?: {
       _ref: string;
@@ -353,6 +716,65 @@ export type FEATURED_POSTS_QUERY_RESULT = Array<{
       _weak?: boolean;
       [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
     };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+    metadata: SanityImageMetadata | null;
+  } | null;
+  body: BlockContent | null;
+  language: string | null;
+  slug: Slug | null;
+  isPublished: boolean | null;
+  showBookingOptions: boolean | null;
+  showBookingDialog: boolean | null;
+  slideshow: {
+    images: Array<{
+      asset?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+      };
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+      _key: string;
+      metadata: SanityImageMetadata | null;
+    }> | null;
+  } | null;
+  price: number | null;
+  faq: Array<{
+    question: string | null;
+    answer: string | null;
+    slug: Slug | null;
+    keywords: Array<string> | null;
+    showOnVillaBruno: boolean | null;
+    category: {
+      title: string | null;
+      slug: Slug | null;
+    } | null;
+  }> | null;
+  translations: Array<never>;
+} | null;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: FEATURED_POSTS_QUERY
+// Query: *[_type == 'post' && defined(slug.current) && $category in categories[]->title && language == $language] {    title,    slug,    isPublished,    mainImage {      ...,      "url": asset->url,      "metadata": asset->metadata    },    'category': *[_type == 'category' && title == $category],    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
+export type FEATURED_POSTS_QUERY_RESULT = Array<{
+  title: string | null;
+  slug: Slug | null;
+  isPublished: boolean | null;
+  mainImage: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     alt?: string;
@@ -369,7 +791,19 @@ export type FEATURED_POSTS_QUERY_RESULT = Array<{
     title?: string;
     description?: string;
   }>;
-  translations: null;
+  translations: Array<
+    | {}
+    | {
+        language: string | null;
+        title: string | null;
+        slug: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug | null;
+      }
+  > | null;
 }>;
 
 // Source: src/sanity/lib/queries.ts
@@ -377,7 +811,427 @@ export type FEATURED_POSTS_QUERY_RESULT = Array<{
 // Query: *[_type == "post" && slug.current == $slug][0]{  title, body,   mainImage {    ...,    "url": asset->url,    'metadata': asset->metadata  }, language, isPublished, slug,  "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }}
 export type POST_QUERY_RESULT = {
   title: string | null;
-  body: Array<
+  body: BlockContent | null;
+  mainImage: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+    url: string | null;
+    metadata: SanityImageMetadata | null;
+  } | null;
+  language: string | null;
+  isPublished: boolean | null;
+  slug: Slug | null;
+  translations: Array<
+    | {}
+    | {
+        language: string | null;
+        title: string | null;
+        slug: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug | null;
+      }
+  > | null;
+} | null;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: PAGE_QUERY
+// Query: *[_type == 'page' && slug.current == $pageName && language == $language][0] {    title, subtitle, description, mainImage, body, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,    slideshow->{images}, price,    faq[]->{question, answer, slug},    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        subtitle,        mainImage,        slug,         body,         isPublished,        faq[]->{ question, answer, slug },      })    }  }
+export type PAGE_QUERY_RESULT = {
+  title: string | null;
+  subtitle: string | null;
+  description: string | null;
+  mainImage: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  } | null;
+  body: BlockContent | null;
+  language: string | null;
+  isPublished: boolean | null;
+  categories: Array<{
+    title: string | null;
+  }> | null;
+  showBookingOptions: boolean | null;
+  showBookingDialog: boolean | null;
+  slideshow: {
+    images: Array<{
+      asset?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+      };
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+      _key: string;
+    }> | null;
+  } | null;
+  price: number | null;
+  faq: Array<{
+    question: string | null;
+    answer: string | null;
+    slug: Slug | null;
+  }> | null;
+  translations: Array<
+    | {}
+    | {
+        language: string | null;
+        title: string | null;
+        subtitle: string | null;
+        mainImage: null;
+        slug: null;
+        body: null;
+        isPublished: null;
+        faq: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        subtitle: null;
+        mainImage: null;
+        slug: Slug | null;
+        body: null;
+        isPublished: null;
+        faq: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        subtitle: null;
+        mainImage: {
+          asset?: {
+            _ref: string;
+            _type: "reference";
+            _weak?: boolean;
+            [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+          };
+          media?: unknown;
+          hotspot?: SanityImageHotspot;
+          crop?: SanityImageCrop;
+          alt?: string;
+          _type: "image";
+        } | null;
+        slug: Slug | null;
+        body: BlockContent | null;
+        isPublished: boolean | null;
+        faq: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        subtitle: string | null;
+        mainImage: {
+          asset?: {
+            _ref: string;
+            _type: "reference";
+            _weak?: boolean;
+            [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+          };
+          media?: unknown;
+          hotspot?: SanityImageHotspot;
+          crop?: SanityImageCrop;
+          alt?: string;
+          _type: "image";
+        } | null;
+        slug: Slug | null;
+        body: BlockContent | null;
+        isPublished: boolean | null;
+        faq: Array<{
+          question: string | null;
+          answer: string | null;
+          slug: Slug | null;
+        }> | null;
+      }
+  > | null;
+} | null;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: NAV_QUERY
+// Query: *[_type == 'page' && language == $language && $category in categories[] -> title] {    title, slug, language, isPublished,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
+export type NAV_QUERY_RESULT = Array<{
+  title: string | null;
+  slug: Slug | null;
+  language: string | null;
+  isPublished: boolean | null;
+  translations: Array<
+    | {}
+    | {
+        language: string | null;
+        title: string | null;
+        slug: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug | null;
+      }
+  > | null;
+}>;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: TOURS_QUERY
+// Query: *[_type == 'tour' && defined(slug.current) && language == $language]{  slug,  title,   mainImage {    ...,    "url": asset->url,    "metadata": asset->metadata  },  description,   dateAdded,  language,  isPublished,  _createdAt,  _updatedAt,  "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug, description      })    }}
+export type TOURS_QUERY_RESULT = Array<{
+  slug: Slug | null;
+  title: string | null;
+  mainImage: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+    url: string | null;
+    metadata: SanityImageMetadata | null;
+  } | null;
+  description: string | null;
+  dateAdded: string | null;
+  language: string | null;
+  isPublished: boolean | null;
+  _createdAt: string;
+  _updatedAt: string;
+  translations: Array<
+    | {}
+    | {
+        language: string | null;
+        title: string | null;
+        slug: null;
+        description: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug | null;
+        description: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug | null;
+        description: string | null;
+      }
+  > | null;
+}>;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: FEATURED_TOURS_QUERY
+// Query: *[_type == 'tour' && defined(slug.current) && isFeatured && language == $language]{  slug,  title,   mainImage {    alt,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  },  description, isPublished,   "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug, description      })    }}
+export type FEATURED_TOURS_QUERY_RESULT = Array<{
+  slug: Slug | null;
+  title: string | null;
+  mainImage: {
+    alt: string | null;
+    url: string | null;
+    metadata: {
+      lqip: string | null;
+      dimensions: SanityImageDimensions | null;
+    } | null;
+  } | null;
+  description: string | null;
+  isPublished: boolean | null;
+  translations: Array<
+    | {}
+    | {
+        language: string | null;
+        title: string | null;
+        slug: null;
+        description: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug | null;
+        description: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug | null;
+        description: string | null;
+      }
+  > | null;
+}>;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: DIALOG_QUERY
+// Query: *[_type == 'dialog'][0] {  _id,  'cta': "CTA_button",  'date': "Date_label",  'selectDate': "Select_date",  'guests': "Guests_label",  'adults': "Adults_label",  'adult': "Adult_label",  'child': "Child_label",  'other': "Other_label",  'paymentMethod': "Payment_method_label",  'creditCard': "Credit_card_label",  'paypal': "Paypal_label",  'people': "People_label",  'person': "Person_label",  'total': "Total_label",  'ok': "OK_button_label",  'cancel': "Cancel_button_label",}
+export type DIALOG_QUERY_RESULT = {
+  _id: string;
+  cta: "CTA_button";
+  date: "Date_label";
+  selectDate: "Select_date";
+  guests: "Guests_label";
+  adults: "Adults_label";
+  adult: "Adult_label";
+  child: "Child_label";
+  other: "Other_label";
+  paymentMethod: "Payment_method_label";
+  creditCard: "Credit_card_label";
+  paypal: "Paypal_label";
+  people: "People_label";
+  person: "Person_label";
+  total: "Total_label";
+  ok: "OK_button_label";
+  cancel: "Cancel_button_label";
+} | null;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: TOUR_QUERY
+// Query: *[_type == 'tour' && slug.current == $slug && language == $language][0]{  _id,   language,  title,   slug,   description,   mainImage {    alt,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  },  isPublished,  slideshow->{images[] {    ...,    'metadata': asset->metadata  }},   "price": coalesce(price, 0),  location,   geo,  duration,  body,  "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug,        description,        body,      })    }}
+export type TOUR_QUERY_RESULT = {
+  _id: string;
+  language: string | null;
+  title: string | null;
+  slug: Slug | null;
+  description: string | null;
+  mainImage: {
+    alt: string | null;
+    url: string | null;
+    metadata: {
+      lqip: string | null;
+      dimensions: SanityImageDimensions | null;
+    } | null;
+  } | null;
+  isPublished: boolean | null;
+  slideshow: {
+    images: Array<{
+      asset?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+      };
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+      _key: string;
+      metadata: SanityImageMetadata | null;
+    }> | null;
+  } | null;
+  price: number | 0;
+  location: string | null;
+  geo: Geopoint | null;
+  duration: string | null;
+  body: BlockContent | null;
+  translations: Array<
+    | {}
+    | {
+        language: string | null;
+        title: string | null;
+        slug: null;
+        description: null;
+        body: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug | null;
+        description: null;
+        body: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug | null;
+        description: null;
+        body: BlockContent | null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug | null;
+        description: string | null;
+        body: BlockContent | null;
+      }
+  > | null;
+} | null;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: ABOUT_QUERY
+// Query: *[_type == 'page' && slug.current == 'about' && language == $language][0] {    title, description, mainImage, body, language,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
+export type ABOUT_QUERY_RESULT = {
+  title: string | null;
+  description: string | null;
+  mainImage: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  } | null;
+  body: BlockContent | null;
+  language: string | null;
+  translations: Array<
+    | {}
+    | {
+        language: string | null;
+        title: string | null;
+        slug: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug | null;
+      }
+  > | null;
+} | null;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: HOME_QUERY
+// Query: *[_type=='home' && language == $language][0] {    hero_title,     hero_slogan,     hero_body,    subtitle,     language,     featured_content_title,    featured_blog_title,     slug,     'mediaUrl': background_media.asset->{url},     'mediaPoster': background_media_poster.asset->{      url,       metadata {        lqip      }    },    intro_body[] {      ...,      markDefs[] {        ...,        _type == "internalLink" => {          ...,          "slug": @.reference-> slug        }      }    },    'translations': *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        hero_title,         hero_slogan,         hero_body,        subtitle,         language,         featured_content_title,        featured_blog_title,         slug,        'mediaUrl': background_media.asset->{url},         'mediaPoster': background_media_poster.asset->{          url,           metadata {            lqip          }        },        intro_body[] {          ...,          markDefs[] {            ...,            _type == "internalLink" => {              ...,              "slug": @.reference-> slug            }          }        }      })    }  }
+export type HOME_QUERY_RESULT = {
+  hero_title: string | null;
+  hero_slogan: string | null;
+  hero_body: BlockContent | null;
+  subtitle: string | null;
+  language: string | null;
+  featured_content_title: string | null;
+  featured_blog_title: string | null;
+  slug: null;
+  mediaUrl: {
+    url: string | null;
+  } | null;
+  mediaPoster: {
+    url: string | null;
+    metadata: {
+      lqip: string | null;
+    } | null;
+  } | null;
+  intro_body: Array<
     | {
         children?: Array<{
           marks?: Array<string>;
@@ -387,11 +1241,38 @@ export type POST_QUERY_RESULT = {
         }>;
         style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
         listItem?: "bullet";
-        markDefs?: Array<{
-          href?: string;
-          _type: "link";
-          _key: string;
-        }>;
+        markDefs: Array<
+          | {
+              reference?:
+                | {
+                    _ref: string;
+                    _type: "reference";
+                    _weak?: boolean;
+                    [internalGroqTypeReferenceTo]?: "page";
+                  }
+                | {
+                    _ref: string;
+                    _type: "reference";
+                    _weak?: boolean;
+                    [internalGroqTypeReferenceTo]?: "post";
+                  }
+                | {
+                    _ref: string;
+                    _type: "reference";
+                    _weak?: boolean;
+                    [internalGroqTypeReferenceTo]?: "tour";
+                  };
+              _type: "internalLink";
+              _key: string;
+              slug: Slug | null;
+            }
+          | {
+              href?: string;
+              blank?: boolean;
+              _type: "link";
+              _key: string;
+            }
+        > | null;
         level?: number;
         _type: "block";
         _key: string;
@@ -403,87 +1284,226 @@ export type POST_QUERY_RESULT = {
           _weak?: boolean;
           [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
         };
+        media?: unknown;
         hotspot?: SanityImageHotspot;
         crop?: SanityImageCrop;
         alt?: string;
         _type: "image";
         _key: string;
+        markDefs: null;
       }
   > | null;
-  mainImage: {
+  translations: Array<
+    | {}
+    | {
+        hero_title: null;
+        hero_slogan: null;
+        hero_body: null;
+        subtitle: null;
+        language: string | null;
+        featured_content_title: null;
+        featured_blog_title: null;
+        slug: Slug | null;
+        mediaUrl: null;
+        mediaPoster: null;
+        intro_body: null;
+      }
+    | {
+        hero_title: null;
+        hero_slogan: null;
+        hero_body: null;
+        subtitle: string | null;
+        language: string | null;
+        featured_content_title: null;
+        featured_blog_title: null;
+        slug: Slug | null;
+        mediaUrl: null;
+        mediaPoster: null;
+        intro_body: null;
+      }
+    | {
+        hero_title: string | null;
+        hero_slogan: string | null;
+        hero_body: BlockContent | null;
+        subtitle: string | null;
+        language: string | null;
+        featured_content_title: string | null;
+        featured_blog_title: string | null;
+        slug: null;
+        mediaUrl: {
+          url: string | null;
+        } | null;
+        mediaPoster: {
+          url: string | null;
+          metadata: {
+            lqip: string | null;
+          } | null;
+        } | null;
+        intro_body: Array<
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+              listItem?: "bullet";
+              markDefs: Array<
+                | {
+                    reference?:
+                      | {
+                          _ref: string;
+                          _type: "reference";
+                          _weak?: boolean;
+                          [internalGroqTypeReferenceTo]?: "page";
+                        }
+                      | {
+                          _ref: string;
+                          _type: "reference";
+                          _weak?: boolean;
+                          [internalGroqTypeReferenceTo]?: "post";
+                        }
+                      | {
+                          _ref: string;
+                          _type: "reference";
+                          _weak?: boolean;
+                          [internalGroqTypeReferenceTo]?: "tour";
+                        };
+                    _type: "internalLink";
+                    _key: string;
+                    slug: Slug | null;
+                  }
+                | {
+                    href?: string;
+                    blank?: boolean;
+                    _type: "link";
+                    _key: string;
+                  }
+              > | null;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+          | {
+              asset?: {
+                _ref: string;
+                _type: "reference";
+                _weak?: boolean;
+                [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+              };
+              media?: unknown;
+              hotspot?: SanityImageHotspot;
+              crop?: SanityImageCrop;
+              alt?: string;
+              _type: "image";
+              _key: string;
+              markDefs: null;
+            }
+        > | null;
+      }
+  > | null;
+} | null;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: GALLERY_QUERY
+// Query: *[_type == 'gallery' && $category in categories[] -> title][0] {    title, images[] {      ...,      "metadata": asset->metadata    }  }
+export type GALLERY_QUERY_RESULT = {
+  title: string | null;
+  images: Array<{
     asset?: {
       _ref: string;
       _type: "reference";
       _weak?: boolean;
       [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
     };
+    media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
-    alt?: string;
     _type: "image";
-    url: string | null;
+    _key: string;
     metadata: SanityImageMetadata | null;
-  } | null;
-  language: null;
-  isPublished: null;
-  slug: Slug | null;
-  translations: null;
+  }> | null;
 } | null;
-
-// Source: src/sanity/lib/queries.ts
-// Variable: PAGE_QUERY
-// Query: *[_type == 'page' && slug.current == $pageName && language == $language][0] {    title, subtitle, description, mainImage, body, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,    slideshow->{images}, price,    faq[]->{question, answer, slug},    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        subtitle,        mainImage,        slug,         body,         isPublished,        faq[]->{ question, answer, slug },      })    }  }
-export type PAGE_QUERY_RESULT = null;
-
-// Source: src/sanity/lib/queries.ts
-// Variable: NAV_QUERY
-// Query: *[_type == 'page' && language == $language && $category in categories[] -> title] {    title, slug, language, isPublished,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
-export type NAV_QUERY_RESULT = Array<never>;
-
-// Source: src/sanity/lib/queries.ts
-// Variable: TOURS_QUERY
-// Query: *[_type == 'tour' && defined(slug.current) && language == $language]{  slug,  title,   mainImage {    ...,    "url": asset->url,    "metadata": asset->metadata  },  description,   dateAdded,  language,  isPublished,  _createdAt,  _updatedAt,  "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug, description      })    }}
-export type TOURS_QUERY_RESULT = Array<never>;
-
-// Source: src/sanity/lib/queries.ts
-// Variable: FEATURED_TOURS_QUERY
-// Query: *[_type == 'tour' && defined(slug.current) && isFeatured && language == $language]{  slug,  title,   mainImage {    alt,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  },  description, isPublished,   "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug, description      })    }}
-export type FEATURED_TOURS_QUERY_RESULT = Array<never>;
-
-// Source: src/sanity/lib/queries.ts
-// Variable: DIALOG_QUERY
-// Query: *[_type == 'dialog'][0] {  _id,  'cta': "CTA_button",  'date': "Date_label",  'selectDate': "Select_date",  'guests': "Guests_label",  'adults': "Adults_label",  'adult': "Adult_label",  'child': "Child_label",  'other': "Other_label",  'paymentMethod': "Payment_method_label",  'creditCard': "Credit_card_label",  'paypal': "Paypal_label",  'people': "People_label",  'person': "Person_label",  'total': "Total_label",  'ok': "OK_button_label",  'cancel': "Cancel_button_label",}
-export type DIALOG_QUERY_RESULT = null;
-
-// Source: src/sanity/lib/queries.ts
-// Variable: TOUR_QUERY
-// Query: *[_type == 'tour' && slug.current == $slug && language == $language][0]{  _id,   language,  title,   slug,   description,   mainImage {    alt,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  },  isPublished,  slideshow->{images[] {    ...,    'metadata': asset->metadata  }},   "price": coalesce(price, 0),  location,   geo,  duration,  body,  "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug,        description,        body,      })    }}
-export type TOUR_QUERY_RESULT = null;
-
-// Source: src/sanity/lib/queries.ts
-// Variable: ABOUT_QUERY
-// Query: *[_type == 'page' && slug.current == 'about' && language == $language][0] {    title, description, mainImage, body, language,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
-export type ABOUT_QUERY_RESULT = null;
-
-// Source: src/sanity/lib/queries.ts
-// Variable: HOME_QUERY
-// Query: *[_type=='home' && language == $language][0] {    hero_title,     hero_slogan,     hero_body,    subtitle,     language,     featured_content_title,    featured_blog_title,     slug,     'mediaUrl': background_media.asset->{url},     'mediaPoster': background_media_poster.asset->{      url,       metadata {        lqip      }    },    intro_body[] {      ...,      markDefs[] {        ...,        _type == "internalLink" => {          ...,          "slug": @.reference-> slug        }      }    },    'translations': *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        hero_title,         hero_slogan,         hero_body,        subtitle,         language,         featured_content_title,        featured_blog_title,         slug,        'mediaUrl': background_media.asset->{url},         'mediaPoster': background_media_poster.asset->{          url,           metadata {            lqip          }        },        intro_body[] {          ...,          markDefs[] {            ...,            _type == "internalLink" => {              ...,              "slug": @.reference-> slug            }          }        }      })    }  }
-export type HOME_QUERY_RESULT = null;
-
-// Source: src/sanity/lib/queries.ts
-// Variable: GALLERY_QUERY
-// Query: *[_type == 'gallery' && $category in categories[] -> title][0] {    title, images[] {      ...,      "metadata": asset->metadata    }  }
-export type GALLERY_QUERY_RESULT = null;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: FAQ_QUERY
 // Query: *[_type == 'faq' && language == $language] | order(displayOrder asc) {    category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug, language,    "translations": *[      _type == "translation.metadata" &&      ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug      })    }  }
-export type FAQ_QUERY_RESULT = Array<never>;
+export type FAQ_QUERY_RESULT = Array<{
+  category: {
+    title: string | null;
+    slug: Slug | null;
+    language: string | null;
+  } | null;
+  question: string | null;
+  answer: string | null;
+  keywords: Array<string> | null;
+  showOnVillaBruno: boolean | null;
+  slug: Slug | null;
+  language: string | null;
+  translations: Array<
+    | {}
+    | {
+        language: string | null;
+        category: null;
+        question: null;
+        answer: null;
+        keywords: null;
+        showOnVillaBruno: null;
+        slug: null;
+      }
+    | {
+        language: string | null;
+        category: null;
+        question: null;
+        answer: null;
+        keywords: null;
+        showOnVillaBruno: null;
+        slug: Slug | null;
+      }
+    | {
+        language: string | null;
+        category: {
+          title: string | null;
+          slug: Slug | null;
+          language: string | null;
+        } | null;
+        question: string | null;
+        answer: string | null;
+        keywords: Array<string> | null;
+        showOnVillaBruno: boolean | null;
+        slug: Slug | null;
+      }
+  > | null;
+}>;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: BOOKINGS_QUERY
-// Query: *[  _type == "booking" &&   dateTime(checkOut) > dateTime(now()) &&   !(_id in path("drafts.**"))]{  uid, checkIn, checkOut, guestName, source}
-export type BOOKINGS_QUERY_RESULT = Array<never>;
+// Query: *[  _type == "booking" &&  dateTime(checkOut) > dateTime(now()) &&  !(_id in path("drafts.**"))]{  uid, checkIn, checkOut, guestName, source}
+export type BOOKINGS_QUERY_RESULT = Array<{
+  uid: string | null;
+  checkIn: string | null;
+  checkOut: string | null;
+  guestName: string | null;
+  source: "airbnb" | "booking" | "direct" | "expedia" | null;
+}>;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: REVIEWS_QUERY
+// Query: *[_type == "review"] | order(date desc){  _id,  platform,  author,  rating,  date,  reviewText,  photoUrl}
+export type REVIEWS_QUERY_RESULT = Array<{
+  _id: string;
+  platform: "airbnb" | "booking" | null;
+  author: {
+    name?: string;
+    location?: string;
+    photoURI?: string;
+  } | null;
+  rating: number | null;
+  date: string | null;
+  reviewText: string | null;
+  photoUrl: string | null;
+}>;
 
 // Query TypeMap
 import "@sanity/client";
@@ -504,6 +1524,7 @@ declare module "@sanity/client" {
     "\n  *[_type=='home' && language == $language][0] {\n    hero_title, \n    hero_slogan, \n    hero_body,\n    subtitle, \n    language, \n    featured_content_title,\n    featured_blog_title, \n    slug, \n    'mediaUrl': background_media.asset->{url}, \n    'mediaPoster': background_media_poster.asset->{\n      url, \n      metadata {\n        lqip\n      }\n    },\n    intro_body[] {\n      ...,\n      markDefs[] {\n        ...,\n        _type == \"internalLink\" => {\n          ...,\n          \"slug\": @.reference-> slug\n        }\n      }\n    },\n    'translations': *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        hero_title, \n        hero_slogan, \n        hero_body,\n        subtitle, \n        language, \n        featured_content_title,\n        featured_blog_title, \n        slug,\n        'mediaUrl': background_media.asset->{url}, \n        'mediaPoster': background_media_poster.asset->{\n          url, \n          metadata {\n            lqip\n          }\n        },\n        intro_body[] {\n          ...,\n          markDefs[] {\n            ...,\n            _type == \"internalLink\" => {\n              ...,\n              \"slug\": @.reference-> slug\n            }\n          }\n        }\n      })\n    }\n  }\n": HOME_QUERY_RESULT;
     "\n  *[_type == 'gallery' && $category in categories[] -> title][0] {\n    title, images[] {\n      ...,\n      \"metadata\": asset->metadata\n    }\n  }\n": GALLERY_QUERY_RESULT;
     '\n  *[_type == \'faq\' && language == $language] | order(displayOrder asc) {\n    category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug, language,\n    "translations": *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug\n      })\n    }\n  }\n': FAQ_QUERY_RESULT;
-    '*[\n  _type == "booking" && \n  dateTime(checkOut) > dateTime(now()) && \n  !(_id in path("drafts.**"))\n]{\n  uid, checkIn, checkOut, guestName, source\n}': BOOKINGS_QUERY_RESULT;
+    '*[\n  _type == "booking" &&\n  dateTime(checkOut) > dateTime(now()) &&\n  !(_id in path("drafts.**"))\n]{\n  uid, checkIn, checkOut, guestName, source\n}': BOOKINGS_QUERY_RESULT;
+    '*[_type == "review"] | order(date desc){\n  _id,\n  platform,\n  author,\n  rating,\n  date,\n  reviewText,\n  photoUrl\n}': REVIEWS_QUERY_RESULT;
   }
 }

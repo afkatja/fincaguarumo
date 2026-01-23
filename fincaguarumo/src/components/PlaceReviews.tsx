@@ -2,24 +2,37 @@
 import React from "react"
 import { usePlace } from "../app/providers/PlaceProvider"
 import Review from "./Review"
-import reviews from "../../data/airbnb-reviews"
-import bookingReviews from "../../data/booking-reviews"
 import { TReview } from "../types"
 import { shuffle } from "../lib/utils"
 import Title from "./Title"
+import useSWR from "swr"
+import { REVIEWS_QUERY } from "../sanity/lib/queries"
+import { clientSideFetch } from "../sanity/lib/clientSide"
 
 export const PlaceReviews = ({ count }: { count?: number }) => {
   const { place } = usePlace()
+  const { data: sanityReviews } = useSWR(REVIEWS_QUERY, clientSideFetch)
 
   if (!place) return null
+
+  const allReviews = [
+    ...(place.reviews ?? []),
+    ...(sanityReviews ?? []),
+  ] as TReview[]
+
+  const memoizedShuffled = React.useMemo(
+    () => shuffle(allReviews),
+    [allReviews],
+  )
+
   const reviewsToShow = count
-    ? shuffle([...(place.reviews ?? []), ...reviews, ...bookingReviews])
+    ? memoizedShuffled
         .filter(review => {
           const text = review?.text ?? review?.reviewText ?? ""
           return text.length > 100
         })
         .slice(0, count)
-    : ([...(place.reviews ?? []), ...reviews, ...bookingReviews] as TReview[])
+    : allReviews
 
   return (
     <div className="py-5 lg:px-40 mt-5">
