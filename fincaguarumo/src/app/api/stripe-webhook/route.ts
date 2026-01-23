@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { sendConfirmationEmail } from "@/lib/sendConfirmationEmail"
 import { setBookings } from "../../../lib/setBookings"
+import { sendErrorEmail } from "../../../lib/sendErrorEmail"
 
 export const runtime = "nodejs"
 
@@ -113,7 +114,14 @@ export async function POST(request: NextRequest) {
             })
           }
         } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error)
           console.error("Failed to send confirmation email:", error)
+          await sendErrorEmail({
+            subject: "Failed to Send Booking Confirmation Email",
+            error: "Email sending failed",
+            details: `Session ID: ${id}, Customer: ${customerDetails.email}, Error: ${errorMessage}`,
+          })
         }
 
         // Create booking - continue even if fails
@@ -129,8 +137,21 @@ export async function POST(request: NextRequest) {
             "Booking created in Sanity successfully.",
             bookingResponse,
           )
+          // Send success notification
+          await sendErrorEmail({
+            subject: "New Booking Successfully Created",
+            error: "Booking successful",
+            details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${bookingDetails.checkIn.toLocaleDateString()}, Check-out: ${bookingDetails.checkOut.toLocaleDateString()}`,
+          })
         } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error)
           console.error("Failed to create booking in Sanity:", error)
+          await sendErrorEmail({
+            subject: "Failed to Create Booking in Sanity",
+            error: "Booking creation failed",
+            details: `Session ID: ${id}, Customer: ${customerDetails.email}, Error: ${errorMessage}`,
+          })
         }
         break
       }
