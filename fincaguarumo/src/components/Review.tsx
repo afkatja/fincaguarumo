@@ -126,7 +126,7 @@ const Review = ({ review }: { review: TReview }) => {
           alt={`${platform} review`}
           width={platform === "airbnb" ? 34 : 20}
           height={24}
-          className="flex-shrink-0 mt-1 ml-auto"
+          className="shrink-0 mt-1 ml-auto"
           title={`Review from ${platform.charAt(0).toUpperCase() + platform.slice(1)}`}
         />
       </div>

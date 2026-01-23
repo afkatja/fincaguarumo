@@ -20,7 +20,8 @@ const PriceCalculation = ({
   locale: string
   duration?: number
   currency?: string
-  t: Record<string, string> | undefined
+  t?: Record<string, any> &
+    ((key: string, values?: Record<string, any>) => string)
 }) => {
   const { dialogData: dialog } = useDialog()
 
@@ -28,8 +29,13 @@ const PriceCalculation = ({
     price,
     guests,
     bookingType,
-    duration
+    duration,
   )
+
+  const discountAmount =
+    duration && duration >= 7
+      ? priceWithVat * duration * (duration >= 28 ? 0.2 : 0.1)
+      : 0
 
   const currency = (toFormat: number) =>
     new Intl.NumberFormat(locale, {
@@ -49,19 +55,30 @@ const PriceCalculation = ({
       <dl className="grid grid-cols-2 items-center justify-between">
         <dt className="text-muted-foreground">
           {bookingType === BOOKING_TYPE.villa
-            ? `${t?.priceLabel} ${guests} 
+            ? `${t?.("priceLabel")} ${guests}
           ${getInternationalizedValue(
             guests === 1 ? dialog?.person : dialog?.people,
             locale,
-            "people"
+            "people",
           )}`
-            : t?.rateLabel || "Price"}
+            : t?.("rateLabel", { defaultValue: "Price" })}
         </dt>
         <dd className="text-right">{currency(priceForPeople)}</dd>
         <dt className="text-muted-foreground">
-          {t?.rateVATlabel || "Price (incl 13% VAT)"}
+          {t?.("rateVATlabel", { defaultValue: "Price (incl 13% VAT)" })}
         </dt>
         <dd className="text-right">{currency(priceWithVat)}</dd>
+        {discountAmount > 0 && (
+          <>
+            <dt className="text-muted-foreground">
+              {(duration! >= 28 ? t?.discount20 : t?.discount10) ||
+                (duration! >= 28
+                  ? "Discount (20% for stays 28+ nights)"
+                  : "Discount (10% for stays 7+ nights)")}
+            </dt>
+            <dd className="text-right">-{currency(discountAmount)}</dd>
+          </>
+        )}
       </dl>
       <Separator />
       <div className="flex items-center justify-between font-medium">

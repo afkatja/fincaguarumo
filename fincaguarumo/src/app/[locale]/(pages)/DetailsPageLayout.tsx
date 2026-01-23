@@ -1,5 +1,5 @@
 "use client"
-import React, { Suspense, useEffect, useState } from "react"
+import React, { Suspense } from "react"
 
 import BookingDialog from "./BookingDialog"
 
@@ -7,10 +7,9 @@ import Icon from "@/components/Icon"
 import { TTour } from "./tours/data"
 import Breadcrumbs from "@/components/Breadcrumbs"
 import Title from "@/components/Title"
-import Loading from "./loading"
 import RichText from "@/components/RichText"
 import { BOOKING_TYPE, BookingType } from "../../../types"
-import { loadTranslations } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 const DetailsPageLayout = ({
   bookingDetails,
@@ -33,24 +32,9 @@ const DetailsPageLayout = ({
   dialogId?: string
 }) => {
   const { title, description, duration, location, price, body } = bookingDetails
-  const [translations, setTranslations] = useState<{
-    booking: {
-      perPerson: string
-      reserveButton: string
-      reserveButtonTour: string
-    }
-  } | null>(null)
-
-  useEffect(() => {
-    const loadTranslationsData = async () => {
-      const messages = await loadTranslations(locale)
-      setTranslations(messages)
-    }
-    loadTranslationsData()
-  })
-  const t = translations?.booking
+  const t = useTranslations("booking")
   return (
-    <Suspense fallback={<Loading className="absolute" />}>
+    <>
       <div className="content-wrap">
         <div className="w-11/12 mx-auto py-5">
           {parent && <Breadcrumbs title={title} parent={parent} />}
@@ -86,13 +70,13 @@ const DetailsPageLayout = ({
                 )}
               </div>
             </div>
-            <footer className="bg-muted dark:bg-gradient-to-br from-zinc-700 to-sky-900 rounded-lg p-6 md:p-8">
+            <footer className="bg-muted dark:bg-linear-to-br from-zinc-700 to-sky-900 rounded-lg p-6 md:p-8">
               <div className="flex items-center justify-between">
                 {!!price ? (
                   <div>
                     <span className="text-2xl font-bold">${price}</span>
                     <span className="text-muted-foreground text-sm">
-                      /{t?.perPerson}
+                      /{t("perPerson")}
                     </span>
                   </div>
                 ) : null}
@@ -101,10 +85,10 @@ const DetailsPageLayout = ({
                   dialogOptions={{
                     buttonText:
                       bookingType === BOOKING_TYPE.tour
-                        ? t?.reserveButtonTour
-                        : t?.reserveButton || "Book now",
+                        ? t("reserveButtonTour")
+                        : t("reserveButton", { defaultValue: "Book now" }),
                     buttonClassName: "ml-auto",
-                    title: t?.reserveButton || "Book now",
+                    title: t("reserveButton", { defaultValue: "Book now" }),
                   }}
                   dialogId={dialogId}
                   locale={locale}
@@ -115,7 +99,7 @@ const DetailsPageLayout = ({
           <RichText body={body} icon={icon} className="mx-0" />
         </section>
       </div>
-    </Suspense>
+    </>
   )
 }
 

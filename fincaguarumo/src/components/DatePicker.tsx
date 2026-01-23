@@ -53,7 +53,7 @@ const DatePicker = ({
     <Popover open={isOpen}>
       {isOpen && (
         <div
-          className="overlay fixed top-0 left-0 w-[100vw] h-[100vh]"
+          className="overlay fixed top-0 left-0 w-screen h-screen"
           onClick={onClose}
         />
       )}

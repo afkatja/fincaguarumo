@@ -1,5 +1,5 @@
-@import "header.css";
-@import "parallax.css";
+@import './header.css';
+@import './parallax.css';
 
 html {
   scroll-behavior: smooth !important;

@@ -60,7 +60,7 @@ function Calendar({
         today: "bg-accent text-accent-foreground",
         outside:
           "outside text-muted-foreground aria-selected:text-muted-foreground",
-        disabled: "text-muted-foreground opacity-50 !cursor-not-allowed",
+        disabled: "text-muted-foreground opacity-50 cursor-not-allowed!",
         range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",

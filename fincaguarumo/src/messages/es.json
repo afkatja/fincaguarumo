@@ -61,10 +61,30 @@
     "rateLabel": "Precio",
     "reserveButton": "Reserva ahora",
     "selectDate": "Seleccionar fecha",
-    "rateVATlabel": "Tasa (incluido 13% de IVA)"
+    "rateVATlabel": "Tasa (incluido 13% de IVA)",
+    "reserveButtonTour": "Reserva ahora",
+    "discount10": "Descuento (10% por estancias de 7+ noches)",
+    "discount20": "Descuento (20% por estancias de 28+ noches)"
   },
   "page": {
     "moreFAQ": "Más preguntas frecuentes",
     "FAQ": "Preguntas frecuentes"
+  },
+  "map": {
+    "location": "Ubicación"
+  },
+  "contactForm": {
+    "successMessage": "¡Mensaje enviado exitosamente!",
+    "errorMessage": "No se pudo enviar el mensaje. Por favor inténtalo de nuevo.",
+    "nameLabel": "Nombre",
+    "nameError": "Por favor ingresa tu nombre",
+    "namePlaceholder": "Jane Doe",
+    "emailLabel": "Correo electrónico",
+    "emailError": "Por favor ingresa tu correo electrónico",
+    "emailPlaceholder": "jane@doe.com",
+    "messageLabel": "Mensaje",
+    "messagePlaceholder": "mensaje",
+    "sending": "Enviando...",
+    "sendMessage": "Enviar mensaje"
   }
 }

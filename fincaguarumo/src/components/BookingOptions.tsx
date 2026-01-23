@@ -1,10 +1,10 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 // import { BookingService } from "../services/booking"
 import { ExpediaService } from "../services/expedia"
 import Datepicker from "@/components/DatePicker"
 import { Button } from "./ui/button"
-import { loadTranslations } from "../lib/utils"
+import { useTranslations } from "next-intl"
 import SelectGuestsOptions from "../app/[locale]/(pages)/(payment)/SelectGuestsOptions"
 import { format } from "date-fns"
 
@@ -20,50 +20,10 @@ export function BookingOptions({
   const [checkin, setCheckin] = useState(new Date(+new Date() + 86400000))
   const [checkout, setCheckout] = useState(new Date(+new Date() + 259200000))
   const [guests, setGuests] = useState(2)
-  const [translations, setTranslations] = useState<{
-    booking: {
-      checkIn: string
-      checkOut: string
-      guests: string
-      selectDate: string
-      checkoutDate: string
-      numberOfGuests: string
-      person: string
-      people: string
-      bookOnBooking: string
-      bookOnAirbnb: string
-      bookOnExpedia: string
-    }
-  } | null>(null)
 
   const expediaService = new ExpediaService()
 
-  useEffect(() => {
-    const loadTranslationsData = async () => {
-      const messages = await loadTranslations(locale)
-      setTranslations(messages)
-    }
-    loadTranslationsData()
-  }, [locale])
-
-  // Fallback translations in case loading fails
-  const fallbackTranslations = {
-    booking: {
-      checkIn: "Check in",
-      checkOut: "Check out",
-      guests: "Guests",
-      selectDate: "Select date",
-      checkoutDate: "Check-out date",
-      numberOfGuests: "Number of guests",
-      person: "person",
-      people: "people",
-      bookOnBooking: "Book on Booking.com",
-      bookOnAirbnb: "Book on AirBnb",
-      bookOnExpedia: "Book on Expedia",
-    },
-  }
-
-  const t = translations?.booking || fallbackTranslations.booking
+  const t = useTranslations("booking")
 
   const checkinStr = format(checkin, "yyyy-MM-dd")
   const checkoutStr = format(checkout, "yyyy-MM-dd")
@@ -78,7 +38,7 @@ export function BookingOptions({
       expediaPropertyId,
       checkinStr,
       checkoutStr,
-      guests.toString()
+      guests.toString(),
     )
     window.open(url, "_blank", "noopener, noreferrer")
   }
@@ -94,14 +54,14 @@ export function BookingOptions({
         <div className="md:grid md:grid-cols-2 gap-4">
           <div>
             <Datepicker
-              label={t.checkIn}
+              label={t("checkIn")}
               selectedDate={checkin}
               onSelectDate={date => setCheckin(date)}
             />
           </div>
           <div className="mt-4 sm:mt-0">
             <Datepicker
-              label={t.checkOut}
+              label={t("checkOut")}
               selectedDate={checkout}
               onSelectDate={date => setCheckout(date)}
             />
@@ -125,21 +85,21 @@ export function BookingOptions({
             onClick={handleBookingClick}
             className="col-span-3 md:col-span-1"
           >
-            {t.bookOnBooking}
+            {t("bookOnBooking")}
           </Button>
           <Button
             name="book-on-airbnb-button"
             onClick={handleAirbnbClick}
             className="col-span-3 md:col-span-1"
           >
-            {t.bookOnAirbnb}
+            {t("bookOnAirbnb")}
           </Button>
           <Button
             name="book-on-expedia-button"
             onClick={handleExpediaClick}
             className="col-span-3 md:col-span-1"
           >
-            {t.bookOnExpedia}
+            {t("bookOnExpedia")}
           </Button>
         </div>
       </div>

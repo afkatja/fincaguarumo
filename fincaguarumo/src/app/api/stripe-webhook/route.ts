@@ -5,12 +5,6 @@ import { setBookings } from "../../../lib/setBookings"
 
 export const runtime = "nodejs"
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
-
 export async function POST(request: NextRequest) {
   console.log("WEBHOOK RECEIVED")
   if (!process.env.STRIPE_API_KEY) {

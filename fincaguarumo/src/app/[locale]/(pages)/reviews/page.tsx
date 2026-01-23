@@ -1,6 +1,6 @@
 import React from "react"
 import Layout from "../pagesLayout"
-import { loadTranslations } from "@/lib/utils"
+import { getTranslations } from "next-intl/server"
 import ClientPage from "./ClientPage"
 import Script from "next/script"
 const jsonLd = {
@@ -28,13 +28,13 @@ const jsonLd = {
 
 const page = async ({ params }: { params: any }) => {
   const { locale } = await params
-  const messages = await loadTranslations(locale)
+  const messages = await getTranslations()
 
   return (
     <Layout
       locale={locale}
       pageName="Reviews"
-      title={messages.reviews?.title ?? "Reviews"}
+      title={messages("reviews.title") ?? "Reviews"}
     >
       <ClientPage />
       <Script

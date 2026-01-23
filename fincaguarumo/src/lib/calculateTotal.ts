@@ -7,7 +7,7 @@ const calculateTotal = (
   price: number,
   guests: number,
   bookingType: BookingType,
-  duration?: number
+  duration?: number,
 ) => {
   const priceWithoutVat = price / 1.13
   // Villa pricing: base price for 1 person, +$20 for each additional person up to 4
@@ -24,19 +24,19 @@ const calculateTotal = (
     const stay = duration ?? 1
     // apply a discount for longer stays
     if (stay >= 7) {
-      // 10% discount
+      // 13% discount
       return {
         priceForPeople,
         priceWithVat: priceForPeople * 1.13,
-        total: priceForPeople * 1.13 * stay * 0.9,
+        total: priceForPeople * 1.13 * stay * 0.87,
       }
     }
-    if (stay >= 30) {
-      // 20% discount
+    if (stay >= 28) {
+      // 33% discount
       return {
         priceForPeople,
         priceWithVat: priceForPeople * 1.13,
-        total: priceForPeople * 1.13 * stay * 0.8,
+        total: priceForPeople * 1.13 * stay * 0.67,
       }
     }
     // no discount

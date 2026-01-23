@@ -1,11 +1,10 @@
-import React from "react"
 import { sanityFetch } from "@/sanity/lib/client"
 import { FAQ_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import NotFound from "../../not-found"
 import { FAQType } from "@/types"
 import FAQCategories from "@/components/FAQ"
-import { loadTranslations } from "@/lib/utils"
+import { getTranslations } from "next-intl/server"
 import Script from "next/script"
 
 const jsonLd = (faqs: FAQType[]) => ({
@@ -24,7 +23,7 @@ const jsonLd = (faqs: FAQType[]) => ({
 
 const FAQpage = async ({ params }: { params: any }) => {
   const { locale } = await params
-  const messages = await loadTranslations(locale)
+  const messages = await getTranslations(locale)
   const faqs: FAQType[] = await sanityFetch({
     query: FAQ_QUERY,
     params: { language: locale },
@@ -36,7 +35,7 @@ const FAQpage = async ({ params }: { params: any }) => {
     <Layout
       locale={locale}
       pageName="FAQ"
-      title={messages.faq?.title ?? "Frequently Asked Questions"}
+      title={messages("faq.title") ?? "Frequently Asked Questions"}
     >
       <div className="w-11/12 mx-auto py-8">
         <FAQCategories faqs={faqs} />

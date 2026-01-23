@@ -1,4 +1,4 @@
-import { isValid, parse, startOfDay } from "date-fns"
+import { isValid, parse, startOfDay, Locale } from "date-fns"
 import { de, enUS, es, nl, ru } from "date-fns/locale"
 
 const localeMap: Record<string, Locale> = {

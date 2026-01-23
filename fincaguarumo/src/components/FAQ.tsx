@@ -1,22 +1,20 @@
 "use client"
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import { FAQType } from "../types"
 import { ChevronDown, ChevronUp } from "lucide-react"
 
 /**
- * Render a single FAQ item.
- * @param {{ faq: FAQType }} props - An object containing the FAQ item to render.
- * @returns {JSX.Element} A JSX element representing the FAQ item.
+ * Renders grouped FAQ categories.
+ * @param {{ faqs: FAQType[] }} props - An object containing an array of FAQ items grouped into categories.
+ * @returns {React.ReactElement} A JSX element representing grouped FAQ categories.
  */
 export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
-  const grouped = useMemo(() => {
-    return faqs.reduce<Record<string, FAQType[]>>((acc, item) => {
-      const key = item.category?.slug?.current || "other"
-      if (!acc[key]) acc[key] = []
-      acc[key].push(item)
-      return acc
-    }, {})
-  }, [faqs])
+  const grouped = faqs.reduce<Record<string, FAQType[]>>((acc, item) => {
+    const key = item.category?.slug?.current || "other"
+    if (!acc[key]) acc[key] = []
+    acc[key].push(item)
+    return acc
+  }, {})
 
   const [openKey, setOpenKey] = useState<string | null>(null)
 

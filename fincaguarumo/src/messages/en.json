@@ -41,6 +41,8 @@
     "priceLabel": "Price (excl. VAT) for",
     "rateLabel": "Price (excl. VAT)",
     "rateVATlabel": "Price (incl. 13% VAT)",
+    "discount10": "Discount (10% for stays 7+ nights)",
+    "discount20": "Discount (20% for stays 28+ nights)",
     "reserveButton": "Book Villa Bruno now",
     "reserveButtonTour": "Book now",
     "selectDate": "Select date"
@@ -48,5 +50,25 @@
   "page": {
     "moreFAQ": "More FAQ",
     "FAQ": "FAQ"
+  },
+  "map": {
+    "location": "Location"
+  },
+  "contact": {
+    "location": "Location"
+  },
+  "contactForm": {
+    "successMessage": "Message sent successfully!",
+    "errorMessage": "Failed to send message. Please try again.",
+    "nameLabel": "Name",
+    "nameError": "Please enter your name",
+    "namePlaceholder": "Jane Doe",
+    "emailLabel": "Email",
+    "emailError": "Please enter your email",
+    "emailPlaceholder": "jane@doe.com",
+    "messageLabel": "Message",
+    "messagePlaceholder": "message",
+    "sending": "Sending...",
+    "sendMessage": "Send Message"
   }
 }

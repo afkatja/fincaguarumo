@@ -6,7 +6,11 @@ import React, {
   useState,
   ReactNode,
 } from "react"
-import { useMap, useMapsLibrary } from "@vis.gl/react-google-maps"
+import {
+  useApiIsLoaded,
+  useMap,
+  useMapsLibrary,
+} from "@vis.gl/react-google-maps"
 
 type PlaceDetails = {
   displayName?: string | null
@@ -32,6 +36,7 @@ export const PlaceProvider: React.FC<PlaceProviderProps> = ({
   placeId,
   children,
 }) => {
+  const apiIsLoaded = useApiIsLoaded()
   const lib = useMapsLibrary("places")
   const map = useMap()
   const [place, setPlace] = useState<PlaceDetails | null>(null)
@@ -39,7 +44,7 @@ export const PlaceProvider: React.FC<PlaceProviderProps> = ({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!lib) return
+    if (!lib || !apiIsLoaded) return
 
     const fetchPlaceDetails = async () => {
       try {
@@ -78,6 +83,7 @@ export const PlaceProvider: React.FC<PlaceProviderProps> = ({
     fetchPlaceDetails()
   }, [lib, map, placeId])
 
+  if (!apiIsLoaded) return null
   return (
     <PlaceContext.Provider value={{ place, loading, error }}>
       {children}

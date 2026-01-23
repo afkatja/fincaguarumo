@@ -1,8 +1,70 @@
-@import "tailwindcss/base";
+@import "tailwindcss";
 @import "@radix-ui/themes/styles";
+@plugin "@tailwindcss/typography";
 
-@tailwind components;
-@tailwind utilities;
+@theme {
+  --font-family-heading:
+    var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  --font-family-body: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-sunrise: var(--sunrise-color);
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-guarumo-primary: var(--guarumo-primary);
+  --color-guarumo-secondary: var(--guarumo-secondary);
+  --color-guarumo-accent: var(--guarumo-accent);
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --gradient: radial-gradient(
+    circle at center top,
+    color(from var(--color-sunrise) srgb r g b / 0.9),
+    color(from var(--color-white) srgb r g b / 0.9) 40%
+  );
+  --background-image-gradient-dark: var(--gradient);
+
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-fade: fade linear forwards;
+  --animate-slide: slide linear forwards;
+
+  --drop-shadow-sharp: 2px 2px 0 rgba(0, 0, 0, 0.8);
+  --drop-shadow-dots: 1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes slide {
+  from {
+    transform: translateY(8.5rem);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
 
 @keyframes fade-out {
   100% {
@@ -17,11 +79,6 @@
 
 /* View Transitions API Support */
 @supports (view-transition-name: none) {
-  @view-transition {
-    navigation: auto;
-  }
-
-  /* Define view transition names for key elements */
   .animation-container {
     view-transition-name: page-content;
   }
@@ -35,15 +92,15 @@
   }
 
   /* Custom transition styles */
-  ::view-transition-old,
-  ::view-transition-new {
-    animation-duration: 0.8s;
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 1.8s;
     animation-timing-function: ease-in-out;
   }
-  ::view-transition-old {
+  ::view-transition-old(*) {
     animation: fade-out;
   }
-  ::view-transition-new {
+  ::view-transition-new(*) {
     animation: fade-in;
   }
 
@@ -63,13 +120,9 @@
 /* GSAP Fallback for browsers without View Transitions API */
 @supports not (view-transition-name: none) {
   .animation-container {
-    transition: opacity 0.3s ease-in-out;
+    transition: opacity 0.8s ease-in-out;
   }
 }
-/* 
-@theme {
-  --color-sunrise: #f9f2d8;
-} */
 
 :root {
   --background: 0 0% 100%;
@@ -142,6 +195,7 @@
       color(from var(--guarumo-sunset) srgb r g b / 0.9),
       color(from var(--guarumo-sky) srgb r g b / 0.9) 40%
     );
+    --gradient-dark: var(--guarumo-gradient);
   }
 }
 
@@ -163,6 +217,13 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+@utility animation-delay-* {
+  animation-delay: --value(number)ms;
+}
+@utility animation-duration-* {
+  animation-duration: --value(number)ms;
 }
 
 @layer select {

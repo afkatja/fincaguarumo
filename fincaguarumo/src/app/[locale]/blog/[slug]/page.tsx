@@ -1,30 +1,14 @@
-// import { QueryParams } from "next-sanity"
-import {
-  POST_QUERYResult,
-  // POSTS_QUERYResult,
-} from "../../../../../sanity.types"
-import { client, sanityFetch } from "../../../../sanity/lib/client"
+import { POST_QUERY_RESULT } from "../../../../../sanity.types"
+import { sanityFetch } from "../../../../sanity/lib/client"
 import { POST_QUERY } from "../../../../sanity/lib/queries"
 import { notFound } from "next/navigation"
 import { Post } from "./Post"
 
-// export async function generateStaticParams() {
-//   const posts = await client.fetch<POSTS_QUERYResult>(
-//     POSTS_QUERY,
-//     {},
-//     { perspective: "published" }
-//   )
-
-//   return posts.map(post => ({
-//     slug: post?.slug?.current,
-//   }))
-// }
-
 export default async function Page({ params }: { params: any }) {
   const { locale, slug } = await params
-  const post = await sanityFetch<POST_QUERYResult>({
+  const post = await sanityFetch<POST_QUERY_RESULT>({
     query: POST_QUERY,
-    params: { slug, lanaguage: locale },
+    params: { slug, language: locale },
     revalidate: 0,
   })
   if (!post) return notFound()

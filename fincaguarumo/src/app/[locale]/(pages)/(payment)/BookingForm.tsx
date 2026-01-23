@@ -1,12 +1,13 @@
 "use client"
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { DialogFooter } from "@/components/ui/dialog"
 import PriceCalculation from "@/components/priceCalculation"
 import DatePicker from "@/components/DatePicker"
 import Input from "@/components/Input"
-import { getInternationalizedValue, loadTranslations } from "@/lib/utils"
+import { getInternationalizedValue } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 import calculateDuration from "@/lib/calculateDuration"
 import calculateTotal from "@/lib/calculateTotal"
 import {
@@ -35,27 +36,16 @@ const BookingForm = ({
 }) => {
   const [activePopover, setActivePopover] = useState<string | null>(null)
   const [dateError, setDateError] = useState<string>("")
-  const [translations, setTranslations] = useState<{
-    booking: Record<string, string>
-  } | null>(null)
 
   const { bookingData, setBookingData } = useBooking()
   const { dialogData: dialog } = useDialog()
 
-  useEffect(() => {
-    const loadTranslationsData = async () => {
-      const messages = await loadTranslations(locale)
-      setTranslations(messages)
-    }
-    loadTranslationsData()
-  }, [locale])
-
-  const t = translations?.booking
+  const t = useTranslations("booking")
 
   // Calculate duration based on check-in and check-out dates
   const duration = calculateDuration(
     bookingData.bookingDetails.checkIn,
-    bookingData.bookingDetails.checkOut
+    bookingData.bookingDetails.checkOut,
   )
 
   return (
@@ -73,7 +63,7 @@ const BookingForm = ({
               bookingData.bookingDetails.price,
               bookingData.bookingDetails.guests,
               bookingType,
-              duration
+              duration,
             ).total,
           },
         })
@@ -88,8 +78,10 @@ const BookingForm = ({
             id="name"
             type="text"
             required
-            labelText={t?.nameLabel || "Your name"}
-            errorMessage={t?.nameError || "Please enter your name"}
+            labelText={t("nameLabel", { defaultValue: "Your name" })}
+            errorMessage={t("nameError", {
+              defaultValue: "Please enter your name",
+            })}
             placeholder="Jane Doe"
             onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
               setBookingData({
@@ -107,8 +99,10 @@ const BookingForm = ({
             id="email"
             type="email"
             required
-            errorMessage={t?.emailError || "Please enter a valid email address"}
-            labelText={t?.emailLabel || "Your email *"}
+            errorMessage={t("emailError", {
+              defaultValue: "Please enter a valid email address",
+            })}
+            labelText={t("emailLabel", { defaultValue: "Your email *" })}
             placeholder="jane@doe.com"
             pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
             onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -127,8 +121,10 @@ const BookingForm = ({
             id="phone"
             required
             defaultCountry={"CR"}
-            errorMessage={t?.phoneError || "Please enter a valid phone number"}
-            labelText={t?.phoneLabel || "Your phone number *"}
+            errorMessage={t("phoneError", {
+              defaultValue: "Please enter a valid phone number",
+            })}
+            labelText={t("phoneLabel", { defaultValue: "Your phone number *" })}
             placeholder="12345678"
             pattern="^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$"
             onChange={(value: string) =>
@@ -171,8 +167,10 @@ const BookingForm = ({
 
                 if (checkOutTime <= checkInTime) {
                   setDateError(
-                    t?.checkOutAfterCheckIn ??
-                      "Check-out date must be after check-in date"
+                    t("checkOutAfterCheckIn", {
+                      defaultValue:
+                        "Check-out date must be after check-in date",
+                    }),
                   )
                   return
                 }
@@ -191,8 +189,10 @@ const BookingForm = ({
               checkOut: bookingData.bookingDetails.checkOut,
             }}
             labels={{
-              checkinDate: t?.checkinDate ?? "Check-in date",
-              checkoutDate: t?.checkoutDate ?? "Check-out date",
+              checkinDate: t("checkinDate", { defaultValue: "Check-in date" }),
+              checkoutDate: t("checkoutDate", {
+                defaultValue: "Check-out date",
+              }),
             }}
             error={dateError}
           />
@@ -215,7 +215,7 @@ const BookingForm = ({
               label={getInternationalizedValue(
                 dialog?.selectDate,
                 locale,
-                "Select date"
+                "Select date",
               )}
               selectedDate={bookingData.bookingDetails.date}
             />

@@ -11,7 +11,7 @@ export const getTranslations = (
     language: string
     title: string
     slug: Slug
-  }[]
+  }[],
 ) =>
   translations
     .filter(ref => ref?.slug?.current)
@@ -26,21 +26,9 @@ export const getTranslations = (
       }
     })
 
-export const loadTranslations = async (locale: string) => {
-  try {
-    const messages = await import(`../messages/${locale}.json`)
-    return messages.default
-  } catch (error) {
-    console.error(`Failed to load translations for locale: ${locale}`, error)
-    // Fallback to English
-    const fallbackMessages = await import(`../messages/en.json`)
-    return fallbackMessages.default
-  }
-}
-
 export async function isUniqueOtherThanLanguage(
   slug: string,
-  context: SlugValidationContext
+  context: SlugValidationContext,
 ) {
   const { document, getClient } = context
   if (!document?.language) {
@@ -77,7 +65,7 @@ export const shuffle = (array: any[]) => {
 export const getInternationalizedValue = (
   field: Array<{ _key: string; value: string }> | undefined,
   currentLanguage: string,
-  fallback?: string
+  fallback?: string,
 ): string => {
   if (!field || !Array.isArray(field)) return fallback || ""
 
