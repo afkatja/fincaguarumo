@@ -20,8 +20,13 @@ export const PlaceReviews = ({ count }: { count?: number }) => {
     ...(sanityReviews ?? []),
   ] as TReview[]
 
+  const memoizedShuffled = React.useMemo(
+    () => shuffle(allReviews),
+    [allReviews],
+  )
+
   const reviewsToShow = count
-    ? shuffle(allReviews)
+    ? memoizedShuffled
         .filter(review => {
           const text = review?.text ?? review?.reviewText ?? ""
           return text.length > 100
