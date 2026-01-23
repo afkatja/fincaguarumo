@@ -1,4 +1,3 @@
-import React from "react"
 import MainNav from "./MainNav"
 import LanguageSelector from "./LanguageSelector"
 import MobileNav from "./MobileNav"

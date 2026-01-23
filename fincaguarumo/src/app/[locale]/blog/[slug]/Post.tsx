@@ -1,8 +1,4 @@
-// import Image from "next/image"
-
-// import { urlFor } from "@/sanity/lib/image"
-
-import { POST_QUERYResult } from "../../../../../sanity.types"
+import { POST_QUERY_RESULT } from "../../../../../sanity.types"
 import Breadcrumbs from "../../../../components/Breadcrumbs"
 // import Title from "../../../../components/Title"
 import RichText from "../../../../components/RichText"
@@ -13,7 +9,7 @@ export function Post({
   parent,
   locale,
 }: {
-  post: POST_QUERYResult
+  post: POST_QUERY_RESULT
   parent: { title: string; href: string }
   locale: string
 }) {
@@ -28,7 +24,7 @@ export function Post({
     >
       {parent && (
         <Breadcrumbs
-          className="max-w-[60rem] prose w-11/12 lg:prose-lg mx-auto mt-4"
+          className="max-w-240 prose w-11/12 lg:prose-lg mx-auto mt-4"
           title={title as string}
           parent={parent}
         />

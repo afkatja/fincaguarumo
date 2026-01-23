@@ -1,5 +1,5 @@
 "use client"
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useState } from "react"
 import Image from "next/image"
 import { loadStripe } from "@stripe/stripe-js"
 import { CheckoutProvider } from "@stripe/react-stripe-js"
@@ -22,29 +22,32 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const { bookingData } = useBooking()
 
-  const fetchData = useMemo(async () => {
-    const serializedData = serializeBookingData(bookingData)
-    try {
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerDetails: serializedData.customerDetails,
-          bookingDetails: {
-            ...serializedData.bookingDetails,
-            type: serializedData.bookingDetails.type,
-          },
-        }),
-      })
+  useEffect(() => {
+    const fetchData = async () => {
+      const serializedData = serializeBookingData(bookingData)
+      try {
+        const response = await fetch("/api/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customerDetails: serializedData.customerDetails,
+            bookingDetails: {
+              ...serializedData.bookingDetails,
+              type: serializedData.bookingDetails.type,
+            },
+          }),
+        })
 
-      const { clientSecret: clientSecretData } = await response.json()
-      console.log({ clientSecretData })
+        const { clientSecret: clientSecretData } = await response.json()
+        console.log({ clientSecretData })
 
-      setClientSecret(clientSecretData)
-      return clientSecretData
-    } catch (err) {
-      console.error("Error creating payment session: " + err)
+        setClientSecret(clientSecretData)
+      } catch (err) {
+        console.error("Error creating payment session: " + err)
+      }
     }
+
+    fetchData()
   }, [bookingData])
 
   const appearance = {
@@ -73,15 +76,7 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
       <CheckoutProvider
         options={{
           fetchClientSecret: async () => {
-            try {
-              const result = await fetchData
-              console.log("Session id request", { result })
-
-              return result || ""
-            } catch (err) {
-              console.error("Session id request error", err)
-              return "error"
-            }
+            return clientSecret || ""
           },
           elementsOptions: options,
           // @ts-expect-error

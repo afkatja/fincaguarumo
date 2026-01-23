@@ -4,7 +4,7 @@ export default function Loading({ className }: { className?: string }) {
   // return <Skeleton />
   return (
     <div
-      className={`w-full max-w-11/12 mx-auto flex items-center justify-center h-full max-h-[80vh] ${className}`}
+      className={`w-full max-w-[91.67%] mx-auto flex flex-1 items-center justify-center h-full ${className ?? ""}`}
     >
       <Ellipsis width={40} height={40} className="loader" />
     </div>

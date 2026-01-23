@@ -1,10 +1,12 @@
-"use client"
 import React, { useMemo } from "react"
 import Icon from "./Icon"
 import { headerIcons } from "./icons"
 
 interface ITitle {
-  Heading?: React.ElementType<{ className?: string; children?: React.ReactNode }>
+  Heading?: React.ElementType<{
+    className?: string
+    children?: React.ReactNode
+  }>
   title: React.ReactNode
   titleClassName?: string
   id?: string
@@ -17,7 +19,13 @@ interface ITitle {
 }
 
 const Title = React.memo(
-  ({ title, titleClassName, Heading = "h2", icon: iconProp = {}, id }: ITitle) => {
+  ({
+    title,
+    titleClassName,
+    Heading = "h2",
+    icon: iconProp = {},
+    id,
+  }: ITitle) => {
     const {
       iconClassName = "",
       size = 40,

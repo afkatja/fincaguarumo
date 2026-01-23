@@ -9,7 +9,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ComponentPropsWithRef, useCallback, useEffect, useState } from "react"
+import { ComponentPropsWithRef, useEffect, useState } from "react"
 
 type CarouselApi = UseEmblaCarouselType[1]
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
@@ -77,22 +77,19 @@ const Carousel = React.forwardRef<
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [scrollSnaps, setScrollSnaps] = useState<number[]>([])
 
-    const onDotButtonClick = useCallback(
-      (index: number) => {
-        if (!api) return
-        api.scrollTo(index)
-      },
-      [api]
-    )
+    const onDotButtonClick = (index: number) => {
+      if (!api) return
+      api.scrollTo(index)
+    }
 
-    const onInit = useCallback((api: CarouselApi) => {
+    const onInit = (api: CarouselApi) => {
       if (!api) {
         return
       }
       setScrollSnaps(api.scrollSnapList())
-    }, [])
+    }
 
-    const onSelect = React.useCallback((api: CarouselApi) => {
+    const onSelect = (api: CarouselApi) => {
       if (!api) {
         return
       }
@@ -100,28 +97,25 @@ const Carousel = React.forwardRef<
       setCanScrollPrev(api.canScrollPrev())
       setCanScrollNext(api.canScrollNext())
       setSelectedIndex(api.selectedScrollSnap())
-    }, [])
+    }
 
-    const scrollPrev = React.useCallback(() => {
+    const scrollPrev = () => {
       api?.scrollPrev()
-    }, [api])
+    }
 
-    const scrollNext = React.useCallback(() => {
+    const scrollNext = () => {
       api?.scrollNext()
-    }, [api])
+    }
 
-    const handleKeyDown = React.useCallback(
-      (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === "ArrowLeft") {
-          event.preventDefault()
-          scrollPrev()
-        } else if (event.key === "ArrowRight") {
-          event.preventDefault()
-          scrollNext()
-        }
-      },
-      [scrollPrev, scrollNext]
-    )
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault()
+        scrollPrev()
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault()
+        scrollNext()
+      }
+    }
 
     React.useEffect(() => {
       if (!api || !setApi) {

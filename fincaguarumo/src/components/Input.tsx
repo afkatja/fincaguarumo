@@ -1,8 +1,7 @@
 import React, { ChangeEventHandler } from "react"
 import { Label } from "./ui/label"
 
-export interface TextInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string
   type: string
   labelText?: string
@@ -45,7 +44,7 @@ const Input = ({
         placeholder={placeholder}
         onChange={onChangeHandler}
         value={value}
-        className="w-full mt-2 p-1 pl-4 rounded-sm outline outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900"
+        className="w-full mt-2 p-1 pl-4 rounded-sm outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900 bg-zinc-50"
         {...props}
       />
       <span className="mt-2 hidden text-sm text-destructive peer-[&:not(:placeholder-shown):not(:focus):invalid]:block">

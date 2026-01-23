@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect } from "react"
 import { createNavigation } from "next-intl/navigation"
+import { useTranslations } from "next-intl"
 import RichText from "@/components/RichText"
 import { BookingOptions } from "@/components/BookingOptions"
 import { Button } from "@/components/ui/button"
@@ -23,26 +24,17 @@ import { placeId } from "../../../../../data/geo"
 import { PlaceReviews } from "../../../../components/PlaceReviews"
 import calculateTotal from "../../../../lib/calculateTotal"
 
-type Messages = {
-  booking?: {
-    bookNow?: string
-    [key: string]: any
-  }
-  [key: string]: any
-}
-
 const ClientPage = ({
   content,
   locale,
-  messages,
 }: {
   content: Content
   locale: string
-  messages: Messages
 }) => {
   const { bookingData, setBookingData } = useBooking()
   const { Link } = createNavigation()
-  const t = messages?.booking
+  const t = useTranslations("booking")
+  const tPage = useTranslations("page")
 
   const googleMapsKey = process.env.NEXT_PUBLIC_GMAPS_API_KEY as string
 
@@ -74,7 +66,7 @@ const ClientPage = ({
   const { total } = calculateTotal(
     content.price ?? 0,
     guests,
-    BOOKING_TYPE.villa
+    BOOKING_TYPE.villa,
   )
 
   return (
@@ -105,7 +97,7 @@ const ClientPage = ({
       )}
       <div className="w-11/12 mx-auto mt-3 mb-8 flex flex-col">
         <Title
-          title={t?.page?.FAQ || "FAQ"}
+          title={tPage("FAQ") || "FAQ"}
           Heading="h2"
           titleClassName="text-3xl font-bold text-guarumo-primary dark:text-zinc-50"
           icon={{ title: "Guarumo" }}
@@ -118,7 +110,7 @@ const ClientPage = ({
             href={`/faq`}
             className="w-80 inline-flex items-center justify-center h-full group no-underline"
           >
-            {t?.page?.moreFAQ || "More FAQ"}
+            {tPage("moreFAQ") || "More FAQ"}
             <Icon
               icon="ArrowRight"
               className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
@@ -128,7 +120,7 @@ const ClientPage = ({
         </div>
       </div>
       {content?.showBookingDialog && (
-        <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-dark">
+        <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-dark shadow-sm">
           <div className="w-11/12 mx-auto">
             <p className="font-bold text-center mb-4">
               Price starting from $ {Math.floor(total)} (for {guests}{" "}
@@ -138,8 +130,8 @@ const ClientPage = ({
               <BookingDialog
                 bookingType={BOOKING_TYPE.villa}
                 dialogOptions={{
-                  buttonText: t?.bookNow || "Book now",
-                  title: t?.bookNow || "Reserve Villa Bruno directly",
+                  buttonText: t("bookNow") || "Book Villa Bruno now",
+                  title: t("bookNow") || "Book Villa Bruno now",
                 }}
                 locale={locale}
               />
@@ -151,11 +143,13 @@ const ClientPage = ({
                       variant="outline"
                       name="book-on-others-button"
                     >
-                      {t?.bookOnOthers}
+                      {t("bookOnOthers") || "Book on other platforms"}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
-                    <DialogTitle>{t?.bookVilla}</DialogTitle>
+                    <DialogTitle>
+                      {t("bookVilla") || "Book your stay"}
+                    </DialogTitle>
                     <div className="mt-8">
                       <BookingOptions
                         locale={locale}

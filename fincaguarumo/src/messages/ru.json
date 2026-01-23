@@ -62,11 +62,29 @@
     "reserveButton": "Резервировать",
     "selectDate": "Выберите дату",
     "rateVATlabel": "Цена (в том числе 13% НДС)",
+    "reserveButtonTour": "Забронируйте сейчас",
     "discount10": "Скидка (10% за пребывание от 7+ ночей)",
     "discount20": "Скидка (20% за пребывание от 28+ ночей)"
   },
   "page": {
     "moreFAQ": "Еще вопросы",
     "FAQ": "Часто задаваемые вопросы"
+  },
+  "map": {
+    "location": "Расположение"
+  },
+  "contactForm": {
+    "successMessage": "Сообщение успешно отправлено!",
+    "errorMessage": "Не удалось отправить сообщение. Пожалуйста, попробуйте еще раз.",
+    "nameLabel": "Имя",
+    "nameError": "Пожалуйста, введите свое имя",
+    "namePlaceholder": "Джейн Доу",
+    "emailLabel": "Электронная почта",
+    "emailError": "Пожалуйста, введите свой адрес электронной почты",
+    "emailPlaceholder": "jane@doe.com",
+    "messageLabel": "Сообщение",
+    "messagePlaceholder": "сообщение",
+    "sending": "Отправка...",
+    "sendMessage": "Отправить сообщение"
   }
 }

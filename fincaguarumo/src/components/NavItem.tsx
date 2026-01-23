@@ -1,9 +1,7 @@
 "use client"
-import { createNavigation } from "next-intl/navigation"
-import React from "react"
+import { Link, usePathname } from "@/navigation"
 
 const NavItem = ({ navItem }: { navItem: { href: string; title: string } }) => {
-  const { Link, usePathname } = createNavigation()
   const pathname = usePathname()
 
   return (

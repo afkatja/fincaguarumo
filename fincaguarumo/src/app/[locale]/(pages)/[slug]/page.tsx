@@ -6,7 +6,6 @@ import { sanityFetch } from "@/sanity/lib/client"
 import { PAGES_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import ClientPage from "./ClientPage"
-import { loadTranslations } from "@/lib/utils"
 import { FAQType, SanityImageObject } from "@/types"
 import Script from "next/script"
 
@@ -86,7 +85,7 @@ export async function generateMetadata({
       description: content?.description
         ? content?.description
         : "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
-      url: `https://fincaguarumo.com/${slug.current}`,
+      url: `https://fincaguarumo.com/${slug}`,
       siteName: "Finca Guarumo",
     },
   }
@@ -103,9 +102,6 @@ const Page = async ({ params }: { params: any }) => {
 
   if (!content?.isPublished) notFound()
 
-  // Load translations
-  const messages = await loadTranslations(locale)
-
   return (
     <Layout
       locale={locale}
@@ -116,14 +112,14 @@ const Page = async ({ params }: { params: any }) => {
       mainImage={content?.mainImage}
       images={content?.slideshow?.images}
     >
-      <ClientPage content={content} locale={locale} messages={messages} />
+      <ClientPage content={content} locale={locale} />
       <Script
         id={"json-ld-page"}
         strategy="afterInteractive"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
-            jsonLd({ title: content?.title, slug: content?.slug })
+            jsonLd({ title: content?.title, slug: content?.slug }),
           ).replace(/</g, "\\u003c"),
         }}
       />

@@ -50,5 +50,25 @@
   "page": {
     "moreFAQ": "More FAQ",
     "FAQ": "FAQ"
+  },
+  "map": {
+    "location": "Location"
+  },
+  "contact": {
+    "location": "Location"
+  },
+  "contactForm": {
+    "successMessage": "Message sent successfully!",
+    "errorMessage": "Failed to send message. Please try again.",
+    "nameLabel": "Name",
+    "nameError": "Please enter your name",
+    "namePlaceholder": "Jane Doe",
+    "emailLabel": "Email",
+    "emailError": "Please enter your email",
+    "emailPlaceholder": "jane@doe.com",
+    "messageLabel": "Message",
+    "messagePlaceholder": "message",
+    "sending": "Sending...",
+    "sendMessage": "Send Message"
   }
 }

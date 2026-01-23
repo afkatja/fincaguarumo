@@ -33,7 +33,7 @@ const SheetPane = ({
         <div className="grid gap-6 p-6">
           {React.Children.map(children, element => {
             if (!element) return null
-            return React.cloneElement(element as JSX.Element, {
+            return React.cloneElement(element as React.ReactElement<any>, {
               onClick: () => setOpen(!open),
             })
           })}

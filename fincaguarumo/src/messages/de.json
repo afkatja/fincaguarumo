@@ -12,13 +12,9 @@
     "youtube": "Youtube",
     "blog": "Blog"
   },
-  "hero": {
-    "title": "Discover Our Retreats",
-    "description": "Explore our collection of curated retreats, each offering a unique blend of natural beauty, adventure, and relaxation."
-  },
+  "hero": {},
   "upcoming": {
-    "title": "Upcoming Retreats",
-    "description": "Check out our upcoming retreats and plan your next getaway."
+    "title": "Bevorstehende Retreats"
   },
   "about": {
     "title": "Über uns",
@@ -26,14 +22,9 @@
     "body": "blabla"
   },
   "contact": {
-    "title": "Contact Us",
-    "description": "Have a question or want to learn more about our retreats? Get in touch with us.",
-    "location": "Our location"
+    "location": "Standort"
   },
-  "tours": {
-    "title": "Tours",
-    "description": "Get off the beaten path and discover Osa Peninsula from within, lead by the locals, on the following tours"
-  },
+  "tours": {},
   "cards": {
     "new": "Neu",
     "featured": "Empfohlen",
@@ -62,14 +53,32 @@
     "phoneLabel": "Ihre Telefonnummer *",
     "priceLabel": "Preis für",
     "rateLabel": "Preis",
-    "reserveButton": "Reserve now",
     "selectDate": "Datum auswählen",
     "rateVATlabel": "Rate (inkl. 13% Mehrwertsteuer)",
+    "reserveButtonTour": "Buchen Sie jetzt",
+    "reserveButton": "Buchen Sie jetzt",
     "discount10": "Rabatt (10% für Aufenthalte ab 7+ Nächten)",
     "discount20": "Rabatt (20% für Aufenthalte ab 28+ Nächten)"
   },
   "page": {
     "moreFAQ": "Mehr FAQ",
     "FAQ": "FAQ"
+  },
+  "map": {
+    "location": "Standort"
+  },
+  "contactForm": {
+    "successMessage": "Nachricht erfolgreich gesendet!",
+    "errorMessage": "Fehler beim Senden der Nachricht. Bitte versuchen Sie es erneut.",
+    "nameLabel": "Name",
+    "nameError": "Bitte geben Sie Ihren Namen ein",
+    "namePlaceholder": "Max Mustermann",
+    "emailLabel": "E-Mail",
+    "emailError": "Bitte geben Sie Ihre E-Mail ein",
+    "emailPlaceholder": "max@mustermann.de",
+    "messageLabel": "Nachricht",
+    "messagePlaceholder": "Nachricht",
+    "sending": "Wird gesendet...",
+    "sendMessage": "Nachricht senden"
   }
 }

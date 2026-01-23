@@ -1,7 +1,7 @@
 import { Posts } from "@/app/[locale]/blog/Posts"
 import { PAGE_QUERY, POSTS_QUERY } from "../../../sanity/lib/queries"
 import { sanityFetch } from "../../../sanity/lib/client"
-import { POSTS_QUERYResult } from "../../../../sanity.types"
+import { POSTS_QUERY_RESULT } from "../../../../sanity.types"
 import PagesLayout from "../(pages)/pagesLayout"
 import { SanityDocument } from "next-sanity"
 import { Metadata } from "next"
@@ -58,7 +58,7 @@ export default async function Page({ params }: { params: any }) {
     revalidate: 0,
     params: { language: locale, pageName: "blog" },
   })
-  const posts = await sanityFetch<POSTS_QUERYResult>({
+  const posts = await sanityFetch<POSTS_QUERY_RESULT>({
     query: POSTS_QUERY,
     revalidate: 0,
   })

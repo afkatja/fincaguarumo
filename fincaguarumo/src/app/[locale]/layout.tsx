@@ -1,7 +1,6 @@
 import type { Viewport } from "next"
 import { draftMode } from "next/headers"
 import { NextIntlClientProvider } from "next-intl"
-import { VisualEditing } from "next-sanity"
 
 import { Poppins, Comfortaa, Cabin, Didact_Gothic } from "next/font/google"
 
@@ -80,16 +79,16 @@ export default async function Layout({
           locale === "ru"
             ? `${comfortaa.variable} ${didact.variable}`
             : `${poppins.variable} ${cabin.variable}`,
-          "min-h-[100vh]"
+          "min-h-screen"
         )}
       >
         <NextIntlClientProvider locale={locale}>
           <TransitionProvider>
-            <div className="flex flex-col min-h-[calc(100dvh-var(--header-height))] animation-container">
+            <div className="flex flex-col min-h-[calc(100dvh-var(--header-height))] animation-container transition-opacity ">
               <BookingProvider>
                 <DialogProvider locale={locale}>
                   <Header locale={locale} />
-                  <main className="flex-1 flex flex-col">
+                  <main className="flex-1 flex flex-col relative">
                     {draft?.isEnabled && (
                       <a
                         className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
@@ -98,7 +97,7 @@ export default async function Layout({
                         Disable preview mode
                       </a>
                     )}
-                    {children} {draft?.isEnabled && <VisualEditing />}
+                    {children}
                   </main>
                 </DialogProvider>
               </BookingProvider>

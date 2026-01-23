@@ -62,11 +62,29 @@
     "reserveButton": "Boek nu",
     "selectDate": "Selecteer datum",
     "rateVATlabel": "Prijs (incl. 13% btw)",
+    "reserveButtonTour": "Boek nu",
     "discount10": "Korting (10% voor verblijven van 7+ nachten)",
     "discount20": "Korting (20% voor verblijven van 28+ nachten)"
   },
   "page": {
     "moreFAQ": "Meer veelgestelde vragen",
     "FAQ": "FAQ"
+  },
+  "map": {
+    "location": "Locatie"
+  },
+  "contactForm": {
+    "successMessage": "Bericht succesvol verzonden!",
+    "errorMessage": "Kan bericht niet verzenden. Probeer het opnieuw.",
+    "nameLabel": "Naam",
+    "nameError": "Voer uw naam in",
+    "namePlaceholder": "Jane Doe",
+    "emailLabel": "E-mail",
+    "emailError": "Voer uw e-mailadres in",
+    "emailPlaceholder": "jane@doe.com",
+    "messageLabel": "Bericht",
+    "messagePlaceholder": "bericht",
+    "sending": "Verzenden...",
+    "sendMessage": "Bericht verzenden"
   }
 }

@@ -8,7 +8,7 @@ const intlMiddleware = createMiddleware({
   localePrefix: "as-needed",
 })
 
-export default function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
 
   // Handle redirects first

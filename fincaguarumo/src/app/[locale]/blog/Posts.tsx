@@ -1,17 +1,16 @@
 "use client"
-import { POSTS_QUERYResult } from "../../../../sanity.types"
+import { POSTS_QUERY_RESULT } from "../../../../sanity.types"
 import FeaturedContent from "../../../components/FeaturedContent"
 import TourItem from "../(pages)/tours/TourItem"
-import { createNavigation } from "next-intl/navigation"
+import { usePathname } from "../../../navigation"
 
 export function Posts({
   posts: postsProp,
   locale,
 }: {
-  posts: POSTS_QUERYResult
+  posts: POSTS_QUERY_RESULT
   locale: string
 }) {
-  const {  usePathname } = createNavigation()
   const pathname = usePathname()
 
   const posts = postsProp
