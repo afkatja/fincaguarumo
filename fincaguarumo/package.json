@@ -96,7 +96,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitalets/google-translate-api": "^9.2.1",
     "eslint": "^8.57.1",
-    "eslint-config-next": "14.2.4",
+    "eslint-config-next": "14.2.35",
     "formatjs": "^0.1.1",
     "fs": "^0.0.1-security",
     "husky": "^9.1.7",
