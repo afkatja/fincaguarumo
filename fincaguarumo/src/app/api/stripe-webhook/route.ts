@@ -10,13 +10,13 @@ export async function POST(request: NextRequest) {
   if (!process.env.STRIPE_API_KEY) {
     return NextResponse.json(
       { error: "Stripe API key not configured" },
-      { status: 500 }
+      { status: 500 },
     )
   }
   if (!process.env.STRIPE_SECRET_KEY) {
     return NextResponse.json(
       { error: "Stripe Secret key not configured" },
-      { status: 500 }
+      { status: 500 },
     )
   }
   if (
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   ) {
     return NextResponse.json(
       { error: "Stripe Webhook secret not configured" },
-      { status: 500 }
+      { status: 500 },
     )
   }
   const stripeInstance = new Stripe(process.env.STRIPE_API_KEY)
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     console.error("Stripe webhook secret is not set.")
     return NextResponse.json(
       { error: "Webhook secret is not configured" },
-      { status: 500 }
+      { status: 500 },
     )
   }
 
@@ -60,13 +60,13 @@ export async function POST(request: NextRequest) {
     event = stripeInstance.webhooks.constructEvent(
       buffer,
       signature,
-      endpointSecret
+      endpointSecret,
     )
   } catch (err: any) {
     console.log(`⚠️  Webhook signature verification failed.`, err.message)
     return NextResponse.json(
       { error: "Webhook failed", details: err.message },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -97,6 +97,8 @@ export async function POST(request: NextRequest) {
           guests: Number(metadata?.guests) || 0,
           geo: metadata?.geo ? JSON.parse(metadata.geo) : {},
         }
+
+        // Send confirmation email - continue even if fails
         try {
           if (process.env.NODE_ENV === "production") {
             const response = await sendConfirmationEmail({
@@ -112,12 +114,9 @@ export async function POST(request: NextRequest) {
           }
         } catch (error) {
           console.error("Failed to send confirmation email:", error)
-          return NextResponse.json(
-            { error: "Failed to send confirmation email" },
-            { status: 500 }
-          )
         }
 
+        // Create booking - continue even if fails
         try {
           const bookingResponse = await setBookings({
             checkIn: bookingDetails.checkIn,
@@ -128,17 +127,10 @@ export async function POST(request: NextRequest) {
           })
           console.log(
             "Booking created in Sanity successfully.",
-            bookingResponse
+            bookingResponse,
           )
         } catch (error) {
           console.error("Failed to create booking in Sanity:", error)
-          return NextResponse.json(
-            {
-              error: "Failed to create booking in Sanity",
-              details: error instanceof Error ? error.message : String(error),
-            },
-            { status: 500 }
-          )
         }
         break
       }
@@ -174,7 +166,7 @@ export async function POST(request: NextRequest) {
     console.error("Error processing webhook event:", error.message)
     return NextResponse.json(
       { error: "Handler error", details: error.message },
-      { status: 500 }
+      { status: 500 },
     )
   }
   // Return a 200 response to acknowledge receipt of the event

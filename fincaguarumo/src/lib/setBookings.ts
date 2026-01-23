@@ -1,4 +1,4 @@
-import { client } from "../sanity/lib/client"
+import { writeClient, client } from "../sanity/lib/client"
 import { BOOKINGS_QUERY } from "../sanity/lib/queries"
 
 export type Booking = {
@@ -33,13 +33,13 @@ export async function setBookings({
       uid,
     }
 
-    const booking = await client.createIfNotExists(bookingDoc)
+    const booking = await writeClient.createIfNotExists(bookingDoc)
     return booking
   } catch (error) {
     console.error("Error setting booking:", error)
     throw new Error(
       "Failed to set booking: " +
-        (error instanceof Error ? error.message : String(error))
+        (error instanceof Error ? error.message : String(error)),
     )
   }
 }

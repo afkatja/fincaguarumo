@@ -14,6 +14,14 @@ export const client = createClient({
   },
 })
 
+export const writeClient = createClient({
+  projectId,
+  dataset,
+  apiVersion,
+  useCdn: false,
+  token: process.env.SANITY_API_WRITE_TOKEN,
+})
+
 export async function sanityFetch<QueryResponse>({
   query,
   params = {},
