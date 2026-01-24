@@ -1,21 +1,22 @@
-import { NextResponse } from "next/server"
+// import { NextResponse } from "next/server"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
-import { BOOKING_TYPE, BookingData } from "../types"
+// import { BOOKING_TYPE, BookingData } from "../types"
 
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_TOKEN || "",
 })
 
-export async function sendConfirmationEmail({
-  customerDetails,
-  bookingDetails,
-}: BookingData) {
+export async function sendConfirmationEmail(
+  { customerDetails, bookingDetails }: any /*BookingData*/,
+) {
   if (!customerDetails || !bookingDetails) {
     throw new Error("Missing customer or booking details")
   }
   try {
     const getBookingType = () => {
-      return bookingDetails.type === BOOKING_TYPE.villa ? "Villa" : "Tour"
+      return bookingDetails.type === "villa" /*BOOKING_TYPE.villa*/
+        ? "Villa"
+        : "Tour"
     }
 
     const getBookingDetails = () => {
@@ -24,7 +25,7 @@ export async function sendConfirmationEmail({
         <li>Number of Guests: ${bookingDetails.guests}</li>
         <li>Total Amount: $${bookingDetails.totalPrice}</li>      `
 
-      if (bookingDetails.type === BOOKING_TYPE.villa) {
+      if (bookingDetails.type === /*BOOKING_TYPE.villa*/ "villa") {
         return `
           <li>Check-in: ${bookingDetails.checkIn}</li>
           <li>Check-out: ${bookingDetails.checkOut}</li>
@@ -46,7 +47,7 @@ export async function sendConfirmationEmail({
         name: "Finca Guarumo",
       },
       subject:
-        bookingDetails.type === BOOKING_TYPE.villa
+        bookingDetails.type === /*BOOKING_TYPE.villa*/ "villa"
           ? "Your reservation at Villa Bruno is confirmed!"
           : `Your Finca Guarumo ${getBookingType()} Booking Confirmation`,
       text: `Dear ${customerDetails.name},
@@ -55,7 +56,7 @@ export async function sendConfirmationEmail({
 
             Booking Details:
             ${
-              bookingDetails.type === BOOKING_TYPE.villa
+              bookingDetails.type === /*BOOKING_TYPE.villa*/ "villa"
                 ? `- Check-in: ${bookingDetails.checkIn}
                   - Check-out: ${bookingDetails.checkOut}`
                 : `- Tour: ${bookingDetails.title}
@@ -98,7 +99,7 @@ export async function sendConfirmationEmail({
 
             Booking Details:
             ${
-              bookingDetails.type === BOOKING_TYPE.villa
+              bookingDetails.type === /*BOOKING_TYPE.villa*/ "villa"
                 ? `- Check-in: ${bookingDetails.checkIn.toLocaleDateString()}
               - Check-out: ${bookingDetails.checkOut.toLocaleDateString()}`
                 : `- Tour: ${bookingDetails.title}
@@ -127,9 +128,9 @@ export async function sendConfirmationEmail({
       .setTo([new Recipient(customerDetails.email, customerDetails.name)])
       .setSubject(`Your Finca Guarumo ${getBookingType()} Booking Confirmation`)
       .setTemplateId(
-        bookingDetails.type === BOOKING_TYPE.villa
+        bookingDetails.type === /*BOOKING_TYPE.villa*/ "villa"
           ? "z3m5jgry77m4dpyo"
-          : "zr6ke4ne3234on12"
+          : "zr6ke4ne3234on12",
       )
       .setPersonalization([
         {
@@ -147,7 +148,7 @@ export async function sendConfirmationEmail({
             total_price: `$${bookingDetails.totalPrice}`,
             guests_number: bookingDetails.guests,
             support_email: process.env.CONTACT_EMAIL!,
-            ...(bookingDetails.type === BOOKING_TYPE.villa
+            ...(bookingDetails.type === /*BOOKING_TYPE.villa*/ "villa"
               ? {
                   checkin: bookingDetails.checkIn,
                   checkout: bookingDetails.checkOut,
@@ -167,8 +168,8 @@ export async function sendConfirmationEmail({
       .setFrom(
         new Sender(
           process.env.MAILERSEND_FROM_EMAIL!,
-          "Finca Guarumo Booking System"
-        )
+          "Finca Guarumo Booking System",
+        ),
       )
       .setTo([new Recipient(process.env.CONTACT_EMAIL!, "Finca Guarumo")])
       .setSubject(`New ${getBookingType()} Booking Received`)
@@ -176,8 +177,8 @@ export async function sendConfirmationEmail({
       .setHtml(adminMsg.html)
 
     // Validate required environment variables
-    if (!process.env.MAILERSEND_API_KEY && !process.env.MAILERSEND_TOKEN) {
-      throw new Error("MAILERSEND_API_KEY is not configured")
+    if (!process.env.MAILERSEND_TOKEN) {
+      throw new Error("MAILERSEND_TOKEN is not configured")
     }
     if (!process.env.MAILERSEND_FROM_EMAIL) {
       throw new Error("MAILERSEND_FROM_EMAIL is not configured")
@@ -198,17 +199,17 @@ export async function sendConfirmationEmail({
       throw error
     }
 
-    return NextResponse.json({ success: true })
+    // return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error("MAILERSEND Error:", {
+    console.error("MAILERSEND Error:", error, {
       error: error.message,
     })
-    return NextResponse.json(
-      {
-        error: "Failed to send email",
-        details: error.response?.body || error.message,
-      },
-      { status: 500 }
-    )
+    // return NextResponse.json(
+    //   {
+    //     error: "Failed to send email",
+    //     details: error.response?.body || error.message,
+    //   },
+    //   { status: 500 }
+    // )
   }
 }
