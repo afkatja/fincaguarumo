@@ -22,12 +22,19 @@ export function normalizeToNoon(date: Date): Date {
  * This ensures dates are interpreted consistently regardless of server timezone
  */
 export function parsePropertyDate(isoString: string): Date {
-  // Parse as UTC first, then adjust to Costa Rica time
+  // Parse as UTC first, then compute Costa Rica calendar date
   const utcDate = new Date(isoString)
-  const costaRicaTime = new Date(
-    utcDate.getTime() + COSTA_RICA_OFFSET_HOURS * 60 * 60 * 1000,
-  )
-  return normalizeToNoon(costaRicaTime)
+  const costaRicaMillis =
+    utcDate.getTime() + COSTA_RICA_OFFSET_HOURS * 60 * 60 * 1000
+  const costaRicaDate = new Date(costaRicaMillis)
+
+  // Extract Costa Rica calendar date (year, month, day) in UTC
+  const year = costaRicaDate.getUTCFullYear()
+  const month = costaRicaDate.getUTCMonth()
+  const day = costaRicaDate.getUTCDate()
+
+  // Return Costa Rica calendar date at noon (18:00 UTC)
+  return new Date(Date.UTC(year, month, day, 18, 0, 0, 0))
 }
 
 /**
