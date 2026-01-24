@@ -7,14 +7,13 @@ export default function bookingToNights(start: Date, end: Date) {
   const startNormalized = normalizeToNoon(start)
   const endNormalized = normalizeToNoon(end)
 
-  // Start from the day after check-in
+  // Start from the check-in day
   const cur = new Date(startNormalized)
-  cur.setDate(cur.getDate() + 1)
 
-  // End at the day of check-out
-  const checkoutExclusive = new Date(endNormalized)
+  // End at the day of check-out inclusive
+  const checkoutInclusive = new Date(endNormalized)
 
-  while (cur < checkoutExclusive) {
+  while (cur <= checkoutInclusive) {
     nights.push(new Date(cur))
     cur.setDate(cur.getDate() + 1)
   }
