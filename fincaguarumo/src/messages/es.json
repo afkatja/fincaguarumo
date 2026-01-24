@@ -86,5 +86,11 @@
     "messagePlaceholder": "mensaje",
     "sending": "Enviando...",
     "sendMessage": "Enviar mensaje"
+  },
+  "bookingChat": {
+    "initialMessage": "¡Hola! ¿Cómo puedo ayudarte a reservar Villa Bruno hoy?",
+    "errorMessage": "Lo siento, encontré un error. Por favor inténtalo de nuevo.",
+    "inputPlaceholder": "Pregunta por la reserva...",
+    "sendButton": "Enviar"
   }
 }

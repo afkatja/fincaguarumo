@@ -86,5 +86,11 @@
     "messagePlaceholder": "bericht",
     "sending": "Verzenden...",
     "sendMessage": "Bericht verzenden"
+  },
+  "bookingChat": {
+    "initialMessage": "Hallo! Hoe kan ik u helpen Villa Bruno vandaag nog te boeken?",
+    "errorMessage": "Sorry, ik heb een fout aangetroffen. Probeer het opnieuw.",
+    "inputPlaceholder": "Vraag naar boeking...",
+    "sendButton": "Versturen"
   }
 }

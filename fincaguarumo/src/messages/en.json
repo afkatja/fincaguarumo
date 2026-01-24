@@ -70,5 +70,11 @@
     "messagePlaceholder": "message",
     "sending": "Sending...",
     "sendMessage": "Send Message"
+  },
+  "bookingChat": {
+    "initialMessage": "Hello! How can I help you book Villa Bruno today?",
+    "errorMessage": "Sorry, I encountered an error. Please try again.",
+    "inputPlaceholder": "Ask about booking...",
+    "sendButton": "Send"
   }
 }
