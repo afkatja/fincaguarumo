@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import CalendarIcon from "./icons/Calendar"
 import { useParams } from "next/navigation"
 import Loading from "../app/[locale]/(pages)/loading"
+import { formatForDisplay } from "../lib/dateUtils"
 
 interface IDatePicker {
   isOpen?: boolean
@@ -39,11 +40,15 @@ const DatePicker = ({
   month,
 }: IDatePicker) => {
   const params = useParams()
+  const locale = Array.isArray(params.locale)
+    ? params.locale[0]
+    : params.locale || "en"
+
   const setDisabledDates = (date: Date) => {
     if (date < new Date()) return true
     if (minDate && date < minDate) return true
     return (disabledDates || []).some(
-      d => d.toDateString() === date.toDateString()
+      d => d.toDateString() === date.toDateString(),
     )
   }
 
@@ -69,11 +74,7 @@ const DatePicker = ({
             </span>
           ) : (
             <span className="font-normal">
-              {(selectedDate ?? new Date()).toLocaleDateString(params.locale, {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              {formatForDisplay(selectedDate ?? new Date(), locale)}
             </span>
           )}
         </Button>

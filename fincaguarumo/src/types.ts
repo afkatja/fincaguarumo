@@ -1,4 +1,9 @@
 import type { SanityImageSource } from "@sanity/asset-utils"
+import {
+  normalizeToNoon,
+  parsePropertyDate,
+  toUTCISOString,
+} from "./lib/dateUtils"
 
 export const BOOKING_TYPE = {
   tour: "tour",
@@ -69,23 +74,23 @@ export function serializeBookingData(data: BookingData): SerializedBookingData {
     ...data,
     bookingDetails: {
       ...data.bookingDetails,
-      date: data.bookingDetails.date.toISOString(),
-      checkIn: data.bookingDetails.checkIn.toISOString(),
-      checkOut: data.bookingDetails.checkOut.toISOString(),
+      date: toUTCISOString(normalizeToNoon(data.bookingDetails.date)),
+      checkIn: toUTCISOString(normalizeToNoon(data.bookingDetails.checkIn)),
+      checkOut: toUTCISOString(normalizeToNoon(data.bookingDetails.checkOut)),
     },
   }
 }
 
 export function deserializeBookingData(
-  data: SerializedBookingData
+  data: SerializedBookingData,
 ): BookingData {
   return {
     ...data,
     bookingDetails: {
       ...data.bookingDetails,
-      date: new Date(data.bookingDetails.date),
-      checkIn: new Date(data.bookingDetails.checkIn),
-      checkOut: new Date(data.bookingDetails.checkOut),
+      date: parsePropertyDate(data.bookingDetails.date),
+      checkIn: parsePropertyDate(data.bookingDetails.checkIn),
+      checkOut: parsePropertyDate(data.bookingDetails.checkOut),
       price: Number(data.bookingDetails.price),
       totalPrice: Number(data.bookingDetails.totalPrice),
       duration: Number(data.bookingDetails.duration),

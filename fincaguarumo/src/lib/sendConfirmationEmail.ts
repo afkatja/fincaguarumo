@@ -1,5 +1,6 @@
 // import { NextResponse } from "next/server"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
+import { formatForEmail } from "./dateUtils"
 // import { BOOKING_TYPE, BookingData } from "../types"
 
 const mailerSend = new MailerSend({
@@ -21,14 +22,14 @@ export async function sendConfirmationEmail(
 
     const getBookingDetails = () => {
       const commonDetails = `
-        <li>Date: ${bookingDetails.date}</li>
+        <li>Date: ${formatForEmail(bookingDetails.date)}</li>
         <li>Number of Guests: ${bookingDetails.guests}</li>
         <li>Total Amount: $${bookingDetails.totalPrice}</li>      `
 
       if (bookingDetails.type === /*BOOKING_TYPE.villa*/ "villa") {
         return `
-          <li>Check-in: ${bookingDetails.checkIn}</li>
-          <li>Check-out: ${bookingDetails.checkOut}</li>
+          <li>Check-in: ${formatForEmail(bookingDetails.checkIn)}</li>
+          <li>Check-out: ${formatForEmail(bookingDetails.checkOut)}</li>
           ${commonDetails}
         `
       }
@@ -57,12 +58,12 @@ export async function sendConfirmationEmail(
             Booking Details:
             ${
               bookingDetails.type === /*BOOKING_TYPE.villa*/ "villa"
-                ? `- Check-in: ${bookingDetails.checkIn}
-                  - Check-out: ${bookingDetails.checkOut}`
+                ? `- Check-in: ${formatForEmail(bookingDetails.checkIn)}
+                  - Check-out: ${formatForEmail(bookingDetails.checkOut)}`
                 : `- Tour: ${bookingDetails.title}
             - Location: ${bookingDetails.location}`
             }
-            - Date: ${bookingDetails.date}
+            - Date: ${formatForEmail(bookingDetails.date)}
             - Number of Guests: ${bookingDetails.guests}
             - Total Amount: $${bookingDetails.totalPrice}
 
@@ -100,11 +101,11 @@ export async function sendConfirmationEmail(
             Booking Details:
             ${
               bookingDetails.type === /*BOOKING_TYPE.villa*/ "villa"
-                ? `- Check-in: ${bookingDetails.checkIn.toLocaleDateString()}
-              - Check-out: ${bookingDetails.checkOut.toLocaleDateString()}`
+                ? `- Check-in: ${formatForEmail(bookingDetails.checkIn)}
+              - Check-out: ${formatForEmail(bookingDetails.checkOut)}`
                 : `- Tour: ${bookingDetails.title}
               - Location: ${bookingDetails.location}
-              - Date: ${bookingDetails.date.toLocaleDateString()}`
+              - Date: ${formatForEmail(bookingDetails.date)}`
             }
               - Number of Guests: ${bookingDetails.guests}
               - Total Amount: $${bookingDetails.totalPrice}`,
