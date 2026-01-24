@@ -139,10 +139,16 @@ export async function POST(request: NextRequest) {
             bookingResponse,
           )
           // Send success notification
+          const checkInFormatted = isNaN(bookingDetails.checkIn.getTime())
+            ? "TBD"
+            : formatForEmail(bookingDetails.checkIn)
+          const checkOutFormatted = isNaN(bookingDetails.checkOut.getTime())
+            ? "TBD"
+            : formatForEmail(bookingDetails.checkOut)
           await sendErrorEmail({
             subject: "New Booking Successfully Created",
             error: "Booking successful",
-            details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${formatForEmail(bookingDetails.checkIn)}, Check-out: ${formatForEmail(bookingDetails.checkOut)}`,
+            details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${checkInFormatted}, Check-out: ${checkOutFormatted}`,
           })
         } catch (error) {
           const errorMessage =

@@ -7,12 +7,13 @@
 const COSTA_RICA_OFFSET_HOURS = -6
 
 /**
- * Normalize a date to noon (12:00) to avoid timezone and DST issues
- * This ensures date arithmetic works consistently regardless of timezone
+ * Normalize a date to noon (12:00) in Costa Rica timezone to avoid timezone and DST issues
+ * This ensures date arithmetic works consistently regardless of server timezone
  */
 export function normalizeToNoon(date: Date): Date {
   const normalized = new Date(date)
-  normalized.setHours(12, 0, 0, 0)
+  // Set to 18:00 UTC (which is 12:00 in Costa Rica, UTC-6)
+  normalized.setUTCHours(12 - COSTA_RICA_OFFSET_HOURS, 0, 0, 0)
   return normalized
 }
 
@@ -75,21 +76,19 @@ export function createPropertyDate(
   month: number,
   day: number,
 ): Date {
-  // Create date in Costa Rica timezone
-  const date = new Date(year, month - 1, day)
-  date.setHours(12, 0, 0, 0)
-  return date
+  // Create date directly in UTC representing noon in Costa Rica (18:00 UTC)
+  return new Date(Date.UTC(year, month - 1, day, 18, 0, 0, 0))
 }
 
 /**
- * Validate that a date is properly normalized (noon time)
+ * Validate that a date is properly normalized (noon time in Costa Rica)
  */
 export function isNormalized(date: Date): boolean {
   return (
-    date.getHours() === 12 &&
-    date.getMinutes() === 0 &&
-    date.getSeconds() === 0 &&
-    date.getMilliseconds() === 0
+    date.getUTCHours() === 18 && // 18:00 UTC = 12:00 Costa Rica (UTC-6)
+    date.getUTCMinutes() === 0 &&
+    date.getUTCSeconds() === 0 &&
+    date.getUTCMilliseconds() === 0
   )
 }
 
