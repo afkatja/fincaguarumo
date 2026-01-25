@@ -1,33 +1,42 @@
 import { NextResponse } from "next/server"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
+import { formatForEmail } from "./dateUtils"
 import { BOOKING_TYPE, BookingData } from "../types"
 
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_TOKEN || "",
 })
 
-export async function sendConfirmationEmail({
-  customerDetails,
-  bookingDetails,
-}: BookingData) {
+/**
+ * Safely format a date for email display, returning "TBD" for invalid dates
+ */
+const safeFormatForEmail = (date: Date): string => {
+  return isNaN(date.getTime()) ? "TBD" : formatForEmail(date)
+}
+
+export async function sendConfirmationEmail(
+  { customerDetails, bookingDetails }: BookingData,
+) {
   if (!customerDetails || !bookingDetails) {
     throw new Error("Missing customer or booking details")
   }
   try {
     const getBookingType = () => {
-      return bookingDetails.type === BOOKING_TYPE.villa ? "Villa" : "Tour"
+      return bookingDetails.type === BOOKING_TYPE.villa
+        ? "Villa"
+        : "Tour"
     }
 
     const getBookingDetails = () => {
       const commonDetails = `
-        <li>Date: ${bookingDetails.date}</li>
+        <li>Date: ${safeFormatForEmail(bookingDetails.date)}</li>
         <li>Number of Guests: ${bookingDetails.guests}</li>
         <li>Total Amount: $${bookingDetails.totalPrice}</li>      `
 
       if (bookingDetails.type === BOOKING_TYPE.villa) {
         return `
-          <li>Check-in: ${bookingDetails.checkIn}</li>
-          <li>Check-out: ${bookingDetails.checkOut}</li>
+          <li>Check-in: ${safeFormatForEmail(bookingDetails.checkIn)}</li>
+          <li>Check-out: ${safeFormatForEmail(bookingDetails.checkOut)}</li>
           ${commonDetails}
         `
       }
@@ -56,12 +65,12 @@ export async function sendConfirmationEmail({
             Booking Details:
             ${
               bookingDetails.type === BOOKING_TYPE.villa
-                ? `- Check-in: ${bookingDetails.checkIn}
-                  - Check-out: ${bookingDetails.checkOut}`
+                ? `- Check-in: ${safeFormatForEmail(bookingDetails.checkIn)}
+                  - Check-out: ${safeFormatForEmail(bookingDetails.checkOut)}`
                 : `- Tour: ${bookingDetails.title}
             - Location: ${bookingDetails.location}`
             }
-            - Date: ${bookingDetails.date}
+            - Date: ${safeFormatForEmail(bookingDetails.date)}
             - Number of Guests: ${bookingDetails.guests}
             - Total Amount: $${bookingDetails.totalPrice}
 
@@ -99,11 +108,11 @@ export async function sendConfirmationEmail({
             Booking Details:
             ${
               bookingDetails.type === BOOKING_TYPE.villa
-                ? `- Check-in: ${bookingDetails.checkIn.toLocaleDateString()}
-              - Check-out: ${bookingDetails.checkOut.toLocaleDateString()}`
+                ? `- Check-in: ${safeFormatForEmail(bookingDetails.checkIn)}
+              - Check-out: ${safeFormatForEmail(bookingDetails.checkOut)}`
                 : `- Tour: ${bookingDetails.title}
               - Location: ${bookingDetails.location}
-              - Date: ${bookingDetails.date.toLocaleDateString()}`
+              - Date: ${safeFormatForEmail(bookingDetails.date)}`
             }
               - Number of Guests: ${bookingDetails.guests}
               - Total Amount: $${bookingDetails.totalPrice}`,
@@ -129,7 +138,7 @@ export async function sendConfirmationEmail({
       .setTemplateId(
         bookingDetails.type === BOOKING_TYPE.villa
           ? "z3m5jgry77m4dpyo"
-          : "zr6ke4ne3234on12"
+          : "zr6ke4ne3234on12",
       )
       .setPersonalization([
         {
@@ -167,8 +176,8 @@ export async function sendConfirmationEmail({
       .setFrom(
         new Sender(
           process.env.MAILERSEND_FROM_EMAIL!,
-          "Finca Guarumo Booking System"
-        )
+          "Finca Guarumo Booking System",
+        ),
       )
       .setTo([new Recipient(process.env.CONTACT_EMAIL!, "Finca Guarumo")])
       .setSubject(`New ${getBookingType()} Booking Received`)
@@ -176,8 +185,8 @@ export async function sendConfirmationEmail({
       .setHtml(adminMsg.html)
 
     // Validate required environment variables
-    if (!process.env.MAILERSEND_API_KEY && !process.env.MAILERSEND_TOKEN) {
-      throw new Error("MAILERSEND_API_KEY is not configured")
+    if (!process.env.MAILERSEND_TOKEN) {
+      throw new Error("MAILERSEND_TOKEN is not configured")
     }
     if (!process.env.MAILERSEND_FROM_EMAIL) {
       throw new Error("MAILERSEND_FROM_EMAIL is not configured")
@@ -200,7 +209,7 @@ export async function sendConfirmationEmail({
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error("MAILERSEND Error:", {
+    console.error("MAILERSEND Error:", error, {
       error: error.message,
     })
     return NextResponse.json(
