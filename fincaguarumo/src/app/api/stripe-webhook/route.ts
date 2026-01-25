@@ -3,6 +3,7 @@ import Stripe from "stripe"
 import { sendConfirmationEmail } from "@/lib/sendConfirmationEmail"
 import { setBookings } from "../../../lib/setBookings"
 import { sendErrorEmail } from "../../../lib/sendErrorEmail"
+import { parsePropertyDate, formatForEmail } from "../../../lib/dateUtils"
 
 export const runtime = "nodejs"
 
@@ -89,9 +90,9 @@ export async function POST(request: NextRequest) {
           duration: Number(metadata?.duration) || 0,
           location: metadata?.location || "",
           body: metadata?.body || "",
-          date: new Date(metadata?.date || ""),
-          checkIn: new Date(metadata?.checkIn || ""),
-          checkOut: new Date(metadata?.checkOut || ""),
+          date: parsePropertyDate(metadata?.date || ""),
+          checkIn: parsePropertyDate(metadata?.checkIn || ""),
+          checkOut: parsePropertyDate(metadata?.checkOut || ""),
           price: Number(metadata?.price) || 0,
           totalPrice: (metadata?.totalPrice as unknown as number) || 0,
           currency: metadata?.currency || "USD",
@@ -138,10 +139,16 @@ export async function POST(request: NextRequest) {
             bookingResponse,
           )
           // Send success notification
+          const checkInFormatted = isNaN(bookingDetails.checkIn.getTime())
+            ? "TBD"
+            : formatForEmail(bookingDetails.checkIn)
+          const checkOutFormatted = isNaN(bookingDetails.checkOut.getTime())
+            ? "TBD"
+            : formatForEmail(bookingDetails.checkOut)
           await sendErrorEmail({
             subject: "New Booking Successfully Created",
             error: "Booking successful",
-            details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${bookingDetails.checkIn.toLocaleDateString()}, Check-out: ${bookingDetails.checkOut.toLocaleDateString()}`,
+            details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${checkInFormatted}, Check-out: ${checkOutFormatted}`,
           })
         } catch (error) {
           const errorMessage =

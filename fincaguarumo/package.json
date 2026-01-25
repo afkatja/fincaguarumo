@@ -14,7 +14,7 @@
     "i18n:watch": "nodemon --watch /src/messages/en.json --exec \"npm run i18n:run\"",
     "prepare": "husky",
     "translate": "npm run i18n:run",
-    "manual-email": "NODE_ENV=production npx tsc --project tsconfig.build.json && MAILERSEND_TOKEN=mlsn.f69c99075e049ceb8d1702ee292276befa1f914a333c2bcb311616feb67b4757 MAILERSEND_API_KEY='mlsn.27e0b8ad54dba175326db5ca27ecbbba7dcbb5e800db2e1c611f105fcc039259' MAILERSEND_FROM_EMAIL='info@fincaguarumo.com' CONTACT_EMAIL='info@fincaguarumo.com' CONTACT_PHONE='+506 87495341' NODE_ENV=production node dist/scripts/send-email.js"
+    "manual-email": "NODE_ENV=production npx tsc --project tsconfig.build.json && MAILERSEND_FROM_EMAIL='info@fincaguarumo.com' CONTACT_EMAIL='info@fincaguarumo.com' CONTACT_PHONE='+506 87495341' NODE_ENV=production node dist/scripts/send-email.js"
   },
   "lint-staged": {
     "src/messages/en.json": [

@@ -7,8 +7,8 @@ async function main() {
     type: "villa",
     duration: "0",
     price: "115",
-    customerName: "Martin Lehmann ",
-    customerEmail: "beilehmanns@gmx.de",
+    customerName: process.env.CUSTOMER_NAME || "",
+    customerEmail: process.env.CUSTOMER_EMAIL || "",
     totalPrice: "460",
     date: "2026-01-22T14:40:54.577Z",
     checkOut: "2026-02-27T23:00:00.000Z",
@@ -17,7 +17,7 @@ async function main() {
     title: "Villa Bruno",
     guests: "1",
     location: "Finca Guarumo",
-    customerPhone: "4915256311333",
+    customerPhone: process.env.CUSTOMER_PHONE || "",
     body: "",
   }
 
