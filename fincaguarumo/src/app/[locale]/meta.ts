@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
             loc === "en"
               ? `${baseUrl}${pathname}`
               : `${baseUrl}/${loc}${pathname}`,
-          ])
+          ]),
         ),
       },
     },
@@ -57,18 +57,18 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
       url: "https://fincaguarumo.com",
       countryName: "Costa Rica",
     },
-    twitter: {
-      card: "summary_large_image",
-      site: "@fincaguarumo", // if you have a Twitter/X account
-      title: "Finca Guarumo – Eco-Villa & Birding Paradise in Costa Rica",
-      description:
-        "Stay at Villa Bruno in the Osa Peninsula. A sustainable jungle experience with birds, wildlife, rural tours, and Corcovado nearby.",
-      images: [
-        {
-          url: "/images/finca-guarumo-v4.4.jpg",
-          alt: "Finca Guarumo – Villa Bruno jungle view",
-        },
-      ],
-    },
+    // twitter: {
+    //   card: "summary_large_image",
+    //   site: "@fincaguarumo", // if you have a Twitter/X account
+    //   title: "Finca Guarumo – Eco-Villa & Birding Paradise in Costa Rica",
+    //   description:
+    //     "Stay at Villa Bruno in the Osa Peninsula. A sustainable jungle experience with birds, wildlife, rural tours, and Corcovado nearby.",
+    //   images: [
+    //     {
+    //       url: "/images/finca-guarumo-v4.4.jpg",
+    //       alt: "Finca Guarumo – Villa Bruno jungle view",
+    //     },
+    //   ],
+    // },
   }
 }
