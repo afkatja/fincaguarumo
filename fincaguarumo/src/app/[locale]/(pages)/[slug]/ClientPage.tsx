@@ -23,6 +23,7 @@ import { PlaceProvider } from "../../../providers/PlaceProvider"
 import { placeId } from "../../../../../data/geo"
 import { PlaceReviews } from "../../../../components/PlaceReviews"
 import calculateTotal from "../../../../lib/calculateTotal"
+import { SidebarChat } from "@/components/better-chatbot"
 
 const ClientPage = ({
   content,
@@ -165,6 +166,7 @@ const ClientPage = ({
           </div>
         </footer>
       )}
+      <SidebarChat initialMessage={`Hi! I'm here to help you book ${content.title || "Villa Bruno"}. How can I assist you today?`} />
     </>
   )
 }

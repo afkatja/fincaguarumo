@@ -9,6 +9,7 @@ import RichText from "../../components/RichText"
 import FeaturedContentLoader from "./FeaturedContentLoader"
 import LazyLoad from "../../components/LazyLoad"
 import Loading from "./(pages)/loading"
+import { FloatingChatButton } from "../../components/better-chatbot"
 
 const HomeMap = dynamic(() => import("../../components/HomeMap"), {
   ssr: false,
@@ -90,6 +91,7 @@ const HomePage = ({ locale, content }: { locale: string; content: any }) => {
           <FeaturedContentLoader locale={locale} />
         </div>
       </VideoOpenZip>
+      <FloatingChatButton />
     </>
   )
 }
