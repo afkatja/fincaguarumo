@@ -2,40 +2,263 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
 
+/**
+ * POST: Create a new booking
+ * Also updates the availability table to mark dates as unavailable
+ */
 export async function POST(request: Request) {
-  const bookingData = await request.json()
+  try {
+    const bookingData = await request.json()
 
-  // Insert booking data into Supabase
-  const { data, error } = await supabase
-    .from("bookings")
-    .insert([
-      {
-        check_in: bookingData.checkIn,
-        check_out: bookingData.checkOut,
-        guest_name: bookingData.guestName,
-        source: bookingData.source || "Direct",
-        uid: bookingData.uid,
-      },
-    ])
-    .select()
+    // Insert booking data into Supabase with all required fields
+    // Note: Using snake_case column names as they exist in the database
+    const bookingRecord: any = {
+      check_in: bookingData.checkIn,
+      check_out: bookingData.checkOut,
+      guest_name: bookingData.guestName,
+      email: bookingData.email || null,
+      phone: bookingData.phone || null,
+      source: bookingData.source || "Direct",
+      uid: bookingData.uid,
+      guests: bookingData.guests || 1,
+      booking_type: bookingData.bookingType || "villa",
+      total_price: bookingData.totalPrice || 0,
+      currency: bookingData.currency || "usd",
+    }
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    // Only add optional fields if they exist in the schema
+    // These may need to be added via migration first
+    if (bookingData.summary !== undefined) {
+      bookingRecord.summary = bookingData.summary
+    }
+    if (bookingData.description !== undefined) {
+      bookingRecord.description = bookingData.description
+    }
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .insert([bookingRecord])
+      .select()
+
+    if (error) {
+      console.error("Error creating booking:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // Also update availability table to mark these dates as unavailable
+    try {
+      const availabilityRecord: any = {
+        start_date: bookingData.checkIn,
+        end_date: bookingData.checkOut,
+        is_available: false,
+        updated_at: new Date().toISOString(),
+      }
+
+      // Add optional fields if they might exist
+      if (bookingData.uid) {
+        availabilityRecord.booking_uid = bookingData.uid
+      }
+      if (bookingData.guestName) {
+        availabilityRecord.reason = `Booked via ${bookingData.source || "Direct"} - ${bookingData.guestName}`
+      }
+
+      const { error: availabilityError } = await supabase
+        .from("availability")
+        .insert([availabilityRecord])
+
+      if (availabilityError) {
+        // If upsert fails due to missing columns, log but don't fail
+        console.error("Error updating availability:", availabilityError)
+      } else {
+        console.log("Availability updated for new booking")
+      }
+    } catch (availabilityError) {
+      console.error("Error updating availability:", availabilityError)
+      // Don't fail the request if availability update fails
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error("Error in POST /api/bookings:", error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    )
   }
-
-  return NextResponse.json(data)
 }
 
-export async function GET() {
-  // Fetch all bookings from Supabase
-  const { data, error } = await supabase.from("bookings").select("*")
+/**
+ * GET: Fetch all bookings
+ * Supports filtering by date range and source
+ */
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const from = searchParams.get("from")
+    const to = searchParams.get("to")
+    const source = searchParams.get("source")
+    const limit = searchParams.get("limit")
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    let query = supabase.from("bookings").select("*")
+
+    // Filter by date range if provided
+    if (from) {
+      query = query.gte("check_in", from)
+    }
+    if (to) {
+      query = query.lte("check_out", to)
+    }
+
+    // Filter by source if provided
+    if (source) {
+      query = query.eq("source", source)
+    }
+
+    // Apply limit if provided
+    if (limit) {
+      query = query.limit(parseInt(limit, 10))
+    }
+
+    // Order by check_in date
+    query = query.order("check_in", { ascending: true })
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error("Error fetching bookings:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error("Error in GET /api/bookings:", error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    )
   }
+}
 
-  return NextResponse.json(data)
+/**
+ * PUT: Update an existing booking
+ */
+export async function PUT(request: Request) {
+  try {
+    const { id, ...updateData } = await request.json()
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Booking id is required" },
+        { status: 400 },
+      )
+    }
+
+    const updateRecord: any = {}
+    if (updateData.checkIn) updateRecord.check_in = updateData.checkIn
+    if (updateData.checkOut) updateRecord.check_out = updateData.checkOut
+    if (updateData.guestName) updateRecord.guest_name = updateData.guestName
+    if (updateData.email !== undefined) updateRecord.email = updateData.email
+    if (updateData.phone !== undefined) updateRecord.phone = updateData.phone
+    if (updateData.source) updateRecord.source = updateData.source
+    if (updateData.guests) updateRecord.guests = updateData.guests
+    if (updateData.bookingType)
+      updateRecord.booking_type = updateData.bookingType
+    if (updateData.totalPrice !== undefined)
+      updateRecord.total_price = updateData.totalPrice
+    if (updateData.currency) updateRecord.currency = updateData.currency
+    if (updateData.summary !== undefined)
+      updateRecord.summary = updateData.summary
+    if (updateData.description !== undefined)
+      updateRecord.description = updateData.description
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .update(updateRecord)
+      .eq("id", id)
+      .select()
+
+    if (error) {
+      console.error("Error updating booking:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error("Error in PUT /api/bookings:", error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    )
+  }
+}
+
+/**
+ * DELETE: Delete a booking
+ * Also removes the corresponding availability entry
+ */
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+    const uid = searchParams.get("uid")
+
+    if (!id && !uid) {
+      return NextResponse.json(
+        { error: "Either id or uid is required" },
+        { status: 400 },
+      )
+    }
+
+    // First get the booking to find the uid
+    let bookingUid = uid
+    if (id && !uid) {
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("uid")
+        .eq("id", id)
+        .single()
+
+      if (booking) {
+        bookingUid = booking.uid
+      }
+    }
+
+    // Delete the booking
+    let query = supabase.from("bookings").delete()
+    if (id) {
+      query = query.eq("id", id)
+    } else if (uid) {
+      query = query.eq("uid", uid)
+    }
+
+    const { error } = await query
+
+    if (error) {
+      console.error("Error deleting booking:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // Also delete the availability entry if we have the uid
+    if (bookingUid) {
+      try {
+        await supabase
+          .from("availability")
+          .delete()
+          .eq("booking_uid", bookingUid)
+      } catch (availabilityError) {
+        console.error("Error deleting availability:", availabilityError)
+      }
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error in DELETE /api/bookings:", error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    )
+  }
 }

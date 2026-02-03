@@ -127,17 +127,86 @@ export async function POST(request: NextRequest) {
 
         // Create booking - continue even if fails
         try {
+          // Save to Sanity with all details
           const bookingResponse = await setBookings({
             checkIn: bookingDetails.checkIn,
             checkOut: bookingDetails.checkOut,
             guestName: customerDetails.name,
             source: "direct",
             uid: event.data.object.id,
+            email: customerDetails.email,
+            phone: customerDetails.phoneNumber,
+            guests: bookingDetails.guests,
+            totalPrice: bookingDetails.totalPrice,
+            currency: bookingDetails.currency,
           })
           console.log(
             "Booking created in Sanity successfully.",
             bookingResponse,
           )
+
+          // Save to Supabase with all required fields
+          try {
+            const siteUrl =
+              process.env.NEXT_PUBLIC_SITE_URL ||
+              (process.env.VERCEL_URL
+                ? `https://${process.env.VERCEL_URL}`
+                : "http://localhost:3000")
+
+            const supabaseResponse = await fetch(`${siteUrl}/api/bookings`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                checkIn: bookingDetails.checkIn.toISOString(),
+                checkOut: bookingDetails.checkOut.toISOString(),
+                guestName: customerDetails.name,
+                email: customerDetails.email,
+                phone: customerDetails.phoneNumber,
+                source: "direct",
+                uid: event.data.object.id,
+                guests: bookingDetails.guests,
+                bookingType: bookingDetails.type,
+                totalPrice: bookingDetails.totalPrice,
+                currency: bookingDetails.currency,
+              }),
+            })
+
+            if (supabaseResponse.ok) {
+              console.log("Booking saved to Supabase successfully")
+
+              // Also update availability table to mark dates as unavailable
+              try {
+                const availabilityResponse = await fetch(
+                  `${siteUrl}/api/availability`,
+                  {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      startDate: bookingDetails.checkIn.toISOString(),
+                      endDate: bookingDetails.checkOut.toISOString(),
+                      isAvailable: false,
+                      reason: `Booked via Direct - ${customerDetails.name}`,
+                      bookingUid: event.data.object.id,
+                    }),
+                  },
+                )
+
+                if (availabilityResponse.ok) {
+                  console.log("Availability updated successfully")
+                } else {
+                  console.error("Failed to update availability")
+                }
+              } catch (availabilityError) {
+                console.error("Error updating availability:", availabilityError)
+              }
+            } else {
+              const errorData = await supabaseResponse.json().catch(() => ({}))
+              console.error("Failed to save booking to Supabase:", errorData)
+            }
+          } catch (supabaseError) {
+            console.error("Error saving booking to Supabase:", supabaseError)
+          }
+
           // Send success notification
           const checkInFormatted = isNaN(bookingDetails.checkIn.getTime())
             ? "TBD"
