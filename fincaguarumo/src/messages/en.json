@@ -26,6 +26,7 @@
     "bookVilla": "Book your stay",
     "checkIn": "Check in",
     "checkOut": "Check out",
+    "checkinDate": "Check-in date",
     "checkoutDate": "Check-out date",
     "emailError": "Please enter a valid email address",
     "emailLabel": "Your email *",
@@ -45,7 +46,18 @@
     "discount20": "Discount (20% for stays 28+ nights)",
     "reserveButton": "Book Villa Bruno now",
     "reserveButtonTour": "Book now",
-    "selectDate": "Select date"
+    "selectDate": "Select date",
+    "back": "Back",
+    "next": "Next",
+    "submitButton": "Submit Booking",
+    "available": "Available",
+    "notAvailable": "Not Available",
+    "availabilityError": "Error checking availability. Please try again.",
+    "checkingAvailability": "Checking availability...",
+    "stepPersonal": "Personal Info",
+    "stepPayment": "Payment",
+    "chatHelpDates": "I can help you check availability and book your stay at Villa Bruno. Ask me about available dates, pricing, and any special requests you may have.",
+    "stepDates": "Select Dates"
   },
   "page": {
     "moreFAQ": "More FAQ",
@@ -72,6 +84,7 @@
     "sendMessage": "Send Message"
   },
   "bookingChat": {
+    "title": "Villa Bruno Booking Assistant",
     "initialMessage": "Hello! How can I help you book Villa Bruno today?",
     "errorMessage": "Sorry, I encountered an error. Please try again.",
     "inputPlaceholder": "Ask about booking...",
