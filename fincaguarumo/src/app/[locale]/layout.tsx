@@ -22,6 +22,7 @@ import Header from "../../components/header"
 import { cn } from "../../lib/utils"
 import Script from "next/script"
 import { jsonLd, orgSchema } from "../../lib/json-ld"
+import GlobalBookingDialog from "../../components/booking/GlobalBookingDialog"
 
 export { generateMetadata }
 
@@ -79,7 +80,7 @@ export default async function Layout({
           locale === "ru"
             ? `${comfortaa.variable} ${didact.variable}`
             : `${poppins.variable} ${cabin.variable}`,
-          "min-h-screen"
+          "min-h-screen",
         )}
       >
         <NextIntlClientProvider locale={locale}>
@@ -99,6 +100,7 @@ export default async function Layout({
                     )}
                     {children}
                   </main>
+                  <GlobalBookingDialog />
                 </DialogProvider>
               </BookingProvider>
             </div>
