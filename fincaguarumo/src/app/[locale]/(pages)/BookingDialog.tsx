@@ -8,7 +8,7 @@ import { useBooking } from "../../providers/BookingProvider"
 import { useDialog } from "../../providers/DialogProvider"
 import { BookingType, initialBookingData } from "../../../types"
 import { getInternationalizedValue } from "../../../lib/utils"
-import BookingDialogContent from "../../providers/BookingDialogContent"
+import BookingDialogContent from "@/app/providers/BookingDialogContent"
 
 const BookingDialog = ({
   bookingType,

@@ -8,12 +8,18 @@ interface DialogContextType {
   dialogData: IDialog | null
   setDialogId: (id: string | null) => void
   isLoading: boolean
+  openBookingDialog: () => void
+  closeBookingDialog: () => void
+  isBookingDialogOpen: boolean
 }
 
 const DialogContext = createContext<DialogContextType>({
   dialogData: null,
   setDialogId: () => {},
   isLoading: false,
+  openBookingDialog: () => {},
+  closeBookingDialog: () => {},
+  isBookingDialogOpen: false,
 })
 
 export const useDialog = () => useContext(DialogContext)
@@ -28,6 +34,7 @@ export const DialogProvider = ({
   const [dialogData, setDialogData] = useState<IDialog | null>(null)
   const [dialogId, setDialogId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false)
 
   useEffect(() => {
     const fetchDialog = async () => {
@@ -47,8 +54,25 @@ export const DialogProvider = ({
     fetchDialog()
   }, [dialogId])
 
+  const openBookingDialog = () => {
+    setIsBookingDialogOpen(true)
+  }
+
+  const closeBookingDialog = () => {
+    setIsBookingDialogOpen(false)
+  }
+
   return (
-    <DialogContext.Provider value={{ dialogData, setDialogId, isLoading }}>
+    <DialogContext.Provider
+      value={{
+        dialogData,
+        setDialogId,
+        isLoading,
+        openBookingDialog,
+        closeBookingDialog,
+        isBookingDialogOpen,
+      }}
+    >
       {children}
     </DialogContext.Provider>
   )

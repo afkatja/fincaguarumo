@@ -1,5 +1,5 @@
 "use client"
-import React, { Suspense } from "react"
+import { Suspense } from "react"
 import dynamic from "next/dynamic"
 import { ArrowDown } from "lucide-react"
 import Link from "next/link"
@@ -10,6 +10,7 @@ import FeaturedContentLoader from "./FeaturedContentLoader"
 import LazyLoad from "../../components/LazyLoad"
 import Loading from "./(pages)/loading"
 import { FloatingChatButton } from "../../components/better-chatbot"
+import { useDialog } from "@/app/providers/DialogProvider"
 
 const HomeMap = dynamic(() => import("../../components/HomeMap"), {
   ssr: false,
@@ -19,6 +20,7 @@ const HomeMap = dynamic(() => import("../../components/HomeMap"), {
 const VideoOpenZip = dynamic(() => import("../../components/VideoOpenZip"))
 
 const HomePage = ({ locale, content }: { locale: string; content: any }) => {
+  const { isBookingDialogOpen } = useDialog()
   return (
     <>
       <VideoOpenZip>
@@ -27,7 +29,7 @@ const HomePage = ({ locale, content }: { locale: string; content: any }) => {
             <Suspense fallback={<Loading />}>
               <Video
                 src={content?.mediaUrl?.url}
-                autoPlay
+                autoPlay={!isBookingDialogOpen}
                 loop
                 muted
                 playsInline

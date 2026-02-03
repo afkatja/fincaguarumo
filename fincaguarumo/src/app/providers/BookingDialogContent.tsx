@@ -6,10 +6,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { RemoveScroll } from "react-remove-scroll"
-import BookingForm from "../[locale]/(pages)/(payment)/BookingForm"
+import ProgressiveBookingForm from "@/components/booking/ProgressiveBookingForm"
 import Payment from "../[locale]/(pages)/(payment)/Payment"
 import { BookingType } from "../../types"
-import { EmbeddedChat } from "@/components/better-chatbot"
 
 interface BookingDialogContentProps {
   bookingData: Record<string, any>
@@ -40,29 +39,22 @@ const BookingDialogContent = ({
   return (
     <>
       {!paymentStep ? (
-        <DialogContent className="min-h-[500px] sm:max-w-[500px] dark:bg-linear-to-br dark:from-zinc-700 dark:to-sky-900 ">
+        <DialogContent className="min-h-150 sm:max-w-150 dark:bg-linear-to-br dark:from-zinc-700 dark:to-sky-900">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
           <RemoveScroll shards={[scrollableRef]}>
-            <BookingForm
+            <ProgressiveBookingForm
               onSubmit={onBookingFormSubmit}
               onCancel={onCancel}
               bookingType={bookingType}
               locale={locale}
-              ref={scrollableRef}
             />
           </RemoveScroll>
-          <div className="mt-4 pt-4 border-t">
-            <EmbeddedChat
-              className="max-h-64"
-              initialMessage="Need help with your booking? I'm here to assist you!"
-            />
-          </div>
         </DialogContent>
       ) : (
-        <DialogContent className="min-h-[500px] sm:max-w-[500px] dark:bg-linear-to-br dark:from-zinc-700 dark:to-sky-900">
+        <DialogContent className="min-h-125 sm:max-w-125 dark:bg-linear-to-br dark:from-zinc-700 dark:to-sky-900">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
@@ -70,12 +62,6 @@ const BookingDialogContent = ({
           <RemoveScroll shards={[scrollableRef]}>
             <Payment ref={scrollableRef} />
           </RemoveScroll>
-          <div className="mt-4 pt-4 border-t">
-            <EmbeddedChat
-              className="max-h-64"
-              initialMessage="Need help with payment? I'm here to assist you!"
-            />
-          </div>
         </DialogContent>
       )}
     </>
