@@ -347,7 +347,7 @@ export const BOOKINGS_QUERY = groq`*[
   dateTime(checkOut) > dateTime(now()) &&
   !(_id in path("drafts.**"))
 ]{
-  uid, checkIn, checkOut, guestName, source
+  uid, checkIn, checkOut, guestName, source, email, phone, guests, totalPrice, currency, syncedAt
 }`
 
 export const REVIEWS_QUERY = groq`*[_type == "review"] | order(date desc){
