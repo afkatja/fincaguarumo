@@ -42,7 +42,10 @@ const Breadcrumbs = ({
       <Breadcrumb className={className}>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/${parent.href}`}>
+            <BreadcrumbLink
+              href={`/${parent.href}`}
+              className="text-muted-foreground"
+            >
               {parent.title}
             </BreadcrumbLink>
           </BreadcrumbItem>

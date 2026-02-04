@@ -178,7 +178,7 @@
     --card: 240, 2%, 26%;
     --border: 148, 92%, 15%;
     --muted: 240, 2%, 26%;
-    --muted-foreground: 240, 5%, 84%;
+    --color-muted-foreground: hsl(240, 5%, 84%);
     --prose-body: hsl(240, 6%, 90%);
     --guarumo-sky: #082f49;
     --guarumo-sunset: #b45309;
@@ -220,10 +220,10 @@ body {
 }
 
 @utility animation-delay-* {
-  animation-delay: --value(number)ms;
+  animation-delay: --value(number) ms;
 }
 @utility animation-duration-* {
-  animation-duration: --value(number)ms;
+  animation-duration: --value(number) ms;
 }
 
 @layer select {
