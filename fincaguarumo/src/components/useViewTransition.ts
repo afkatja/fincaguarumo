@@ -14,7 +14,7 @@ export const useViewTransition = () => {
 
   const startTransition = async (
     callback: () => void | Promise<void>,
-    options: ViewTransitionOptions = {}
+    options: ViewTransitionOptions = {},
   ) => {
     if (supportsViewTransitions) {
       try {
