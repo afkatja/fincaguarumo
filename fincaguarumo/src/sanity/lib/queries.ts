@@ -1,12 +1,34 @@
 import { groq } from "next-sanity"
 
+// Reusable image projection fragments
+const imageWithMetadata = groq`_type == "imageWithMetadata" => {
+  ...,
+  "url": asset->url,
+  "metadata": asset->metadata
+}`
+const mainImageWithUrl = groq`{
+  ...,
+  "url": asset->url,
+  "metadata": asset->metadata
+}`
+const mainImageMetadataOnly = groq`{
+  ...,
+  "metadata": asset->metadata
+}`
+const mainImageWithDimensions = groq`{
+  alt,
+  "url": asset->url,
+  "metadata": asset->metadata {
+    lqip,
+    dimensions
+  }
+}`
+const imageMetadataOnly = groq`...,
+  "metadata": asset->metadata`
+
 export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...12]{
   _id, title, slug, 
-  mainImage {
-    ..., 
-      "url": asset->url,
-    'metadata': asset->metadata
-  },
+  mainImage ${mainImageWithUrl},
   _createdAt, _updatedAt, isPublished
 }`
 export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][]{
@@ -14,17 +36,14 @@ export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][
 }`
 
 export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && language == $language][0] {
-  title, subtitle, description, 
-  mainImage {
-    ..., 
-    'metadata': asset->metadata
-  }, 
-  body, language, slug, isPublished, showBookingOptions, showBookingDialog,
-  slideshow->{
-  images[]{
+  title, subtitle, description,
+  mainImage ${mainImageMetadataOnly},
+  body[]{
     ...,
-    'metadata': asset->metadata
-  }
+    ${imageWithMetadata}
+  }, language, slug, isPublished, showBookingOptions, showBookingDialog,
+  slideshow->{
+  images[]${mainImageMetadataOnly}
 },
   price, faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} },
   "translations": coalesce(
@@ -34,9 +53,12 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
         title,
         subtitle,
         description,
-        mainImage {..., 'metadata': asset->metadata},
-        slug, 
-        body,
+        mainImage ${mainImageMetadataOnly},
+        slug,
+        body[]{
+          ...,
+          ${imageWithMetadata}
+        },
         showBookingOptions,
         showBookingDialog,
         faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} }
@@ -51,11 +73,7 @@ export const FEATURED_POSTS_QUERY = groq`
     title,
     slug,
     isPublished,
-    mainImage {
-      ...,
-      "url": asset->url,
-      "metadata": asset->metadata
-    },
+    mainImage ${mainImageWithUrl},
     'category': *[_type == 'category' && title == $category],
     "translations": *[
       _type == "translation.metadata" && 
@@ -71,12 +89,11 @@ export const FEATURED_POSTS_QUERY = groq`
 `
 
 export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && language == $language][0]{
-  title, body, 
-  mainImage {
+  title, body[]{
     ...,
-    "url": asset->url,
-    'metadata': asset->metadata
-  }, 
+    ${imageWithMetadata}
+  },
+  mainImage ${mainImageWithUrl}, 
   openGraph {
     title,
     description,
@@ -104,11 +121,14 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && lan
 
 export const PAGE_QUERY = groq`
   *[_type == 'page' && slug.current == $pageName && language == $language][0] {
-    title, subtitle, description, mainImage, body, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,
+    title, subtitle, description, mainImage, body[]{
+      ...,
+      ${imageWithMetadata}
+    }, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,
     slideshow->{images}, price,
     faq[]->{question, answer, slug},
     "translations": *[
-      _type == "translation.metadata" && 
+      _type == "translation.metadata" &&
       ^._id in translations[].value._ref
     ][0].translations[]{
       ...(value->{
@@ -116,8 +136,11 @@ export const PAGE_QUERY = groq`
         title,
         subtitle,
         mainImage,
-        slug, 
-        body, 
+        slug,
+        body[]{
+          ...,
+          ${imageWithMetadata}
+        },
         isPublished,
         faq[]->{ question, answer, slug },
       })
@@ -143,11 +166,7 @@ export const NAV_QUERY = groq`
 export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && language == $language]{
   slug,
   title, 
-  mainImage {
-    ...,
-    "url": asset->url,
-    "metadata": asset->metadata
-  },
+  mainImage ${mainImageWithUrl},
   description, 
   dateAdded,
   language,
@@ -170,14 +189,7 @@ export const TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && la
 export const FEATURED_TOURS_QUERY = groq`*[_type == 'tour' && defined(slug.current) && isFeatured && language == $language]{
   slug,
   title, 
-  mainImage {
-    alt,
-    "url": asset->url,
-    "metadata": asset->metadata {
-      lqip,
-      dimensions
-    }
-  },
+  mainImage ${mainImageWithDimensions},
   description, isPublished,
    "translations": *[
       _type == "translation.metadata" && 
@@ -215,30 +227,23 @@ export const DIALOG_QUERY = groq`*[_type == 'dialog'][0] {
 
 export const TOUR_QUERY = groq`
 *[_type == 'tour' && slug.current == $slug && language == $language][0]{
-  _id, 
+  _id,
   language,
-  title, 
-  slug, 
-  description, 
-  mainImage {
-    alt,
-    "url": asset->url,
-    "metadata": asset->metadata {
-      lqip,
-      dimensions
-    }
-  },
+  title,
+  slug,
+  description,
+  mainImage ${mainImageWithDimensions},
   isPublished,
-  slideshow->{images[] {
-    ...,
-    'metadata': asset->metadata
-  }}, 
+  slideshow->{images[] ${mainImageMetadataOnly}},
   "price": coalesce(price, 0),
-  location, 
+  location,
   geo,
   duration,
-  body,
-  "translations": *[
+  body[]{
+    ...,
+    ${imageWithMetadata}
+  },
+    "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
     ][0].translations[]{
@@ -247,7 +252,10 @@ export const TOUR_QUERY = groq`
         title,
         slug,
         description,
-        body,
+        body[]{
+          ...,
+          ${imageWithMetadata}
+        },
       })
     }
 }
@@ -271,23 +279,27 @@ export const ABOUT_QUERY = groq`
 
 export const HOME_QUERY = groq`
   *[_type=='home' && language == $language][0] {
-    hero_title, 
-    hero_slogan, 
-    hero_body,
-    subtitle, 
-    language, 
+    hero_title,
+    hero_slogan,
+    hero_body[]{
+      ...,
+      ${imageWithMetadata}
+    },
+    subtitle,
+    language,
     featured_content_title,
-    featured_blog_title, 
-    slug, 
-    'mediaUrl': background_media.asset->{url}, 
+    featured_blog_title,
+    slug,
+    'mediaUrl': background_media.asset->{url},
     'mediaPoster': background_media_poster.asset->{
-      url, 
+      url,
       metadata {
         lqip
       }
     },
-    intro_body[] {
+    intro_body[]{
       ...,
+      ${imageWithMetadata},
       markDefs[] {
         ...,
         _type == "internalLink" => {
@@ -297,27 +309,31 @@ export const HOME_QUERY = groq`
       }
     },
     'translations': *[
-      _type == "translation.metadata" && 
+      _type == "translation.metadata" &&
       ^._id in translations[].value._ref
     ][0].translations[]{
       ...(value->{
-        hero_title, 
-        hero_slogan, 
-        hero_body,
-        subtitle, 
-        language, 
+        hero_title,
+        hero_slogan,
+        hero_body[]{
+          ...,
+          ${imageWithMetadata}
+        },
+        subtitle,
+        language,
         featured_content_title,
-        featured_blog_title, 
+        featured_blog_title,
         slug,
-        'mediaUrl': background_media.asset->{url}, 
+        'mediaUrl': background_media.asset->{url},
         'mediaPoster': background_media_poster.asset->{
-          url, 
+          url,
           metadata {
             lqip
           }
         },
-        intro_body[] {
+        intro_body[]{
           ...,
+          ${imageWithMetadata},
           markDefs[] {
             ...,
             _type == "internalLink" => {
@@ -334,8 +350,7 @@ export const HOME_QUERY = groq`
 export const GALLERY_QUERY = groq`
   *[_type == 'gallery' && $category in categories[] -> title][0] {
     title, images[] {
-      ...,
-      "metadata": asset->metadata
+      ${imageMetadataOnly}
     }
   }
 `
