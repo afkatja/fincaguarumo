@@ -69,17 +69,7 @@ export const tourType = defineType({
     }),
     defineField({
       name: "mainImage",
-      type: "image",
-      options: {
-        hotspot: true,
-      },
-      fields: [
-        {
-          name: "alt",
-          type: "string",
-          title: "Alternative text",
-        },
-      ],
+      type: "imageWithMetadata",
     }),
     defineField({
       name: "slideshow",

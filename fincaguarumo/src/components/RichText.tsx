@@ -8,6 +8,7 @@ import Link from "next/link"
 import ExternalLink from "./icons/ExternalLink"
 
 import { createNavigation } from "next-intl/navigation"
+import { ImageWithFallback } from "./ImageWithFallback"
 
 const RichText = ({
   body,
@@ -57,6 +58,21 @@ const RichText = ({
           width={1024}
           height={700}
           className="mt-0"
+        />
+      ),
+      imageWithMetadata: ({ value }) => (
+        <ImageWithFallback
+          src={value.url || urlFor(value).url()}
+          alt={value.alt}
+          width={value.metadata?.dimensions?.width}
+          height={value.metadata?.dimensions?.height}
+          className="mt-0"
+          blurDataURL={value.metadata?.lqip}
+          quality={80}
+          unoptimized={false}
+          author={value.author}
+          caption={value.caption}
+          sourceUrl={value.sourceUrl}
         />
       ),
     },
