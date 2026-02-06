@@ -1,11 +1,7 @@
-"use client"
 import { ImageProps } from "next/image"
-import { useState } from "react"
-import Image from "next/image"
-import { Source } from "./Source"
-import ImageFallback from "./imageFallback"
 import ExternalLink from "./icons/ExternalLink"
 import Link from "next/link"
+import ImageWithArtDirection from "./ImageWithArtDirection"
 
 type ImageWithFallbackProps = Omit<ImageProps, "onError"> & {
   fallbackClassName?: string
@@ -13,6 +9,7 @@ type ImageWithFallbackProps = Omit<ImageProps, "onError"> & {
   author?: string
   caption?: string
   sourceUrl?: string
+  [prop: string]: any
 }
 
 export const ImageWithFallback = ({
@@ -36,88 +33,55 @@ export const ImageWithFallback = ({
   sourceUrl,
   ...rest
 }: ImageWithFallbackProps) => {
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-
-  const handleError = () => {
-    setHasError(true)
-    setIsLoading(false)
-  }
-
-  const handleLoad = () => {
-    setIsLoading(false)
-  }
-
   // Only use blur placeholder if blurDataURL is provided
   const shouldUseBlur = blurDataURL !== undefined
   const hasAttribution = author || caption || sourceUrl
 
+  const imgWidth = typeof width === "number" ? width : 2016
+  const imgHeight = typeof height === "number" ? height : 1134
+  const hasArtDirection = rest.mobile || rest.tablet || rest.desktop
+
   return (
     <figure className={`relative ${className || ""}`}>
-      {hasError ? (
-        <ImageFallback loading={false} />
-      ) : (
-        <>
-          <ImageFallback loading={!isLoading} />
-          <picture>
-            {sizes && (
-              <Source
-                src={src}
-                loader={loader}
-                unoptimized={unoptimized}
-                quality={quality}
-                sizes={sizes}
-              />
-            )}
-            <Image
-              src={src}
-              alt={alt}
-              sizes={sizes}
-              priority={priority}
-              quality={quality}
-              loader={loader}
-              unoptimized={unoptimized}
-              fill={fill}
-              width={width}
-              height={height}
-              placeholder={shouldUseBlur ? "blur" : undefined}
-              blurDataURL={blurDataURL}
-              fetchPriority={fetchPriority}
-              onError={handleError}
-              onLoad={handleLoad}
-              className={`transition-opacity duration-700 ${
-                isLoading ? "opacity-0" : "opacity-100"
-              }`}
-              {...rest}
-            />
-          </picture>
-          {hasAttribution && (
-            <figcaption className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 flex items-center">
-              {caption && <span className="block">{caption}</span>}
-              {(author || sourceUrl) && (
-                <span className="block mt-0.5 lg:ml-auto">
-                  {author && <span>&copy; {author}</span>}
-                  {author && sourceUrl && <span className="mx-1">·</span>}
-                  {sourceUrl && (
-                    <Link
-                      href={sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-0.5 text-guarumo-accent hover:underline"
-                    >
-                      Source
-                      <ExternalLink
-                        width={12}
-                        height={12}
-                        className="shrink-0"
-                      />
-                    </Link>
-                  )}
-                </span>
+      {hasArtDirection && (
+        <ImageWithArtDirection
+          mobile={rest.mobile}
+          tablet={rest.tablet}
+          desktop={rest.desktop}
+          width={imgWidth}
+          height={imgHeight}
+          quality={quality}
+          sizes={sizes}
+          loader={loader}
+          unoptimized={unoptimized}
+          src={typeof src === "string" ? src : ""}
+          alt={alt}
+          priority={priority}
+          fill={fill}
+          placeholder={shouldUseBlur ? "blur" : placeholder}
+        />
+      )}
+      {hasAttribution && (
+        <figcaption className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 flex items-center">
+          {caption && <span className="block">{caption}</span>}
+          {(author || sourceUrl) && (
+            <span className="block mt-0.5 lg:ml-auto">
+              {author && <span>&copy; {author}</span>}
+              {author && sourceUrl && <span className="mx-1">·</span>}
+              {sourceUrl && (
+                <Link
+                  href={sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-0.5 text-guarumo-accent hover:underline"
+                >
+                  Source
+                  <ExternalLink width={12} height={12} className="shrink-0" />
+                </Link>
               )}
-            </figcaption>
+            </span>
           )}
-        </>
+        </figcaption>
       )}
     </figure>
   )

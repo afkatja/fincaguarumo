@@ -3,7 +3,7 @@ import Title from "@/components/Title"
 import RichText from "@/components/RichText"
 import Slideshow from "@/components/Slideshow"
 import { shuffle } from "@/lib/utils"
-import { SanityImageObject } from "../../../types"
+import type { GalleryImage } from "@/lib/sanityImages"
 
 const PageLayout = ({
   pageName,
@@ -19,13 +19,20 @@ const PageLayout = ({
 }: {
   subtitle?: string
   pageName: string
-  body?: any
+  body?: unknown
   icon?: string
   children?: React.ReactNode
-  images?: any[]
-  [props: string]: any
+  images?: GalleryImage[]
+  mainImage?: GalleryImage | null
+  [props: string]: unknown
 }) => {
   if (!pageName) notFound()
+
+  const slideshowImages: GalleryImage[] = images
+    ? (shuffle(images) as GalleryImage[])
+    : mainImage
+      ? [mainImage]
+      : []
 
   return (
     <div className="bg-zinc-50 dark:bg-zinc-900 pt-5 lg:pt-8 content-wrap z-10 flex-1">
@@ -46,14 +53,8 @@ const PageLayout = ({
           />
         )}
       </div>
-      {(mainImage || images) && (
-        <Slideshow
-          images={
-            images
-              ? (shuffle(images) as unknown as SanityImageObject[])
-              : [mainImage]
-          }
-        />
+      {slideshowImages.length > 0 && (
+        <Slideshow images={slideshowImages} />
       )}
       {description && (
         <section className="w-11/12! pt-6! lg:py-2 prose lg:prose-lg mx-auto">

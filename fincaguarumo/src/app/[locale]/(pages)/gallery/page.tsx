@@ -1,18 +1,24 @@
-import React from "react"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { GALLERY_QUERY, PAGE_QUERY } from "../../../../sanity/lib/queries"
 import Layout from "../pagesLayout"
 import Carousel from "@/components/Carousel"
-import { urlFor } from "../../../../sanity/lib/image"
-import { SanityImageObject } from "../../../../types"
+import {
+  normalizeToCarouselImages,
+  type GalleryImage,
+  type ImageWithMetadata,
+} from "@/lib/sanityImages"
 
 type Content = {
   title: string
   description: string
-  mainImage: SanityImageObject
-  body: any
-  gallery?: any[]
+  mainImage?: ImageWithMetadata | null
 }
+
+type GalleryResult = {
+  title: string
+  images: GalleryImage[]
+}
+
 const GalleryPage = async ({ params }: { params: any }) => {
   const { locale } = await params
 
@@ -22,28 +28,13 @@ const GalleryPage = async ({ params }: { params: any }) => {
     params: { language: locale, pageName: "gallery" },
   })
 
-  const gallery: { title: string; images: (SanityImageObject & {metadata?: { lqip: string }})[] } =
-    await sanityFetch({
-      query: GALLERY_QUERY,
-      revalidate: 0,
-      params: { category: "General" },
-    })
+  const gallery: GalleryResult = await sanityFetch({
+    query: GALLERY_QUERY,
+    revalidate: 0,
+    params: { category: "General" },
+  })
 
-  const images = gallery?.images.map(item => ({
-    _type: item._type || "image",
-    asset: item.asset,
-    metadata: item.metadata,
-    alt: item.alt || "",
-    src: urlFor(item)
-      .width(2016)
-      .height(1134)
-      .fit("scale")
-      .quality(100)
-      .format("webp")
-      .url(),
-    width: 2016,
-    height: 1134,
-  }))
+  const images = normalizeToCarouselImages(gallery?.images)
   return (
     <Layout
       locale={locale}
