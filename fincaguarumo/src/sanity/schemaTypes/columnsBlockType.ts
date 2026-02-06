@@ -31,8 +31,9 @@ export const columnsBlockType = defineType({
     },
     prepare: selection => {
       const { columnCount } = selection
+      const count = columnCount ?? 0
       return {
-        title: `${columnCount} columns`,
+        title: `${count} columns`,
         media: ColumnsBlockPreview,
       }
     },

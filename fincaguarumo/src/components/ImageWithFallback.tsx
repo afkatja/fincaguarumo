@@ -1,4 +1,5 @@
 import { ImageProps } from "next/image"
+import Image from "next/image"
 import ExternalLink from "./icons/ExternalLink"
 import Link from "next/link"
 import ImageWithArtDirection from "./ImageWithArtDirection"
@@ -43,7 +44,7 @@ export const ImageWithFallback = ({
 
   return (
     <figure className={`relative ${className || ""}`}>
-      {hasArtDirection && (
+      {hasArtDirection ? (
         <ImageWithArtDirection
           mobile={rest.mobile}
           tablet={rest.tablet}
@@ -59,6 +60,21 @@ export const ImageWithFallback = ({
           priority={priority}
           fill={fill}
           placeholder={shouldUseBlur ? "blur" : placeholder}
+        />
+      ) : (
+        <Image
+          src={typeof src === "string" ? src : ""}
+          alt={alt}
+          width={imgWidth}
+          height={imgHeight}
+          quality={quality}
+          sizes={sizes}
+          loader={loader}
+          unoptimized={unoptimized}
+          priority={priority}
+          fill={fill}
+          placeholder={shouldUseBlur ? "blur" : placeholder}
+          {...rest}
         />
       )}
       {hasAttribution && (

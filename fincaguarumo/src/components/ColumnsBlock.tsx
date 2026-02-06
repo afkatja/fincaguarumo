@@ -2,6 +2,8 @@ import { BlockContent } from "sanity.types"
 import type { ImageWithMetadata } from "sanity.types"
 import { ImageWithFallback } from "./ImageWithFallback"
 import { urlFor } from "../sanity/lib/image"
+import { PortableText } from "next-sanity"
+import { portableTextComponents } from "./RichText"
 
 interface ColumnsBlockProps {
   value: {
@@ -22,13 +24,12 @@ const ColumnsBlock = ({ value }: ColumnsBlockProps) => {
       {content.map((block: any, index: number) => {
         return (
           <div key={index} className="prose prose-lg">
-            {/* Render block content here */}
+            {/* Render block content using PortableText to preserve rich text formatting */}
             {block._type === "block" && (
-              <p className="portable-text-p mb-6 leading-7">
-                {block.children?.map((child: any, childIndex: number) => (
-                  <span key={childIndex}>{child.text}</span>
-                ))}
-              </p>
+              <PortableText
+                value={[block]}
+                components={portableTextComponents}
+              />
             )}
             {block._type === "imageWithMetadata" && (
               <ImageWithFallback

@@ -33,9 +33,9 @@ const ImageWithArtDirection = ({
   placeholder,
   blurDataURL,
   fetchPriority,
-  onError,
-  onLoad,
   className,
+  srcSet,
+  metadata,
   ...rest
 }: TImage) => {
   const fallbackSrc = desktop || src
@@ -56,9 +56,9 @@ const ImageWithArtDirection = ({
   return (
     <>
       {hasError ? (
-        <ImageFallback loading={false} />
+        <ImageFallback shouldHideFallback={true} />
       ) : (
-        <ImageFallback loading={!isLoading} />
+        <ImageFallback shouldHideFallback={!isLoading} />
       )}
       <picture>
         {mobile && (

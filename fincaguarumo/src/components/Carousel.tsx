@@ -39,6 +39,7 @@ const CarouselImageEl = ({
       mobile={img.mobile}
       tablet={img.tablet}
       desktop={img.desktop}
+      blurDataURL={img.metadata?.lqip}
     />
   )
 }
