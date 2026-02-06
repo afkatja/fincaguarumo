@@ -79,7 +79,7 @@ export default async function Layout({
           locale === "ru"
             ? `${comfortaa.variable} ${didact.variable}`
             : `${poppins.variable} ${cabin.variable}`,
-          "min-h-screen"
+          "min-h-screen",
         )}
       >
         <NextIntlClientProvider locale={locale}>
