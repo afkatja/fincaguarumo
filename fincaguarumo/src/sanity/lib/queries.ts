@@ -1,22 +1,30 @@
 import { groq } from "next-sanity"
 
-// Reusable image projection fragments
+// Reusable image projection fragments (explicit crop/hotspot for urlFor)
 const imageWithMetadata = groq`_type == "imageWithMetadata" => {
   ...,
+  crop,
+  hotspot,
   "url": asset->url,
   "metadata": asset->metadata
 }`
 const mainImageWithUrl = groq`{
   ...,
+  crop,
+  hotspot,
   "url": asset->url,
   "metadata": asset->metadata
 }`
 const mainImageMetadataOnly = groq`{
   ...,
+  crop,
+  hotspot,
   "metadata": asset->metadata
 }`
 const mainImageWithDimensions = groq`{
   alt,
+  crop,
+  hotspot,
   "url": asset->url,
   "metadata": asset->metadata {
     lqip,
@@ -24,7 +32,22 @@ const mainImageWithDimensions = groq`{
   }
 }`
 const imageMetadataOnly = groq`...,
+  crop,
+  hotspot,
   "metadata": asset->metadata`
+
+// For gallery/slideshow: supports both imageWithMetadata and artDirectedImage
+const galleryImageProjection = groq`{
+  _type,
+  ...select(
+    _type == "artDirectedImage" => {
+      "desktop": desktop { ${mainImageMetadataOnly} },
+      "tablet": tablet { ${mainImageMetadataOnly} },
+      "mobile": mobile { ${mainImageMetadataOnly} }
+    },
+    ${mainImageMetadataOnly}
+  )
+}`
 
 export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...12]{
   _id, title, slug, 
@@ -43,8 +66,8 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
     ${imageWithMetadata}
   }, language, slug, isPublished, showBookingOptions, showBookingDialog,
   slideshow->{
-  images[]${mainImageMetadataOnly}
-},
+    "images": images[]${galleryImageProjection}
+  },
   price, faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} },
   "translations": coalesce(
     *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{
@@ -133,7 +156,7 @@ export const PAGE_QUERY = groq`
       ...,
       ${imageWithMetadata}
     }, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,
-    slideshow->{images}, price,
+    slideshow->{ "images": images[]${galleryImageProjection} }, price,
     faq[]->{question, answer, slug},
     "translations": *[
       _type == "translation.metadata" &&
@@ -242,7 +265,7 @@ export const TOUR_QUERY = groq`
   description,
   mainImage ${mainImageWithDimensions},
   isPublished,
-  slideshow->{images[] ${mainImageMetadataOnly}},
+  slideshow->{ "images": images[]${galleryImageProjection} },
   "price": coalesce(price, 0),
   location,
   geo,
@@ -357,9 +380,8 @@ export const HOME_QUERY = groq`
 
 export const GALLERY_QUERY = groq`
   *[_type == 'gallery' && $category in categories[] -> title][0] {
-    title, images[] {
-      ${imageMetadataOnly}
-    }
+    title,
+    "images": images[]${galleryImageProjection}
   }
 `
 
