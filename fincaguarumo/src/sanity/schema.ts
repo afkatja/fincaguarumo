@@ -16,6 +16,7 @@ import { faqType } from "./schemaTypes/faqType"
 import { faqCategoryType } from "./schemaTypes/faqCategoryType"
 import { reviewType } from "./schemaTypes/reviewType"
 import { imageType } from "./schemaTypes/imageType"
+import { artDirectedImageType } from "./schemaTypes/artDirectedImageType"
 import { columnsBlockType } from "./schemaTypes/columnsBlockType"
 
 export const schema: { types: SchemaTypeDefinition[] } = {
@@ -36,6 +37,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     faqCategoryType,
     reviewType,
     imageType,
+    artDirectedImageType,
     columnsBlockType,
   ],
 }

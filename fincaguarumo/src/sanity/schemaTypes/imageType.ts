@@ -5,7 +5,13 @@ export const imageType = defineType({
   title: "Image",
   type: "image",
   options: {
-    hotspot: true,
+    hotspot: {
+      previews: [
+        { title: "16:9", aspectRatio: 16 / 9 },
+        { title: "4:5", aspectRatio: 4 / 5 },
+        { title: "9:16", aspectRatio: 9 / 16 },
+      ],
+    },
   },
   fields: [
     defineField({
