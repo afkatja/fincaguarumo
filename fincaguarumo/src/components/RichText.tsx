@@ -14,10 +14,12 @@ const RichText = ({
   body,
   icon,
   className,
+  columns,
 }: {
   body: any
   icon?: string
   className?: string
+  columns?: boolean
 }) => {
   if (!body) return
   const { Link: IntlLink } = createNavigation()

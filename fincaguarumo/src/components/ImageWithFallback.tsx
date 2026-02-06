@@ -93,10 +93,10 @@ export const ImageWithFallback = ({
             />
           </picture>
           {hasAttribution && (
-            <figcaption className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+            <figcaption className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 flex items-center">
               {caption && <span className="block">{caption}</span>}
               {(author || sourceUrl) && (
-                <span className="block mt-0.5">
+                <span className="block mt-0.5 lg:ml-auto">
                   {author && <span>&copy; {author}</span>}
                   {author && sourceUrl && <span className="mx-1">·</span>}
                   {sourceUrl && (
