@@ -20,7 +20,6 @@ const ColumnsBlock = ({ value }: ColumnsBlockProps) => {
   return (
     <div className={`grid ${columnClass} gap-4 my-8`}>
       {content.map((block: any, index: number) => {
-        console.log({ block })
         return (
           <div key={index} className="prose prose-lg">
             {/* Render block content here */}

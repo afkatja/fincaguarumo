@@ -51,7 +51,6 @@ export const ImageWithFallback = ({
   // Only use blur placeholder if blurDataURL is provided
   const shouldUseBlur = blurDataURL !== undefined
   const hasAttribution = author || caption || sourceUrl
-  console.log("on load", isLoading)
 
   return (
     <figure className={`relative ${className || ""}`}>
