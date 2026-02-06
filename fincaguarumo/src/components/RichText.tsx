@@ -9,6 +9,7 @@ import ExternalLink from "./icons/ExternalLink"
 
 import { createNavigation } from "next-intl/navigation"
 import { ImageWithFallback } from "./ImageWithFallback"
+import ColumnsBlock from "./ColumnsBlock"
 
 const RichText = ({
   body,
@@ -70,13 +71,14 @@ const RichText = ({
           height={value.metadata?.dimensions?.height}
           className="mt-0"
           blurDataURL={value.metadata?.lqip}
-          quality={80}
+          quality={75}
           unoptimized={false}
           author={value.author}
           caption={value.caption}
           sourceUrl={value.sourceUrl}
         />
       ),
+      columnsBlock: ({ value }) => <ColumnsBlock value={value} />,
     },
 
     marks: {

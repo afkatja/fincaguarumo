@@ -89,9 +89,17 @@ export const FEATURED_POSTS_QUERY = groq`
 `
 
 export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && language == $language][0]{
-  title, body[]{
+  title, 
+  body[]{
     ...,
-    ${imageWithMetadata}
+    ${imageWithMetadata},
+    columnsBlock {
+      columnCount,
+      content[]{
+        ...,
+        ${imageWithMetadata}
+      }
+    }
   },
   mainImage ${mainImageWithUrl}, 
   openGraph {
