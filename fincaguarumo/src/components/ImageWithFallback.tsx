@@ -4,8 +4,7 @@ import ExternalLink from "./icons/ExternalLink"
 import Link from "next/link"
 import ImageWithArtDirection from "./ImageWithArtDirection"
 
-type ImageWithFallbackProps = Omit<ImageProps, "onError"> & {
-  fallbackClassName?: string
+type ImageWithFallbackProps = ImageProps & {
   blurDataURL?: string
   author?: string
   caption?: string
@@ -17,7 +16,6 @@ export const ImageWithFallback = ({
   src,
   alt,
   className,
-  fallbackClassName,
   sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px",
   priority,
   quality,
@@ -60,6 +58,8 @@ export const ImageWithFallback = ({
           priority={priority}
           fill={fill}
           placeholder={shouldUseBlur ? "blur" : placeholder}
+          blurDataURL={blurDataURL}
+          fetchPriority={fetchPriority}
         />
       ) : (
         <Image
@@ -74,6 +74,8 @@ export const ImageWithFallback = ({
           priority={priority}
           fill={fill}
           placeholder={shouldUseBlur ? "blur" : placeholder}
+          blurDataURL={blurDataURL}
+          fetchPriority={fetchPriority}
           {...rest}
         />
       )}

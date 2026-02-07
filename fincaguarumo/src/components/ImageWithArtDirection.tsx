@@ -3,6 +3,7 @@ import { useState } from "react"
 import { Source } from "./Source"
 import Image, { ImageProps } from "next/image"
 import ImageFallback from "./imageFallback"
+import { clsx } from "clsx"
 
 export type TImage = ImageProps & {
   src: string
@@ -56,57 +57,64 @@ const ImageWithArtDirection = ({
   return (
     <>
       {hasError ? (
-        <ImageFallback shouldHideFallback={true} />
+        <ImageFallback shouldHideFallback={false} />
       ) : (
         <ImageFallback shouldHideFallback={!isLoading} />
       )}
-      <picture>
-        {mobile && (
-          <source
-            media="(max-width: 640px)"
-            srcSet={mobile}
-            width={640}
-            height={360}
+      {!hasError && (
+        <picture>
+          {mobile && (
+            <source
+              media="(max-width: 640px)"
+              srcSet={mobile}
+              width={640}
+              height={360}
+            />
+          )}
+          {tablet && (
+            <source
+              media="(max-width: 1024px)"
+              srcSet={tablet}
+              width={1024}
+              height={576}
+            />
+          )}
+          <Source
+            src={fallbackSrc}
+            loader={loader}
+            unoptimized={unoptimized}
+            quality={quality}
+            sizes={sizes}
           />
-        )}
-        {tablet && (
-          <source
-            media="(max-width: 1024px)"
-            srcSet={tablet}
-            width={1024}
-            height={576}
-          />
-        )}
-        <Source
-          src={fallbackSrc}
-          loader={loader}
-          unoptimized={unoptimized}
-          quality={quality}
-          sizes={sizes}
-        />
 
-        <Image
-          src={src}
-          alt={alt}
-          sizes={sizes}
-          priority={priority}
-          quality={quality}
-          loader={loader}
-          unoptimized={unoptimized}
-          fill={fill}
-          width={width}
-          height={height}
-          placeholder={shouldUseBlur ? "blur" : undefined}
-          blurDataURL={blurDataURL}
-          fetchPriority={fetchPriority}
-          onError={handleError}
-          onLoad={handleLoad}
-          className={`transition-opacity duration-700 ${
-            isLoading ? "opacity-0" : "opacity-100"
-          }`}
-          {...rest}
-        />
-      </picture>
+          <Image
+            src={src}
+            alt={alt}
+            sizes={sizes}
+            priority={priority}
+            quality={quality}
+            loader={loader}
+            unoptimized={unoptimized}
+            fill={fill}
+            width={width}
+            height={height}
+            placeholder={shouldUseBlur ? "blur" : undefined}
+            blurDataURL={blurDataURL}
+            fetchPriority={fetchPriority}
+            onError={handleError}
+            onLoad={handleLoad}
+            className={clsx(
+              "transition-opacity duration-700",
+              {
+                "opacity-0": isLoading,
+                "opacity-100": !isLoading,
+              },
+              className,
+            )}
+            {...rest}
+          />
+        </picture>
+      )}
     </>
   )
 }
