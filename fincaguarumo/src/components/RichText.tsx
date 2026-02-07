@@ -122,7 +122,7 @@ const RichText = ({
 
   return (
     <div
-      className={`prose prose-lg w-11/12! mx-auto py-2 leading-relaxed ${className}`}
+      className={`prose prose-lg w-11/12! mx-auto py-2 leading-relaxed ${className || ""}`}
     >
       <PortableText value={body} components={portableTextComponents} />
     </div>
