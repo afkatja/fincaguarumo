@@ -7,6 +7,7 @@ import Icon from "@/components/Icon"
 import Title from "@/components/Title"
 import ContactForm from "./ContactForm"
 import { useTranslations } from "next-intl"
+import { PAGE_QUERY_RESULT } from "../../../../../sanity.types"
 
 const safeBtoa = (s?: string) => {
   if (typeof s !== "string") return ""
@@ -27,7 +28,7 @@ export default function Contact({
   people,
 }: {
   locale: string
-  content: SanityDocument & { description?: string }
+  content: PAGE_QUERY_RESULT
   people: Record<string, any>[]
 }) {
   const t = useTranslations("contact")
@@ -36,8 +37,8 @@ export default function Contact({
       locale={locale}
       pageName="contact"
       title={content?.title}
-      description={content?.description}
-      mainImage={content?.mainImage as any}
+      description={content?.description || ""}
+      mainImage={content?.mainImage}
     >
       <div className="w-11/12 my-8 max-w-240! mx-auto items-start">
         <Title
