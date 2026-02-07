@@ -11,6 +11,30 @@ import { Link as IntlLink } from "../navigation"
 import { ImageWithFallback } from "./ImageWithFallback"
 import ColumnsBlock from "./ColumnsBlock"
 
+// Helper function to extract plain text from ReactNode
+const getPlainTextFromNode = (node: any): string => {
+  if (typeof node === "string") {
+    return node
+  }
+  if (Array.isArray(node)) {
+    return node.map(getPlainTextFromNode).join("")
+  }
+  if (node && typeof node === "object" && node.props) {
+    return getPlainTextFromNode(node.props.children)
+  }
+  return ""
+}
+
+// Helper function to slugify text
+const slugify = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "") // Remove special characters
+    .replace(/[\s_-]+/g, "-") // Replace spaces and underscores with hyphens
+    .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
+}
+
 // Export components object for reuse in other components
 export const portableTextComponents: Partial<PortableTextReactComponents> = {
   block: {
@@ -37,7 +61,7 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
           iconClassName: "fill-guarumo-accent dark:fill-zinc-50",
           title: "",
         }}
-        id={String(children).toLowerCase().split(" ")[0]}
+        id={slugify(getPlainTextFromNode(children))}
       />
     ),
   },
