@@ -40,9 +40,11 @@ const ColumnsBlock = ({ value }: ColumnsBlockProps) => {
                 blurDataURL={block.metadata?.lqip}
                 quality={80}
                 unoptimized={false}
-                author={block.author}
-                caption={block.caption}
-                sourceUrl={block.sourceUrl}
+                attribution={{
+                  author: block.author,
+                  caption: block.caption,
+                  sourceUrl: block.sourceUrl,
+                }}
               />
             )}
           </div>

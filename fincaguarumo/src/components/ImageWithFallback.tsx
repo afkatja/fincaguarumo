@@ -3,14 +3,11 @@ import Image from "next/image"
 import ExternalLink from "./icons/ExternalLink"
 import Link from "next/link"
 import ImageWithArtDirection from "./ImageWithArtDirection"
-
-type ImageWithFallbackProps = ImageProps & {
-  blurDataURL?: string
-  author?: string
-  caption?: string
-  sourceUrl?: string
-  [prop: string]: any
-}
+import {
+  ImageWithFallbackProps,
+  ImageAttributionProps,
+  ArtDirectionProps,
+} from "./imageProps"
 
 export const ImageWithFallback = ({
   src,
@@ -27,28 +24,24 @@ export const ImageWithFallback = ({
   placeholder,
   blurDataURL,
   fetchPriority,
-  author,
-  caption,
-  sourceUrl,
+  attribution,
+  artDirection,
   ...rest
 }: ImageWithFallbackProps) => {
   // Only use blur placeholder if blurDataURL is provided
   const shouldUseBlur = blurDataURL !== undefined
-  const hasAttribution = author || caption || sourceUrl
+  const hasAttribution =
+    attribution?.author || attribution?.caption || attribution?.sourceUrl
 
   const imgWidth = typeof width === "number" ? width : 2016
   const imgHeight = typeof height === "number" ? height : 1134
-  const hasArtDirection = rest.mobile || rest.tablet || rest.desktop
+  const hasArtDirection =
+    artDirection?.mobile || artDirection?.tablet || artDirection?.desktop
 
   return (
     <figure className={`relative ${className || ""}`}>
       {hasArtDirection ? (
         <ImageWithArtDirection
-          mobile={rest.mobile}
-          tablet={rest.tablet}
-          desktop={rest.desktop}
-          width={imgWidth}
-          height={imgHeight}
           quality={quality}
           sizes={sizes}
           loader={loader}
@@ -60,13 +53,13 @@ export const ImageWithFallback = ({
           placeholder={shouldUseBlur ? "blur" : placeholder}
           blurDataURL={blurDataURL}
           fetchPriority={fetchPriority}
+          artDirection={artDirection}
+          {...(fill ? {} : { width: imgWidth, height: imgHeight })}
         />
       ) : (
         <Image
           src={typeof src === "string" ? src : ""}
           alt={alt}
-          width={imgWidth}
-          height={imgHeight}
           quality={quality}
           sizes={sizes}
           loader={loader}
@@ -77,18 +70,23 @@ export const ImageWithFallback = ({
           blurDataURL={blurDataURL}
           fetchPriority={fetchPriority}
           {...rest}
+          {...(fill ? {} : { width: imgWidth, height: imgHeight })}
         />
       )}
       {hasAttribution && (
         <figcaption className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 flex items-center">
-          {caption && <span className="block">{caption}</span>}
-          {(author || sourceUrl) && (
+          {attribution?.caption && (
+            <span className="block">{attribution.caption}</span>
+          )}
+          {(attribution?.author || attribution?.sourceUrl) && (
             <span className="block mt-0.5 lg:ml-auto">
-              {author && <span>&copy; {author}</span>}
-              {author && sourceUrl && <span className="mx-1">·</span>}
-              {sourceUrl && (
+              {attribution?.author && <span>&copy; {attribution.author}</span>}
+              {attribution?.author && attribution?.sourceUrl && (
+                <span className="mx-1">·</span>
+              )}
+              {attribution?.sourceUrl && (
                 <Link
-                  href={sourceUrl}
+                  href={attribution.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-0.5 text-guarumo-accent hover:underline"

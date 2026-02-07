@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
 import { ImageWithFallback } from "./ImageWithFallback"
-import { TImage } from "./ImageWithArtDirection"
 import type { CarouselImage } from "@/lib/sanityImages"
 
 const SIZES = "(max-width: 640px) 640px, (max-width: 1024px) 1024px, 2016px"
@@ -19,7 +18,7 @@ const CarouselImageEl = ({
   img,
   priority,
 }: {
-  img: TImage
+  img: CarouselImage
   priority: boolean
 }) => {
   const width = img.width ?? 2016
@@ -36,9 +35,11 @@ const CarouselImageEl = ({
       width={width}
       height={height}
       fill={false}
-      mobile={img.mobile}
-      tablet={img.tablet}
-      desktop={img.desktop}
+      artDirection={{
+        mobile: img.mobile,
+        tablet: img.tablet,
+        desktop: img.desktop,
+      }}
       blurDataURL={img.metadata?.lqip}
     />
   )

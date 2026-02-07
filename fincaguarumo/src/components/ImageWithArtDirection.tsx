@@ -4,23 +4,13 @@ import { Source } from "./Source"
 import Image, { ImageProps } from "next/image"
 import ImageFallback from "./imageFallback"
 import { clsx } from "clsx"
-
-export type TImage = ImageProps & {
-  src: string
-  srcSet?: string
-  alt: string
-  width?: number
-  height?: number
-  metadata?: { lqip?: string }
-  mobile?: string
-  tablet?: string
-  desktop?: string
-}
+import {
+  ImageWithArtDirectionProps,
+  ImageAttributionProps,
+  ArtDirectionProps,
+} from "./imageProps"
 
 const ImageWithArtDirection = ({
-  mobile,
-  tablet,
-  desktop,
   quality,
   sizes,
   loader,
@@ -35,11 +25,11 @@ const ImageWithArtDirection = ({
   blurDataURL,
   fetchPriority,
   className,
-  srcSet,
-  metadata,
+  attribution,
+  artDirection,
   ...rest
-}: TImage) => {
-  const fallbackSrc = desktop || src
+}: ImageWithArtDirectionProps) => {
+  const fallbackSrc = artDirection?.desktop || src
   const shouldUseBlur = blurDataURL !== undefined
 
   const [isLoading, setIsLoading] = useState(true)
@@ -63,18 +53,18 @@ const ImageWithArtDirection = ({
       )}
       {!hasError && (
         <picture>
-          {mobile && (
+          {artDirection?.mobile && (
             <source
               media="(max-width: 640px)"
-              srcSet={mobile}
+              srcSet={artDirection.mobile}
               width={640}
               height={360}
             />
           )}
-          {tablet && (
+          {artDirection?.tablet && (
             <source
               media="(max-width: 1024px)"
-              srcSet={tablet}
+              srcSet={artDirection.tablet}
               width={1024}
               height={576}
             />
@@ -83,7 +73,7 @@ const ImageWithArtDirection = ({
             src={fallbackSrc}
             loader={loader}
             unoptimized={unoptimized}
-            quality={quality}
+            quality={quality ? Number(quality) : undefined}
             sizes={sizes}
           />
 
