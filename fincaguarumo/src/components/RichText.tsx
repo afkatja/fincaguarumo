@@ -61,9 +61,11 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
         blurDataURL={value.metadata?.lqip}
         quality={75}
         unoptimized={false}
-        author={value.author}
-        caption={value.caption}
-        sourceUrl={value.sourceUrl}
+        attribution={{
+          author: value.author,
+          caption: value.caption,
+          sourceUrl: value.sourceUrl,
+        }}
       />
     ),
     columnsBlock: ({ value }) => <ColumnsBlock value={value} />,
@@ -116,7 +118,7 @@ const RichText = ({
   className?: string
   columns?: boolean
 }) => {
-  if (!body) return
+  if (!body) return null
 
   return (
     <div
