@@ -7,7 +7,7 @@ import { urlFor } from "../sanity/lib/image"
 import Link from "next/link"
 import ExternalLink from "./icons/ExternalLink"
 
-import { createNavigation } from "next-intl/navigation"
+import { Link as IntlLink } from "../navigation"
 import { ImageWithFallback } from "./ImageWithFallback"
 import ColumnsBlock from "./ColumnsBlock"
 
@@ -73,7 +73,6 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
 
   marks: {
     internalLink: ({ value, children }) => {
-      const { Link: IntlLink } = createNavigation()
       return (
         <IntlLink
           href={value.slug.current}
