@@ -39,6 +39,7 @@ export default function ProgressiveBookingForm({
 }: ProgressiveBookingFormProps) {
   const [currentStep, setCurrentStep] = useState<BookingStep>("dates")
   const [dateError, setDateError] = useState<string>("")
+  const [calendarLoading, setCalendarLoading] = useState(false)
   const [isStepValid, setIsStepValid] = useState<Record<BookingStep, boolean>>({
     dates: false,
     personal: false,
@@ -197,12 +198,14 @@ export default function ProgressiveBookingForm({
               }),
             }}
             error={dateError}
+            onLoadingChange={setCalendarLoading}
           />
           <AvailabilityPreview
             checkIn={bookingData.bookingDetails.checkIn}
             checkOut={bookingData.bookingDetails.checkOut}
             bookingType={bookingType}
             className="mt-2"
+            calendarLoading={calendarLoading}
           />
         </>
       ) : (

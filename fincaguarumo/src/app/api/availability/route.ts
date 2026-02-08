@@ -65,6 +65,7 @@ export async function POST(request: Request) {
     const isUnavailable = data && data.length > 0
     const hasBookingConflict = bookingsData && bookingsData.length > 0
     const isAvailable = !isUnavailable && !hasBookingConflict
+    console.log("Availability", { data, bookingsData })
 
     return NextResponse.json({
       isAvailable,

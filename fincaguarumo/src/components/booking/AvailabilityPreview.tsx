@@ -9,6 +9,7 @@ interface AvailabilityPreviewProps {
   checkOut?: Date | null
   bookingType: "villa" | "tour"
   className?: string
+  calendarLoading?: boolean
 }
 
 interface AvailabilityStatus {
@@ -22,6 +23,7 @@ export default function AvailabilityPreview({
   checkOut,
   bookingType,
   className = "",
+  calendarLoading = false,
 }: AvailabilityPreviewProps) {
   const t = useTranslations("booking")
   const [availability, setAvailability] = useState<AvailabilityStatus>({
@@ -34,6 +36,12 @@ export default function AvailabilityPreview({
     const checkAvailability = async () => {
       if (!checkIn || !checkOut || bookingType !== "villa") {
         setAvailability({ isAvailable: null, isLoading: false })
+        return
+      }
+
+      // Don't check availability if calendar is still loading
+      if (calendarLoading) {
+        setAvailability({ isAvailable: null, isLoading: true })
         return
       }
 
@@ -71,7 +79,7 @@ export default function AvailabilityPreview({
     // Debounce the availability check
     const timer = setTimeout(checkAvailability, 500)
     return () => clearTimeout(timer)
-  }, [checkIn, checkOut, bookingType])
+  }, [checkIn, checkOut, bookingType, calendarLoading])
 
   if (bookingType !== "villa") {
     return null
@@ -99,9 +107,11 @@ export default function AvailabilityPreview({
       >
         <Loader2 className="w-4 h-4 animate-spin" />
         <span>
-          {t("checkingAvailability", {
-            defaultValue: "Checking availability...",
-          })}
+          {calendarLoading
+            ? t("loadingCalendar", { defaultValue: "Loading calendar..." })
+            : t("checkingAvailability", {
+                defaultValue: "Checking availability...",
+              })}
         </span>
       </div>
     )

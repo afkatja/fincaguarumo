@@ -289,61 +289,142 @@ async function saveBookingToSupabase(booking: Booking & { source: string }) {
  * Update availability table with booked dates
  * This marks all dates within booking ranges as unavailable
  */
-async function updateAvailabilityTable(bookings: Booking[]) {
-  try {
-    // First, remove old availability entries that are in the past
-    const today = new Date().toISOString()
-    await supabase.from("availability").delete().lt("end_date", today)
+async function updateAvailabilityTable(
+  bookings: Booking[],
+  maxRetries = 3,
+): Promise<void> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(
+        `Updating availability table (attempt ${attempt}/${maxRetries}) with ${bookings.length} bookings`,
+      )
 
-    // For each booking, ensure availability entries exist
-    for (const booking of bookings) {
-      const startDate = new Date(booking.start)
-      const endDate = new Date(booking.end)
+      // First, remove old availability entries that are in the past
+      const today = new Date().toISOString()
+      const { error: cleanupError } = await supabase
+        .from("availability")
+        .delete()
+        .lt("end_date", today)
 
-      // Skip past bookings for availability table - only future/present bookings
-      // affect current availability
-      if (endDate < new Date()) {
+      if (cleanupError) {
+        console.error(
+          "Error cleaning up old availability entries:",
+          cleanupError,
+        )
+        if (attempt === maxRetries) throw cleanupError
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
         continue
       }
 
-      // Check if this exact range already exists in availability
-      const { data: existing } = await supabase
-        .from("availability")
-        .select("id")
-        .eq("start_date", booking.start)
-        .eq("end_date", booking.end)
-        .maybeSingle()
+      // For each booking, ensure availability entries exist
+      let successCount = 0
+      let errorCount = 0
 
-      if (!existing) {
-        // Create new availability entry marked as unavailable
-        const availabilityRecord: any = {
-          start_date: booking.start,
-          end_date: booking.end,
-          is_available: false,
-          updated_at: new Date().toISOString(),
+      for (const booking of bookings) {
+        const startDate = new Date(booking.start)
+        const endDate = new Date(booking.end)
+
+        // Skip past bookings for availability table - only future/present bookings
+        // affect current availability
+        if (endDate < new Date()) {
+          continue
         }
 
-        // Add optional fields that may not exist in schema yet
-        if (booking.source) {
-          availabilityRecord.reason = `Booked via ${booking.source}`
-        }
-        if (booking.uid) {
-          availabilityRecord.booking_uid = booking.uid
-        }
+        try {
+          // Check if this exact range already exists in availability
+          const { data: existing } = await supabase
+            .from("availability")
+            .select("id, is_available, reason, booking_uid")
+            .eq("start_date", booking.start)
+            .eq("end_date", booking.end)
+            .maybeSingle()
 
-        const { error } = await supabase
-          .from("availability")
-          .insert([availabilityRecord])
+          if (!existing) {
+            // Create new availability entry marked as unavailable
+            const availabilityRecord: any = {
+              start_date: booking.start,
+              end_date: booking.end,
+              is_available: false,
+              updated_at: new Date().toISOString(),
+            }
 
-        if (error) {
-          console.error("Error updating availability:", error)
+            // Add optional fields that may not exist in schema yet
+            if (booking.source) {
+              availabilityRecord.reason = `Booked via ${booking.source}`
+            }
+            if (booking.uid) {
+              availabilityRecord.booking_uid = booking.uid
+            }
+
+            const { error } = await supabase
+              .from("availability")
+              .insert([availabilityRecord])
+
+            if (error) {
+              console.error(
+                `Error creating availability entry for booking ${booking.uid}:`,
+                error,
+              )
+              errorCount++
+            } else {
+              successCount++
+            }
+          } else if (existing.is_available !== false) {
+            // Update existing entry to mark as unavailable
+            const { error } = await supabase
+              .from("availability")
+              .update({
+                is_available: false,
+                updated_at: new Date().toISOString(),
+                reason: booking.source
+                  ? `Booked via ${booking.source}`
+                  : existing.reason,
+                booking_uid: booking.uid || existing.booking_uid,
+              })
+              .eq("id", existing.id)
+
+            if (error) {
+              console.error(
+                `Error updating availability entry for booking ${booking.uid}:`,
+                error,
+              )
+              errorCount++
+            } else {
+              successCount++
+            }
+          } else {
+            // Already marked as unavailable
+            successCount++
+          }
+        } catch (bookingError) {
+          console.error(
+            `Error processing booking ${booking.uid}:`,
+            bookingError,
+          )
+          errorCount++
         }
       }
-    }
 
-    console.log(`Updated availability table with ${bookings.length} bookings`)
-  } catch (error) {
-    console.error("Error updating availability table:", error)
+      console.log(
+        `Availability table update completed: ${successCount} successful, ${errorCount} errors`,
+      )
+
+      if (errorCount === 0 || attempt === maxRetries) {
+        return // Success or final attempt, exit the function
+      }
+
+      // If we had errors but haven't exhausted retries, wait and retry
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
+    } catch (error) {
+      console.error(
+        `Error updating availability table (attempt ${attempt}/${maxRetries}):`,
+        error,
+      )
+      if (attempt === maxRetries) {
+        throw error
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
+    }
   }
 }
 
@@ -429,7 +510,15 @@ export async function GET() {
     const merged = mergeBookings(deduped)
 
     // Update availability table with all bookings
-    await updateAvailabilityTable(deduped)
+    // This is critical - always update availability even if some bookings fail
+    try {
+      await updateAvailabilityTable(deduped)
+      console.log("Successfully updated availability table")
+    } catch (availabilityError) {
+      console.error("Failed to update availability table:", availabilityError)
+      // Continue anyway - the API should still return the booking data
+      // but log the error for monitoring
+    }
 
     return NextResponse.json({ bookings: deduped, merged })
   } catch (err) {
