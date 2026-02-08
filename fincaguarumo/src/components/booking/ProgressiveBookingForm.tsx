@@ -333,8 +333,8 @@ export default function ProgressiveBookingForm({
         duration={duration}
         currency={bookingData.bookingDetails.currency}
       />
-      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <p className="text-sm text-blue-800">
+      <div className="p-4 bg-guarumo-primary/20 rounded-lg border border-guarumo-primary">
+        <p className="text-sm text-guarumo-primary">
           {t("paymentStepInfo", {
             defaultValue:
               "You'll be redirected to a secure payment page to complete your booking.",
@@ -416,6 +416,7 @@ export default function ProgressiveBookingForm({
       </form>
       <div className="mt-4 pt-4 border-t">
         <EmbeddedChat
+          key={`chat-${currentStep}`}
           className="max-h-64"
           initialMessage={
             currentStep === "dates"

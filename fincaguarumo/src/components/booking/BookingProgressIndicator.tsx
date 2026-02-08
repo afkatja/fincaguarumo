@@ -50,9 +50,9 @@ export default function BookingProgressIndicator({
                     relative flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm transition-all duration-200
                     ${
                       status === "completed"
-                        ? "bg-guarumo-primary text-white cursor-pointer hover:bg-guarumo=secondary"
+                        ? "bg-guarumo-primary text-zinc-50 cursor-pointer hover:bg-guarumo=secondary"
                         : status === "current"
-                          ? "bg-guarumo-accent text-white ring-4 ring-guarumo-accent/20"
+                          ? "bg-guarumo-accent text-zinc-50 ring-4 ring-guarumo-accent/20"
                           : "bg-zinc-200 text-zinc-500"
                     }
                     ${isClickable ? "hover:scale-105" : ""}
