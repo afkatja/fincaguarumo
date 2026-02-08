@@ -82,6 +82,7 @@ const BookingCalendar = ({
           selectedDate={selectedDates.checkIn}
           disabledDates={blockedDates}
           loading={loading}
+          month={selectedDates.checkIn || new Date()}
         />
 
         <div className="md:ml-4 mt-4 md:mt-0">
@@ -98,6 +99,7 @@ const BookingCalendar = ({
             disabledDates={blockedDates}
             loading={loading}
             minDate={selectedDates.checkIn}
+            month={selectedDates.checkIn || new Date()}
           />
         </div>
       </div>

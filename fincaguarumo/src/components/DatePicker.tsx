@@ -85,7 +85,7 @@ const DatePicker = ({
           disabled={date => setDisabledDates(date)}
           onSelect={(_, selectedDay) => onSelectDate(selectedDay)}
           selected={selectedDate}
-          startMonth={selectedDate ?? new Date()}
+          startMonth={month ?? selectedDate ?? new Date()}
         />
       </PopoverContent>
     </Popover>
