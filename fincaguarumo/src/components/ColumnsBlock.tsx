@@ -38,7 +38,7 @@ const ColumnsBlock = ({ value }: ColumnsBlockProps) => {
                 width={block.metadata?.dimensions?.width || 800}
                 height={block.metadata?.dimensions?.height || 600}
                 blurDataURL={block.metadata?.lqip}
-                quality={80}
+                quality={75}
                 unoptimized={false}
                 attribution={{
                   author: block.author,

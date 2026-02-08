@@ -24,7 +24,7 @@ const Gallery = ({
               .width(1200)
               .height(700)
               .format("webp")
-              .quality(85)
+              .quality(75)
               .url()}
             alt={item.item.alt || ""}
             width={1200}
