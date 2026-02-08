@@ -22,6 +22,16 @@ const safeBtoa = (s?: string) => {
   }
 }
 
+/**
+ * Render the Contact page for a given locale using provided page content and people data.
+ *
+ * Renders page metadata (title, description, main image), a contact form, a list of contact cards for each person,
+ * and a location section with an external link and embedded Google Map.
+ *
+ * @param content - Page content object; expected to include `title`, `description`, and `mainImage` used for layout metadata.
+ * @param people - Array of person records. Each record is expected to provide `name`, `avatar`, `phoneNumber`, and `email`.
+ * @returns The React element representing the Contact page.
+ */
 export default function Contact({
   locale,
   content,
