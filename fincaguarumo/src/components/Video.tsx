@@ -94,7 +94,7 @@ const Video = ({
           blurDataURL={blurDataURL}
         />
       ) : (
-        <ImageFallback loading={!videoVisible} />
+        <ImageFallback shouldHideFallback={videoVisible} />
       )}
       {showVideo && (
         <video
