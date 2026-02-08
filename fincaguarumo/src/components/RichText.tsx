@@ -31,6 +31,8 @@ const slugify = (text: string): string => {
   return text
     .toLowerCase()
     .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove diacritical marks
     .replace(/[^\w\s-]/g, "") // Remove special characters
     .replace(/[\s_-]+/g, "-") // Replace spaces and underscores with hyphens
     .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
@@ -46,7 +48,7 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
     h1: ({ children }) => (
       <Title
         Heading="h1"
-        titleClassName="col-span-2 dark:text-zinc-50 !y-6"
+        titleClassName="col-span-2 dark:text-zinc-50 !my-6"
         title={children}
         icon={{
           iconClassName: "fill-guarumo-accent dark:fill-zinc-50",
@@ -136,19 +138,16 @@ const RichText = ({
   body,
   icon,
   className,
-  columns,
 }: {
   body: any
   icon?: string
   className?: string
-  columns?: boolean
 }) => {
   if (!body) return null
 
   const wrapperClassName = `
     prose prose-lg w-11/12! mx-auto py-2 leading-relaxed 
     ${className || ""}
-    ${columns ? "grid lg:grid-cols-2 lg:gap-8" : ""}
   `.trim()
 
   return (
