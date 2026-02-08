@@ -36,6 +36,7 @@ export default function ChatInterface({
 }: ChatInterfaceProps) {
   const { locale } = useParams()
   const t = useTranslations("bookingChat")
+  const tGreetings = useTranslations("greetings")
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
@@ -63,10 +64,12 @@ export default function ChatInterface({
   // Initialize with greeting message
   useEffect(() => {
     if (messages.length === 0) {
-      const greeting = initialMessage || getPersonalizedGreeting(chatContext)
+      const greeting =
+        initialMessage || getPersonalizedGreeting(chatContext, tGreetings)
+
       setMessages([{ role: "assistant", content: greeting }])
     }
-  }, [locale, initialMessage, messages.length, chatContext])
+  }, [locale, initialMessage, messages.length, chatContext, tGreetings])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,46 +100,79 @@ export default function ChatInterface({
         throw new Error("Failed to get response")
       }
 
-      // Read the stream
+      // Read the stream with proper error handling and cleanup
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
       let assistantMessage = ""
+      let buffer = ""
 
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
+        try {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
 
-          const chunk = decoder.decode(value, { stream: true })
-          // Parse the stream chunk (simplified - in production, use proper stream parsing)
-          const lines = chunk.split("\n")
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6)
-              if (data === "[DONE]") continue
-              try {
-                const parsed = JSON.parse(data)
-                if (parsed.content) {
-                  assistantMessage += parsed.content
-                  setMessages(prev => {
-                    const newMessages = [...prev]
-                    const lastMessage = newMessages[newMessages.length - 1]
-                    if (lastMessage?.role === "assistant") {
-                      lastMessage.content = assistantMessage
-                    } else {
-                      newMessages.push({
-                        role: "assistant",
-                        content: assistantMessage,
-                      })
-                    }
-                    return newMessages
-                  })
+            const chunk = decoder.decode(value, { stream: true })
+            buffer += chunk
+
+            // Process complete lines
+            const lines = buffer.split("\n")
+            buffer = lines.pop() || "" // Keep incomplete line in buffer
+
+            for (const line of lines) {
+              const trimmedLine = line.trim()
+
+              // Handle both SSE format and plain text content
+              if (trimmedLine.startsWith("data: ")) {
+                const data = trimmedLine.slice(6)
+                if (data === "[DONE]" || data === "") continue
+
+                try {
+                  const parsed = JSON.parse(data)
+                  if (parsed.content && typeof parsed.content === "string") {
+                    assistantMessage += parsed.content
+                    setMessages(prev => {
+                      const newMessages = [...prev]
+                      const lastMessage = newMessages[newMessages.length - 1]
+                      if (lastMessage?.role === "assistant") {
+                        lastMessage.content = assistantMessage
+                      } else {
+                        newMessages.push({
+                          role: "assistant",
+                          content: assistantMessage,
+                        })
+                      }
+                      return newMessages
+                    })
+                  }
+                } catch (parseError) {
+                  console.warn("Failed to parse SSE data:", data, parseError)
                 }
-              } catch (e) {
-                // Skip invalid JSON
+              } else if (
+                trimmedLine &&
+                !trimmedLine.startsWith("event:") &&
+                !trimmedLine.startsWith("id:")
+              ) {
+                // Treat as plain text content
+                assistantMessage += trimmedLine + " "
+                setMessages(prev => {
+                  const newMessages = [...prev]
+                  const lastMessage = newMessages[newMessages.length - 1]
+                  if (lastMessage?.role === "assistant") {
+                    lastMessage.content = assistantMessage
+                  } else {
+                    newMessages.push({
+                      role: "assistant",
+                      content: assistantMessage,
+                    })
+                  }
+                  return newMessages
+                })
               }
             }
           }
+        } finally {
+          reader.releaseLock()
         }
       }
     } catch (error) {
@@ -161,7 +197,7 @@ export default function ChatInterface({
       <>
         <button
           onClick={toggleOpen}
-          className={`fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 ${
+          className={`fixed bottom-6 right-6 z-50 bg-guarumo-primary hover:bg-guarumo-secondary text-zinc-50 rounded-full p-4 shadow-lg transition-all duration-300 ${
             isOpen ? "scale-0" : "scale-100"
           }`}
           aria-label="Open chat"
@@ -171,7 +207,7 @@ export default function ChatInterface({
 
         {isOpen && (
           <div
-            className={`fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl overflow-hidden ${className}`}
+            className={`fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-zinc-50 rounded-2xl shadow-2xl overflow-hidden ${className}`}
           >
             <ChatHeader onClose={toggleOpen} />
             <ChatBody
@@ -193,7 +229,7 @@ export default function ChatInterface({
 
   if (variant === "sidebar") {
     return (
-      <div className={`h-full flex flex-col bg-white border-l ${className}`}>
+      <div className={`h-full flex flex-col bg-zinc-50 border-l ${className}`}>
         <ChatHeader onClose={toggleOpen} />
         <ChatBody
           messages={messages}
@@ -212,7 +248,9 @@ export default function ChatInterface({
 
   // Embedded variant
   return (
-    <div className={`flex flex-col bg-white rounded-lg border ${className}`}>
+    <div
+      className={`flex flex-col bg-zinc-50 rounded-lg border overflow-hidden ${className}`}
+    >
       <ChatHeader onClose={toggleOpen} />
       <ChatBody
         messages={messages}
@@ -232,7 +270,7 @@ export default function ChatInterface({
 function ChatHeader({ onClose }: { onClose?: () => void }) {
   const t = useTranslations("bookingChat")
   return (
-    <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+    <div className="flex items-center justify-between p-4 border-b bg-guarumo-primary text-zinc-50">
       <div className="flex items-center gap-2">
         <MessageCircle className="w-5 h-5" />
         <h3 className="font-semibold">
@@ -242,7 +280,7 @@ function ChatHeader({ onClose }: { onClose?: () => void }) {
       {onClose && (
         <button
           onClick={onClose}
-          className="p-1 hover:bg-blue-700 rounded transition-colors"
+          className="p-1 hover:bg-guarumo-primary/80 rounded transition-colors"
           aria-label="Close chat"
         >
           <X className="w-5 h-5" />
@@ -271,8 +309,8 @@ function ChatBody({
           <div
             className={`max-w-[80%] rounded-2xl px-4 py-2 ${
               msg.role === "user"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-900"
+                ? "bg-guarumo-primary text-zinc-50"
+                : "bg-zinc-100 text-zinc-900"
             }`}
           >
             {msg.content}
@@ -281,8 +319,8 @@ function ChatBody({
       ))}
       {isLoading && (
         <div className="flex justify-start">
-          <div className="bg-gray-100 rounded-2xl px-4 py-2">
-            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+          <div className="bg-zinc-100 rounded-2xl px-4 py-2">
+            <Loader2 className="w-5 h-5 animate-spin text-guarumo-primary" />
           </div>
         </div>
       )}
@@ -313,13 +351,13 @@ function ChatFooter({
           placeholder={t("inputPlaceholder", {
             defaultValue: "Ask about booking...",
           })}
-          className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-guarumo-primary"
           disabled={isLoading}
         />
         <button
           type="submit"
           disabled={isLoading || !input.trim()}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition-colors"
+          className="px-4 py-2 bg-guarumo-primary hover:bg-guarumo-secondary disabled:bg-zinc-300 text-zinc-50 rounded-lg transition-colors"
         >
           {isLoading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
