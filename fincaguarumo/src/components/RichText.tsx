@@ -98,6 +98,7 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
 
   marks: {
     internalLink: ({ value, children }) => {
+      if (!value?.slug?.current) return <>{children}</>
       return (
         <IntlLink
           href={value.slug.current}
