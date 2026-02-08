@@ -166,7 +166,12 @@ const ClientPage = ({
           </div>
         </footer>
       )}
-      <SidebarChat initialMessage={`Hi! I'm here to help you book ${content.title || "Villa Bruno"}. How can I assist you today?`} />
+      <SidebarChat
+        propertyTitle={content.title || "Villa Bruno"}
+        initialMessage={tPage("greetings.stay", {
+          propertyTitle: content.title || "Villa Bruno",
+        })}
+      />
     </>
   )
 }
