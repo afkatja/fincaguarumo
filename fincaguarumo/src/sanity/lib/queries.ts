@@ -41,11 +41,12 @@ const galleryImageProjection = groq`{
   _type,
   ...select(
     _type == "artDirectedImage" => {
-      "desktop": desktop { ${mainImageMetadataOnly} },
-      "tablet": tablet { ${mainImageMetadataOnly} },
-      "mobile": mobile { ${mainImageMetadataOnly} }
+      "desktop": desktop ${mainImageMetadataOnly},
+      "tablet": tablet ${mainImageMetadataOnly},
+      "mobile": mobile ${mainImageMetadataOnly}
     },
-    ${mainImageMetadataOnly}
+    _type == "imageWithMetadata" => 
+      ${mainImageMetadataOnly}
   )
 }`
 
