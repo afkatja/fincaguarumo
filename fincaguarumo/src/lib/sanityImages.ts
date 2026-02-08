@@ -24,10 +24,22 @@ export type ArtDirectedImage = {
 /** Union: single image or art-directed image (gallery/slideshow input) */
 export type GalleryImage = ImageWithMetadata | ArtDirectedImage
 
+/**
+ * Checks whether a gallery image is an art-directed image.
+ *
+ * @param img - The gallery image to test
+ * @returns `true` if `img` is an art-directed image, `false` otherwise.
+ */
 function isArtDirected(img: GalleryImage): img is ArtDirectedImage {
   return img && "_type" in img && img._type === "artDirectedImage"
 }
 
+/**
+ * Determines whether a value contains a non-null `asset` property.
+ *
+ * @param img - The value to test for an image asset
+ * @returns `true` if `img` is an object that contains a non-null `asset` property, `false` otherwise.
+ */
 function hasAsset(img: unknown): img is ImageWithMetadata {
   return (
     img != null &&
@@ -37,6 +49,18 @@ function hasAsset(img: unknown): img is ImageWithMetadata {
   )
 }
 
+/**
+ * Generate a set of responsive WebP image URLs and basic image attributes for a Sanity image.
+ *
+ * @param img - The Sanity image (may include `metadata` and `alt`) to build URLs from
+ * @returns An object containing:
+ *  - `src`: URL for the 2016×1134 image,
+ *  - `srcSet`: comma-separated responsive URLs with width descriptors,
+ *  - `width`: 2016,
+ *  - `height`: 1134,
+ *  - `alt`: the image alt text or an empty string,
+ *  - `metadata`: the image's metadata (if present)
+ */
 function buildResponsiveUrls(img: ImageWithMetadata) {
   const base = urlFor(img).fit("crop").quality(100).format("webp")
   return {
@@ -64,6 +88,14 @@ export type CarouselImage = {
   desktop?: string
 }
 
+/**
+ * Normalize an array of gallery images into a list of carousel-ready image objects.
+ *
+ * Preserves alt text and metadata, constructs per-device URLs for art-directed images, and filters out entries without image assets.
+ *
+ * @param images - An array of GalleryImage items, or `null`/`undefined`. Non-array or missing input yields an empty result.
+ * @returns An array of CarouselImage objects derived from valid input images; returns an empty array if there are no valid images.
+ */
 export function normalizeToCarouselImages(
   images: GalleryImage[] | null | undefined,
 ): CarouselImage[] {
