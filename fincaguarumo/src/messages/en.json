@@ -55,9 +55,13 @@
     "availabilityError": "Error checking availability. Please try again.",
     "checkingAvailability": "Checking availability...",
     "stepPersonal": "Personal Info",
+    "paymentStepInfo": "You'll be redirected to a secure payment page to complete your booking",
     "stepPayment": "Payment",
     "chatHelpDates": "I can help you check availability and book your stay at Villa Bruno. Ask me about available dates, pricing, and any special requests you may have.",
-    "stepDates": "Select Dates"
+    "chatHelpPersonal": "I can help you with your booking details. Please provide your name, email, phone number, and any special requests.",
+    "chatHelpPayment": "I can help you with your payment details. Please provide your payment information.",
+    "stepDates": "Select Dates",
+    "loadingCalendar": "Loading calendar..."
   },
   "page": {
     "moreFAQ": "More FAQ",
@@ -89,5 +93,10 @@
     "errorMessage": "Sorry, I encountered an error. Please try again.",
     "inputPlaceholder": "Ask about booking...",
     "sendButton": "Send"
+  },
+  "greetings": {
+    "homepage": "Welcome to Villa Bruno! How can I help you today?",
+    "stay": "Hi! I'm here to help you book {propertyTitle}. What would you like to know?",
+    "other": "Hello! How can I assist you today?"
   }
 }

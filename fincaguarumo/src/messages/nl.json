@@ -92,5 +92,10 @@
     "errorMessage": "Sorry, ik heb een fout aangetroffen. Probeer het opnieuw.",
     "inputPlaceholder": "Vraag naar boeking...",
     "sendButton": "Versturen"
+  },
+  "greetings": {
+    "homepage": "Welkom bij Villa Bruno! Hoe kan ik u vandaag helpen?",
+    "stay": "Hallo! Ik ben hier om u te helpen met het boeken van {propertyTitle}. Wat wilt u weten?",
+    "other": "Hallo! Hoe kan ik u vandaag helpen?"
   }
 }

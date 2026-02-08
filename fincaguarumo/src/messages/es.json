@@ -92,5 +92,10 @@
     "errorMessage": "Lo siento, encontré un error. Por favor inténtalo de nuevo.",
     "inputPlaceholder": "Pregunta por la reserva...",
     "sendButton": "Enviar"
+  },
+  "greetings": {
+    "homepage": "¡Bienvenido a Villa Bruno! ¿Cómo puedo ayudarte hoy?",
+    "stay": "¡Hola! Estoy aquí para ayudarte a reservar {propertyTitle}. ¿Qué te gustaría saber?",
+    "other": "¡Hola! ¿Cómo puedo asistirte hoy?"
   }
 }

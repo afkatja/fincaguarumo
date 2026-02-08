@@ -179,40 +179,23 @@ export const detectUserIntent = (
   return "general"
 }
 
-// Get personalized greeting based on context
-export const getPersonalizedGreeting = (context: ChatContext): string => {
-  const { page, locale, propertyTitle } = context
+// Get personalized greeting based on context using next-intl translations
+export const getPersonalizedGreeting = (
+  context: ChatContext,
+  t: (key: string, values?: Record<string, string>) => string,
+): string => {
+  const { page, propertyTitle } = context
 
-  const greetings: Record<string, Record<string, string>> = {
-    en: {
-      homepage: "Welcome to Villa Bruno! How can I help you today?",
-      stay: `Hi! I'm here to help you book ${propertyTitle || "Villa Bruno"}. What would you like to know?`,
-      other: "Hello! How can I assist you today?",
-    },
-    es: {
-      homepage: "¡Bienvenido a Villa Bruno! ¿Cómo puedo ayudarte hoy?",
-      stay: `¡Hola! Estoy aquí para ayudarte a reservar ${propertyTitle || "Villa Bruno"}. ¿Qué te gustaría saber?`,
-      other: "¡Hola! ¿Cómo puedo asistirte hoy?",
-    },
-    de: {
-      homepage: "Willkommen bei Villa Bruno! Wie kann ich Ihnen heute helfen?",
-      stay: `Hallo! Ich bin hier, um Ihnen bei der Buchung von ${propertyTitle || "Villa Bruno"} zu helfen. Was möchten Sie wissen?`,
-      other: "Hallo! Wie kann ich Ihnen heute helfen?",
-    },
-    nl: {
-      homepage: "Welkom bij Villa Bruno! Hoe kan ik u vandaag helpen?",
-      stay: `Hallo! Ik ben hier om u te helpen met het boeken van ${propertyTitle || "Villa Bruno"}. Wat wilt u weten?`,
-      other: "Hallo! Hoe kan ik u vandaag helpen?",
-    },
-    ru: {
-      homepage:
-        "Добро пожаловать в Виллу Бруно! Чем я могу помочь вам сегодня?",
-      stay: `Привет! Я здесь, чтобы помочь вам забронировать ${propertyTitle || "Виллу Бруно"}. Что вы хотели бы узнать?`,
-      other: "Привет! Чем я могу помочь вам сегодня?",
-    },
+  switch (page) {
+    case "homepage":
+      return t("greetings.homepage")
+    case "stay":
+      return t("greetings.stay", {
+        propertyTitle: propertyTitle || "Villa Bruno",
+      })
+    default:
+      return t("greetings.other")
   }
-
-  return greetings[locale]?.[page] || greetings.en.other
 }
 
 // Suggest next actions based on context

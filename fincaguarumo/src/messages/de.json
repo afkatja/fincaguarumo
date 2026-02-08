@@ -86,5 +86,10 @@
     "errorMessage": "Es tut mir leid, es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
     "inputPlaceholder": "Fragen Sie nach der Buchung...",
     "sendButton": "Schicken"
+  },
+  "greetings": {
+    "homepage": "Willkommen bei Villa Bruno! Wie kann ich Ihnen heute helfen?",
+    "stay": "Hallo! Ich bin hier, um Ihnen bei der Buchung von {propertyTitle} zu helfen. Was möchten Sie wissen?",
+    "other": "Hallo! Wie kann ich Ihnen heute helfen?"
   }
 }
