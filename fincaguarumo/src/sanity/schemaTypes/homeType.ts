@@ -43,11 +43,8 @@ export const homeType = defineType({
     }),
     defineField({
       name: "background_media_poster",
-      type: "image",
+      type: "imageWithMetadata",
       title: "Video poster",
-      options: {
-        hotspot: true,
-      },
     }),
     defineField({
       name: "featured_content_title",

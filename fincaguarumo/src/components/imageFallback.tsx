@@ -1,6 +1,10 @@
 import React from "react"
 
-const ImageFallback = ({ loading }: { loading: boolean }) => {
+const ImageFallback = ({
+  shouldHideFallback,
+}: {
+  shouldHideFallback: boolean
+}) => {
   return (
     <svg
       width="24"
@@ -9,7 +13,7 @@ const ImageFallback = ({ loading }: { loading: boolean }) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`text-muted-foreground/50 absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
-        loading ? "opacity-0 pointer-events-none" : "opacity-100"
+        shouldHideFallback ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >
       <path

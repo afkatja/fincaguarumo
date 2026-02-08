@@ -1,6 +1,6 @@
-import { SanityDocument } from "sanity"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { PAGE_QUERY } from "../../../../sanity/lib/queries"
+import { PAGE_QUERY_RESULT } from "../../../../../sanity.types"
 
 import ContactPage from "./ContactPage"
 import Script from "next/script"
@@ -54,7 +54,7 @@ const people = [
 
 const Contact = async ({ params }: { params: any }) => {
   const { locale } = await params
-  const content = await sanityFetch<SanityDocument>({
+  const content = await sanityFetch<PAGE_QUERY_RESULT>({
     query: PAGE_QUERY,
     revalidate: 0,
     params: { pageName: "contact", language: locale },

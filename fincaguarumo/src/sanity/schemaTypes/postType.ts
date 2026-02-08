@@ -36,17 +36,7 @@ export const postType = defineType({
     }),
     defineField({
       name: "mainImage",
-      type: "image",
-      options: {
-        hotspot: true,
-      },
-      fields: [
-        {
-          name: "alt",
-          type: "string",
-          title: "Alternative text",
-        },
-      ],
+      type: "imageWithMetadata",
     }),
     defineField({
       name: "categories",
@@ -60,6 +50,41 @@ export const postType = defineType({
     defineField({
       name: "body",
       type: "blockContent",
+    }),
+    defineField({
+      name: "openGraph",
+      title: "Open Graph",
+      type: "object",
+      fields: [
+        defineField({
+          name: "title",
+          title: "OG Title",
+          type: "string",
+          description:
+            "Optional title for social sharing. Defaults to the post title if empty.",
+        }),
+        defineField({
+          name: "description",
+          title: "OG Description",
+          type: "text",
+          description:
+            "Optional short description for social sharing. Defaults to an automatic summary if empty.",
+        }),
+        defineField({
+          name: "url",
+          title: "OG URL override",
+          type: "url",
+          description:
+            "Optional canonical URL for this post. Leave empty to use the site default URL for this post.",
+        }),
+        defineField({
+          name: "image",
+          title: "OG Image",
+          type: "imageWithMetadata",
+          description:
+            "Optional image for social sharing. Leave empty to fall back to the main image.",
+        }),
+      ],
     }),
     defineField({
       name: "isPublished",

@@ -16,14 +16,7 @@ export const galleryType = defineType({
     defineField({
       name: "images",
       type: "array",
-      of: [
-        {
-          type: "image",
-          options: {
-            hotspot: true,
-          },
-        },
-      ],
+      of: [{ type: "imageWithMetadata" }, { type: "artDirectedImage" }],
       options: {
         layout: "grid",
       },

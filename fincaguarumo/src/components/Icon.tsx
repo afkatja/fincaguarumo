@@ -7,7 +7,7 @@ export const ICONS: any = Object.keys(icons).reduce(
     ..._icons,
     [iconName]: (icons as any)[iconName],
   }),
-  {}
+  {},
 )
 
 export enum IconColor {
@@ -41,7 +41,10 @@ const Icon = ({
   className?: string
   size?: number
 }) => {
+  if(!icon) return null
+
   if (!ICONS[icon]) return `no such icon ${icon}`
+  
 
   const Component = ICONS[icon]
   const getColor = () => {

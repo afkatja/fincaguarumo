@@ -4,37 +4,22 @@ import Carousel from "@/components/Carousel"
 import { Button } from "@/components/ui/button"
 import Icon from "@/components/Icon"
 import Loading from "../app/[locale]/(pages)/loading"
-import { urlFor } from "../sanity/lib/image"
-import { SanityImageObject } from "../types"
+import {
+  normalizeToCarouselImages,
+  type GalleryImage,
+} from "@/lib/sanityImages"
 
 const Slideshow = ({
   images: imagesProp,
   showExpand,
 }: {
-  images: (SanityImageObject & { metadata?: { lqip: string }; url?: string })[]
+  images: GalleryImage[]
   showExpand?: boolean
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
+  const images = normalizeToCarouselImages(imagesProp)
 
-  if (!imagesProp || imagesProp.length === 0) return null
-
-  const images = imagesProp.map(img => ({
-    _type: img._type || "image",
-    asset: img.asset,
-    metadata: img.metadata,
-    src: img?.url
-      ? `${img.url}?w=2016&h=1134&fit=crop&q=100&fm=webp`
-      : urlFor(img)
-          .width(2016)
-          .height(1134)
-          .fit("crop")
-          .quality(100)
-          .format("webp")
-          .url(),
-    width: 2016,
-    height: 1134,
-    alt: img.alt || "",
-  }))
+  if (!images.length) return null
 
   return (
     <Suspense fallback={<Loading className="absolute" />}>

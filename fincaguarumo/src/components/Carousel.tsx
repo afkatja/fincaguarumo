@@ -9,8 +9,41 @@ import {
   CarouselDot,
 } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
-import Image from "next/image"
-import { SanityImageObject } from "../types"
+import { ImageWithFallback } from "./ImageWithFallback"
+import type { CarouselImage } from "@/lib/sanityImages"
+
+const SIZES = "(max-width: 640px) 640px, (max-width: 1024px) 1024px, 2016px"
+
+const CarouselImageEl = ({
+  img,
+  priority,
+}: {
+  img: CarouselImage
+  priority: boolean
+}) => {
+  const width = img.width ?? 2016
+  const height = img.height ?? 1134
+  const fallbackSrc = img.desktop || img.src
+
+  return (
+    <ImageWithFallback
+      src={fallbackSrc}
+      alt={img.alt}
+      className="mx-auto w-full object-cover"
+      sizes={SIZES}
+      priority={priority}
+      width={width}
+      height={height}
+      fill={false}
+      artDirection={{
+        mobile: img.mobile,
+        tablet: img.tablet,
+        desktop: img.desktop,
+      }}
+      blurDataURL={img.metadata?.lqip}
+    />
+  )
+}
 
 const ImgSlider = React.memo(
   ({
@@ -21,16 +54,7 @@ const ImgSlider = React.memo(
     plugins,
     ...props
   }: {
-    images: (SanityImageObject & {
-      desktop?: string
-      tablet?: string
-      mobile?: string
-      src: string
-      alt: string
-      width?: number
-      height?: number
-      metadata?: { lqip: string }
-    })[]
+    images: CarouselImage[]
     useArrows?: boolean
     options?: any
     plugins?: any[]
@@ -43,27 +67,13 @@ const ImgSlider = React.memo(
       <Carousel
         {...props}
         opts={options ?? (props as any).opts}
-        // Use a stable plugin instance and merge user-provided plugins.
         plugins={[autoplayRef.current, ...(plugins ?? [])]}
         className={`w-11/12 mx-auto md:max-h-[90dvh] flex flex-col ${className}`}
       >
         <CarouselContent>
           {images.slice(0, 12).map((img, i) => (
             <CarouselItem key={i}>
-              <Image
-                src={img.src}
-                sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 2016px"
-                alt={img.alt}
-                width={img.width ?? 2016}
-                height={img.height ?? 1134}
-                className="mx-auto object-cover"
-                priority={i === 0}
-                quality={100}
-                {...(img.metadata && {
-                  placeholder: "blur",
-                  blurDataURL: img.metadata?.lqip,
-                })}
-              />
+              <CarouselImageEl img={img} priority={i === 0} />
             </CarouselItem>
           ))}
         </CarouselContent>
@@ -77,7 +87,7 @@ const ImgSlider = React.memo(
         ) : null}
       </Carousel>
     )
-  }
+  },
 )
 
 ImgSlider.displayName = "ImgSlider"

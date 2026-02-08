@@ -42,7 +42,7 @@ const Title = React.memo(
       <Heading className={titleClassName} id={id}>
         {!!Object.keys(iconProp).length && (
           <Icon
-            icon={iconTitle ?? icon}
+            icon={iconTitle || icon}
             size={size}
             className={`inline mr-4 ${iconClassName}`}
             color={color}
@@ -51,7 +51,7 @@ const Title = React.memo(
         {title}
       </Heading>
     )
-  }
+  },
 )
 
 Title.displayName = "Title"

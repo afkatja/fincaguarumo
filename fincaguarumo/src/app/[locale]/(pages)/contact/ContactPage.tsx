@@ -7,6 +7,7 @@ import Icon from "@/components/Icon"
 import Title from "@/components/Title"
 import ContactForm from "./ContactForm"
 import { useTranslations } from "next-intl"
+import { PAGE_QUERY_RESULT } from "../../../../../sanity.types"
 
 const safeBtoa = (s?: string) => {
   if (typeof s !== "string") return ""
@@ -21,13 +22,23 @@ const safeBtoa = (s?: string) => {
   }
 }
 
+/**
+ * Render the Contact page for a given locale using provided page content and people data.
+ *
+ * Renders page metadata (title, description, main image), a contact form, a list of contact cards for each person,
+ * and a location section with an external link and embedded Google Map.
+ *
+ * @param content - Page content object; expected to include `title`, `description`, and `mainImage` used for layout metadata.
+ * @param people - Array of person records. Each record is expected to provide `name`, `avatar`, `phoneNumber`, and `email`.
+ * @returns The React element representing the Contact page.
+ */
 export default function Contact({
   locale,
   content,
   people,
 }: {
   locale: string
-  content: SanityDocument
+  content: PAGE_QUERY_RESULT
   people: Record<string, any>[]
 }) {
   const t = useTranslations("contact")
@@ -36,7 +47,7 @@ export default function Contact({
       locale={locale}
       pageName="contact"
       title={content?.title}
-      description={content?.description}
+      description={content?.description || ""}
       mainImage={content?.mainImage}
     >
       <div className="w-11/12 my-8 max-w-240! mx-auto items-start">
