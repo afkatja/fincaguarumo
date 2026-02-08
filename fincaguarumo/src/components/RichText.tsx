@@ -10,6 +10,7 @@ import ExternalLink from "./icons/ExternalLink"
 import { Link as IntlLink } from "../navigation"
 import { ImageWithFallback } from "./ImageWithFallback"
 import ColumnsBlock from "./ColumnsBlock"
+import Icon from "./Icon"
 
 // Helper function to extract plain text from ReactNode
 const getPlainTextFromNode = (node: any): string => {
@@ -143,10 +144,19 @@ const RichText = ({
 }) => {
   if (!body) return null
 
+  const wrapperClassName = `
+    prose prose-lg w-11/12! mx-auto py-2 leading-relaxed 
+    ${className || ""}
+    ${columns ? "grid lg:grid-cols-2 lg:gap-8" : ""}
+  `.trim()
+
   return (
-    <div
-      className={`prose prose-lg w-11/12! mx-auto py-2 leading-relaxed ${className || ""}`}
-    >
+    <div className={wrapperClassName}>
+      {!icon ? null : (
+        <div className="flex items-center mb-4">
+          <Icon icon={icon} className="mr-3 h-6 w-6" />
+        </div>
+      )}
       <PortableText value={body} components={portableTextComponents} />
     </div>
   )
