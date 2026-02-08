@@ -69,7 +69,7 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
     image: ({ value }) => (
       <Image
         src={urlFor(value).url()}
-        alt=""
+        alt={value.alt || ""}
         width={1024}
         height={700}
         className="mt-0"
@@ -78,9 +78,9 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
     imageWithMetadata: ({ value }) => (
       <ImageWithFallback
         src={value.url || urlFor(value).url()}
-        alt={value.alt}
-        width={value.metadata?.dimensions?.width}
-        height={value.metadata?.dimensions?.height}
+        alt={value.alt || ""}
+        width={value.metadata?.dimensions?.width || 1024}
+        height={value.metadata?.dimensions?.height || 700}
         className="mt-0"
         blurDataURL={value.metadata?.lqip}
         quality={75}
