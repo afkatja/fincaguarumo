@@ -11,6 +11,16 @@ import {
   searchPosts,
   searchTours,
   getAverageRating,
+  extractAllAmenities,
+  extractFeaturedAmenities,
+  extractAllPricingRules,
+  extractAllPaymentMethods,
+  extractAllCancellationPolicies,
+  extractDefaultCancellationPolicy,
+  extractAllLogistics,
+  extractImportantLogistics,
+  searchAmenities,
+  searchLogistics,
 } from "./sanity-data-extractor"
 import { portableTextToPlain } from "@/sanity/lib/portableTextHelper"
 
@@ -22,6 +32,107 @@ export interface RAGContext {
   reviews?: any[]
   posts?: any[]
   averageRating?: any
+  amenities?: any[]
+  pricingRules?: any[]
+  paymentMethods?: any[]
+  cancellationPolicy?: any
+  logistics?: any[]
+}
+
+// Intent detection for better context selection
+function detectUserIntent(query: string): string {
+  const lowerQuery = query.toLowerCase()
+
+  if (
+    lowerQuery.includes("amenit") ||
+    lowerQuery.includes("facilit") ||
+    lowerQuery.includes("feature") ||
+    lowerQuery.includes("pool") ||
+    lowerQuery.includes("wifi") ||
+    lowerQuery.includes("kitchen")
+  ) {
+    return "amenities"
+  }
+  if (
+    lowerQuery.includes("price") ||
+    lowerQuery.includes("cost") ||
+    lowerQuery.includes("fee") ||
+    lowerQuery.includes("discount") ||
+    lowerQuery.includes("season") ||
+    lowerQuery.includes("rate")
+  ) {
+    return "pricing"
+  }
+  if (
+    lowerQuery.includes("payment") ||
+    lowerQuery.includes("pay") ||
+    lowerQuery.includes("card") ||
+    lowerQuery.includes("stripe") ||
+    lowerQuery.includes("paypal")
+  ) {
+    return "payment"
+  }
+  if (
+    lowerQuery.includes("cancel") ||
+    lowerQuery.includes("refund") ||
+    lowerQuery.includes("modification") ||
+    lowerQuery.includes("change")
+  ) {
+    return "cancellation"
+  }
+  if (
+    lowerQuery.includes("check") ||
+    lowerQuery.includes("arrival") ||
+    lowerQuery.includes("departure") ||
+    lowerQuery.includes("transport") ||
+    lowerQuery.includes("direction") ||
+    lowerQuery.includes("parking")
+  ) {
+    return "logistics"
+  }
+  if (
+    lowerQuery.includes("tour") ||
+    lowerQuery.includes("activity") ||
+    lowerQuery.includes("excursion") ||
+    lowerQuery.includes("trip")
+  ) {
+    return "tours"
+  }
+  if (
+    lowerQuery.includes("review") ||
+    lowerQuery.includes("rating") ||
+    lowerQuery.includes("guest") ||
+    lowerQuery.includes("experience")
+  ) {
+    return "reviews"
+  }
+
+  return "general"
+}
+
+// Enhanced query matching with synonyms and related terms
+function enhanceQuery(query: string): string[] {
+  const lowerQuery = query.toLowerCase()
+  const terms = [lowerQuery]
+
+  // Add synonyms based on detected intent
+  if (lowerQuery.includes("amenit")) {
+    terms.push("facilities", "features", "equipment", "conveniences")
+  }
+  if (lowerQuery.includes("price")) {
+    terms.push("cost", "rate", "fee", "pricing", "rates")
+  }
+  if (lowerQuery.includes("payment")) {
+    terms.push("pay", "transaction", "charge", "billing")
+  }
+  if (lowerQuery.includes("cancel")) {
+    terms.push("refund", "cancellation", "modify", "change")
+  }
+  if (lowerQuery.includes("check")) {
+    terms.push("arrival", "departure", "checkin", "checkout")
+  }
+
+  return terms
 }
 
 // Build context based on user query and page context
@@ -32,26 +143,240 @@ export async function buildRAGContext(
   const context: RAGContext = {}
   let contextText = ""
 
-  const lowerQuery = userQuery.toLowerCase()
+  const userIntent = detectUserIntent(userQuery)
+  const enhancedTerms = enhanceQuery(userQuery)
 
-  // Extract relevant FAQs based on query
+  // Extract relevant FAQs with enhanced matching
   const faqs = await extractAllFAQs()
   const relevantFAQs = faqs.filter(
     (faq: any) =>
       faq.language === pageContext.locale &&
-      (faq.question.toLowerCase().includes(lowerQuery) ||
-        faq.answer.toLowerCase().includes(lowerQuery) ||
-        faq.keywords?.some((k: string) =>
-          k.toLowerCase().includes(lowerQuery),
-        )),
+      (faq.intent === userIntent || faq.priority >= 5) &&
+      enhancedTerms.some(
+        term =>
+          faq.question.toLowerCase().includes(term) ||
+          faq.answer.toLowerCase().includes(term) ||
+          faq.keywords?.some((k: string) => k.toLowerCase().includes(term)),
+      ),
   )
 
+  // Sort by priority and relevance
+  relevantFAQs.sort((a: any, b: any) => {
+    if (a.intent === userIntent && b.intent !== userIntent) return -1
+    if (b.intent === userIntent && a.intent !== userIntent) return 1
+    return (b.priority || 1) - (a.priority || 1)
+  })
+
   if (relevantFAQs.length > 0) {
-    context.faqs = relevantFAQs.slice(0, 5) // Limit to top 5
+    context.faqs = relevantFAQs.slice(0, 8) // Increased limit
     contextText += "\n\n=== RELEVANT FAQs ===\n"
     context.faqs?.forEach((faq: any, i: number) => {
       contextText += `\nQ${i + 1}: ${faq.question}\nA: ${faq.answer}\n`
+      if (faq.relatedQuestions && faq.relatedQuestions.length > 0) {
+        contextText += `Related: ${faq.relatedQuestions.map((rq: any) => rq.question).join(", ")}\n`
+      }
     })
+  }
+
+  // Enhanced amenities context
+  if (
+    userIntent === "amenities" ||
+    enhancedTerms.some(term =>
+      ["amenit", "facilit", "feature", "pool", "wifi", "kitchen"].some(
+        keyword => term.includes(keyword),
+      ),
+    )
+  ) {
+    const amenities = await extractAllAmenities()
+    const relevantAmenities = amenities.filter(
+      (amenity: any) =>
+        amenity.language === pageContext.locale &&
+        enhancedTerms.some(
+          term =>
+            amenity.title.toLowerCase().includes(term) ||
+            amenity.description.toLowerCase().includes(term) ||
+            amenity.keywords?.some((k: string) =>
+              k.toLowerCase().includes(term),
+            ) ||
+            amenity.category.toLowerCase().includes(term),
+        ),
+    )
+
+    if (relevantAmenities.length > 0) {
+      context.amenities = relevantAmenities.slice(0, 10)
+      contextText += "\n\n=== AMENITIES & FEATURES ===\n"
+      context.amenities?.forEach((amenity: any, i: number) => {
+        contextText += `\n${i + 1}. ${amenity.title} (${amenity.category})\n`
+        contextText += `   ${amenity.description}\n`
+        if (amenity.isFeatured) contextText += "   ⭐ Featured\n"
+      })
+    }
+  }
+
+  // Enhanced pricing context
+  if (
+    userIntent === "pricing" ||
+    enhancedTerms.some(term =>
+      ["price", "cost", "fee", "discount", "season", "rate"].some(keyword =>
+        term.includes(keyword),
+      ),
+    )
+  ) {
+    const pricingRules = await extractAllPricingRules()
+    const relevantPricing = pricingRules.filter(
+      (rule: any) =>
+        rule.language === pageContext.locale &&
+        enhancedTerms.some(
+          term =>
+            rule.title.toLowerCase().includes(term) ||
+            rule.description.toLowerCase().includes(term) ||
+            rule.ruleType.toLowerCase().includes(term) ||
+            rule.season?.toLowerCase().includes(term),
+        ),
+    )
+
+    if (relevantPricing.length > 0) {
+      context.pricingRules = relevantPricing
+      contextText += "\n\n=== PRICING INFORMATION ===\n"
+      context.pricingRules?.forEach((rule: any, i: number) => {
+        contextText += `\n${i + 1}. ${rule.title}\n`
+        contextText += `   Type: ${rule.ruleType}\n`
+        if (rule.season) contextText += `   Season: ${rule.season}\n`
+        if (rule.basePrice) contextText += `   Base Price: $${rule.basePrice}\n`
+        if (rule.percentage) contextText += `   ${rule.percentage}%\n`
+        if (rule.fixedAmount) contextText += `   Fee: $${rule.fixedAmount}\n`
+        if (rule.minimumNights)
+          contextText += `   Minimum nights: ${rule.minimumNights}\n`
+        contextText += `   ${rule.description}\n`
+      })
+    }
+  }
+
+  // Enhanced payment methods context
+  if (
+    userIntent === "payment" ||
+    enhancedTerms.some(term =>
+      ["payment", "pay", "card", "stripe", "paypal"].some(keyword =>
+        term.includes(keyword),
+      ),
+    )
+  ) {
+    const paymentMethods = await extractAllPaymentMethods()
+    const relevantPayments = paymentMethods.filter(
+      (method: any) =>
+        method.language === pageContext.locale &&
+        enhancedTerms.some(
+          term =>
+            method.title.toLowerCase().includes(term) ||
+            method.description.toLowerCase().includes(term) ||
+            method.methodType.toLowerCase().includes(term) ||
+            method.processor?.toLowerCase().includes(term),
+        ),
+    )
+
+    if (relevantPayments.length > 0) {
+      context.paymentMethods = relevantPayments
+      contextText += "\n\n=== PAYMENT METHODS ===\n"
+      context.paymentMethods?.forEach((method: any, i: number) => {
+        contextText += `\n${i + 1}. ${method.title}\n`
+        contextText += `   Type: ${method.methodType}\n`
+        if (method.processor)
+          contextText += `   Processor: ${method.processor}\n`
+        if (method.processingTime)
+          contextText += `   Processing time: ${method.processingTime}\n`
+        if (method.fees) contextText += `   Fees: ${method.fees}\n`
+        if (method.isRecommended) contextText += "   ⭐ Recommended\n"
+        contextText += `   ${method.description}\n`
+      })
+    }
+  }
+
+  // Enhanced cancellation policy context
+  if (
+    userIntent === "cancellation" ||
+    enhancedTerms.some(term =>
+      ["cancel", "refund", "modification", "change"].some(keyword =>
+        term.includes(keyword),
+      ),
+    )
+  ) {
+    const cancellationPolicy = await extractDefaultCancellationPolicy()
+    if (
+      cancellationPolicy &&
+      cancellationPolicy.language === pageContext.locale
+    ) {
+      context.cancellationPolicy = cancellationPolicy
+      contextText += "\n\n=== CANCELLATION POLICY ===\n"
+      contextText += `Policy: ${cancellationPolicy.title}\n`
+      contextText += `Type: ${cancellationPolicy.policyType}\n`
+      contextText += `${cancellationPolicy.description}\n`
+
+      if (
+        cancellationPolicy.timeframes &&
+        cancellationPolicy.timeframes.length > 0
+      ) {
+        contextText += "\nCancellation Timeframes:\n"
+        cancellationPolicy.timeframes.forEach((timeframe: any) => {
+          contextText += `- ${timeframe.daysBeforeCheckIn}+ days before check-in: ${timeframe.refundPercentage}% refund\n`
+          contextText += `  ${timeframe.description}\n`
+        })
+      }
+
+      if (cancellationPolicy.modificationsAllowed) {
+        contextText += `\nModifications: ${cancellationPolicy.modificationPolicy || "Allowed"}\n`
+      }
+
+      contextText += `\nNo-show policy: ${cancellationPolicy.noShowPolicy}\n`
+    }
+  }
+
+  // Enhanced logistics context
+  if (
+    userIntent === "logistics" ||
+    enhancedTerms.some(term =>
+      [
+        "check",
+        "arrival",
+        "departure",
+        "transport",
+        "direction",
+        "parking",
+      ].some(keyword => term.includes(keyword)),
+    )
+  ) {
+    const logistics = await extractImportantLogistics()
+    const relevantLogistics = logistics.filter(
+      (logistic: any) =>
+        logistic.language === pageContext.locale &&
+        enhancedTerms.some(
+          term =>
+            logistic.title.toLowerCase().includes(term) ||
+            logistic.description.toLowerCase().includes(term) ||
+            logistic.instructions?.toLowerCase().includes(term) ||
+            logistic.category.toLowerCase().includes(term) ||
+            logistic.keywords?.some((k: string) =>
+              k.toLowerCase().includes(term),
+            ),
+        ),
+    )
+
+    if (relevantLogistics.length > 0) {
+      context.logistics = relevantLogistics
+      contextText += "\n\n=== LOGISTICS & PRACTICAL INFORMATION ===\n"
+      context.logistics?.forEach((logistic: any, i: number) => {
+        contextText += `\n${i + 1}. ${logistic.title} (${logistic.category})\n`
+        contextText += `   ${logistic.description}\n`
+        if (logistic.checkInTime)
+          contextText += `   Check-in: ${logistic.checkInTime}\n`
+        if (logistic.checkOutTime)
+          contextText += `   Check-out: ${logistic.checkOutTime}\n`
+        if (logistic.instructions)
+          contextText += `   Instructions: ${logistic.instructions}\n`
+        if (logistic.contactInfo)
+          contextText += `   Contact: ${logistic.contactInfo}\n`
+        if (logistic.isImportant) contextText += "   ⭐ Important\n"
+      })
+    }
   }
 
   // Extract page content if on a specific page
@@ -80,11 +405,12 @@ export async function buildRAGContext(
 
   // Extract tour information if query mentions tours/activities
   if (
-    lowerQuery.includes("tour") ||
-    lowerQuery.includes("activity") ||
-    lowerQuery.includes("attraction") ||
-    lowerQuery.includes("excursion") ||
-    lowerQuery.includes("trip")
+    userIntent === "tours" ||
+    enhancedTerms.some(term =>
+      ["tour", "activity", "attraction", "excursion", "trip"].some(keyword =>
+        term.includes(keyword),
+      ),
+    )
   ) {
     const tours = await extractAllTours()
     const relevantTours = tours.filter(
@@ -107,11 +433,12 @@ export async function buildRAGContext(
 
   // Extract reviews if query mentions reviews/ratings
   if (
-    lowerQuery.includes("review") ||
-    lowerQuery.includes("rating") ||
-    lowerQuery.includes("feedback") ||
-    lowerQuery.includes("guest") ||
-    lowerQuery.includes("experience")
+    userIntent === "reviews" ||
+    enhancedTerms.some(term =>
+      ["review", "rating", "feedback", "guest", "experience"].some(keyword =>
+        term.includes(keyword),
+      ),
+    )
   ) {
     const topReviews = await extractTopReviews(5)
     const avgRating = await getAverageRating()
@@ -133,13 +460,11 @@ export async function buildRAGContext(
 
   // Extract blog posts if query mentions blog/articles/local attractions
   if (
-    lowerQuery.includes("blog") ||
-    lowerQuery.includes("article") ||
-    lowerQuery.includes("post") ||
-    lowerQuery.includes("local") ||
-    lowerQuery.includes("area") ||
-    lowerQuery.includes("nearby") ||
-    lowerQuery.includes("around")
+    enhancedTerms.some(term =>
+      ["blog", "article", "post", "local", "area", "nearby", "around"].some(
+        keyword => term.includes(keyword),
+      ),
+    )
   ) {
     const posts = await extractAllPosts()
     const relevantPosts = posts.filter(

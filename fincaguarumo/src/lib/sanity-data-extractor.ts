@@ -10,9 +10,289 @@ export async function extractAllFAQs() {
     keywords,
     category->{title, slug},
     language,
-    showOnVillaBruno
+    showOnVillaBruno,
+    priority,
+    intent,
+    relatedQuestions[]->{_id, question}
   }`
   return await client.fetch(query)
+}
+
+// Extract all amenities
+export async function extractAllAmenities() {
+  const query = groq`*[_type == "amenities"] | order(displayOrder asc) {
+    _id,
+    title,
+    slug,
+    category,
+    description,
+    icon,
+    image,
+    isFeatured,
+    keywords,
+    language
+  }`
+  return await client.fetch(query)
+}
+
+// Extract amenities by category
+export async function extractAmenitiesByCategory(category: string) {
+  const query = groq`*[_type == "amenities" && category == $category] | order(displayOrder asc) {
+    _id,
+    title,
+    category,
+    description,
+    icon,
+    image,
+    isFeatured,
+    keywords,
+    language
+  }`
+  return await client.fetch(query, { category })
+}
+
+// Extract featured amenities
+export async function extractFeaturedAmenities() {
+  const query = groq`*[_type == "amenities" && isFeatured == true] | order(displayOrder asc) {
+    _id,
+    title,
+    category,
+    description,
+    icon,
+    image,
+    keywords,
+    language
+  }`
+  return await client.fetch(query)
+}
+
+// Extract all pricing rules
+export async function extractAllPricingRules() {
+  const query = groq`*[_type == "pricingRules" && isActive == true] | order(displayOrder asc) {
+    _id,
+    title,
+    ruleType,
+    season,
+    startDate,
+    endDate,
+    basePrice,
+    percentage,
+    fixedAmount,
+    minimumNights,
+    description,
+    language
+  }`
+  return await client.fetch(query)
+}
+
+// Extract pricing rules by type
+export async function extractPricingRulesByType(ruleType: string) {
+  const query = groq`*[_type == "pricingRules" && ruleType == $ruleType && isActive == true] | order(displayOrder asc) {
+    _id,
+    title,
+    ruleType,
+    season,
+    startDate,
+    endDate,
+    basePrice,
+    percentage,
+    fixedAmount,
+    minimumNights,
+    description,
+    language
+  }`
+  return await client.fetch(query, { ruleType })
+}
+
+// Extract all payment methods
+export async function extractAllPaymentMethods() {
+  const query = groq`*[_type == "paymentMethods" && isAvailable == true] | order(displayOrder asc) {
+    _id,
+    title,
+    methodType,
+    processor,
+    description,
+    processingTime,
+    fees,
+    supportedCards,
+    instructions,
+    isRecommended,
+    icon,
+    language
+  }`
+  return await client.fetch(query)
+}
+
+// Extract recommended payment methods
+export async function extractRecommendedPaymentMethods() {
+  const query = groq`*[_type == "paymentMethods" && isAvailable == true && isRecommended == true] | order(displayOrder asc) {
+    _id,
+    title,
+    methodType,
+    processor,
+    description,
+    processingTime,
+    fees,
+    supportedCards,
+    instructions,
+    icon,
+    language
+  }`
+  return await client.fetch(query)
+}
+
+// Extract all cancellation policies
+export async function extractAllCancellationPolicies() {
+  const query = groq`*[_type == "cancellationPolicies" && isActive == true] | order(displayOrder asc) {
+    _id,
+    title,
+    policyType,
+    timeframes,
+    description,
+    modificationsAllowed,
+    modificationPolicy,
+    noShowPolicy,
+    exceptions,
+    isDefault,
+    language
+  }`
+  return await client.fetch(query)
+}
+
+// Extract default cancellation policy
+export async function extractDefaultCancellationPolicy() {
+  const query = groq`*[_type == "cancellationPolicies" && isActive == true && isDefault == true][0] {
+    _id,
+    title,
+    policyType,
+    timeframes,
+    description,
+    modificationsAllowed,
+    modificationPolicy,
+    noShowPolicy,
+    exceptions,
+    language
+  }`
+  return await client.fetch(query)
+}
+
+// Extract all logistics information
+export async function extractAllLogistics() {
+  const query = groq`*[_type == "logistics"] | order(displayOrder asc) {
+    _id,
+    title,
+    category,
+    checkInTime,
+    checkOutTime,
+    earlyCheckIn,
+    earlyCheckInFee,
+    lateCheckOut,
+    lateCheckOutFee,
+    description,
+    instructions,
+    contactInfo,
+    address,
+    distance,
+    isImportant,
+    keywords,
+    language
+  }`
+  return await client.fetch(query)
+}
+
+// Extract logistics by category
+export async function extractLogisticsByCategory(category: string) {
+  const query = groq`*[_type == "logistics" && category == $category] | order(displayOrder asc) {
+    _id,
+    title,
+    category,
+    checkInTime,
+    checkOutTime,
+    earlyCheckIn,
+    earlyCheckInFee,
+    lateCheckOut,
+    lateCheckOutFee,
+    description,
+    instructions,
+    contactInfo,
+    address,
+    distance,
+    isImportant,
+    keywords,
+    language
+  }`
+  return await client.fetch(query, { category })
+}
+
+// Extract important logistics information
+export async function extractImportantLogistics() {
+  const query = groq`*[_type == "logistics" && isImportant == true] | order(displayOrder asc) {
+    _id,
+    title,
+    category,
+    checkInTime,
+    checkOutTime,
+    earlyCheckIn,
+    earlyCheckInFee,
+    lateCheckOut,
+    lateCheckOutFee,
+    description,
+    instructions,
+    contactInfo,
+    address,
+    distance,
+    keywords,
+    language
+  }`
+  return await client.fetch(query)
+}
+
+// Search amenities by keywords
+export async function searchAmenities(
+  searchTerm: string,
+  language: string = "en",
+) {
+  const searchQuery = groq`*[_type == "amenities" && language == $language && (
+    title match $searchTerm ||
+    description match $searchTerm ||
+    keywords match $searchTerm ||
+    category match $searchTerm
+  )] | order(displayOrder asc) {
+    title,
+    category,
+    description,
+    icon,
+    isFeatured,
+    keywords
+  }`
+  return await client.fetch(searchQuery, {
+    searchTerm: `*${searchTerm}*`,
+    language,
+  })
+}
+
+// Search logistics by keywords
+export async function searchLogistics(
+  searchTerm: string,
+  language: string = "en",
+) {
+  const searchQuery = groq`*[_type == "logistics" && language == $language && (
+    title match $searchTerm ||
+    description match $searchTerm ||
+    keywords match $searchTerm ||
+    category match $searchTerm
+  )] | order(displayOrder asc) {
+    title,
+    category,
+    description,
+    instructions,
+    isImportant,
+    keywords
+  }`
+  return await client.fetch(searchQuery, {
+    searchTerm: `*${searchTerm}*`,
+    language,
+  })
 }
 
 // Extract FAQs by category
