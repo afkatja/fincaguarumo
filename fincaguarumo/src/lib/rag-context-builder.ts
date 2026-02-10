@@ -23,6 +23,10 @@ import {
   searchLogistics,
 } from "./sanity-data-extractor"
 import { portableTextToPlain } from "@/sanity/lib/portableTextHelper"
+import {
+  buildSemanticRAGContext,
+  validateSemanticRAGSetup,
+} from "./semantic-rag/semantic-context-builder"
 
 export interface RAGContext {
   faqs?: any[]
@@ -137,6 +141,47 @@ function enhanceQuery(query: string): string[] {
 
 // Build context based on user query and page context
 export async function buildRAGContext(
+  userQuery: string,
+  pageContext: { page: string; slug?: string; locale: string },
+): Promise<string> {
+  try {
+    // First, try to validate semantic RAG setup
+    const validation = await validateSemanticRAGSetup()
+
+    if (validation.isValid) {
+      // Use semantic RAG if available
+      console.log("Using semantic RAG for query:", userQuery)
+      const semanticContext = await buildSemanticRAGContext(
+        userQuery,
+        pageContext,
+        {
+          locale: pageContext.locale,
+          useMultiStep: true,
+          includeMetadata: true,
+        },
+      )
+
+      return semanticContext.formattedContext
+    } else {
+      console.warn(
+        "Semantic RAG not available, falling back to keyword-based RAG",
+      )
+      console.warn("Issues:", validation.issues)
+
+      // Fallback to original keyword-based approach
+      return await buildKeywordBasedRAGContext(userQuery, pageContext)
+    }
+  } catch (error) {
+    console.error(
+      "Error in buildRAGContext, falling back to keyword-based:",
+      error,
+    )
+    return await buildKeywordBasedRAGContext(userQuery, pageContext)
+  }
+}
+
+// Fallback keyword-based RAG context builder
+async function buildKeywordBasedRAGContext(
   userQuery: string,
   pageContext: { page: string; slug?: string; locale: string },
 ): Promise<string> {
