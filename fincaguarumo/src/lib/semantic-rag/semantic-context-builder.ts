@@ -288,6 +288,92 @@ export async function getSemanticRAGStats(): Promise<{
 /**
  * Validate semantic RAG setup
  */
+export async function validateSemanticRAGSetup(): Promise<{
+  isValid: boolean
+  errors: string[]
+  warnings: string[]
+  stats?: {
+    totalEmbeddings: number
+    contentTypes: Record<string, number>
+    languages: Record<string, number>
+  }
+}> {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  try {
+    // Test 1: Check embedding methods
+    console.log("Testing embedding methods...")
+    const embeddingTest = await testEmbeddingMethods()
+
+    if (!embeddingTest.local.success && !embeddingTest.remote.success) {
+      errors.push("Both local and remote embedding methods failed")
+      if (embeddingTest.local.error)
+        errors.push(`Local error: ${embeddingTest.local.error}`)
+      if (embeddingTest.remote.error)
+        errors.push(`Remote error: ${embeddingTest.remote.error}`)
+    } else {
+      if (!embeddingTest.local.success && embeddingTest.local.error) {
+        warnings.push(`Local embedding failed: ${embeddingTest.local.error}`)
+      }
+      if (!embeddingTest.remote.success && embeddingTest.remote.error) {
+        warnings.push(`Remote embedding failed: ${embeddingTest.remote.error}`)
+      }
+    }
+
+    // Test 2: Check content availability
+    console.log("Checking content availability...")
+    try {
+      const { getContentStats } = await import("./vector-store")
+      const stats = await getContentStats()
+
+      if (stats.totalEmbeddings === 0) {
+        errors.push(
+          "No embeddings found in vector store. Run semantic-rag:init to create embeddings.",
+        )
+      } else {
+        console.log(`Found ${stats.totalEmbeddings} embeddings`)
+      }
+
+      // Return stats if validation passes
+      const resultStats = {
+        totalEmbeddings: stats.totalEmbeddings,
+        contentTypes: stats.contentTypeStats,
+        languages: stats.languageStats,
+      }
+
+      return {
+        isValid: errors.length === 0,
+        errors,
+        warnings,
+        stats: resultStats,
+      }
+    } catch (contentError) {
+      errors.push(
+        `Failed to access content: ${contentError instanceof Error ? contentError.message : "Unknown error"}`,
+      )
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+    }
+  } catch (error) {
+    errors.push(
+      `Validation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    )
+    return {
+      isValid: false,
+      errors,
+      warnings,
+    }
+  }
+}
+
+/**
+ * Build content type context for semantic RAG
+ */
 export async function buildContentTypeContext(
   contentType: string,
   language: string,

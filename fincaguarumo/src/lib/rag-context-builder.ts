@@ -166,7 +166,7 @@ export async function buildRAGContext(
       console.warn(
         "Semantic RAG not available, falling back to keyword-based RAG",
       )
-      console.warn("Issues:", validation.issues)
+      console.warn("Issues:", validation.errors)
 
       // Fallback to original keyword-based approach
       return await buildKeywordBasedRAGContext(userQuery, pageContext)

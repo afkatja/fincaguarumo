@@ -1,7 +1,7 @@
 /**
- * Local Embedding Service using Ollama + Mistral
- * 
- * This provides embedding generation using locally running Ollama with Mistral model
+ * Local Embedding Service using Ollama + Nomic embed-text
+ *
+ * This provides embedding generation using locally running Ollama with nomic-embed-text model
  */
 
 export interface EmbeddingResult {
@@ -10,9 +10,11 @@ export interface EmbeddingResult {
 }
 
 /**
- * Generate embeddings using local Ollama with Mistral
+ * Generate embeddings using local Ollama with nomic-embed-text
  */
-export async function generateEmbedding(text: string): Promise<EmbeddingResult> {
+export async function generateEmbedding(
+  text: string,
+): Promise<EmbeddingResult> {
   try {
     const response = await fetch("http://localhost:11434/api/embeddings", {
       method: "POST",
@@ -20,7 +22,7 @@ export async function generateEmbedding(text: string): Promise<EmbeddingResult> 
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "mistral",
+        model: "nomic-embed-text",
         prompt: text,
       }),
     })
@@ -30,8 +32,12 @@ export async function generateEmbedding(text: string): Promise<EmbeddingResult> 
     }
 
     const data = await response.json()
-    
-    if (!data.embeddings || !Array.isArray(data.embeddings) || data.embeddings.length === 0) {
+
+    if (
+      !data.embeddings ||
+      !Array.isArray(data.embeddings) ||
+      data.embeddings.length === 0
+    ) {
       throw new Error("Invalid embedding response from Ollama")
     }
 
@@ -41,14 +47,18 @@ export async function generateEmbedding(text: string): Promise<EmbeddingResult> 
     }
   } catch (error) {
     console.error("Error generating local embedding:", error)
-    throw new Error(`Failed to generate local embedding: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    throw new Error(
+      `Failed to generate local embedding: ${error instanceof Error ? error.message : "Unknown error"}`,
+    )
   }
 }
 
 /**
  * Generate embeddings for multiple texts in batch
  */
-export async function generateBatchEmbeddings(texts: string[]): Promise<EmbeddingResult[]> {
+export async function generateBatchEmbeddings(
+  texts: string[],
+): Promise<EmbeddingResult[]> {
   const results: EmbeddingResult[] = []
 
   // Ollama doesn't have batch embedding, so process sequentially
@@ -96,7 +106,7 @@ export async function checkOllamaAvailability(): Promise<boolean> {
 export async function getAvailableModels(): Promise<string[]> {
   try {
     const response = await fetch("http://localhost:11434/api/tags")
-    
+
     if (!response.ok) {
       throw new Error(`Failed to get models: ${response.statusText}`)
     }
@@ -113,8 +123,7 @@ export async function getAvailableModels(): Promise<string[]> {
  * Get embedding dimensions for local model
  */
 export function getEmbeddingDimensions(): number {
-  // Mistral embeddings are typically 4096 dimensions
-  // But we'll use 768 to match TogetherAI for compatibility
+  // nomic-embed-text uses 768 dimensions
   return 768
 }
 
@@ -125,6 +134,6 @@ export function validateEmbedding(embedding: number[]): boolean {
   return (
     Array.isArray(embedding) &&
     embedding.length === getEmbeddingDimensions() &&
-    embedding.every(dim => typeof dim === 'number' && !isNaN(dim))
+    embedding.every(dim => typeof dim === "number" && !isNaN(dim))
   )
 }

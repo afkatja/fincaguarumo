@@ -197,7 +197,10 @@ export async function testEmbeddingMethods(): Promise<{
   local: { success: boolean; error?: string; time?: number }
   remote: { success: boolean; error?: string; time?: number }
 }> {
-  const results = {
+  const results: {
+    local: { success: boolean; error?: string; time?: number }
+    remote: { success: boolean; error?: string; time?: number }
+  } = {
     local: { success: false, error: undefined, time: undefined },
     remote: { success: false, error: undefined, time: undefined },
   }
