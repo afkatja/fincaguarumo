@@ -25,6 +25,7 @@ const mainImageWithDimensions = groq`{
   alt,
   crop,
   hotspot,
+  asset,
   "url": asset->url,
   "metadata": asset->metadata {
     lqip,
@@ -45,8 +46,8 @@ const galleryImageProjection = groq`{
       "tablet": tablet ${mainImageMetadataOnly},
       "mobile": mobile ${mainImageMetadataOnly}
     },
-    _type == "imageWithMetadata" => 
-      ${mainImageMetadataOnly}
+    _type == "imageWithMetadata" || _type == "image" => 
+      ${mainImageWithDimensions}
   )
 }`
 
@@ -153,11 +154,18 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && lan
 
 export const PAGE_QUERY = groq`
   *[_type == 'page' && slug.current == $pageName && language == $language][0] {
-    title, subtitle, description, mainImage, body[]{
+    title, 
+    subtitle, 
+    description, 
+    mainImage: imageWithMetadata, 
+    body[]{
       ...,
       ${imageWithMetadata}
     }, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,
-    slideshow->{ "images": images[]${galleryImageProjection} }, price,
+    slideshow->{ 
+      "images": images[]${galleryImageProjection} 
+    }, 
+    price,
     faq[]->{question, answer, slug},
     "translations": *[
       _type == "translation.metadata" &&

@@ -100,6 +100,7 @@ export function normalizeToCarouselImages(
   images: GalleryImage[] | null | undefined,
 ): CarouselImage[] {
   if (!images || !Array.isArray(images)) return []
+  // console.log({ images })
 
   return images
     .map((item): CarouselImage | null => {
