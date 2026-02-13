@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js"
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 // TogetherAI configuration
@@ -17,12 +17,14 @@ export interface EmbeddingResult {
 /**
  * Generate embeddings using TogetherAI e5-base-instruct model
  */
-export async function generateEmbedding(text: string): Promise<EmbeddingResult> {
+export async function generateEmbedding(
+  text: string,
+): Promise<EmbeddingResult> {
   try {
     const response = await fetch("https://api.together.xyz/v1/embeddings", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${TOGETHER_API_KEY}`,
+        Authorization: `Bearer ${TOGETHER_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -36,7 +38,7 @@ export async function generateEmbedding(text: string): Promise<EmbeddingResult> 
     }
 
     const data = await response.json()
-    
+
     if (!data.data || !data.data[0] || !data.data[0].embedding) {
       throw new Error("Invalid embedding response from TogetherAI")
     }
@@ -47,25 +49,29 @@ export async function generateEmbedding(text: string): Promise<EmbeddingResult> 
     }
   } catch (error) {
     console.error("Error generating embedding:", error)
-    throw new Error(`Failed to generate embedding: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    throw new Error(
+      `Failed to generate embedding: ${error instanceof Error ? error.message : "Unknown error"}`,
+    )
   }
 }
 
 /**
  * Generate embeddings for multiple texts in batch
  */
-export async function generateBatchEmbeddings(texts: string[]): Promise<EmbeddingResult[]> {
+export async function generateBatchEmbeddings(
+  texts: string[],
+): Promise<EmbeddingResult[]> {
   const batchSize = 100 // TogetherAI limit
   const results: EmbeddingResult[] = []
 
   for (let i = 0; i < texts.length; i += batchSize) {
     const batch = texts.slice(i, i + batchSize)
-    
+
     try {
       const response = await fetch("https://api.together.xyz/v1/embeddings", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${TOGETHER_API_KEY}`,
+          Authorization: `Bearer ${TOGETHER_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -79,7 +85,7 @@ export async function generateBatchEmbeddings(texts: string[]): Promise<Embeddin
       }
 
       const data = await response.json()
-      
+
       if (!data.data || !Array.isArray(data.data)) {
         throw new Error("Invalid batch embedding response from TogetherAI")
       }
@@ -91,7 +97,10 @@ export async function generateBatchEmbeddings(texts: string[]): Promise<Embeddin
 
       results.push(...batchResults)
     } catch (error) {
-      console.error(`Error generating batch embeddings for batch ${i / batchSize}:`, error)
+      console.error(
+        `Error generating batch embeddings for batch ${i / batchSize}:`,
+        error,
+      )
       throw error
     }
   }
@@ -108,7 +117,7 @@ export async function storeEmbedding(
   language: string,
   content: string,
   embedding: number[],
-  metadata: Record<string, any> = {}
+  metadata: Record<string, any> = {},
 ): Promise<void> {
   try {
     const { error } = await supabase.from("content_embeddings").upsert({
@@ -141,10 +150,10 @@ export async function storeBatchEmbeddings(
     content: string
     embedding: number[]
     metadata?: Record<string, any>
-  }>
+  }>,
 ): Promise<void> {
   try {
-    const records = embeddings.map((emb) => ({
+    const records = embeddings.map(emb => ({
       content_id: emb.contentId,
       content_type: emb.contentType,
       language: emb.language,
@@ -170,7 +179,7 @@ export async function storeBatchEmbeddings(
  */
 export async function embeddingExists(
   contentId: string,
-  contentType: string
+  contentType: string,
 ): Promise<boolean> {
   try {
     const { data, error } = await supabase
@@ -180,7 +189,8 @@ export async function embeddingExists(
       .eq("content_type", contentType)
       .single()
 
-    if (error && error.code !== "PGRST116") { // PGRST116 is "not found"
+    if (error && error.code !== "PGRST116") {
+      // PGRST116 is "not found"
       throw error
     }
 
@@ -206,6 +216,6 @@ export function validateEmbedding(embedding: number[]): boolean {
   return (
     Array.isArray(embedding) &&
     embedding.length === getEmbeddingDimensions() &&
-    embedding.every(dim => typeof dim === 'number' && !isNaN(dim))
+    embedding.every(dim => typeof dim === "number" && !isNaN(dim))
   )
 }

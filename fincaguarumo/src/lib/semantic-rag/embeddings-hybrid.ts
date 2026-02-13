@@ -39,8 +39,8 @@ const defaultConfig: EmbeddingConfig = {
  */
 function getEmbeddingConfig(): EmbeddingConfig {
   return {
-    preferLocal: process.env.EMBEDDING_PREFER_LOCAL !== "false",
-    fallbackToRemote: process.env.EMBEDDING_FALLBACK_TO_REMOTE !== "false",
+    preferLocal: process.env.EMBEDDING_PREFER_LOCAL === "true",
+    fallbackToRemote: process.env.EMBEDDING_FALLBACK_TO_REMOTE === "true",
     localTimeout: parseInt(process.env.EMBEDDING_LOCAL_TIMEOUT || "10000"),
   }
 }
@@ -223,21 +223,30 @@ export async function testEmbeddingMethods(): Promise<{
     }
   }
 
-  // Test remote
-  try {
-    const start = Date.now()
-    await generateRemoteEmbedding("test query")
-    const time = Date.now() - start
-    results.remote = {
-      success: true,
-      time,
-      error: undefined,
-    }
-  } catch (error) {
+  // Test remote (skip if EMBEDDING_PREFER_LOCAL=true)
+  const config = getEmbeddingConfig()
+  if (config.preferLocal) {
     results.remote = {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: "Remote embedding skipped (EMBEDDING_PREFER_LOCAL=true)",
       time: undefined,
+    }
+  } else {
+    try {
+      const start = Date.now()
+      await generateRemoteEmbedding("test query")
+      const time = Date.now() - start
+      results.remote = {
+        success: true,
+        time,
+        error: undefined,
+      }
+    } catch (error) {
+      results.remote = {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+        time: undefined,
+      }
     }
   }
 
