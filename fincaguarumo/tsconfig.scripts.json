@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+
+  "include": ["src/**/*.ts", "scripts/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "scripts/translate.ts",
+    "scripts/send-email.ts",
+    "scripts/cleanup.ts"
+  ]
+}

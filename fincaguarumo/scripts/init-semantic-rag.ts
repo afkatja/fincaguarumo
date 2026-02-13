@@ -26,11 +26,32 @@ async function main() {
     if (!validation.isValid) {
       console.error("❌ Setup validation failed:")
       validation.errors.forEach(error => console.error(`   - ${error}`))
-      if (validation.warnings.length > 0) {
-        console.log("\n⚠️  Warnings:")
-        validation.warnings.forEach(warning => console.log(`   - ${warning}`))
+
+      // Check if the only error is no embeddings (which we're about to create)
+      const hasOnlyEmbeddingError =
+        validation.errors.length === 1 &&
+        validation.errors[0].includes("No embeddings found")
+
+      // Check if warnings are only about remote embedding being skipped (expected for local setup)
+      const hasOnlyLocalWarnings =
+        validation.warnings.length > 0 &&
+        validation.warnings.every(w => w.includes("Remote embedding skipped"))
+
+      if (
+        !hasOnlyEmbeddingError ||
+        validation.warnings.some(w => !w.includes("Remote embedding skipped"))
+      ) {
+        if (validation.warnings.length > 0) {
+          console.log("\n⚠️  Warnings:")
+          validation.warnings.forEach(warning => console.log(`   - ${warning}`))
+        }
+        process.exit(1)
       }
-      process.exit(1)
+    }
+
+    if (validation.warnings.length > 0) {
+      console.log("\n⚠️  Warnings:")
+      validation.warnings.forEach(warning => console.log(`   - ${warning}`))
     }
 
     console.log("✅ Setup validation passed!")
@@ -88,8 +109,6 @@ async function main() {
 }
 
 // Check if this is being run directly
-if (require.main === module) {
-  main().catch(console.error)
-}
+main().catch(console.error)
 
 export { main }
