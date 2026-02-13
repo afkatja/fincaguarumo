@@ -7,7 +7,7 @@ import {
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export interface VectorSearchResult {
@@ -334,14 +334,14 @@ export async function rebuildEmbeddings(
       const texts = batch.map(item => item.content)
 
       // Generate embeddings
-      const { generateBatchEmbeddings } = await import("./embeddings")
+      const { generateBatchEmbeddings } = await import("./embeddings-hybrid")
       const embeddings = await generateBatchEmbeddings(texts)
 
       // Store embeddings
       const { storeBatchEmbeddings } = await import("./embeddings")
       await storeBatchEmbeddings(
         batch.map((item, index) => ({
-          contentId: item.contentId,
+          contentId: item.contentId || `${contentType}_${language}_${index}`,
           contentType,
           language,
           content: item.content,
