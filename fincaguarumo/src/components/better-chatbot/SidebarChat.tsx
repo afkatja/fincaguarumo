@@ -4,6 +4,8 @@ import { useState } from "react"
 import { useBooking } from "@/app/providers/BookingProvider"
 import { usePageContext } from "@/hooks/usePageContext"
 import ChatInterface from "./ChatInterface"
+import { Button } from "../ui/button"
+import { MessageCircle } from "lucide-react"
 
 interface SidebarChatProps {
   className?: string
@@ -21,29 +23,29 @@ export default function SidebarChat({
   const { page } = usePageContext()
 
   return (
-    <div className={`relative ${className}`}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="absolute top-4 right-4 z-10 bg-guarumo-primary hover:bg-guarumo-secondary text-zinc-50 px-4 py-2 rounded-lg shadow-lg transition-colors"
-      >
-        {isOpen ? "Close Chat" : "Chat Assistant"}
-      </button>
+    <div className={`fixed bottom-34 w-full z-10 ${className}`}>
+      <div className="w-11/12 mx-auto flex items-center ">
+        <Button onClick={() => setIsOpen(!isOpen)} className="ml-auto">
+          <MessageCircle className="mr-2" />
+          {isOpen ? "Close Chat" : "Chat Assistant"}
+        </Button>
 
-      {isOpen && (
-        <div className="fixed inset-y-0 right-0 w-96 max-w-[calc(100vw-2rem)] z-50 bg-zinc-50 shadow-2xl">
-          <ChatInterface
-            variant="sidebar"
-            isOpen={isOpen}
-            onToggle={() => setIsOpen(!isOpen)}
-            initialMessage={initialMessage}
-            context={{
-              page,
-              bookingData,
-              propertyTitle,
-            }}
-          />
-        </div>
-      )}
+        {isOpen && (
+          <div className="fixed inset-y-0 right-0 w-96 max-w-[calc(100vw-2rem)] z-50 bg-zinc-50 shadow-2xl">
+            <ChatInterface
+              variant="sidebar"
+              isOpen={isOpen}
+              onToggle={() => setIsOpen(!isOpen)}
+              initialMessage={initialMessage}
+              context={{
+                page,
+                bookingData,
+                propertyTitle,
+              }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
