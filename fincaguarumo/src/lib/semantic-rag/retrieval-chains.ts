@@ -4,12 +4,14 @@ import {
   HybridSearchResult,
   SearchOptions,
 } from "./vector-store"
-import { processAllDocuments } from "./document-loaders"
+// import { processAllDocuments } from "./document-loaders"
 
 export interface RetrievalChainOptions extends SearchOptions {
   useHybridSearch?: boolean
   contextSize?: number
   minRelevanceScore?: number
+  language?: string
+  threshold?: number
 }
 
 export interface RetrievedContext {
