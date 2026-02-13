@@ -18,7 +18,9 @@
     "semantic-rag:build": "npx tsx --tsconfig tsconfig.scripts.json ",
     "semantic-rag:init": "EMBEDDING_PREFER_LOCAL=true EMBEDDING_FALLBACK_TO_REMOTE=false npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/init-semantic-rag.ts",
     "semantic-rag:validate": "EMBEDDING_PREFER_LOCAL=true EMBEDDING_FALLBACK_TO_REMOTE=false npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/validate.ts",
-    "semantic-rag:test": "npm run semantic-rag:build && node dist/src/lib/semantic-rag/test.js"
+    "semantic-rag:test": "npm run semantic-rag:build && node dist/src/lib/semantic-rag/test.js",
+    "semantic-rag:init-prod": "EMBEDDING_PREFER_LOCAL=false EMBEDDING_FALLBACK_TO_REMOTE=true npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/init-semantic-rag.ts",
+    "semantic-rag:validate-prod": "EMBEDDING_PREFER_LOCAL=false EMBEDDING_FALLBACK_TO_REMOTE=true npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/validate.ts"
   },
   "lint-staged": {
     "src/messages/en.json": [
