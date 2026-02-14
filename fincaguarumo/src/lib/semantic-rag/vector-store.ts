@@ -95,7 +95,10 @@ export async function hybridSearch(
 
   try {
     // Generate embedding for the query
-    const { embedding } = await generateEmbedding(query)
+    const { embedding, dimensions } = await generateEmbedding(query)
+
+    // Diagnostic logging
+    console.log("[hybridSearch] Query:", query)
 
     // Call the hybrid search function
     const { data, error } = await supabase.rpc("hybrid_search", {
@@ -110,6 +113,7 @@ export async function hybridSearch(
     })
 
     if (error) {
+      console.error("[hybridSearch] Supabase RPC error:", error)
       throw new Error(`Hybrid search failed: ${error.message}`)
     }
 
