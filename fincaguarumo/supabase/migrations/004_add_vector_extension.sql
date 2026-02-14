@@ -67,8 +67,8 @@ RETURNS TABLE (
   language TEXT,
   content TEXT,
   metadata JSONB,
-  similarity FLOAT
-) AS $$
+  similarity DOUBLE PRECISION
+) AS $
 BEGIN
   RETURN QUERY
   SELECT 
@@ -78,7 +78,7 @@ BEGIN
     ce.language,
     ce.content,
     ce.metadata,
-    1 - (ce.embedding <=> query_embedding) as similarity
+    (1 - (ce.embedding <=> query_embedding))::DOUBLE PRECISION as similarity
   FROM content_embeddings ce
   WHERE 
     (content_type_filter IS NULL OR ce.content_type = content_type_filter)
@@ -87,7 +87,7 @@ BEGIN
   ORDER BY similarity DESC
   LIMIT max_results;
 END;
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;
 
 -- Create a function for hybrid search (semantic + keyword)
 CREATE OR REPLACE FUNCTION hybrid_search(
@@ -107,10 +107,10 @@ RETURNS TABLE (
   language TEXT,
   content TEXT,
   metadata JSONB,
-  similarity FLOAT,
-  keyword_score FLOAT,
-  combined_score FLOAT
-) AS $$
+  similarity DOUBLE PRECISION,
+  keyword_score DOUBLE PRECISION,
+  combined_score DOUBLE PRECISION
+) AS $
 BEGIN
   RETURN QUERY
   WITH 
@@ -122,8 +122,8 @@ BEGIN
       ce.language,
       ce.content,
       ce.metadata,
-      1 - (ce.embedding <=> query_embedding) as semantic_similarity,
-      0 as keyword_score
+      (1 - (ce.embedding <=> query_embedding))::DOUBLE PRECISION as semantic_similarity,
+      0.0::DOUBLE PRECISION as keyword_score
     FROM content_embeddings ce
     WHERE 
       (content_type_filter IS NULL OR ce.content_type = content_type_filter)
@@ -138,12 +138,12 @@ BEGIN
       ce.language,
       ce.content,
       ce.metadata,
-      0 as semantic_similarity,
+      0.0::DOUBLE PRECISION as semantic_similarity,
       CASE 
-        WHEN ce.content ILIKE '%' || query_text || '%' THEN 1.0
-        WHEN ce.content ILIKE '%' || query_text THEN 0.8
-        WHEN ce.content ILIKE query_text || '%' THEN 0.8
-        ELSE 0.0
+        WHEN ce.content ILIKE '%' || query_text || '%' THEN 1.0::DOUBLE PRECISION
+        WHEN ce.content ILIKE '%' || query_text THEN 0.8::DOUBLE PRECISION
+        WHEN ce.content ILIKE query_text || '%' THEN 0.8::DOUBLE PRECISION
+        ELSE 0.0::DOUBLE PRECISION
       END as keyword_score
     FROM content_embeddings ce
     WHERE 
@@ -158,13 +158,13 @@ BEGIN
     COALESCE(sr.language, kr.language) as language,
     COALESCE(sr.content, kr.content) as content,
     COALESCE(sr.metadata, kr.metadata) as metadata,
-    COALESCE(sr.semantic_similarity, 0) as similarity,
-    COALESCE(kr.keyword_score, 0) as keyword_score,
-    (COALESCE(sr.semantic_similarity, 0) * semantic_weight + COALESCE(kr.keyword_score, 0) * keyword_weight) as combined_score
+    COALESCE(sr.semantic_similarity, 0.0::DOUBLE PRECISION)::DOUBLE PRECISION as similarity,
+    COALESCE(kr.keyword_score, 0.0::DOUBLE PRECISION)::DOUBLE PRECISION as keyword_score,
+    (COALESCE(sr.semantic_similarity, 0.0::DOUBLE PRECISION) * semantic_weight + COALESCE(kr.keyword_score, 0.0::DOUBLE PRECISION) * keyword_weight)::DOUBLE PRECISION as combined_score
   FROM semantic_results sr
   FULL OUTER JOIN keyword_results kr ON sr.id = kr.id
-  WHERE (COALESCE(sr.semantic_similarity, 0) * semantic_weight + COALESCE(kr.keyword_score, 0) * keyword_weight) > 0
+  WHERE (COALESCE(sr.semantic_similarity, 0.0::DOUBLE PRECISION) * semantic_weight + COALESCE(kr.keyword_score, 0.0::DOUBLE PRECISION) * keyword_weight) > 0
   ORDER BY combined_score DESC
   LIMIT max_results;
 END;
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;
