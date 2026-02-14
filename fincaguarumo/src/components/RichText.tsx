@@ -80,7 +80,7 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
     ),
     imageWithMetadata: ({ value }) => (
       <ImageWithFallback
-        src={value.url || urlFor(value).url()}
+        src={urlFor(value).url()}
         alt={value.alt || ""}
         width={value.metadata?.dimensions?.width || 1024}
         height={value.metadata?.dimensions?.height || 700}
@@ -91,7 +91,7 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
         attribution={{
           author: value.author,
           caption: value.caption,
-          sourceUrl: value.sourceUrl,
+          sourceUrl: value.sourceUrl || value.url,
         }}
       />
     ),

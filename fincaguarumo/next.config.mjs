@@ -67,6 +67,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "*.bstatic.com",
       },
+      {
+        protocol: "https",
+        hostname: "*.myportfolio.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.flickr.com",
+      },
     ],
   },
   async rewrites() {
