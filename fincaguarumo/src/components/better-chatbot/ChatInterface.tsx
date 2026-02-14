@@ -82,15 +82,30 @@ export default function ChatInterface({
     setInput("")
     setIsLoading(true)
 
-    // Add user message
+    // Add user message to state
     setMessages(prev => [...prev, { role: "user", content: userMessage }])
+
+    // Build messages array for API call
+    // Only include user messages in the history to comply with API requirements
+    // The API expects: [system] → user → assistant → user → assistant...
+    const userOnlyMessages = messages
+      .filter(msg => msg.role === "user")
+      .map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      }))
+
+    const messagesWithUser = [
+      ...userOnlyMessages,
+      { role: "user", content: userMessage },
+    ]
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: messages.map(msg => ({
+          messages: messagesWithUser.map(msg => ({
             role: msg.role,
             content: msg.content,
           })),
@@ -100,7 +115,9 @@ export default function ChatInterface({
       })
 
       if (!response.ok) {
-        throw new Error("Failed to get response")
+        throw new Error(
+          `Failed to get response: ${response.status} ${response.statusText}`,
+        )
       }
 
       // Read the stream with proper error handling and cleanup
@@ -134,6 +151,7 @@ export default function ChatInterface({
                   const parsed = JSON.parse(data)
                   if (parsed.content && typeof parsed.content === "string") {
                     assistantMessage += parsed.content
+
                     setMessages(prev => {
                       const newMessages = [...prev]
                       const lastMessage = newMessages[newMessages.length - 1]
