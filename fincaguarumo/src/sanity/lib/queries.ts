@@ -1,13 +1,18 @@
 import { groq } from "next-sanity"
 
 // Reusable image projection fragments (explicit crop/hotspot for urlFor)
-const imageWithMetadata = groq`_type == "imageWithMetadata" => {
-  ...,
-  crop,
-  hotspot,
-  "url": asset->url,
-  "metadata": asset->metadata
-}`
+const imageWithMetadata = groq`...select(
+  _type == "imageWithMetadata" || _type == "image" => {
+    ...,
+    crop,
+    hotspot,
+    "url": asset->url,
+    "metadata": asset->metadata {
+      lqip,
+      dimensions
+    }
+  }
+)`
 const mainImageWithUrl = groq`{
   ...,
   crop,
@@ -22,6 +27,7 @@ const mainImageMetadataOnly = groq`{
   "metadata": asset->metadata
 }`
 const mainImageWithDimensions = groq`{
+  ...,
   alt,
   crop,
   hotspot,
@@ -51,7 +57,7 @@ const galleryImageProjection = groq`{
   )
 }`
 
-export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...12]{
+export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...32]{
   _id, title, slug, 
   mainImage ${mainImageWithUrl},
   _createdAt, _updatedAt, isPublished
@@ -113,7 +119,7 @@ export const FEATURED_POSTS_QUERY = groq`
   }
 `
 
-export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && language == $language][0]{
+export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && (language == $language || ($language == "en" && !defined(language)))][0]{
   title, 
   body[]{
     ...,
@@ -126,18 +132,12 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && lan
       }
     }
   },
-  mainImage ${mainImageWithUrl}, 
+  mainImage ${mainImageWithDimensions}, 
   openGraph {
     title,
     description,
     url,
-    image {
-      ...,
-      "url": asset->url,
-      "metadata": asset->metadata{
-        dimensions
-      }
-    }
+    image ${mainImageWithDimensions}
   },
   language, isPublished, slug,
   "translations": *[
@@ -157,7 +157,7 @@ export const PAGE_QUERY = groq`
     title, 
     subtitle, 
     description, 
-    mainImage: imageWithMetadata, 
+    mainImage ${imageWithMetadata}, 
     body[]{
       ...,
       ${imageWithMetadata}
