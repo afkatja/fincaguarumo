@@ -31,7 +31,7 @@ export default function SidebarChat({
         </Button>
 
         {isOpen && (
-          <div className="fixed inset-y-0 right-0 w-96 max-w-[calc(100vw-2rem)] z-50 bg-zinc-50 shadow-2xl">
+          <div className="fixed inset-y-0 right-0 w-96 max-w-[calc(100vw-2rem)] z-50 shadow-2xl">
             <ChatInterface
               variant="sidebar"
               isOpen={isOpen}

@@ -2,29 +2,12 @@ import {
   createChatStream,
   bookingTools,
   bookingAgentConfig,
+  evaluateResponseForHallucinations,
 } from "@/lib/better-chatbot/config"
-import { checkAvailability } from "@/lib/tools/availability"
-import { createBooking } from "@/lib/tools/booking"
 import { getContextAwarePrompt } from "@/lib/better-chatbot/context-aware"
 import { buildRAGContext } from "@/lib/rag-context-builder"
-
-// Tool execution functions
-const toolExecutors = {
-  checkAvailability: async (args: any) => {
-    return await checkAvailability(args)
-  },
-  createBooking: async (args: any) => {
-    return await createBooking(args)
-  },
-  getPropertyInfo: async () => {
-    return {
-      name: "Villa Bruno",
-      location: "Costa Rica",
-      amenities: ["Pool", "Beautiful Views", "Modern Amenities"],
-      languages: ["English", "Spanish", "German"],
-    }
-  },
-}
+import { extractPropertyConfig } from "@/lib/sanity-data-extractor"
+import { streamText } from "ai"
 
 export async function POST(request: Request) {
   try {
@@ -41,6 +24,9 @@ export async function POST(request: Request) {
       locale,
     })
 
+    // Get Sanity configuration data for evaluation
+    const sanityData = await extractPropertyConfig()
+
     // Build context-aware system prompt
     let systemPrompt = bookingAgentConfig.systemPrompt
     if (context) {
@@ -53,7 +39,7 @@ export async function POST(request: Request) {
       systemPrompt = `${systemPrompt}\n\n=== RELEVANT INFORMATION FROM OUR DATABASE ===\n${ragContext}\n\nUse this information to answer the user's question accurately. If the information doesn't fully answer their question, you can still provide helpful guidance based on your general knowledge.`
     }
 
-    // Create the chat stream with tool execution
+    // Generate initial response with evaluation
     const result = await createChatStream({
       messages,
       threadId,
@@ -61,8 +47,149 @@ export async function POST(request: Request) {
       systemPrompt,
     })
 
-    // Return the stream
-    return result.toTextStreamResponse()
+    // Collect the full response and tool outputs for evaluation
+    let fullResponse = ""
+    let toolOutputs: any[] = []
+
+    // Capture the complete response
+    const response = result.toTextStreamResponse()
+    const reader = response.body?.getReader()
+
+    if (reader) {
+      const decoder = new TextDecoder()
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value, { stream: true })
+        fullResponse += chunk
+      }
+    }
+
+    // Extract tool outputs from the result (this needs to be done properly)
+    // For now, we'll use a simplified approach
+    try {
+      // The AI SDK should provide tool outputs in the result object
+      const toolResults = (await (result as any).toolResults) || []
+      console.log("TOOL RESULTS", { result })
+
+      // Ensure toolResults is an array before mapping
+      if (Array.isArray(toolResults)) {
+        toolOutputs = toolResults.map((toolResult: any) => ({
+          toolName: toolResult.toolName,
+          args: toolResult.args,
+          result: toolResult.result,
+        }))
+      } else {
+        console.warn("toolResults is not an array:", typeof toolResults)
+        toolOutputs = []
+      }
+    } catch (error) {
+      console.warn("Could not extract tool outputs:", error)
+      toolOutputs = []
+    }
+
+    // Evaluate the response for hallucinations
+    const evaluation = await evaluateResponseForHallucinations({
+      response: fullResponse,
+      toolOutputs,
+      sanityData,
+    })
+
+    // Log evaluation results
+    console.log("Response evaluation:", {
+      score: evaluation.score,
+      isAccurate: evaluation.isAccurate,
+      hallucinationsCount: evaluation.hallucinations?.length || 0,
+    })
+
+    let finalResponse = fullResponse
+    let correctionsApplied = false
+
+    // If score is below threshold or hallucinations detected, apply corrections
+    if (
+      evaluation.score < 8 ||
+      !evaluation.isAccurate ||
+      (evaluation.hallucinations && evaluation.hallucinations.length > 0)
+    ) {
+      console.warn("Low quality response detected, applying corrections:", {
+        hallucinations: evaluation.hallucinations,
+        corrections: evaluation.corrections,
+      })
+
+      // Apply corrections by improving the system prompt for next response
+      if (evaluation.corrections && evaluation.corrections.length > 0) {
+        try {
+          // Convert corrections to system prompt improvements
+          const correctionPrompt = `Based on recent response evaluation, add these specific constraints to prevent inaccuracies:
+
+CORRECTIONS NEEDED:
+${evaluation.corrections.map((correction: string, index: number) => `${index + 1}. ${correction}`).join("\n")}
+
+UPDATED SYSTEM PROMPT RULES:
+${systemPrompt}
+
+ADDITIONAL CONSTRAINTS (must follow strictly):
+- ${evaluation.corrections
+            .map((correction: string) =>
+              correction
+                .replace(/^Remove /, "Do not mention ")
+                .replace(/^Add /, "Always include ")
+                .replace(/^Correct /, "Ensure accurate "),
+            )
+            .join("\n- ")}
+- Double-check all factual claims against provided data
+- Never invent amenities, features, or details not in ground truth
+- Verify all pricing matches tool outputs exactly
+- Only use information from the provided ground truth data
+
+These constraints override any conflicting instructions in the original system prompt.`
+
+          // Generate new response with improved system prompt
+          const correctedResult = await createChatStream({
+            messages,
+            threadId,
+            tools: bookingTools,
+            systemPrompt: correctionPrompt,
+          })
+
+          // Capture the corrected response
+          const correctedResponseText = correctedResult.toTextStreamResponse()
+          const correctedReader = correctedResponseText.body?.getReader()
+
+          if (correctedReader) {
+            const decoder = new TextDecoder()
+            let correctedText = ""
+            while (true) {
+              const { done, value } = await correctedReader.read()
+              if (done) break
+              const chunk = decoder.decode(value, { stream: true })
+              correctedText += chunk
+            }
+            finalResponse = correctedText
+            correctionsApplied = true
+            console.log("Corrections applied via improved system prompt")
+          }
+        } catch (correctionError) {
+          console.error(
+            "Failed to apply corrections via system prompt:",
+            correctionError,
+          )
+        }
+      }
+    }
+
+    // Return the final response (original or corrected)
+    return new Response(finalResponse, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "x-evaluation-score": evaluation.score.toString(),
+        "x-evaluation-accurate": evaluation.isAccurate.toString(),
+        "x-hallucinations-count": (
+          evaluation.hallucinations?.length || 0
+        ).toString(),
+        "x-corrections-applied": correctionsApplied.toString(),
+      },
+    })
   } catch (error) {
     console.error("Chat API error:", error)
     return new Response(

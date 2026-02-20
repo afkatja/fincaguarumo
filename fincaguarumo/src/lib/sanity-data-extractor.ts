@@ -385,6 +385,45 @@ export async function extractHomeContent() {
   return await client.fetch(query)
 }
 
+// Extract property configuration for chatbot (pricing, capacity, etc.)
+export async function extractPropertyConfig() {
+  const query = groq`{
+    "home": *[_type == "home"][0] {
+      capacity {
+        maxGuests,
+        bedrooms,
+        bathrooms
+      },
+      locationDetails {
+        address,
+        region,
+        country
+      },
+      propertyOverview,
+      keyFeatures
+    },
+    "basePricing": *[_type == "pricingRules" && ruleType == "base_rate" && isActive == true][0] {
+      basePrice,
+      title,
+      description
+    },
+    "paymentMethods": *[_type == "paymentMethods" && isAvailable == true] {
+      title,
+      methodType,
+      processor,
+      description,
+      isRecommended
+    } | order(displayOrder asc),
+    "cancellationPolicy": *[_type == "cancellationPolicies" && isActive == true && isDefault == true][0] {
+      title,
+      policyType,
+      description,
+      timeframes
+    }
+  }`
+  return await client.fetch(query)
+}
+
 // Extract all reviews
 export async function extractAllReviews() {
   const query = groq`*[_type == "review"] | order(date desc) {

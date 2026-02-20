@@ -30,8 +30,15 @@ This plan addresses three issues in the chat interface:
 
 ### Price Calculation
 
-- [`calculateTotal.ts`](src/lib/calculateTotal.ts) - Core pricing logic
+- [`calculateTotal.ts`](src/lib/calculateTotal.ts) - Core pricing logic with discount calculation
+- [`bookingToNights.ts`](src/lib/bookingToNights.ts) - Calculate nights from date range
 - [`priceCalculation.tsx`](src/components/priceCalculation.tsx) - UI component for price breakdown
+
+### Sanity Data Access
+
+- [`src/sanity/lib/client.ts`](src/sanity/lib/client.ts) - Sanity client for fetching data
+- [`src/lib/sanity-data-extractor.ts`](src/lib/sanity-data-extractor.ts) - Helper functions for extracting tours, pages, posts
+- [`src/config.ts`](src/config.ts) - Supported languages: `en`, `nl`, `es`, `ru`, `de`
 
 ---
 
@@ -125,21 +132,50 @@ export const bookingTools = {
   }),
 
   getPropertyInfo: tool({
-    description: "Get information about Villa Bruno property",
-    inputSchema: z.object({}),
-    execute: async () => {
+    description:
+      "Get information about the property including tours, pages, and blog posts from Sanity. Use this to answer questions about activities, tours, and general information.",
+    inputSchema: z.object({
+      locale: z
+        .string()
+        .describe(
+          "User language preference - must be one of: en, nl, es, ru, de",
+        ),
+      query: z
+        .string()
+        .optional()
+        .describe("Optional search query to filter results"),
+    }),
+    execute: async ({ locale, query }) => {
+      // Use supported language with fallback to English
+      const userLanguage = getUserLanguage(locale)
+
+      // Fetch tours, pages, and posts from Sanity
+      const [tours, pages, posts] = await Promise.all([
+        extractAllTours(),
+        extractAllPages(),
+        extractAllPosts(),
+      ])
+
+      // Filter by language if available in data
+      const filteredTours = tours.filter(
+        (t: any) => t.language === userLanguage || !t.language,
+      )
+      const filteredPages = pages.filter(
+        (p: any) => p.language === userLanguage || !p.language,
+      )
+      const filteredPosts = posts.filter(
+        (p: any) => p.language === userLanguage || !p.language,
+      )
+
       return {
-        name: "Villa Bruno",
-        location: "Costa Rica",
-        amenities: [
-          "Pool",
-          "Beautiful Views",
-          "Modern Amenities",
-          "WiFi",
-          "Kitchen",
-        ],
-        capacity: "Up to 5 guests",
-        languages: ["English", "Spanish", "German"],
+        language: userLanguage,
+        supportedLanguages: languages.map(l => ({
+          code: l.value,
+          title: l.title,
+        })),
+        tours: filteredTours,
+        pages: filteredPages,
+        posts: filteredPosts,
       }
     },
   }),
@@ -185,11 +221,12 @@ import calculateTotal, {
   EXTRA_GUEST_FEE,
   MAX_EXTRA_GUESTS,
 } from "@/lib/calculateTotal"
+import bookingToNights from "@/lib/bookingToNights"
 import { BOOKING_TYPE } from "@/types"
 
 export interface PriceCalculationInput {
   basePrice: number // Base price per night
-  guests: number // Number of guests (1-5)
+  guests: number // Number of guests (1-4)
   checkIn: string // Check-in date YYYY-MM-DD
   checkOut: string // Check-out date YYYY-MM-DD
   bookingType?: "villa" | "tour" // Default: "villa"
@@ -199,7 +236,7 @@ export interface PriceCalculationResult {
   priceForPeople: number
   priceWithVat: number
   total: number
-  discountApplied: "none" | "10percent" | "20percent"
+  discountApplied: "none" | "13percent" | "33percent"
   discountAmount: number
   nights: number
   breakdown: {
@@ -215,12 +252,11 @@ export function calculateBookingPrice(
 ): PriceCalculationResult {
   const { basePrice, guests, checkIn, checkOut, bookingType = "villa" } = input
 
-  // Calculate nights
+  // Calculate nights using bookingToNights utility
   const start = new Date(checkIn)
   const end = new Date(checkOut)
-  const nights = Math.ceil(
-    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
-  )
+  const nightsList = bookingToNights(start, end)
+  const nights = nightsList.length
 
   // Use existing calculation
   const { priceForPeople, priceWithVat, total } = calculateTotal(
@@ -230,16 +266,17 @@ export function calculateBookingPrice(
     nights,
   )
 
-  // Calculate discount
-  let discountApplied: "none" | "10percent" | "20percent" = "none"
+  // Calculate discount based on length of stay
+  // 7+ nights: 13% discount, 28+ nights: 33% discount
+  let discountApplied: "none" | "13percent" | "33percent" = "none"
   let discountAmount = 0
 
   if (bookingType === "villa" && nights >= 28) {
-    discountApplied = "20percent"
-    discountAmount = priceWithVat * nights * 0.2
+    discountApplied = "33percent"
+    discountAmount = priceWithVat * nights * 0.33
   } else if (bookingType === "villa" && nights >= 7) {
-    discountApplied = "10percent"
-    discountAmount = priceWithVat * nights * 0.1
+    discountApplied = "13percent"
+    discountAmount = priceWithVat * nights * 0.13
   }
 
   // Calculate breakdown

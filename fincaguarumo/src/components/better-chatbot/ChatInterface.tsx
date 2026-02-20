@@ -4,7 +4,9 @@ import { useState, useRef, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { MessageCircle, X, Send, Loader2 } from "lucide-react"
-import { getLanguagePrompt } from "@/lib/better-chatbot/config"
+import Markdown from "react-markdown"
+import remarkGfm from "remark-gfm"
+// import { getLanguagePrompt } from "@/lib/better-chatbot/config"
 import {
   ChatContext,
   getPersonalizedGreeting,
@@ -175,7 +177,8 @@ export default function ChatInterface({
                 !trimmedLine.startsWith("id:")
               ) {
                 // Treat as plain text content
-                assistantMessage += trimmedLine + " "
+                // Use newline instead of space to preserve markdown block elements
+                assistantMessage += trimmedLine + "\n"
                 setMessages(prev => {
                   const newMessages = [...prev]
                   const lastMessage = newMessages[newMessages.length - 1]
@@ -335,10 +338,16 @@ function ChatBody({
             className={`max-w-[80%] rounded-2xl px-4 py-2 ${
               msg.role === "user"
                 ? "bg-guarumo-primary text-zinc-50"
-                : "bg-zinc-100 text-zinc-900"
+                : "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50"
             }`}
           >
-            {msg.content}
+            {msg.role === "assistant" ? (
+              <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-1">
+                <Markdown remarkPlugins={[remarkGfm]}>{msg.content}</Markdown>
+              </div>
+            ) : (
+              msg.content
+            )}
           </div>
         </div>
       ))}

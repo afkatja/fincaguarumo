@@ -20,7 +20,8 @@
     "semantic-rag:validate": "EMBEDDING_PREFER_LOCAL=true EMBEDDING_FALLBACK_TO_REMOTE=false npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/validate.ts",
     "semantic-rag:test": "npm run semantic-rag:build && node dist/src/lib/semantic-rag/test.js",
     "semantic-rag:init-prod": "EMBEDDING_PREFER_LOCAL=false EMBEDDING_FALLBACK_TO_REMOTE=true npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/init-semantic-rag.ts",
-    "semantic-rag:validate-prod": "EMBEDDING_PREFER_LOCAL=false EMBEDDING_FALLBACK_TO_REMOTE=true npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/validate.ts"
+    "semantic-rag:validate-prod": "EMBEDDING_PREFER_LOCAL=false EMBEDDING_FALLBACK_TO_REMOTE=true npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/validate.ts",
+    "eval": "npx tsx --require dotenv/config test-evaluation.js"
   },
   "lint-staged": {
     "src/messages/en.json": [
@@ -32,7 +33,6 @@
     "@ai-sdk/perplexity": "^3.0.19",
     "@google-cloud/translate": "^9.3.0",
     "@hookform/resolvers": "^3.10.0",
-    "@langchain/community": "^1.1.12",
     "@mistralai/mistralai": "^1.13.0",
     "@netlify/plugin-nextjs": "^5.15.5",
     "@portabletext/react": "^3.2.4",
@@ -73,12 +73,11 @@
     "gsap": "^3.14.2",
     "ical-expander": "^3.2.0",
     "ics": "^3.8.1",
-    "langchain": "^1.2.18",
     "libphonenumber-js": "^1.12.35",
     "lucide-react": "^0.562.0",
     "mailersend": "^2.6.0",
     "media": "^0.2.1",
-    "next": "^16.1.4",
+    "next": "^16.1.6",
     "next-sanity": "^12.0.14",
     "next-transition-router": "^0.2.11",
     "react": "19.2.3",
@@ -87,9 +86,11 @@
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.1",
     "react-loading-skeleton": "^3.5.0",
+    "react-markdown": "^10.1.0",
     "react-remove-scroll": "^2.7.2",
     "react-responsive": "^10.0.1",
     "react-select": "^5.10.2",
+    "remark-gfm": "^4.0.1",
     "sanity": "^5.6.0",
     "sanity-plugin-internationalized-array": "^3.2.2",
     "sanity-plugin-media": "^4.1.1",
