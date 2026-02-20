@@ -1,4 +1,7 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+echo "Running TypeScript type checking..."
+npx tsc --noEmit || exit 1
+
 npx lint-staged
