@@ -2,6 +2,9 @@ import { sanityFetch } from "@/sanity/lib/client"
 import { DIALOG_QUERY, TOUR_QUERY } from "@/sanity/lib/queries"
 import { IDialog, TTour } from "@/types"
 import TourPage from "./TourPage"
+import { generateTourMetadata } from "./metadata"
+
+export { generateTourMetadata as generateMetadata }
 
 const Page = async ({ params }: { params: any }) => {
   const { slug, locale } = await params
