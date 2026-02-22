@@ -2,7 +2,6 @@
 import Image from "next/image"
 import { useParams } from "next/navigation"
 import Script from "next/script"
-import React from "react"
 import { TReview } from "../types"
 
 const platformIcons = {
@@ -47,43 +46,55 @@ const Review = ({ review }: { review: TReview }) => {
     }
   })()
 
+  // Validate author name for schema.org compliance
   const authorName =
     review?.authorAttribution?.displayName || review?.author?.name || "Guest"
 
-  const schemaScriptId = `json-ld-review-${platform}-${authorName.replace(/\s+/g, "-").toLowerCase()}-${normalizedRating}-${publishDate || "no-date"}`
+  // Ensure we have a valid author name (not empty or just whitespace)
+  const validAuthorName = authorName.trim() || "Guest"
+
+  const schemaScriptId = `json-ld-review-${platform}-${validAuthorName.replace(/\s+/g, "-").toLowerCase()}-${normalizedRating}-${publishDate || "no-date"}`
 
   const stars = Array.from({ length: normalizedRating }, (_, i) => i + 1)
 
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "Review",
-    itemReviewed: {
-      "@type": "LodgingBusiness",
-      name: "Finca Guarumo",
-      image: "https://fincaguarumo.com/logo-single.png",
-    },
-    author: {
-      "@type": "Person",
-      name: authorName,
-    },
-    reviewRating: {
-      "@type": "Rating",
-      ratingValue: normalizedRating.toString(),
-      bestRating: "5",
-      worstRating: "1",
-    },
-    ...(publishDate && { datePublished: publishDate }),
-    reviewBody: review?.text || review?.reviewText || "",
-    publisher: {
-      "@type": "Organization",
-      name:
-        platform === "google"
-          ? "Google Business Profile"
-          : platform === "airbnb"
-            ? "Airbnb"
-            : "Booking.com",
-    },
-  }
+  // Only generate schema if we have valid data
+  const hasValidReviewData =
+    validAuthorName &&
+    normalizedRating > 0 &&
+    (review?.text || review?.reviewText)
+
+  const schema = hasValidReviewData
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Review",
+        itemReviewed: {
+          "@type": "LodgingBusiness",
+          name: "Finca Guarumo - Villa Bruno",
+          image: "https://fincaguarumo.com/logo-single.png",
+        },
+        author: {
+          "@type": "Person",
+          name: validAuthorName,
+        },
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: normalizedRating.toString(),
+          bestRating: "5",
+          worstRating: "1",
+        },
+        ...(publishDate && { datePublished: publishDate }),
+        reviewBody: review?.text || review?.reviewText || "",
+        publisher: {
+          "@type": "Organization",
+          name:
+            platform === "google"
+              ? "Google Business Profile"
+              : platform === "airbnb"
+                ? "Airbnb"
+                : "Booking.com",
+        },
+      }
+    : null
 
   return (
     <div
@@ -93,7 +104,12 @@ const Review = ({ review }: { review: TReview }) => {
       itemType="https://schema.org/Review"
     >
       <div className="flex items-center gap-2">
-        <div className="rounded-full">
+        <div
+          className="rounded-full"
+          itemProp="author"
+          itemScope
+          itemType="https://schema.org/Person"
+        >
           <Image
             src={
               review?.authorAttribution?.photoURI ||
@@ -101,15 +117,20 @@ const Review = ({ review }: { review: TReview }) => {
               review?.photoUrl ||
               defaultUserIcon[platform]
             }
-            alt={review?.authorAttribution?.displayName || review?.author?.name || "Reviewer"}
+            alt={
+              review?.authorAttribution?.displayName ||
+              review?.author?.name ||
+              "Reviewer"
+            }
             width="40"
             height="40"
             loading="lazy"
           />
+          <meta itemProp="name" content={validAuthorName} />
         </div>
         <div>
           <p className="text-guarumo-primary font-bold text-lg truncate max-w-24">
-            {authorName}
+            {validAuthorName}
           </p>
           {publishDate && (
             <p className="text-zinc-400 text-sm">
@@ -160,15 +181,20 @@ const Review = ({ review }: { review: TReview }) => {
           />
         ))}
       </div>
-      <div className="text-zinc-800">{review?.text || review?.reviewText}</div>
-      <Script
-        id={schemaScriptId}
-        strategy="afterInteractive"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(schema).replace(/</g, "\\u003c"),
-        }}
-      />
+      <div className="text-zinc-800" itemProp="reviewBody">
+        {review?.text || review?.reviewText}
+      </div>
+      <meta itemProp="itemReviewed" content="Finca Guarumo - Villa Bruno" />
+      {schema && (
+        <Script
+          id={schemaScriptId}
+          strategy="afterInteractive"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(schema).replace(/</g, "\\u003c"),
+          }}
+        />
+      )}
     </div>
   )
 }
