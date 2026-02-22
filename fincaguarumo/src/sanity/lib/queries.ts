@@ -68,7 +68,7 @@ export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][
 
 export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && language == $language][0] {
   title, subtitle, description,
-  mainImage ${mainImageMetadataOnly},
+  mainImage mainImageMetadataOnly,
   body[]{
     ...,
     ${imageWithMetadata}
@@ -84,7 +84,6 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
         title,
         subtitle,
         description,
-        mainImage ${mainImageMetadataOnly},
         slug,
         body[]{
           ...,
@@ -157,7 +156,7 @@ export const PAGE_QUERY = groq`
     title, 
     subtitle, 
     description, 
-    mainImage ${imageWithMetadata}, 
+    mainImage ${mainImageWithDimensions}, 
     body[]{
       ...,
       ${imageWithMetadata}
@@ -175,7 +174,6 @@ export const PAGE_QUERY = groq`
         language,
         title,
         subtitle,
-        mainImage,
         slug,
         body[]{
           ...,
