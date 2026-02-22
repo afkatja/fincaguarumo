@@ -26,6 +26,7 @@ export async function POST(request: Request) {
 
     // Get Sanity configuration data for evaluation
     const sanityData = await extractPropertyConfig()
+    console.log("SANITY DATA", { sanityData })
 
     // Build context-aware system prompt
     let systemPrompt = bookingAgentConfig.systemPrompt
@@ -65,24 +66,23 @@ export async function POST(request: Request) {
       }
     }
 
-    // Extract tool outputs from the result (this needs to be done properly)
-    // For now, we'll use a simplified approach
+    // Extract tool outputs from the result properly
     try {
-      // The AI SDK should provide tool outputs in the result object
-      const toolResults = (await (result as any).toolResults) || []
-      console.log("TOOL RESULTS", { result })
+      // For streamText, we need to collect tool results during streaming
+      // or use the onFinish callback. Since we're already consuming the stream,
+      // we'll capture tool results from the steps array
+      const steps = await result.steps
+      const allToolResults = steps.flatMap(
+        (step: any) =>
+          step.toolResults?.map((toolResult: any) => ({
+            toolName: toolResult.toolCallId || toolResult.toolName,
+            args: toolResult.args,
+            result: toolResult.result,
+          })) || [],
+      )
 
-      // Ensure toolResults is an array before mapping
-      if (Array.isArray(toolResults)) {
-        toolOutputs = toolResults.map((toolResult: any) => ({
-          toolName: toolResult.toolName,
-          args: toolResult.args,
-          result: toolResult.result,
-        }))
-      } else {
-        console.warn("toolResults is not an array:", typeof toolResults)
-        toolOutputs = []
-      }
+      toolOutputs = allToolResults
+      console.log("TOOL RESULTS", { toolOutputs })
     } catch (error) {
       console.warn("Could not extract tool outputs:", error)
       toolOutputs = []
