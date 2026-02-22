@@ -71,10 +71,29 @@ const Review = ({ review }: { review: TReview }) => {
           "@type": ["VacationRental", "Place"],
           name: "Finca Guarumo - Villa Bruno",
           image: "https://fincaguarumo.com/logo-single.png",
+          description:
+            "Eco-friendly jungle villa in Costa Rica's Osa Peninsula",
+          identifier: "finca-guarumo-villa-bruno",
           address: {
             "@type": "PostalAddress",
-            addressCountry: "Costa Rica",
+            addressCountry: "CR",
+            addressRegion: "Puntarenas",
           },
+          geo: {
+            "@type": "GeoCoordinates",
+            latitude: 8.496327590468868,
+            longitude: -83.33419146456554,
+          },
+          containsPlace: [
+            {
+              "@type": "LodgingReservation",
+              occupancy: {
+                "@type": "QuantitativeValue",
+                maxValue: 4,
+                unitText: "person",
+              },
+            },
+          ],
         },
         author: {
           "@type": "Person",
@@ -198,12 +217,18 @@ const Review = ({ review }: { review: TReview }) => {
           itemProp="image"
           content="https://fincaguarumo.com/logo-single.png"
         />
+        <meta
+          itemProp="description"
+          content="Eco-friendly jungle villa in Costa Rica's Osa Peninsula"
+        />
+        <meta itemProp="identifier" content="finca-guarumo-villa-bruno" />
         <div
           itemProp="address"
           itemScope
           itemType="https://schema.org/PostalAddress"
         >
-          <meta itemProp="addressCountry" content="Costa Rica" />
+          <meta itemProp="addressCountry" content="CR" />
+          <meta itemProp="addressRegion" content="Puntarenas" />
         </div>
       </div>
       {schema && (
