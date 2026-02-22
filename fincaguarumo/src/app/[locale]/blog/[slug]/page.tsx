@@ -17,7 +17,7 @@ export async function generateMetadata({
 
   const post = await sanityFetch<POST_QUERY_RESULT>({
     query: POST_QUERY,
-    params: { slug, language: locale },
+    params: { slug },
     revalidate: 0,
   })
 
@@ -27,10 +27,7 @@ export async function generateMetadata({
 
   const og = post.openGraph || {}
 
-  const canonicalUrl =
-    locale === "en"
-      ? `${baseUrl}/blog/${slug}`
-      : `${baseUrl}/${locale}/blog/${slug}`
+  const canonicalUrl = `${baseUrl}/en/blog/${slug}`
 
   const baseTitle =
     (og as { title?: string }).title || post.title || "Finca Guarumo"
@@ -57,17 +54,6 @@ export async function generateMetadata({
     description,
     alternates: {
       canonical: canonicalUrl,
-      languages: {
-        "x-default": `${baseUrl}/blog/${slug}`,
-        ...Object.fromEntries(
-          locales.map(loc => [
-            loc,
-            loc === "en"
-              ? `${baseUrl}/blog/${slug}`
-              : `${baseUrl}/${loc}/blog/${slug}`,
-          ]),
-        ),
-      },
     },
     openGraph: {
       type: "article",
@@ -90,10 +76,10 @@ export async function generateMetadata({
 }
 
 export default async function Page({ params }: { params: any }) {
-  const { locale, slug } = await params
+  const { slug } = await params
   const post = await sanityFetch<POST_QUERY_RESULT>({
     query: POST_QUERY,
-    params: { slug, language: locale },
+    params: { slug },
     revalidate: 0,
   })
   if (!post) return notFound()
@@ -101,10 +87,6 @@ export default async function Page({ params }: { params: any }) {
   if (!post?.isPublished) notFound()
 
   return (
-    <Post
-      post={post}
-      parent={{ title: "Blog", href: "blog" }}
-      locale={locale}
-    />
+    <Post post={post} parent={{ title: "Blog", href: "/blog" }} locale="en" />
   )
 }

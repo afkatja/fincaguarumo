@@ -42,7 +42,7 @@ export const generateSitemap = async () => {
           locales.map(loc => [
             loc,
             loc === "en" ? baseUrl : `${baseUrl}/${loc}`,
-          ])
+          ]),
         ),
       },
       changeFrequency: "daily" as const,
@@ -60,16 +60,11 @@ export const generateSitemap = async () => {
 
   // Blog posts (English only - not translated)
   posts.forEach(post => {
-    locales.forEach(locale => {
-      urls.push({
-        url:
-          locale === "en"
-            ? `${baseUrl}/blog/${post.slug.current}`
-            : `${baseUrl}/${locale}/blog/${post.slug.current}`,
-        lastModified: new Date(post._updatedAt),
-        changeFrequency: "weekly" as const,
-        priority: 0.8,
-      })
+    urls.push({
+      url: `${baseUrl}/en/blog/${post.slug.current}`,
+      lastModified: new Date(post._updatedAt),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
     })
   })
 
@@ -93,7 +88,7 @@ export const generateSitemap = async () => {
                 loc === "en"
                   ? `${baseUrl}/tours/${tour.slug.current}`
                   : `${baseUrl}/${loc}/tours/${tour.slug.current}`,
-              ])
+              ]),
             ),
           },
           changeFrequency: "weekly" as const,
@@ -122,7 +117,7 @@ export const generateSitemap = async () => {
                 loc === "en"
                   ? `${baseUrl}/${page.slug.current}`
                   : `${baseUrl}/${loc}/${page.slug.current}`,
-              ])
+              ]),
             ),
           },
           changeFrequency: "weekly" as const,
@@ -156,7 +151,7 @@ export const generateSitemap = async () => {
             locales.map(loc => [
               loc,
               loc === "en" ? `${baseUrl}/${path}` : `${baseUrl}/${loc}/${path}`,
-            ])
+            ]),
           ),
         },
         changeFrequency,

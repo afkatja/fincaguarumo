@@ -13,7 +13,7 @@ const getTranslationItems = (
   S: StructureBuilder,
   schemaType: string,
   title: string,
-  queryType: "metadata" | "standalone" = "metadata"
+  queryType: "metadata" | "standalone" = "metadata",
 ) => {
   return S.documentList()
     .title(title)
@@ -27,7 +27,7 @@ const getTranslationItems = (
         .items([
           S.listItem()
             .title(
-              `Source (${i18n.languages.find(item => item.isDefault)?.title})`
+              `Source (${i18n.languages.find(item => item.isDefault)?.title})`,
             )
             .child(S.document().schemaType(schemaType).documentId(id)),
           ...i18n.languages
@@ -59,10 +59,10 @@ const getTranslationItems = (
                       type: schemaType,
                       lang: lang.id,
                       id: id,
-                    })
+                    }),
                 )
             }),
-        ])
+        ]),
     )
 }
 
@@ -82,7 +82,15 @@ export const structure: StructureResolver = S => {
         .child(getTranslationItems(S, "tour", "Tours", "metadata")),
       S.listItem()
         .title("Posts")
-        .child(getTranslationItems(S, "post", "Posts")),
+        .child(
+          S.documentList()
+            .title("Posts")
+            .schemaType("post")
+            .filter(
+              '_type == "post" && (language == "en" || !defined(language))',
+            )
+            .apiVersion("v2025-02-19"),
+        ),
 
       S.listItem()
         .title("FAQ")
@@ -97,7 +105,7 @@ export const structure: StructureResolver = S => {
             .title("Gallery")
             .schemaType("gallery")
             .filter('_type == "gallery"')
-            .apiVersion("v2025-02-19")
+            .apiVersion("v2025-02-19"),
         ),
       S.listItem()
         .title("Categories")
@@ -107,12 +115,12 @@ export const structure: StructureResolver = S => {
             .title("Categories")
             .schemaType("category")
             .filter('_type == "category"')
-            .apiVersion("v2025-02-19")
+            .apiVersion("v2025-02-19"),
         ),
       S.listItem()
         .title("FAQ Categories")
         .child(
-          getTranslationItems(S, "faqCategory", "FAQ categories", "metadata")
+          getTranslationItems(S, "faqCategory", "FAQ categories", "metadata"),
         ),
       S.listItem()
         .title("Authors")
@@ -122,7 +130,7 @@ export const structure: StructureResolver = S => {
             .title("Authors")
             .schemaType("author")
             .filter('_type == "author"')
-            .apiVersion("v2025-02-19")
+            .apiVersion("v2025-02-19"),
         ),
       // Field-level translations
       S.divider(),
@@ -138,7 +146,7 @@ export const structure: StructureResolver = S => {
             .defaultOrdering([{ field: "title", direction: "asc" }])
             .initialValueTemplates([
               S.initialValueTemplateItem("dialog", { title: "" }),
-            ])
+            ]),
         ),
     ])
   return list
@@ -146,7 +154,7 @@ export const structure: StructureResolver = S => {
 
 export const defaultDocumentNode: DefaultDocumentNodeResolver = (
   S,
-  { schemaType, getClient }
+  { schemaType, getClient },
 ) => {
   switch (schemaType) {
     case "page":

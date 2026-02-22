@@ -20,7 +20,7 @@ export function Posts({
       content: {
         [post.slug?.current as string]: (
           <TourItem
-            href={`${pathname}/${post?.slug?.current}`}
+            href={`/en/blog/${post?.slug?.current}`}
             // @ts-expect-error
             mainImage={
               typeof post?.mainImage === "object"
@@ -36,7 +36,7 @@ export function Posts({
             description={""}
             slug={post.slug as { current: string }}
             isPublished={post.isPublished ?? false}
-            locale={locale}
+            locale="en"
           />
         ),
       },

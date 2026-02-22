@@ -85,6 +85,52 @@ const nextConfig = {
       },
     ]
   },
+  async redirects() {
+    return [
+      // Redirect non-English blog pages to English
+      {
+        source: "/es/blog",
+        destination: "/en/blog",
+        permanent: true,
+      },
+      {
+        source: "/ru/blog",
+        destination: "/en/blog",
+        permanent: true,
+      },
+      {
+        source: "/de/blog",
+        destination: "/en/blog",
+        permanent: true,
+      },
+      {
+        source: "/nl/blog",
+        destination: "/en/blog",
+        permanent: true,
+      },
+      // Redirect non-English blog posts to English
+      {
+        source: "/es/blog/:slug*",
+        destination: "/en/blog/:slug*",
+        permanent: true,
+      },
+      {
+        source: "/ru/blog/:slug*",
+        destination: "/en/blog/:slug*",
+        permanent: true,
+      },
+      {
+        source: "/de/blog/:slug*",
+        destination: "/en/blog/:slug*",
+        permanent: true,
+      },
+      {
+        source: "/nl/blog/:slug*",
+        destination: "/en/blog/:slug*",
+        permanent: true,
+      },
+    ]
+  },
 }
 
 const withNextIntl = createNextIntlPlugin()

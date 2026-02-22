@@ -13,32 +13,34 @@ export async function generateMetadata({
 }: {
   params: any
 }): Promise<Metadata> {
-  const { locale } = await params
   const pageContent = await sanityFetch<SanityDocument>({
     query: PAGE_QUERY,
     revalidate: 0,
-    params: { language: locale, pageName: "blog" },
+    params: { language: "en", pageName: "blog" },
   })
 
   const baseUrl = "https://fincaguarumo.com"
-  const canonicalUrl = `${baseUrl}/${locale}/blog`
+  const canonicalUrl = `${baseUrl}/en/blog`
 
   return {
     title: pageContent?.title || "Blog - Finca Guarumo",
     description:
       pageContent?.description ||
       "Read our latest blog posts about wildlife, sustainability, and life at Finca Guarumo.",
+    keywords:
+      `blog, wildlife, sustainability, nature, Costa Rica, Osa Peninsula, Corcovado, birdwatching, eco-tourism, Finca Guarumo, jungle life, rural tourism, sustainable travel, nature photography, bird watching, conservation, eco-lodge, rainforest, biodiversity, tropical birds, nature education`
+        .split(",")
+        .map(k => k.trim())
+        .filter(Boolean),
+    metadataBase: new URL(baseUrl),
+    robots: "index, follow",
+    icons: {
+      icon: "/favicon/icon.ico",
+      apple: "/favicon/apple-touch-icon.png",
+      shortcut: "/favicon/safari-pinned-tab.svg",
+    },
     alternates: {
       canonical: canonicalUrl,
-      languages: {
-        "x-default": `${baseUrl}/blog`,
-        ...Object.fromEntries(
-          locales.map(loc => [
-            loc,
-            loc === "en" ? `${baseUrl}/blog` : `${baseUrl}/${loc}/blog`,
-          ])
-        ),
-      },
     },
     openGraph: {
       title: pageContent?.title || "Blog - Finca Guarumo",
@@ -47,16 +49,32 @@ export async function generateMetadata({
         "Read our latest blog posts about wildlife, sustainability, and life at Finca Guarumo.",
       url: canonicalUrl,
       type: "website",
+      images: pageContent?.mainImage
+        ? [
+            {
+              url: pageContent.mainImage.url,
+              width: pageContent.mainImage.metadata?.dimensions?.width || 1200,
+              height: pageContent.mainImage.metadata?.dimensions?.height || 630,
+              alt: pageContent.mainImage.alt || "Finca Guarumo Blog",
+            },
+          ]
+        : [
+            {
+              url: "/images/finca-guarumo-v4.4.jpg",
+              width: 1200,
+              height: 630,
+              alt: "Finca Guarumo",
+            },
+          ],
     },
   }
 }
 
 export default async function Page({ params }: { params: any }) {
-  const { locale } = await params
   const pageContent = await sanityFetch<SanityDocument>({
     query: PAGE_QUERY,
     revalidate: 0,
-    params: { language: locale, pageName: "blog" },
+    params: { language: "en", pageName: "blog" },
   })
   const posts = await sanityFetch<POSTS_QUERY_RESULT>({
     query: POSTS_QUERY,
@@ -73,14 +91,14 @@ export default async function Page({ params }: { params: any }) {
 
   return (
     <PagesLayout
-      locale={locale}
+      locale="en"
       pageName="blog"
       title={pageContent?.title}
       subtitle={pageContent?.subtitle}
       mainImage={pageContent?.mainImage}
       description={pageContent?.description}
     >
-      <Posts posts={postsOrdered} locale={locale} />
+      <Posts posts={postsOrdered} locale="en" />
     </PagesLayout>
   )
 }

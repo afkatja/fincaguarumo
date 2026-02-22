@@ -57,7 +57,7 @@ const galleryImageProjection = groq`{
   )
 }`
 
-export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current)][0...32]{
+export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current) && (language == "en" || !defined(language))][0...32]{
   _id, title, slug, 
   mainImage ${mainImageWithUrl},
   _createdAt, _updatedAt, isPublished
@@ -118,7 +118,7 @@ export const FEATURED_POSTS_QUERY = groq`
   }
 `
 
-export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && (language == $language || ($language == "en" && !defined(language)))][0]{
+export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && (language == "en" || !defined(language))][0]{
   title, 
   body[]{
     ...,
@@ -138,17 +138,7 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && (la
     url,
     image ${mainImageWithDimensions}
   },
-  language, isPublished, slug,
-  "translations": *[
-      _type == "translation.metadata" && 
-      ^._id in translations[].value._ref
-    ][0].translations[]{
-      ...(value->{
-        language,
-        title,
-        slug
-      })
-    }
+  language, isPublished, slug
 }`
 
 export const PAGE_QUERY = groq`
