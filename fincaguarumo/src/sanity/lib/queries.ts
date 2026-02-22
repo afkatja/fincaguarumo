@@ -120,6 +120,8 @@ export const FEATURED_POSTS_QUERY = groq`
 
 export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && (language == "en" || !defined(language))][0]{
   title, 
+  description,
+  publishedAt,
   body[]{
     ...,
     ${imageWithMetadata},

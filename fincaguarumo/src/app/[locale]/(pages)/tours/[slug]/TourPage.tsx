@@ -6,6 +6,8 @@ import { titleCase } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import { useBooking } from "../../../../providers/BookingProvider"
 import { BOOKING_TYPE, BookingData, TTour } from "../../../../../types"
+import TourMetadata from "@/components/TourMetadata"
+import { urlFor } from "@/sanity/lib/image"
 
 const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
   if (!tour || !tour.isPublished) notFound()
@@ -37,30 +39,41 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
   }, [tour, setBookingData])
 
   return (
-    <DetailsPageLayout
-      bookingDetails={{
-        title: tour.title,
-        description: tour.description,
-        duration: tour.duration,
-        location: tour.location,
-        price: tour.price,
-        body: tour.body,
-        geo: tour.geo,
-      }}
-      slideshow={
-        tour?.slideshow?.images.length || tour.mainImage ? (
-          <Slideshow
-            images={tour?.slideshow?.images ?? [tour.mainImage]}
-            showExpand={false}
-          />
-        ) : null
-      }
-      parent={{ title: "Tours", href: "tours" }}
-      icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
-      bookingType={BOOKING_TYPE.tour}
-      locale={locale}
-      dialogId={tour.dialog?._id}
-    />
+    <>
+      <TourMetadata
+        tour={{
+          ...tour,
+          mainImage: tour.mainImage
+            ? { url: urlFor(tour.mainImage).url() }
+            : undefined,
+        }}
+        locale={locale}
+      />
+      <DetailsPageLayout
+        bookingDetails={{
+          title: tour.title,
+          description: tour.description,
+          duration: tour.duration,
+          location: tour.location,
+          price: tour.price,
+          body: tour.body,
+          geo: tour.geo,
+        }}
+        slideshow={
+          tour?.slideshow?.images.length || tour.mainImage ? (
+            <Slideshow
+              images={tour?.slideshow?.images ?? [tour.mainImage]}
+              showExpand={false}
+            />
+          ) : null
+        }
+        parent={{ title: "Tours", href: "tours" }}
+        icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
+        bookingType={BOOKING_TYPE.tour}
+        locale={locale}
+        dialogId={tour.dialog?._id}
+      />
+    </>
   )
 }
 

@@ -4,6 +4,7 @@ import Breadcrumbs from "../../../../components/Breadcrumbs"
 // import Title from "../../../../components/Title"
 import RichText from "../../../../components/RichText"
 import PagesLayout from "../../(pages)/pagesLayout"
+import BlogMetadata from "../../../../components/BlogMetadata"
 
 /**
  * Render a post page using PagesLayout, optionally including breadcrumbs and the post body.
@@ -25,21 +26,24 @@ export function Post({
   const { title, mainImage, body, slug } = post || {}
 
   return (
-    <PagesLayout
-      locale={locale}
-      pageName={slug?.current as string}
-      title={title}
-      mainImage={mainImage as GalleryImage | null}
-    >
-      {parent && (
-        <Breadcrumbs
-          className="max-w-240 prose w-11/12 lg:prose-lg mx-auto mt-4"
-          title={title as string}
-          parent={parent}
-        />
-      )}
+    <>
+      <BlogMetadata post={post} />
+      <PagesLayout
+        locale={locale}
+        pageName={slug?.current as string}
+        title={title}
+        mainImage={mainImage as GalleryImage | null}
+      >
+        {parent && (
+          <Breadcrumbs
+            className="max-w-240 prose w-11/12 lg:prose-lg mx-auto mt-4"
+            title={title as string}
+            parent={parent}
+          />
+        )}
 
-      {body ? <RichText body={body} /> : null}
-    </PagesLayout>
+        {body ? <RichText body={body} /> : null}
+      </PagesLayout>
+    </>
   )
 }
