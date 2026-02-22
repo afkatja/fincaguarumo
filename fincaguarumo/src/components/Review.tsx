@@ -68,9 +68,13 @@ const Review = ({ review }: { review: TReview }) => {
         "@context": "https://schema.org",
         "@type": "Review",
         itemReviewed: {
-          "@type": "LodgingBusiness",
+          "@type": ["VacationRental", "Place"],
           name: "Finca Guarumo - Villa Bruno",
           image: "https://fincaguarumo.com/logo-single.png",
+          address: {
+            "@type": "PostalAddress",
+            addressCountry: "Costa Rica",
+          },
         },
         author: {
           "@type": "Person",
@@ -184,7 +188,24 @@ const Review = ({ review }: { review: TReview }) => {
       <div className="text-zinc-800" itemProp="reviewBody">
         {review?.text || review?.reviewText}
       </div>
-      <meta itemProp="itemReviewed" content="Finca Guarumo - Villa Bruno" />
+      <div
+        itemProp="itemReviewed"
+        itemScope
+        itemType="https://schema.org/VacationRental"
+      >
+        <meta itemProp="name" content="Finca Guarumo - Villa Bruno" />
+        <meta
+          itemProp="image"
+          content="https://fincaguarumo.com/logo-single.png"
+        />
+        <div
+          itemProp="address"
+          itemScope
+          itemType="https://schema.org/PostalAddress"
+        >
+          <meta itemProp="addressCountry" content="Costa Rica" />
+        </div>
+      </div>
       {schema && (
         <Script
           id={schemaScriptId}
