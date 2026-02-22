@@ -13,6 +13,12 @@
   force = true
 
 [[redirects]]
+  from = "https://fincaguarumo.com/*"  
+  to = "https://fincaguarumo.com/:splat"  
+  status = 301
+  force = true
+
+[[redirects]]
   from = "/villa-bruno"
   to = "/stay"
   status = 301
