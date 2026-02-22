@@ -1,6 +1,7 @@
 export const metadata = {
   title: "Finca Guarumo Studio",
   description: "CMS for Finca Guarumo",
+  robots: "noindex, nofollow",
   metadataBase: new URL("https://fincaguarumo.com"),
   icons: {
     icon: "/favicon/icon.ico",

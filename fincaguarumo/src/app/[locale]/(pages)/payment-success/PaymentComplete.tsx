@@ -104,7 +104,7 @@ export default function CompletePage() {
       const fetchSessionStatus = async () => {
         try {
           const response = await fetch(
-            `/api/session-status?session_id=${sessionId}`
+            `/api/session-status?session_id=${sessionId}`,
           )
           if (!response.ok) {
             console.error("Failed to fetch session status")
@@ -189,7 +189,7 @@ export default function CompletePage() {
                   <strong>
                     {new Date(
                       bookingData.bookingDetails?.checkIn ??
-                        bookingData.bookingDetails?.date
+                        bookingData.bookingDetails?.date,
                     ).toLocaleDateString(locale, {
                       year: "numeric",
                       month: "long",
