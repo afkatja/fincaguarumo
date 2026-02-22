@@ -23,10 +23,12 @@ import { pricingRulesType } from "./schemaTypes/pricingRulesType"
 import { paymentMethodsType } from "./schemaTypes/paymentMethodsType"
 import { cancellationPoliciesType } from "./schemaTypes/cancellationPoliciesType"
 import { logisticsType } from "./schemaTypes/logisticsType"
+import { propertyType } from "./schemaTypes/propertyType"
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     homeType,
+    propertyType,
     blockContentType,
     categoryType,
     postType,
