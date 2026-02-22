@@ -8,6 +8,7 @@ import Title from "@/components/Title"
 import ContactForm from "./ContactForm"
 import { useTranslations } from "next-intl"
 import { PAGE_QUERY_RESULT } from "../../../../../sanity.types"
+import type { GalleryImage } from "@/lib/sanityImages"
 
 const safeBtoa = (s?: string) => {
   if (typeof s !== "string") return ""
@@ -19,6 +20,25 @@ const safeBtoa = (s?: string) => {
     return btoa(binary)
   } catch {
     return ""
+  }
+}
+
+/**
+ * Transform Sanity image to GalleryImage type
+ * Converts null values to undefined for type compatibility
+ */
+function transformSanityImageToGalleryImage(image: any): GalleryImage | null {
+  if (!image) return null
+
+  return {
+    ...image,
+    url: image.url || undefined,
+    alt: image.alt || undefined,
+    metadata: image.metadata
+      ? {
+          lqip: image.metadata.lqip || undefined,
+        }
+      : undefined,
   }
 }
 
@@ -48,7 +68,7 @@ export default function Contact({
       pageName="contact"
       title={content?.title}
       description={content?.description || ""}
-      mainImage={content?.mainImage}
+      mainImage={transformSanityImageToGalleryImage(content?.mainImage)}
     >
       <div className="w-11/12 my-8 max-w-240! mx-auto items-start">
         <Title
