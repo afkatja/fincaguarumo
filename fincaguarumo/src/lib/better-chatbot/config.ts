@@ -130,13 +130,13 @@ export async function getDynamicSystemPrompt(): Promise<string> {
     const config = await extractPropertyConfig()
 
     // Extract values with fallbacks
-    const maxGuests = config?.home?.capacity?.maxGuests || DEFAULT_MAX_GUESTS
+    const maxGuests = config?.property?.maxGuests || DEFAULT_MAX_GUESTS
     const basePrice =
       config?.basePricing?.basePrice || DEFAULT_BASE_PRICE_PER_NIGHT
     const paymentMethods = config?.paymentMethods || []
     const cancellationPolicy = config?.cancellationPolicy
-    const amenities = config?.home?.amenities || []
-    const propertyFeatures = config?.home?.features || []
+    const amenities = config?.amenities || []
+    const propertyFeatures = config?.property?.keyFeatures || []
 
     // Build payment methods string
     let paymentInfo = "Payment methods: "
@@ -450,8 +450,7 @@ export const bookingTools = {
 
         // Get property config for dynamic values
         const config = await extractPropertyConfig()
-        const maxGuests =
-          config?.home?.capacity?.maxGuests || DEFAULT_MAX_GUESTS
+        const maxGuests = config?.property?.maxGuests || DEFAULT_MAX_GUESTS
         const basePricePerNight =
           config?.basePricing?.basePrice || DEFAULT_BASE_PRICE_PER_NIGHT
 

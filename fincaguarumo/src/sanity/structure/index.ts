@@ -13,7 +13,7 @@ const getTranslationItems = (
   S: StructureBuilder,
   schemaType: string,
   title: string,
-  queryType: "metadata" | "standalone" = "metadata"
+  queryType: "metadata" | "standalone" = "metadata",
 ) => {
   return S.documentList()
     .title(title)
@@ -27,7 +27,7 @@ const getTranslationItems = (
         .items([
           S.listItem()
             .title(
-              `Source (${i18n.languages.find(item => item.isDefault)?.title})`
+              `Source (${i18n.languages.find(item => item.isDefault)?.title})`,
             )
             .child(S.document().schemaType(schemaType).documentId(id)),
           ...i18n.languages
@@ -59,10 +59,10 @@ const getTranslationItems = (
                       type: schemaType,
                       lang: lang.id,
                       id: id,
-                    })
+                    }),
                 )
             }),
-        ])
+        ]),
     )
 }
 
@@ -89,6 +89,91 @@ export const structure: StructureResolver = S => {
         .child(getTranslationItems(S, "faq", "FAQ", "metadata")),
 
       S.divider(),
+      // Booking and Property Management
+      S.listItem()
+        .title("Bookings")
+        .schemaType("booking")
+        .child(
+          S.documentList()
+            .title("Bookings")
+            .schemaType("booking")
+            .filter('_type == "booking"')
+            .apiVersion("v2025-02-19")
+            .defaultOrdering([{ field: "checkIn", direction: "desc" }]),
+        ),
+      S.listItem()
+        .title("Amenities")
+        .schemaType("amenities")
+        .child(
+          S.documentList()
+            .title("Amenities")
+            .schemaType("amenities")
+            .filter('_type == "amenities"')
+            .apiVersion("v2025-02-19"),
+        ),
+      S.listItem()
+        .title("Pricing Rules")
+        .schemaType("pricingRules")
+        .child(
+          S.documentList()
+            .title("Pricing Rules")
+            .schemaType("pricingRules")
+            .filter('_type == "pricingRules"')
+            .apiVersion("v2025-02-19"),
+        ),
+      S.listItem()
+        .title("Payment Methods")
+        .schemaType("paymentMethods")
+        .child(
+          S.documentList()
+            .title("Payment Methods")
+            .schemaType("paymentMethods")
+            .filter('_type == "paymentMethods"')
+            .apiVersion("v2025-02-19"),
+        ),
+      S.listItem()
+        .title("Cancellation Policies")
+        .schemaType("cancellationPolicies")
+        .child(
+          S.documentList()
+            .title("Cancellation Policies")
+            .schemaType("cancellationPolicies")
+            .filter('_type == "cancellationPolicies"')
+            .apiVersion("v2025-02-19"),
+        ),
+      S.listItem()
+        .title("Logistics")
+        .schemaType("logistics")
+        .child(
+          S.documentList()
+            .title("Logistics")
+            .schemaType("logistics")
+            .filter('_type == "logistics"')
+            .apiVersion("v2025-02-19"),
+        ),
+      S.listItem()
+        .title("Reviews")
+        .schemaType("review")
+        .child(
+          S.documentList()
+            .title("Reviews")
+            .schemaType("review")
+            .filter('_type == "review"')
+            .apiVersion("v2025-02-19")
+            .defaultOrdering([{ field: "date", direction: "desc" }]),
+        ),
+      S.listItem()
+        .title("Property types")
+        .schemaType("property")
+        .child(
+          S.documentList()
+            .title("Property types")
+            .schemaType("property")
+            .filter('_type == "property"')
+            .apiVersion("v2025-02-19"),
+        ),
+
+      S.divider(),
       S.listItem()
         .title("Gallery")
         .schemaType("gallery")
@@ -97,7 +182,7 @@ export const structure: StructureResolver = S => {
             .title("Gallery")
             .schemaType("gallery")
             .filter('_type == "gallery"')
-            .apiVersion("v2025-02-19")
+            .apiVersion("v2025-02-19"),
         ),
       S.listItem()
         .title("Categories")
@@ -107,12 +192,17 @@ export const structure: StructureResolver = S => {
             .title("Categories")
             .schemaType("category")
             .filter('_type == "category"')
-            .apiVersion("v2025-02-19")
+            .apiVersion("v2025-02-19"),
         ),
       S.listItem()
         .title("FAQ Categories")
+        .schemaType("faqCategory")
         .child(
-          getTranslationItems(S, "faqCategory", "FAQ categories", "metadata")
+          S.documentList()
+            .title("FAQ Categories")
+            .schemaType("faqCategory")
+            .filter('_type == "faqCategory"')
+            .apiVersion("v2025-02-19"),
         ),
       S.listItem()
         .title("Authors")
@@ -122,7 +212,7 @@ export const structure: StructureResolver = S => {
             .title("Authors")
             .schemaType("author")
             .filter('_type == "author"')
-            .apiVersion("v2025-02-19")
+            .apiVersion("v2025-02-19"),
         ),
       // Field-level translations
       S.divider(),
@@ -138,7 +228,7 @@ export const structure: StructureResolver = S => {
             .defaultOrdering([{ field: "title", direction: "asc" }])
             .initialValueTemplates([
               S.initialValueTemplateItem("dialog", { title: "" }),
-            ])
+            ]),
         ),
     ])
   return list
@@ -146,7 +236,7 @@ export const structure: StructureResolver = S => {
 
 export const defaultDocumentNode: DefaultDocumentNodeResolver = (
   S,
-  { schemaType, getClient }
+  { schemaType, getClient },
 ) => {
   switch (schemaType) {
     case "page":
@@ -157,6 +247,14 @@ export const defaultDocumentNode: DefaultDocumentNodeResolver = (
     case "category":
     case "author":
     case "dialog":
+    case "amenities":
+    case "pricingRules":
+    case "paymentMethods":
+    case "cancellationPolicies":
+    case "logistics":
+    case "booking":
+    case "review":
+    case "property":
       return S.document().views([
         S.view.form(),
         // preview(S, client)

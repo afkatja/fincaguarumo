@@ -388,7 +388,12 @@ export async function extractHomeContent() {
 // Extract property configuration for chatbot (pricing, capacity, etc.)
 export async function extractPropertyConfig() {
   const query = groq`{
-    "home": *[_type == "home"][0] {
+    "property": *[_type == "property" && isPublished == true][0] {
+      propertyType,
+      title,
+      subtitle,
+      description,
+      price,
       capacity {
         maxGuests,
         bedrooms,
@@ -397,10 +402,35 @@ export async function extractPropertyConfig() {
       locationDetails {
         address,
         region,
-        country
+        country,
+        proximity,
+        coordinates
       },
-      propertyOverview,
-      keyFeatures
+      propertyOverview {
+        title,
+        subtitle,
+        description,
+        features,
+        highlights
+      },
+      keyFeatures,
+      amenities[]-> {
+        title,
+        category,
+        description,
+        icon,
+        isFeatured,
+        keywords,
+        language
+      }
+    },
+    "home": *[_type == "home"][0] {
+      hero_title,
+      hero_slogan,
+      subtitle,
+      hero_body,
+      intro_body,
+      language
     },
     "basePricing": *[_type == "pricingRules" && ruleType == "base_rate" && isActive == true][0] {
       basePrice,
