@@ -9,27 +9,6 @@ const intlMiddleware = createMiddleware({
 })
 
 export default function proxy(request: NextRequest) {
-  const path = request.nextUrl.pathname
-
-  // Handle redirects first
-  const redirects: Record<string, string> = {
-    "/villa-bruno": "/stay",
-    "/accommodation": "/stay",
-    // Add locale-prefixed versions
-    "/es/villa-bruno": "/es/stay",
-    "/es/accommodation": "/es/stay",
-    "/nl/villa-bruno": "/nl/stay",
-    "/nl/accommodation": "/nl/stay",
-    "/de/villa-bruno": "/de/stay",
-    "/de/accommodation": "/de/stay",
-    "/ru/villa-bruno": "/ru/stay",
-    "/ru/accommodation": "/ru/stay",
-  }
-
-  if (redirects[path]) {
-    return NextResponse.redirect(new URL(redirects[path], request.url), 301)
-  }
-
   // Handle internationalization
   const response = intlMiddleware(request)
 
