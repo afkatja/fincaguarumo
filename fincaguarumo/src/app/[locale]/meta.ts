@@ -24,15 +24,15 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
     alternates: {
       canonical:
         locale === "en"
-          ? `${baseUrl}${pathname}`
-          : `${baseUrl}/${locale}${pathname}`,
+          ? `${baseUrl}/${pathname}`
+          : `${baseUrl}/${locale}/${pathname}`,
       languages: {
-        "x-default": `${baseUrl}${pathname}`,
+        "x-default": `${baseUrl}/${pathname}`,
         ...Object.fromEntries(
           locales.map(loc => [
             loc,
             loc === "en"
-              ? `${baseUrl}${pathname}`
+              ? `${baseUrl}/${pathname}`
               : `${baseUrl}/${loc}${pathname}`,
           ]),
         ),
