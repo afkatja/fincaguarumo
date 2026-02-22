@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 import { sanityFetch } from "@/sanity/lib/client"
-import { POSTS_QUERY } from "@/sanity/lib/queries"
+import { POST_QUERY } from "@/sanity/lib/queries"
 import { POST_QUERY_RESULT } from "../../../../../sanity.types"
 
 const baseUrl = "https://fincaguarumo.com"
@@ -8,12 +8,12 @@ const baseUrl = "https://fincaguarumo.com"
 export async function generateBlogMetadata({
   params,
 }: {
-  params: { locale: string; slug: string }
+  params: Promise<{ locale: string; slug: string }>
 }): Promise<Metadata> {
-  const { slug } = params
+  const { slug } = await params
 
   const post: POST_QUERY_RESULT = await sanityFetch({
-    query: POSTS_QUERY,
+    query: POST_QUERY,
     params: { slug },
     revalidate: 0,
   })
