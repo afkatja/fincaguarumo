@@ -21,7 +21,7 @@ import { i18n } from "../../../languages"
 import Header from "../../components/header"
 import { cn } from "../../lib/utils"
 import Script from "next/script"
-import { jsonLd, orgSchema } from "../../lib/json-ld"
+import { jsonLd, orgSchema } from "../../lib/villa-json-ld"
 
 export { generateMetadata }
 

@@ -1,3 +1,43 @@
+export const containsPlace = [
+  {
+    "@type": "House",
+    name: "Villa Bruno Main Unit",
+    identifier: "villa-bruno-unit-1",
+    occupancy: {
+      "@type": "QuantitativeValue",
+      maxValue: 4,
+      value: 4,
+    },
+    floorSize: {
+      "@type": "QuantitativeValue",
+      value: 54,
+      unitCode: "MTK",
+    },
+    numberOfRooms: 2,
+    numberOfBedrooms: 2,
+    numberOfBathroomsTotal: 1,
+    bed: [
+      {
+        "@type": "BedDetails",
+        typeOfBed: "Queen bed",
+        numberOfBeds: 2,
+      },
+    ],
+    amenityFeature: [
+      {
+        "@type": "LocationFeatureSpecification",
+        name: "Kitchen",
+        value: true,
+      },
+      {
+        "@type": "LocationFeatureSpecification",
+        name: "WiFi",
+        value: true,
+      },
+    ],
+  },
+]
+
 export const jsonLd = {
   "@context": "https://schema.org",
   "@type": "LodgingBusiness",
@@ -75,8 +115,8 @@ export const jsonLd = {
   ],
   petsAllowed: false,
   smokingAllowed: false,
-  checkinTime: "2024-11-01T15:00:00+00:00",
-  checkoutTime: "2024-11-01T11:00:00+00:00",
+  checkinTime: "2026-03-01T15:00:00+00:00",
+  checkoutTime: "2026-03-01T11:00:00+00:00",
   numberOfRooms: 2,
   floorSize: {
     "@type": "QuantitativeValue",
@@ -163,46 +203,7 @@ export const jsonLd = {
     },
   ],
   hasMap: "https://maps.app.goo.gl/GAfQHZfeW8ZtKPkk8",
-  containsPlace: [
-    {
-      "@type": "Accommodation",
-      additionalType: "EntirePlace",
-      name: "Villa Bruno Main Unit",
-      identifier: "villa-bruno-unit-1",
-      occupancy: {
-        "@type": "QuantitativeValue",
-        maxValue: 4,
-        value: 4,
-      },
-      floorSize: {
-        "@type": "QuantitativeValue",
-        value: "54",
-        unitCode: "MTK",
-      },
-      numberOfRooms: 2,
-      numberOfBedrooms: 2,
-      numberOfBathroomsTotal: 1,
-      bed: [
-        {
-          "@type": "BedDetails",
-          typeOfBed: "Queen bed",
-          numberOfBeds: 2,
-        },
-      ],
-      amenityFeature: [
-        {
-          "@type": "LocationFeatureSpecification",
-          name: "Kitchen",
-          value: true,
-        },
-        {
-          "@type": "LocationFeatureSpecification",
-          name: "Air Conditioning",
-          value: true,
-        },
-      ],
-    },
-  ],
+  containsPlace,
   makesOffer: [
     {
       "@type": "Offer",
@@ -232,7 +233,7 @@ export const jsonLd = {
       },
       availability: "https://schema.org/InStock",
       validFrom: "2024-01-01",
-      url: "https://fincaguarumo.com/villa-bruno",
+      url: "https://fincaguarumo.com/stay",
     },
   ],
   tourBookingPage: "https://fincaguarumo.com/experiences",
@@ -275,7 +276,7 @@ export const orgSchema = {
   foundingDate: "2025",
   owns: {
     "@type": "LodgingBusiness",
-    "@id": "https://fincaguarumo.com/villa-bruno",
+    "@id": "https://fincaguarumo.com/stay",
     name: "Villa Bruno at Finca Guarumo",
     image: "https://fincaguarumo.com/images/villa-bruno-exterior.jpg",
     telephone: "+506-87495341",

@@ -4,6 +4,8 @@ import { useParams } from "next/navigation"
 import Script from "next/script"
 import { TReview } from "../types"
 
+import { containsPlace } from "../lib/villa-json-ld"
+
 const platformIcons = {
   google: "https://cdn.trustindex.io/assets/platform/Google/icon.svg",
   airbnb:
@@ -84,16 +86,7 @@ const Review = ({ review }: { review: TReview }) => {
             latitude: 8.496327590468868,
             longitude: -83.33419146456554,
           },
-          containsPlace: [
-            {
-              "@type": "LodgingReservation",
-              occupancy: {
-                "@type": "QuantitativeValue",
-                maxValue: 4,
-                unitText: "person",
-              },
-            },
-          ],
+          containsPlace,
         },
         author: {
           "@type": "Person",

@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect } from "react"
+import { useEffect } from "react"
 import { createNavigation } from "next-intl/navigation"
 import { useTranslations } from "next-intl"
 import RichText from "@/components/RichText"

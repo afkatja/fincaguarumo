@@ -13,7 +13,7 @@ const jsonLd = {
 
   about: {
     "@type": "LodgingBusiness", // Use the type that fixed your main page error
-    "@id": "https://fincaguarumo.com/villa-bruno#unit", // Use the same @id as the main page
+    "@id": "https://fincaguarumo.com/stay#unit", // Use the same @id as the main page
     name: "Villa Bruno - Finca Guarumo",
   },
 
