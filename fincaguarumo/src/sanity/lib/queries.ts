@@ -403,11 +403,11 @@ export const BOOKINGS_QUERY = groq`*[
   _type == "booking" &&
   dateTime(checkOut) > dateTime(now()) &&
   !(_id in path("drafts.**"))
-]{
+][]{
   uid, checkIn, checkOut, guestName, source, email, phone, guests, totalPrice, currency, syncedAt
 }`
 
-export const REVIEWS_QUERY = groq`*[_type == "review"] | order(date desc){
+export const REVIEWS_QUERY = groq`*[_type == "review"][] | order(date desc){
   _id,
   platform,
   author,
@@ -416,3 +416,64 @@ export const REVIEWS_QUERY = groq`*[_type == "review"] | order(date desc){
   reviewText,
   photoUrl
 }`
+
+export const ACCOMMODATION_QUERY = groq`
+  *[_type == "accommodation" && slug.current == $slug && language == $language][0] {
+    title, subtitle, description,
+    mainImage ${mainImageMetadataOnly},
+    body[]{
+      ...,
+      ${imageWithMetadata}
+    }, 
+    language, 
+    slug, 
+    isPublished, 
+    showBookingOptions, 
+    showBookingDialog,
+    slideshow->{
+      "images": images[]${galleryImageProjection}
+    },
+    price, 
+    faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} }, 
+    capacity, 
+    bedrooms, 
+    bathrooms, 
+    propertyType, 
+    location, 
+    highlightFeatures,
+    checkInTime, 
+    checkOutTime,
+    amenities[]->{ title, description, icon },
+    pricingRules[]->{ title, description, rules },
+    paymentMethods[]->{ title, description, type },
+    cancellationPolicy->{ title, description, rules },
+    logistics[]->{ title, description, type },
+    "translations": coalesce(
+      *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{
+        ...(value->{
+          language,
+          title,
+          subtitle,
+          description,
+          slug,
+          body[]{
+            ...,
+            ${imageWithMetadata}
+          },
+          showBookingOptions,
+          showBookingDialog,
+          faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} },
+          capacity, 
+          bedrooms, 
+          bathrooms, 
+          propertyType, 
+          location, 
+          highlightFeatures,
+          checkInTime, 
+          checkOutTime
+        })
+      },
+      []
+    )
+  }
+`
