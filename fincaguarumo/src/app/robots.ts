@@ -1,0 +1,18 @@
+import { MetadataRoute } from "next"
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: [
+      {
+        userAgent: "*",
+        allow: ["/", "/sitemap.xml", "/public/"],
+        disallow: ["/studio/", "/login/", "/register/"],
+      },
+      {
+        userAgent: "*",
+        disallow: ["/*.pdf$", "/*.doc$"],
+      },
+    ],
+    sitemap: "https://fincaguarumo.com/sitemap.xml",
+  }
+}

@@ -82,7 +82,15 @@ export const structure: StructureResolver = S => {
         .child(getTranslationItems(S, "tour", "Tours", "metadata")),
       S.listItem()
         .title("Posts")
-        .child(getTranslationItems(S, "post", "Posts")),
+        .child(
+          S.documentList()
+            .title("Posts")
+            .schemaType("post")
+            .filter(
+              '_type == "post" && (language == "en" || !defined(language))',
+            )
+            .apiVersion("v2025-02-19"),
+        ),
 
       S.listItem()
         .title("FAQ")
@@ -198,11 +206,7 @@ export const structure: StructureResolver = S => {
         .title("FAQ Categories")
         .schemaType("faqCategory")
         .child(
-          S.documentList()
-            .title("FAQ Categories")
-            .schemaType("faqCategory")
-            .filter('_type == "faqCategory"')
-            .apiVersion("v2025-02-19"),
+          getTranslationItems(S, "faqCategory", "FAQ categories", "metadata"),
         ),
       S.listItem()
         .title("Authors")
