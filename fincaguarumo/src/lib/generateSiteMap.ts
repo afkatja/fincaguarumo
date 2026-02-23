@@ -128,6 +128,7 @@ export const generateSitemap = async () => {
 
   // Static pages (hardcoded routes not in Sanity)
   const staticPages = [
+    { path: "stay", priority: 0.9, changeFrequency: "weekly" as const },
     { path: "about", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "faq", priority: 0.85, changeFrequency: "weekly" as const },
     { path: "reviews", priority: 0.9, changeFrequency: "weekly" as const },
