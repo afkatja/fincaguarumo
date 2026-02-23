@@ -78,6 +78,11 @@ export const structure: StructureResolver = S => {
         .title("Pages")
         .child(getTranslationItems(S, "page", "Pages", "metadata")),
       S.listItem()
+        .title("Accommodations")
+        .child(
+          getTranslationItems(S, "accommodation", "Accommodations", "metadata"),
+        ),
+      S.listItem()
         .title("Tours")
         .child(getTranslationItems(S, "tour", "Tours", "metadata")),
       S.listItem()
@@ -244,6 +249,7 @@ export const defaultDocumentNode: DefaultDocumentNodeResolver = (
 ) => {
   switch (schemaType) {
     case "page":
+    case "accommodation":
     case "tour":
     case "post":
     case "faq":
