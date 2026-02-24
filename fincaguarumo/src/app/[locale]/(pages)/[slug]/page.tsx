@@ -8,36 +8,34 @@ import ClientPage from "./ClientPage"
 import { FAQType, SanityImageObject } from "@/types"
 import Script from "next/script"
 
-const jsonLd = (data: { title: string; slug: { current: string } }) => ({
+const jsonLd = (data: {
+  title: string
+  slug: { current: string }
+  description?: string
+}) => ({
   "@context": "https://schema.org",
-  "@type": "LodgingBusiness",
+  "@type": "WebPage",
   name: `${data.title} - Finca Guarumo`,
-  alternateName: ["Villa Bruno", "Villa Bruno at Finca Guarumo"],
+  description:
+    data.description ||
+    "Learn about Finca Guarumo and our sustainable eco-tourism initiatives in Costa Rica's Osa Peninsula",
+  url: `https://fincaguarumo.com/${data.slug.current}`,
   partOf: {
-    "@type": "Organization",
+    "@type": "WebSite",
     name: "Finca Guarumo",
     url: "https://fincaguarumo.com",
   },
-  branchOf: {
-    "@type": "Organization",
+  about: {
+    "@type": "Thing",
+    name: "Eco-Tourism",
+    description: "Sustainable tourism and nature conservation in Costa Rica",
+  },
+  inLanguage: "en",
+  isPartOf: {
+    "@type": "WebSite",
     name: "Finca Guarumo",
+    url: "https://fincaguarumo.com",
   },
-  description:
-    "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
-  url: `https://fincaguarumo.com/${data.slug.current}`,
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "Puerto Jiménez",
-    addressRegion: "Puntarenas",
-    addressCountry: "CR",
-  },
-  amenityFeature: [
-    { "@type": "LocationFeatureSpecification", name: "Solar Power" },
-    { "@type": "LocationFeatureSpecification", name: "Starlink Internet" },
-    { "@type": "LocationFeatureSpecification", name: "Wildlife Viewing" },
-  ],
-  numberOfRooms: 1,
-  maximumAttendeeCapacity: 4,
 })
 
 export type Content = {
@@ -50,6 +48,7 @@ export type Content = {
   isPublished: boolean
   showBookingOptions: boolean
   showBookingDialog: boolean
+  showFAQ: boolean
   slideshow: {
     images: SanityImageObject[]
   }
@@ -164,7 +163,11 @@ const Page = async ({ params }: { params: any }) => {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
-            jsonLd({ title: content?.title, slug: content?.slug }),
+            jsonLd({
+              title: content?.title,
+              slug: content?.slug,
+              description: content?.description,
+            }),
           ).replace(/</g, "\\u003c"),
         }}
       />
