@@ -93,7 +93,7 @@ const AccommodationClientPage = ({
             href={`/reviews`}
             className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
           >
-            Read more reviews
+            {t("readMoreReviews") || "Read more reviews"}
             <Icon
               icon="ArrowRight"
               className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
@@ -149,8 +149,8 @@ const AccommodationClientPage = ({
               <BookingDialog
                 bookingType={BOOKING_TYPE.villa}
                 dialogOptions={{
-                  buttonText: t("bookNow") || "Book Villa Bruno now",
-                  title: t("bookNow") || "Book Villa Bruno now",
+                  buttonText: t("bookNow") || "Book now",
+                  title: t("bookNow") || "Book now",
                 }}
                 locale={locale}
               />
@@ -167,7 +167,7 @@ const AccommodationClientPage = ({
                   </DialogTrigger>
                   <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
                     <DialogTitle>
-                      {t("bookVilla") || "Book your stay"}
+                      {t("bookYourStay") || "Book your stay"}
                     </DialogTitle>
                     <div className="mt-8">
                       <BookingOptions

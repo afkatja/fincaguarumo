@@ -9,12 +9,14 @@ import { REVIEWS_QUERY } from "../sanity/lib/queries"
 import { clientSideFetch } from "../sanity/lib/clientSide"
 import Icon from "./Icon"
 import { Badge } from "./ui/badge"
+import { useTranslations } from "next-intl"
 
 interface ReviewSummaryProps {
   count?: number
 }
 
 export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
+  const t = useTranslations("reviews")
   const { place } = usePlace()
   const { data: sanityReviews } = useSWR(REVIEWS_QUERY, clientSideFetch)
 
@@ -82,31 +84,31 @@ export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
     const themes = [
       {
         keywords: ["wildlife", "animals", "monkeys", "birds", "nature"],
-        theme: "Wildlife & Nature",
+        theme: t("wildlifeNature") || "Wildlife & Nature",
       },
       {
         keywords: ["solar", "eco", "sustainable", "green", "environment"],
-        theme: "Eco-Friendly",
+        theme: t("ecoFriendly") || "Eco-Friendly",
       },
       {
         keywords: ["quiet", "peaceful", "serene", "relaxing", "tranquil"],
-        theme: "Peaceful Setting",
+        theme: t("peacefulSetting") || "Peaceful Setting",
       },
       {
         keywords: ["clean", "beautiful", "amazing", "stunning", "perfect"],
-        theme: "Beautiful & Clean",
+        theme: t("beautifulClean") || "Beautiful & Clean",
       },
       {
         keywords: ["location", "access", "convenient", "close", "near"],
-        theme: "Great Location",
+        theme: t("greatLocation") || "Great Location",
       },
       {
         keywords: ["host", "staff", "service", "helpful", "friendly"],
-        theme: "Excellent Service",
+        theme: t("excellentService") || "Excellent Service",
       },
       {
         keywords: ["comfortable", "cozy", "bed", "amenities", "facilities"],
-        theme: "Comfortable",
+        theme: t("comfortable") || "Comfortable",
       },
     ]
 
@@ -141,7 +143,7 @@ export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
     <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm p-6 mb-6">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Overall Rating */}
-        <div className="flex-shrink-0 text-center lg:text-left">
+        <div className="shrink-0 text-center lg:text-left">
           <div className="flex items-center justify-center lg:justify-start gap-1 mb-2">
             {renderStars(summaryStats.averageRating)}
           </div>
@@ -149,7 +151,8 @@ export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
             {summaryStats.averageRating}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Based on {summaryStats.totalReviews} reviews
+            {t("basedOnReviews", { count: summaryStats.totalReviews }) ||
+              `Based on ${summaryStats.totalReviews} reviews`}
           </div>
         </div>
 
@@ -180,7 +183,7 @@ export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
         {/* Common Themes */}
         <div className="shrink-0">
           <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            What guests love most
+            {t("whatGuestsLoveMost") || "What guests love most"}
           </h4>
           <div className="flex flex-wrap gap-1">
             {summaryStats.commonThemes.map((theme, index) => (
@@ -200,7 +203,7 @@ export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
       {summaryStats.recentReviews.length > 0 && (
         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-zinc-700">
           <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            Recent guest comments
+            {t("recentGuestComments") || "Recent guest comments"}
           </h4>
           <div className="space-y-2">
             {summaryStats.recentReviews.slice(0, 2).map((review, index) => {
@@ -210,6 +213,7 @@ export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
               const author =
                 review?.authorAttribution?.displayName ||
                 review?.author?.name ||
+                t("guest") ||
                 "Guest"
 
               return (

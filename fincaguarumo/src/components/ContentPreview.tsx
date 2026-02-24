@@ -5,6 +5,7 @@ import { portableTextComponents } from "./RichText"
 import Title from "./Title"
 import { Button } from "@/components/ui/button"
 import Icon from "./Icon"
+import { useTranslations } from "next-intl"
 
 interface ContentPreviewProps {
   body: any
@@ -15,6 +16,7 @@ export const ContentPreview = ({
   body,
   maxSections = 2,
 }: ContentPreviewProps) => {
+  const t = useTranslations("accommodation")
   if (!body) return null
 
   // Extract the first few sections from the body content
@@ -69,7 +71,7 @@ export const ContentPreview = ({
     <div className="w-11/12 mx-auto my-8">
       <div className="bg-linear-to-b from-white to-gray-50 dark:from-zinc-800 dark:to-zinc-900 rounded-lg p-6 border border-gray-200 dark:border-zinc-700">
         <Title
-          title="About this accommodation"
+          title={t("aboutThisAccommodation") || "About this accommodation"}
           Heading="h2"
           titleClassName="text-2xl font-bold text-guarumo-primary dark:text-zinc-50 mb-4"
           icon={{ iconClassName: "fill-guarumo-accent dark:fill-zinc-50" }}
@@ -85,8 +87,8 @@ export const ContentPreview = ({
         {hasMoreContent && (
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-zinc-700 text-center">
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Continue reading to learn more about this unique eco-villa
-              experience...
+              {t("continueReading") ||
+                "Continue reading to learn more about this unique eco-villa experience..."}
             </p>
             <Button
               variant="outline"
@@ -100,7 +102,7 @@ export const ContentPreview = ({
                 }
               }}
             >
-              Read more
+              {t("readMore") || "Read more"}
               <Icon
                 icon="ArrowDown"
                 className="h-4 w-4 ml-2 transition-transform group-hover:translate-y-1"
