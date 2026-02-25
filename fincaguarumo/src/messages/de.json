@@ -135,14 +135,14 @@
     "wildlifeNature": "Tierwelt und Natur",
     "ecoFriendly": "Umweltfreundlich",
     "peacefulSetting": "Friedliche Umgebung",
-    "beautifulClean": null,
-    "greatLocation": null,
-    "excellentService": null,
-    "comfortable": null,
-    "basedOnReviews": null,
-    "whatGuestsLoveMost": null,
-    "recentGuestComments": null,
-    "guest": null,
-    "readMoreReviews": null
+    "beautifulClean": "Schön und sauber",
+    "greatLocation": "Tolle Lage",
+    "excellentService": "Exzellenter Service",
+    "comfortable": "Bequem",
+    "basedOnReviews": "Basierend auf Bewertungen",
+    "whatGuestsLoveMost": "Was Gäste am meisten lieben",
+    "recentGuestComments": "Aktuelle Gästekommentare",
+    "guest": "Gast",
+    "readMoreReviews": "Mehr Bewertungen lesen"
   }
 }
