@@ -246,6 +246,30 @@ export default function ProgressiveBookingForm({
           }
         />
       </div>
+
+      {/* Show price calculation when dates and guests are selected */}
+      {((bookingType === BOOKING_TYPE.villa &&
+        bookingData.bookingDetails.checkIn &&
+        bookingData.bookingDetails.checkOut &&
+        bookingData.bookingDetails.guests) ||
+        (bookingType === BOOKING_TYPE.tour &&
+          bookingData.bookingDetails.date &&
+          bookingData.bookingDetails.guests)) && (
+        <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-muted-foreground">
+          <h3 className="font-medium mb-3">
+            {t("priceSummary", { defaultValue: "Price Summary" })}
+          </h3>
+          <PriceCalculation
+            price={bookingData.bookingDetails.price}
+            guests={bookingData.bookingDetails.guests}
+            bookingType={bookingType}
+            locale={locale}
+            t={t}
+            duration={duration}
+            currency={bookingData.bookingDetails.currency}
+          />
+        </div>
+      )}
     </div>
   )
 
@@ -317,6 +341,22 @@ export default function ProgressiveBookingForm({
               },
             })
           }
+        />
+      </div>
+
+      {/* Show price summary in personal step */}
+      <div className="mt-6 p-4 bg-muted/50 rounded-lg border">
+        <h3 className="font-medium mb-3">
+          {t("priceSummary", { defaultValue: "Price Summary" })}
+        </h3>
+        <PriceCalculation
+          price={bookingData.bookingDetails.price}
+          guests={bookingData.bookingDetails.guests}
+          bookingType={bookingType}
+          locale={locale}
+          t={t}
+          duration={duration}
+          currency={bookingData.bookingDetails.currency}
         />
       </div>
     </div>

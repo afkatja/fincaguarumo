@@ -40,6 +40,7 @@
     "phoneError": "Please enter a valid phone number",
     "phoneLabel": "Your phone number *",
     "priceLabel": "Price (excl. VAT) for",
+    "priceSummary": "Price summary",
     "rateLabel": "Price (excl. VAT)",
     "rateVATlabel": "Price (incl. 13% VAT)",
     "discount10": "Discount (10% for stays 7+ nights)",
