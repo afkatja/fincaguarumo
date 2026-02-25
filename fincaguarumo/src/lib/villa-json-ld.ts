@@ -233,7 +233,7 @@ export const jsonLd = {
       },
       availability: "https://schema.org/InStock",
       validFrom: "2024-01-01",
-      url: "https://fincaguarumo.com/stay",
+      url: "https://fincaguarumo.com/villa-bruno",
     },
   ],
   tourBookingPage: "https://fincaguarumo.com/experiences",
@@ -276,7 +276,7 @@ export const orgSchema = {
   foundingDate: "2025",
   owns: {
     "@type": "LodgingBusiness",
-    "@id": "https://fincaguarumo.com/stay",
+    "@id": "https://fincaguarumo.com/villa-bruno",
     name: "Villa Bruno at Finca Guarumo",
     image: "https://fincaguarumo.com/images/villa-bruno-exterior.jpg",
     telephone: "+506-87495341",

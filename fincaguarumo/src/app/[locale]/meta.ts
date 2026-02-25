@@ -8,6 +8,15 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
   // Handle undefined pathname by defaulting to empty string (homepage)
   const currentPath = pathname || ""
 
+  // Handle canonical URLs for property page duplication
+  // Point /stay to /villa-bruno as the primary URL
+  let canonicalPath = currentPath
+  if (currentPath === "stay") {
+    canonicalPath = "villa-bruno"
+  } else if (currentPath === "accommodation") {
+    canonicalPath = "villa-bruno"
+  }
+
   return {
     title: "Finca Guarumo",
     metadataBase: new URL(baseUrl),
@@ -27,16 +36,16 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
     alternates: {
       canonical:
         locale === "en"
-          ? `${baseUrl}/${currentPath}`
-          : `${baseUrl}/${locale}/${currentPath}`,
+          ? `${baseUrl}/${canonicalPath}`
+          : `${baseUrl}/${locale}/${canonicalPath}`,
       languages: {
-        "x-default": `${baseUrl}/${currentPath}`,
+        "x-default": `${baseUrl}/${canonicalPath}`,
         ...Object.fromEntries(
           locales.map(loc => [
             loc,
             loc === "en"
-              ? `${baseUrl}${currentPath}`
-              : `${baseUrl}/${loc}${currentPath}`,
+              ? `${baseUrl}${canonicalPath}`
+              : `${baseUrl}/${loc}${canonicalPath}`,
           ]),
         ),
       },

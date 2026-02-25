@@ -8,7 +8,7 @@ interface EmbeddedChatProps {
   className?: string
   initialMessage?: string
   context?: {
-    page?: "homepage" | "stay" | "other"
+    page?: "homepage" | "villa-bruno" | "other"
     bookingData?: any
     propertyTitle?: string
   }
