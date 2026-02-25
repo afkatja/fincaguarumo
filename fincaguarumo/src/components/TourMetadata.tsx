@@ -46,7 +46,7 @@ const tourJsonLd = (tour: TourData, locale: string) => ({
   image: tour.mainImage?.url ? [tour.mainImage.url] : undefined,
 })
 
-// This component is now client-side only - server-only metadata generation moved to metadata.ts
+// This component is now server-rendered JSON-LD - client-side only usage removed
 
 export default function TourMetadata({
   tour,
@@ -56,14 +56,8 @@ export default function TourMetadata({
   locale: string
 }) {
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(tourJsonLd(tour, locale)).replace(
-          /</g,
-          "\\u003c",
-        ),
-      }}
-    />
+    <script type="application/ld+json">
+      {JSON.stringify(tourJsonLd(tour, locale)).replace(/</g, "\\u003c")}
+    </script>
   )
 }

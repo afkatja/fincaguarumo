@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect } from "react"
-import { createNavigation } from "next-intl/navigation"
+import { Link } from "@/navigation"
 import { useTranslations } from "next-intl"
 import RichText from "@/components/RichText"
 import { BookingOptions } from "@/components/BookingOptions"
@@ -37,7 +37,6 @@ const AccommodationClientPage = ({
   locale: string
 }) => {
   const { bookingData, setBookingData } = useBooking()
-  const { Link } = createNavigation()
   const t = useTranslations("booking")
   const b = useTranslations("reviews")
   const tPage = useTranslations("page")
@@ -161,28 +160,29 @@ const AccommodationClientPage = ({
           </Link>
         </div>
       </div>
-      <div id="reviews" className="mb-6">
-        <APIProvider
-          apiKey={googleMapsKey}
-          // onLoad={() => console.log("Maps API has loaded.")}
-        >
-          <PlaceProvider placeId={placeId}>
-            <PlaceReviews count={4} />
-          </PlaceProvider>
-        </APIProvider>
-        <Link
-          href={`/reviews`}
-          className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
-        >
-          {b("readMoreReviews") || "Read more reviews"}
-          <Icon
-            icon="ArrowRight"
-            className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
-            color="currentColor"
-          />
-        </Link>
-      </div>
-
+      {googleMapsKey && (
+        <div id="reviews" className="mb-6">
+          <APIProvider
+            apiKey={googleMapsKey}
+            // onLoad={() => console.log("Maps API has loaded.")}
+          >
+            <PlaceProvider placeId={placeId}>
+              <PlaceReviews count={4} />
+            </PlaceProvider>
+          </APIProvider>
+          <Link
+            href={`/reviews`}
+            className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
+          >
+            {b("readMoreReviews") || "Read more reviews"}
+            <Icon
+              icon="ArrowRight"
+              className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+              color="currentColor"
+            />
+          </Link>
+        </div>
+      )}
       {/* Booking Footer - Sticky booking options */}
       {content?.showBookingDialog && (
         <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-dark shadow-sm">

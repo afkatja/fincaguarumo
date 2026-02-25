@@ -450,7 +450,7 @@ export const ACCOMMODATION_QUERY = groq`
     cancellationPolicy->{ title, description, rules },
     logistics[]->{ title, description, type },
     "translations": coalesce(
-      *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{
+      *[_type == "translation.metadata" && ^._id in translations[].value._ref][0].translations[]{
         ...(value->{
           language,
           title,

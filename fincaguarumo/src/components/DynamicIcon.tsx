@@ -1,17 +1,28 @@
-import * as Icons from "lucide-react"
+import {
+  Sun,
+  Binoculars,
+  Droplet,
+  Mountain,
+  DollarSign,
+  Home,
+  Users,
+  MapPin,
+  Clock,
+  Star,
+} from "lucide-react"
 
 // Create a type-safe icon mapping
 const iconMap = {
-  Sun: Icons.Sun,
-  Binoculars: Icons.Binoculars,
-  Droplet: Icons.Droplet,
-  Mountain: Icons.Mountain,
-  DollarSign: Icons.DollarSign,
-  Home: Icons.Home,
-  Users: Icons.Users,
-  MapPin: Icons.MapPin,
-  Clock: Icons.Clock,
-  Star: Icons.Star,
+  Sun,
+  Binoculars,
+  Droplet,
+  Mountain,
+  DollarSign,
+  Home,
+  Users,
+  MapPin,
+  Clock,
+  Star,
   // Add more icons as needed
 }
 
@@ -24,14 +35,19 @@ interface DynamicIconProps {
   color?: string
 }
 
-export const DynamicIcon = ({ icon, className, size = 24, color = "currentColor" }: DynamicIconProps) => {
+export const DynamicIcon = ({
+  icon,
+  className,
+  size = 24,
+  color = "currentColor",
+}: DynamicIconProps) => {
   const IconComponent = iconMap[icon as IconName]
-  
+
   if (!IconComponent) {
     console.warn(`Icon "${icon}" not found in iconMap`)
     return <div className={className} style={{ width: size, height: size }} />
   }
-  
+
   return <IconComponent className={className} size={size} color={color} />
 }
 

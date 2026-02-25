@@ -16,7 +16,7 @@ export const ContentPreview = ({ summary }: ContentPreviewProps) => {
   return (
     <div className="">
       <Title
-        title={t("aboutThisAccommodation") || "About this accommodation"}
+        title={t("aboutThisAccommodation")}
         Heading="h2"
         titleClassName="text-xl font-bold text-guarumo-primary dark:text-zinc-50 mb-4"
         icon={{ iconClassName: "fill-guarumo-accent dark:fill-zinc-50" }}
@@ -28,8 +28,7 @@ export const ContentPreview = ({ summary }: ContentPreviewProps) => {
 
       <div className="mt-6 pt-6 border-t border-zinc-300 dark:border-zinc-700 md:border-0 text-center">
         <p className="text-zinc-600 dark:text-zinc-400 mb-4 text-sm">
-          {t("continueReading") ||
-            "Continue reading to learn more about this unique eco-villa experience..."}
+          {t("continueReading")}
         </p>
         <Button
           variant="outline"
@@ -42,7 +41,7 @@ export const ContentPreview = ({ summary }: ContentPreviewProps) => {
             }
           }}
         >
-          {t("readMore") || "Read more"}
+          {t("readMore")}
           <ArrowDownIcon className="w-4 h-4 ml-2 stroke-guarumo-primary" />
         </Button>
       </div>

@@ -29,10 +29,13 @@ interface SanityReviewDocument extends ReviewData {
 }
 
 // Helper function to convert date string to ISO format
-function parseDate(dateString: string): string {
+function parseDate(dateString: string): string | null {
   // Handle "Month Day, Year" format (e.g., "July 8, 2025")
   if (dateString.includes(",")) {
     const date = new Date(dateString)
+    if (isNaN(date.getTime())) {
+      return null
+    }
     return date.toISOString().split("T")[0]
   }
 
@@ -42,7 +45,11 @@ function parseDate(dateString: string): string {
   }
 
   // Fallback
-  return new Date(dateString).toISOString().split("T")[0]
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) {
+    return null
+  }
+  return date.toISOString().split("T")[0]
 }
 
 // Helper function to preserve original rating scale
@@ -67,27 +74,36 @@ async function migrateReviews() {
 
     // Process each review
     for (const review of allReviews) {
-      // Create a unique ID based on platform and author name
-      const uniqueId = `review-${review.platform}-${review.author.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "-")}`
-
-      const reviewDoc: SanityReviewDocument = {
-        _id: uniqueId,
-        _type: "review",
-        platform: review.platform,
-        author: {
-          name: review.author.name,
-          location: review.author.location || undefined,
-          photoURI: getPhotoUrl(review) || undefined,
-        },
-        rating: preserveRating(review.rating, review.platform),
-        date: parseDate(review.date),
-        reviewText: review.reviewText,
-        photoUrl: getPhotoUrl(review) || undefined,
-      }
-
       try {
+        // Create a unique ID based on platform, author name, and UUID to prevent collisions
+        const uniqueId = `review-${review.platform}-${review.author.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")}-${crypto.randomUUID()}`
+
+        // Parse date with validation
+        const parsedDate = parseDate(review.date)
+        if (!parsedDate) {
+          console.warn(
+            `⚠️  Skipping review with invalid date: ${review.author.name} (${review.platform}) - Date: ${review.date}`,
+          )
+          continue
+        }
+
+        const reviewDoc: SanityReviewDocument = {
+          _id: uniqueId,
+          _type: "review",
+          platform: review.platform,
+          author: {
+            name: review.author.name,
+            location: review.author.location || undefined,
+            photoURI: getPhotoUrl(review) || undefined,
+          },
+          rating: preserveRating(review.rating, review.platform),
+          date: parsedDate,
+          reviewText: review.reviewText,
+          photoUrl: getPhotoUrl(review) || undefined,
+        }
+
         const result = await migrationClient.createOrReplace(reviewDoc)
         console.log(
           `✅ Migrated review: ${review.author.name} (${review.platform})`,

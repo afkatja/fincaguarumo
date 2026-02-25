@@ -27,7 +27,19 @@ const InPageNavigation: React.FC<InPageNavigationProps> = ({ sections }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isSupported, setIsSupported] = useState(false)
   const navRef = useRef<HTMLDivElement>(null)
+  const isVisibleRef = useRef(isVisible)
+  const activeSectionRef = useRef(activeSection)
   const t = useTranslations("page")
+
+  // Update refs when state changes
+  useEffect(() => {
+    isVisibleRef.current = isVisible
+  }, [isVisible])
+
+  useEffect(() => {
+    activeSectionRef.current = activeSection
+  }, [activeSection])
+
   // Define primary sections (always visible) and secondary sections (hidden by default on mobile)
   const primarySections = sections.slice(0, 3) // Quick Info, Reviews, About
   const secondarySections = sections.slice(3) // Details, FAQ, All Reviews
@@ -67,7 +79,7 @@ const InPageNavigation: React.FC<InPageNavigationProps> = ({ sections }) => {
 
       // Show/hide navigation based on scroll position
       const shouldShow = scrollY > 300
-      if (shouldShow !== isVisible) {
+      if (shouldShow !== isVisibleRef.current) {
         setIsVisible(shouldShow)
 
         if (navRef.current) {
@@ -120,7 +132,7 @@ const InPageNavigation: React.FC<InPageNavigationProps> = ({ sections }) => {
         currentSection = sections[0]?.id || ""
       }
 
-      if (currentSection !== activeSection) {
+      if (currentSection !== activeSectionRef.current) {
         setActiveSection(currentSection)
       }
     }
@@ -147,7 +159,7 @@ const InPageNavigation: React.FC<InPageNavigationProps> = ({ sections }) => {
         gsap.killTweensOf(navRef.current)
       }
     }
-  }, [sections, isVisible, activeSection])
+  }, [sections, isSupported])
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)

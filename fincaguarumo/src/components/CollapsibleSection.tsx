@@ -1,7 +1,6 @@
 "use client"
-import React, { useState, useRef } from "react"
+import React, { useState } from "react"
 import { Button } from "./ui/button"
-import Icon from "./Icon"
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
 interface CollapsibleSectionProps {
@@ -18,7 +17,6 @@ export const CollapsibleSection = ({
   className = "",
 }: CollapsibleSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
-  const contentRef = useRef<HTMLDivElement>(null)
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded)
@@ -49,10 +47,9 @@ export const CollapsibleSection = ({
       </Button>
 
       <div
-        ref={contentRef}
         className={`transition-all duration-300 ease-in-out ${
           isExpanded
-            ? "max-h-none opacity-100"
+            ? "max-h-[400px] opacity-100"
             : "md:max-h-none md:opacity-100 max-h-0 opacity-0 overflow-hidden"
         }`}
       >

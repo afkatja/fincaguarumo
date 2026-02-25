@@ -3,12 +3,9 @@ import React from "react"
 import { usePlace } from "../app/providers/PlaceProvider"
 import Image from "next/image"
 import { TReview } from "../types"
-import { shuffle } from "../lib/utils"
-import Title from "./Title"
 import useSWR from "swr"
 import { REVIEWS_QUERY } from "../sanity/lib/queries"
 import { clientSideFetch } from "../sanity/lib/clientSide"
-import Icon from "./Icon"
 import { Badge } from "./ui/badge"
 import { useTranslations } from "next-intl"
 import { starIcons } from "./Review"
@@ -32,31 +29,31 @@ const extractCommonThemes = (texts: string[], t: any): string[] => {
   const themes = [
     {
       keywords: ["wildlife", "animals", "monkeys", "birds", "nature"],
-      theme: t("wildlifeNature") || "Wildlife & Nature",
+      theme: t("wildlifeNature"),
     },
     {
       keywords: ["solar", "eco", "sustainable", "green", "environment"],
-      theme: t("ecoFriendly") || "Eco-Friendly",
+      theme: t("ecoFriendly"),
     },
     {
       keywords: ["quiet", "peaceful", "serene", "relaxing", "tranquil"],
-      theme: t("peacefulSetting") || "Peaceful Setting",
+      theme: t("peacefulSetting"),
     },
     {
       keywords: ["clean", "beautiful", "amazing", "stunning", "perfect"],
-      theme: t("beautifulClean") || "Beautiful & Clean",
+      theme: t("beautifulClean"),
     },
     {
       keywords: ["location", "access", "convenient", "close", "near"],
-      theme: t("greatLocation") || "Great Location",
+      theme: t("greatLocation"),
     },
     {
       keywords: ["host", "staff", "service", "helpful", "friendly"],
-      theme: t("excellentService") || "Excellent Service",
+      theme: t("excellentService"),
     },
     {
       keywords: ["comfortable", "cozy", "bed", "amenities", "facilities"],
-      theme: t("comfortable") || "Comfortable",
+      theme: t("comfortable"),
     },
   ]
 
@@ -85,14 +82,12 @@ export const ReviewSummary = ({
 
   // Compute stable review array
   const stableAllReviews = React.useMemo(() => {
-    if (!place) return []
-    return [...(place.reviews ?? []), ...(sanityReviews ?? [])] as TReview[]
+    return [...(place?.reviews ?? []), ...(sanityReviews ?? [])] as TReview[]
   }, [place, JSON.stringify(place?.reviews), JSON.stringify(sanityReviews)])
 
   // Calculate summary statistics
   const summaryStats = React.useMemo(() => {
     if (!stableAllReviews.length) return null
-    console.log({ place, stableAllReviews })
 
     const totalReviews = stableAllReviews.length
     const validRatings = stableAllReviews.filter(review => {
@@ -169,8 +164,7 @@ export const ReviewSummary = ({
               {summaryStats.averageRating}
             </div>
             <p className="flex-none w-full text-sm text-gray-600 dark:text-gray-400">
-              {t("basedOnReviews", { count: summaryStats.totalReviews }) ||
-                `Based on ${summaryStats.totalReviews} reviews`}
+              {t("basedOnReviews", { count: summaryStats.totalReviews })}
             </p>
           </div>
 
@@ -200,7 +194,7 @@ export const ReviewSummary = ({
           {/* Combined Features & Themes */}
           <div>
             <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
-              {t("whatGuestsLoveMost") || "What guests love most"}
+              {t("whatGuestsLoveMost")}
             </h4>
             <div className="flex flex-wrap gap-1">
               {/* Static highlight features with icons */}
@@ -238,7 +232,7 @@ export const ReviewSummary = ({
           {summaryStats.recentReviews.length > 0 && (
             <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
               <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">
-                {t("recentGuestComments") || "Recent guest comments"}
+                {t("recentGuestComments")}
               </h4>
               <div className="space-y-2">
                 {summaryStats.recentReviews.slice(0, 2).map((review, index) => {
@@ -248,8 +242,7 @@ export const ReviewSummary = ({
                   const author =
                     review?.authorAttribution?.displayName ||
                     review?.author?.name ||
-                    t("guest") ||
-                    "Guest"
+                    t("guest")
 
                   return (
                     <div
@@ -278,7 +271,7 @@ export const ReviewSummary = ({
           }
           className="group inline-flex max-w-3xl ml-auto mt-6"
         >
-          {t("readMoreReviews") || "Read more reviews"}
+          {t("readMoreReviews")}
           <ArrowDown className="w-4 h-4 stroke-guarumo-primary" />
         </Button>
       )}

@@ -33,15 +33,12 @@ const blogJsonLd = (post: POST_QUERY_RESULT, locale: string) => ({
   image: post?.mainImage?.url ? [post?.mainImage.url] : undefined,
 })
 
-// This component is now client-side only - server-only metadata generation moved to page.tsx
+// This component is now server-rendered JSON-LD - client-side only usage removed
 
 export default function BlogMetadata({ post }: { post: POST_QUERY_RESULT }) {
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(blogJsonLd(post, "en")).replace(/</g, "\\u003c"),
-      }}
-    />
+    <script type="application/ld+json">
+      {JSON.stringify(blogJsonLd(post, "en")).replace(/</g, "\\u003c")}
+    </script>
   )
 }

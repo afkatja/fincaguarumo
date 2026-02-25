@@ -1,7 +1,6 @@
 "use client"
 import Image from "next/image"
 import { useParams } from "next/navigation"
-import Script from "next/script"
 import { TReview } from "../types"
 import { normalizeRatingTo5Stars } from "../lib/ratingUtils"
 
@@ -32,9 +31,9 @@ const Review = ({ review }: { review: TReview }) => {
   const platform = review.platform || "google"
 
   // Centralized derived values using utility function
-  const normalizedRating = normalizeRatingTo5Stars(
-    review?.rating || 0,
-    platform,
+  const normalizedRating = Math.max(
+    0,
+    Math.min(5, normalizeRatingTo5Stars(review?.rating || 0, platform)),
   )
 
   const publishDate = (() => {
@@ -226,14 +225,9 @@ const Review = ({ review }: { review: TReview }) => {
         </div>
       </div>
       {schema && (
-        <Script
-          id={schemaScriptId}
-          strategy="afterInteractive"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(schema).replace(/</g, "\\u003c"),
-          }}
-        />
+        <script id={schemaScriptId} type="application/ld+json">
+          {JSON.stringify(schema).replace(/</g, "\\u003c")}
+        </script>
       )}
     </div>
   )

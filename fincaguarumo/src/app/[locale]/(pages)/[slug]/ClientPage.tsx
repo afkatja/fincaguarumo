@@ -75,7 +75,7 @@ const ClientPage = ({
       {content?.showFAQ && (
         <div className="w-11/12 mx-auto mt-3 mb-8 flex flex-col">
           <Title
-            title={tPage("FAQ") || "FAQ"}
+            title={tPage("FAQ")}
             Heading="h2"
             titleClassName="text-3xl font-bold text-guarumo-primary dark:text-zinc-50"
             icon={{ title: "Guarumo" }}
@@ -88,7 +88,7 @@ const ClientPage = ({
               href={`/faq`}
               className="w-80 inline-flex items-center justify-center h-full group no-underline"
             >
-              {tPage("moreFAQ") || "More FAQ"}
+              {tPage("moreFAQ")}
               <Icon
                 icon="ArrowRight"
                 className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
@@ -111,8 +111,8 @@ const ClientPage = ({
               <BookingDialog
                 bookingType={BOOKING_TYPE.villa}
                 dialogOptions={{
-                  buttonText: t("bookNow") || "Book now",
-                  title: t("bookNow") || "Book your experience",
+                  buttonText: t("bookNow"),
+                  title: t("bookNow"),
                 }}
                 locale={locale}
               />
@@ -124,13 +124,11 @@ const ClientPage = ({
                       variant="outline"
                       name="book-on-others-button"
                     >
-                      {t("bookOnOthers") || "Book on other platforms"}
+                      {t("bookOnOthers")}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
-                    <DialogTitle>
-                      {t("bookVilla") || "Book your experience"}
-                    </DialogTitle>
+                    <DialogTitle>{t("bookVilla")}</DialogTitle>
                     <div className="mt-8">
                       <BookingOptions
                         locale={locale}

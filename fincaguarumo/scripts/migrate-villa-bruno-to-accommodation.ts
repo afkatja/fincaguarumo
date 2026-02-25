@@ -9,7 +9,7 @@ async function migrateVillaBrunoToAccommodation() {
     console.log("Starting Villa Bruno migration to accommodation type...")
 
     // Find existing Villa Bruno page(s) - targeting the /stay slug specifically
-    const villaBrunoQuery = groq`*[_type == "page" && slug.current == "stay"] {
+    const villaBrunoQuery = groq`*[_type == "page" && slug.current == "stay" && !(_id in path('drafts.*'))] {
       _id,
       title,
       subtitle,
@@ -36,7 +36,7 @@ async function migrateVillaBrunoToAccommodation() {
       console.log("Checking for any Villa Bruno pages...")
 
       // Fallback: search for any page with Villa Bruno in title
-      const fallbackQuery = groq`*[_type == "page" && title match "Villa Bruno"] {
+      const fallbackQuery = groq`*[_type == "page" && title match "Villa Bruno" && !(_id in path('drafts.*'))] {
         _id,
         title,
         slug
@@ -176,7 +176,7 @@ async function dryRun() {
   try {
     console.log("🔍 DRY RUN: Previewing Villa Bruno migration...")
 
-    const villaBrunoQuery = groq`*[_type == "page" && slug.current == "stay"] {
+    const villaBrunoQuery = groq`*[_type == "page" && slug.current == "stay" && !(_id in path('drafts.*'))] {
       _id,
       title,
       subtitle,

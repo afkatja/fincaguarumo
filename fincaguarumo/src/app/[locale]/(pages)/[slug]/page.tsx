@@ -6,12 +6,12 @@ import { PAGES_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import ClientPage from "./ClientPage"
 import { FAQType, SanityImageObject } from "@/types"
-import Script from "next/script"
 
 const jsonLd = (data: {
   title: string
   slug: { current: string }
   description?: string
+  locale: string
 }) => ({
   "@context": "https://schema.org",
   "@type": "WebPage",
@@ -20,17 +20,12 @@ const jsonLd = (data: {
     data.description ||
     "Learn about Finca Guarumo and our sustainable eco-tourism initiatives in Costa Rica's Osa Peninsula",
   url: `https://fincaguarumo.com/${data.slug.current}`,
-  partOf: {
-    "@type": "WebSite",
-    name: "Finca Guarumo",
-    url: "https://fincaguarumo.com",
-  },
   about: {
     "@type": "Thing",
     name: "Eco-Tourism",
     description: "Sustainable tourism and nature conservation in Costa Rica",
   },
-  inLanguage: "en",
+  inLanguage: data.locale,
   isPartOf: {
     "@type": "WebSite",
     name: "Finca Guarumo",
@@ -157,20 +152,16 @@ const Page = async ({ params }: { params: any }) => {
       images={content?.slideshow?.images}
     >
       <ClientPage content={content} locale={locale} />
-      <Script
-        id={"json-ld-page"}
-        strategy="afterInteractive"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            jsonLd({
-              title: content?.title,
-              slug: content?.slug,
-              description: content?.description,
-            }),
-          ).replace(/</g, "\\u003c"),
-        }}
-      />
+      <script type="application/ld+json">
+        {JSON.stringify(
+          jsonLd({
+            title: content?.title,
+            slug: content?.slug,
+            description: content?.description,
+            locale,
+          }),
+        ).replace(/</g, "\\u003c")}
+      </script>
     </Layout>
   )
 }

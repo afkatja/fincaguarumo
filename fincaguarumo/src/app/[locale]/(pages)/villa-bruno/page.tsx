@@ -6,7 +6,9 @@ import { ACCOMMODATION_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import AccommodationClientPage from "./AccommodationClientPage"
 import { FAQType, SanityImageObject } from "@/types"
-import Script from "next/script"
+import { title } from "process"
+
+const slug = "villa-bruno"
 
 const jsonLd = (data: { title: string; slug: { current: string } }) => ({
   "@context": "https://schema.org",
@@ -24,7 +26,7 @@ const jsonLd = (data: { title: string; slug: { current: string } }) => ({
   },
   description:
     "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
-  url: `https://fincaguarumo.com/${data.slug.current}`,
+  url: `https://fincaguarumo.com/${slug}`,
   address: {
     "@type": "PostalAddress",
     addressLocality: "Puerto Jiménez",
@@ -110,7 +112,7 @@ export async function generateMetadata({
 }: {
   params: any
 }): Promise<Metadata> {
-  const { locale, slug } = await params
+  const { locale } = await params
 
   const content: AccommodationContent = await sanityFetch({
     query: ACCOMMODATION_QUERY,
@@ -179,11 +181,11 @@ export async function generateMetadata({
 }
 
 const AccommodationPage = async ({ params }: { params: any }) => {
-  const { locale, slug } = await params
+  const { locale } = await params
 
   const content: AccommodationContent = await sanityFetch({
     query: ACCOMMODATION_QUERY,
-    params: { slug: "villa-bruno", language: locale },
+    params: { slug, language: locale },
     revalidate: 0,
   })
 
@@ -200,16 +202,11 @@ const AccommodationPage = async ({ params }: { params: any }) => {
       images={content?.slideshow?.images}
     >
       <AccommodationClientPage content={content} locale={locale} />
-      <Script
-        id={"json-ld-accommodation"}
-        strategy="afterInteractive"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            jsonLd({ title: content?.title, slug: content?.slug }),
-          ).replace(/</g, "\\u003c"),
-        }}
-      />
+      <script type="application/ld+json">
+        {JSON.stringify(
+          jsonLd({ title: content?.title, slug: content?.slug }),
+        ).replace(/</g, "\\u003c")}
+      </script>
     </Layout>
   )
 }

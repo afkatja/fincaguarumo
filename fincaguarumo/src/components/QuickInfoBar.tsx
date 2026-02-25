@@ -29,14 +29,13 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
         <div className="flex flex-col items-center text-center p-4 bg-zinc-50/50 rounded-lg">
           <DollarSign className="h-8 w-8 text-guarumo-primary mb-2" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {t("from") || "From"}
+            {t("from")}
           </span>
           <span className="text-2xl font-bold text-guarumo-primary dark:text-zinc-50">
             {formatPrice(price)}
           </span>
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            per{" "}
-            {guests === 1 ? t("person") || "person" : t("people") || "person"}
+            per {guests === 1 ? t("person") : t("people")}
           </span>
         </div>
 
@@ -44,13 +43,13 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
         <div className="flex flex-col items-center text-center p-4 bg-zinc-50/50 rounded-lg">
           <User2Icon className="h-8 w-8 text-guarumo-primary mb-2" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {t("capacity") || "Capacity"}
+            {t("capacity")}
           </span>
           <span className="text-2xl font-bold text-guarumo-primary dark:text-zinc-50">
             {content.capacity || 4}
           </span>
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            {t("guests") || "guests"}
+            {t("guests")}
           </span>
         </div>
 
@@ -58,14 +57,14 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
         <div className="flex flex-col items-center text-center p-4 bg-zinc-50/50 rounded-lg">
           <HomeIcon className="h-8 w-8 text-guarumo-primary mb-2" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {t("type") || "Type"}
+            {t("type")}
           </span>
           <span className="text-lg font-bold text-guarumo-primary dark:text-zinc-50 capitalize">
             {content.propertyType || "Villa"}
           </span>
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            {content.bedrooms || 1} {t("bed") || "bed"},{" "}
-            {content.bathrooms || 1} {t("bath") || "bath"}
+            {content.bedrooms || 1} {t("bed")}, {content.bathrooms || 1}{" "}
+            {t("bath")}
           </span>
         </div>
 
@@ -73,7 +72,7 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
         <div className="flex flex-col items-center text-center p-4 bg-zinc-50/50 rounded-lg">
           <Icon icon="Pin" className="h-8 w-8 text-guarumo-primary mb-2" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {t("location") || "Location"}
+            {t("location")}
           </span>
           <span className="text-lg font-bold text-guarumo-primary dark:text-zinc-50">
             {content.location?.city || "Puerto Jiménez"}
@@ -89,7 +88,7 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
         <div className="flex items-center gap-2">
           <Icon icon="Clock" className="h-4 w-4 text-guarumo-primary" />
           <span className="text-gray-600 dark:text-gray-400">
-            {t("checkIn") || "Check-in"}:
+            {t("checkIn")}:
           </span>
           <span className="font-medium text-guarumo-primary dark:text-zinc-50">
             {content.checkInTime || "3:00 PM"}
@@ -98,7 +97,7 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
         <div className="flex items-center gap-2">
           <Icon icon="Clock" className="h-4 w-4 text-guarumo-primary" />
           <span className="text-gray-600 dark:text-gray-400">
-            {t("checkOut") || "Check-out"}:
+            {t("checkOut")}:
           </span>
           <span className="font-medium text-guarumo-primary dark:text-zinc-50">
             {content.checkOutTime || "11:00 AM"}
