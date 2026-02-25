@@ -26,7 +26,7 @@ export const ContentPreview = ({ summary }: ContentPreviewProps) => {
         {summary}
       </p>
 
-      <div className="mt-6 pt-6 border-t border-zinc-300 dark:border-zinc-700 text-center">
+      <div className="mt-6 pt-6 border-t border-zinc-300 dark:border-zinc-700 md:border-0 text-center">
         <p className="text-zinc-600 dark:text-zinc-400 mb-4 text-sm">
           {t("continueReading") ||
             "Continue reading to learn more about this unique eco-villa experience..."}

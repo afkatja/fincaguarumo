@@ -99,27 +99,16 @@ const AccommodationClientPage = ({
                 <ReviewSummary
                   count={4}
                   highlightFeatures={content.highlightFeatures}
+                  readMoreSection="reviews"
                 />
-                <PlaceReviews count={4} />
               </PlaceProvider>
             </APIProvider>
-            <Link
-              href={`/reviews`}
-              className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
-            >
-              {b("readMoreReviews") || "Read more reviews"}
-              <Icon
-                icon="ArrowRight"
-                className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
-                color="currentColor"
-              />
-            </Link>
           </CollapsibleSection>
         </div>
       )}
 
       {/* Content Preview - First few sections of Sanity content */}
-      <div className="w-11/12 mx-auto">
+      <div className="w-11/12 mx-auto mb-6">
         <CollapsibleSection
           title="About this accommodation"
           defaultExpanded={false}
@@ -157,6 +146,27 @@ const AccommodationClientPage = ({
             />
           </Link>
         </div>
+      </div>
+      <div id="reviews">
+        <APIProvider
+          apiKey={googleMapsKey}
+          // onLoad={() => console.log("Maps API has loaded.")}
+        >
+          <PlaceProvider placeId={placeId}>
+            <PlaceReviews count={4} />
+          </PlaceProvider>
+        </APIProvider>
+        <Link
+          href={`/reviews`}
+          className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
+        >
+          {b("readMoreReviews") || "Read more reviews"}
+          <Icon
+            icon="ArrowRight"
+            className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+            color="currentColor"
+          />
+        </Link>
       </div>
 
       {/* Booking Footer - Sticky booking options */}

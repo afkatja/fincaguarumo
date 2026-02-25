@@ -53,7 +53,7 @@ export const CollapsibleSection = ({
         className={`transition-all duration-300 ease-in-out ${
           isExpanded
             ? "max-h-none opacity-100"
-            : "max-h-0 opacity-0 overflow-hidden"
+            : "md:max-h-none md:opacity-100 max-h-0 opacity-0 overflow-hidden"
         }`}
       >
         <div className="p-4 pt-0 md:p-0">{children}</div>

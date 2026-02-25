@@ -14,6 +14,8 @@ import { useTranslations } from "next-intl"
 import { starIcons } from "./Review"
 import { DynamicLucideIcon } from "./DynamicLucideIcon"
 import { normalizeRatingTo5Stars } from "../lib/ratingUtils"
+import { Button } from "./ui/button"
+import { ArrowDown } from "lucide-react"
 
 interface ReviewSummaryProps {
   count?: number
@@ -22,6 +24,7 @@ interface ReviewSummaryProps {
     description?: string
     icon?: string
   }>
+  readMoreSection?: string
 }
 
 // Extract common themes from review texts
@@ -74,6 +77,7 @@ const extractCommonThemes = (texts: string[], t: any): string[] => {
 export const ReviewSummary = ({
   count,
   highlightFeatures,
+  readMoreSection,
 }: ReviewSummaryProps) => {
   const t = useTranslations("reviews")
   const { place } = usePlace()
@@ -153,115 +157,131 @@ export const ReviewSummary = ({
   }
 
   return (
-    <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg shadow-sm p-6 mb-6 lg:grid lg:grid-cols-2 gap-4">
-      <div className="md:flex flex-wrap items-start gap-4">
-        {/* Overall Rating */}
-        <div className="flex-1 flex flex-wrap gap-2">
-          <div className="flex items-center gap-1 mb-2">
-            {renderStars(summaryStats.averageRating)}
+    <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg shadow-sm p-6 mb-6 flex flex-wrap">
+      <div className="lg:grid lg:grid-cols-2 gap-4">
+        <div className="md:flex flex-wrap items-start gap-4">
+          {/* Overall Rating */}
+          <div className="flex-1 flex flex-wrap gap-2">
+            <div className="flex items-center gap-1 mb-2">
+              {renderStars(summaryStats.averageRating)}
+            </div>
+            <div className="text-3xl font-bold text-guarumo-primary dark:text-zinc-50">
+              {summaryStats.averageRating}
+            </div>
+            <p className="flex-none w-full text-sm text-gray-600 dark:text-gray-400">
+              {t("basedOnReviews", { count: summaryStats.totalReviews }) ||
+                `Based on ${summaryStats.totalReviews} reviews`}
+            </p>
           </div>
-          <div className="text-3xl font-bold text-guarumo-primary dark:text-zinc-50">
-            {summaryStats.averageRating}
-          </div>
-          <p className="flex-none w-full text-sm text-gray-600 dark:text-gray-400">
-            {t("basedOnReviews", { count: summaryStats.totalReviews }) ||
-              `Based on ${summaryStats.totalReviews} reviews`}
-          </p>
-        </div>
 
-        {/* Rating Distribution */}
-        <div className="space-y-2 flex-3 shrink-0 mt-4 pt-4 md:ml-6 md:pl-6 md:mt-0 md:pt-0">
-          {summaryStats.ratingDistribution.map(
-            ({ stars, count, percentage }) => (
-              <div key={stars} className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400 w-8">
-                  {stars}★
-                </span>
-                <div className="flex-1 bg-gray-200 dark:bg-zinc-700 rounded-full h-2">
-                  <div
-                    className="bg-yellow-400 h-2 rounded-full"
-                    style={{ width: `${percentage}%` }}
-                  />
+          {/* Rating Distribution */}
+          <div className="space-y-2 flex-3 shrink-0 mt-4 pt-4 md:ml-6 md:pl-6 md:mt-0 md:pt-0">
+            {summaryStats.ratingDistribution.map(
+              ({ stars, count, percentage }) => (
+                <div key={stars} className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 w-8">
+                    {stars}★
+                  </span>
+                  <div className="flex-1 bg-gray-200 dark:bg-zinc-700 rounded-full h-2">
+                    <div
+                      className="bg-yellow-400 h-2 rounded-full"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400 w-8 text-right">
+                    {count}
+                  </span>
                 </div>
-                <span className="text-sm text-gray-600 dark:text-gray-400 w-8 text-right">
-                  {count}
-                </span>
+              ),
+            )}
+          </div>
+        </div>
+        <div className="md:border-l border-zinc-200 dark:border-zinc-700 mt-4 pt-4 md:ml-6 md:pl-6 md:mt-0 md:pt-0">
+          {/* Combined Features & Themes */}
+          <div>
+            <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+              {t("whatGuestsLoveMost") || "What guests love most"}
+            </h4>
+            <div className="flex flex-wrap gap-1">
+              {/* Static highlight features with icons */}
+              {highlightFeatures &&
+                highlightFeatures.length > 0 &&
+                highlightFeatures.slice(0, 4).map((feature, index) => (
+                  <Badge
+                    key={`feature-${index}`}
+                    variant="secondary"
+                    className="text-xs bg-guarumo-primary/20 text-guarumo-primary dark:text-zinc-50 border-guarumo-primary/30"
+                  >
+                    {feature.icon && (
+                      <DynamicLucideIcon
+                        icon={feature.icon}
+                        className="h-3 w-3 mr-1"
+                      />
+                    )}
+                    {feature.title}
+                  </Badge>
+                ))}
+              {/* Dynamic common themes from reviews */}
+              {summaryStats.commonThemes.map((theme, index) => (
+                <Badge
+                  key={`theme-${index}`}
+                  variant="secondary"
+                  className="text-xs bg-guarumo-accent/20 text-guarumo-accent dark:text-zinc-50 border-guarumo-accent/30"
+                >
+                  {theme}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Review Snippets */}
+          {summaryStats.recentReviews.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
+              <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">
+                {t("recentGuestComments") || "Recent guest comments"}
+              </h4>
+              <div className="space-y-2">
+                {summaryStats.recentReviews.slice(0, 2).map((review, index) => {
+                  const text = review?.text || review?.reviewText || ""
+                  const truncatedText =
+                    text.length > 150 ? text.substring(0, 150) + "..." : text
+                  const author =
+                    review?.authorAttribution?.displayName ||
+                    review?.author?.name ||
+                    t("guest") ||
+                    "Guest"
+
+                  return (
+                    <div
+                      key={index}
+                      className="text-sm text-zinc-600 dark:text-zinc-400 italic"
+                    >
+                      "{truncatedText}"
+                      <span className="ml-2 font-normal not-italic">
+                        - {author}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
-            ),
+            </div>
           )}
         </div>
       </div>
-      <div className="md:border-l border-zinc-200 dark:border-zinc-700 mt-4 pt-4 md:ml-6 md:pl-6 md:mt-0 md:pt-0">
-        {/* Combined Features & Themes */}
-        <div>
-          <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
-            {t("whatGuestsLoveMost") || "What guests love most"}
-          </h4>
-          <div className="flex flex-wrap gap-1">
-            {/* Static highlight features with icons */}
-            {highlightFeatures &&
-              highlightFeatures.length > 0 &&
-              highlightFeatures.slice(0, 4).map((feature, index) => (
-                <Badge
-                  key={`feature-${index}`}
-                  variant="secondary"
-                  className="text-xs bg-guarumo-primary/20 text-guarumo-primary dark:text-zinc-50 border-guarumo-primary/30"
-                >
-                  {feature.icon && (
-                    <DynamicLucideIcon
-                      icon={feature.icon}
-                      className="h-3 w-3 mr-1"
-                    />
-                  )}
-                  {feature.title}
-                </Badge>
-              ))}
-            {/* Dynamic common themes from reviews */}
-            {summaryStats.commonThemes.map((theme, index) => (
-              <Badge
-                key={`theme-${index}`}
-                variant="secondary"
-                className="text-xs bg-guarumo-accent/20 text-guarumo-accent dark:text-zinc-50 border-guarumo-accent/30"
-              >
-                {theme}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Review Snippets */}
-        {summaryStats.recentReviews.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
-            <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">
-              {t("recentGuestComments") || "Recent guest comments"}
-            </h4>
-            <div className="space-y-2">
-              {summaryStats.recentReviews.slice(0, 2).map((review, index) => {
-                const text = review?.text || review?.reviewText || ""
-                const truncatedText =
-                  text.length > 150 ? text.substring(0, 150) + "..." : text
-                const author =
-                  review?.authorAttribution?.displayName ||
-                  review?.author?.name ||
-                  t("guest") ||
-                  "Guest"
-
-                return (
-                  <div
-                    key={index}
-                    className="text-sm text-zinc-600 dark:text-zinc-400 italic"
-                  >
-                    "{truncatedText}"
-                    <span className="ml-2 font-normal not-italic">
-                      - {author}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+      {readMoreSection && (
+        <Button
+          variant="outline"
+          onClick={() =>
+            document
+              .getElementById(readMoreSection)
+              ?.scrollIntoView({ behavior: "smooth" })
+          }
+          className="group inline-flex max-w-3xl ml-auto mt-6"
+        >
+          {t("readMoreReviews") || "Read more reviews"}
+          <ArrowDown className="w-4 h-4 stroke-guarumo-primary" />
+        </Button>
+      )}
     </div>
   )
 }
