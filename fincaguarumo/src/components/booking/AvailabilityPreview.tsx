@@ -88,7 +88,7 @@ export default function AvailabilityPreview({
   if (!checkIn || !checkOut) {
     return (
       <div
-        className={`flex items-center gap-2 text-gray-500 text-sm ${className}`}
+        className={`flex items-center gap-2 text-zinc-500 text-sm ${className}`}
       >
         <Calendar className="w-4 h-4" />
         <span>
@@ -103,7 +103,7 @@ export default function AvailabilityPreview({
   if (availability.isLoading) {
     return (
       <div
-        className={`flex items-center gap-2 text-blue-600 text-sm ${className}`}
+        className={`flex items-center gap-2 text-foreground-muted text-sm ${className}`}
       >
         <Loader2 className="w-4 h-4 animate-spin" />
         <span>
@@ -120,7 +120,7 @@ export default function AvailabilityPreview({
   if (availability.error) {
     return (
       <div
-        className={`flex items-center gap-2 text-red-600 text-sm ${className}`}
+        className={`flex items-center gap-2 text-destructive text-sm ${className}`}
       >
         <XCircle className="w-4 h-4" />
         <span>
@@ -139,7 +139,7 @@ export default function AvailabilityPreview({
   return (
     <div
       className={`flex items-center gap-2 text-sm font-medium ${
-        availability.isAvailable ? "text-green-600" : "text-red-600"
+        availability.isAvailable ? "text-guarumo-primary" : "text-destructive"
       } ${className}`}
     >
       {availability.isAvailable ? (
