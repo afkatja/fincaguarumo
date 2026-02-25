@@ -41,6 +41,7 @@
     "phoneLabel": "Your phone number *",
     "priceLabel": "Price (excl. VAT) for",
     "rateLabel": "Price (excl. VAT)",
+    "priceFrom": "Price starting from {price} for {guests} {guestsLabel}",
     "rateVATlabel": "Price (incl. 13% VAT)",
     "discount10": "Discount (10% for stays 7+ nights)",
     "discount20": "Discount (20% for stays 28+ nights)",
