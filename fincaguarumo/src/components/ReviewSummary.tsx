@@ -1,6 +1,7 @@
 "use client"
 import React from "react"
 import { usePlace } from "../app/providers/PlaceProvider"
+import Image from "next/image"
 import { TReview } from "../types"
 import { shuffle } from "../lib/utils"
 import Title from "./Title"
@@ -10,12 +11,70 @@ import { clientSideFetch } from "../sanity/lib/clientSide"
 import Icon from "./Icon"
 import { Badge } from "./ui/badge"
 import { useTranslations } from "next-intl"
+import { starIcons } from "./Review"
+import { DynamicLucideIcon } from "./DynamicLucideIcon"
+import { normalizeRatingTo5Stars } from "../lib/ratingUtils"
 
 interface ReviewSummaryProps {
   count?: number
+  highlightFeatures?: Array<{
+    title: string
+    description?: string
+    icon?: string
+  }>
 }
 
-export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
+// Extract common themes from review texts
+const extractCommonThemes = (texts: string[], t: any): string[] => {
+  const themes = [
+    {
+      keywords: ["wildlife", "animals", "monkeys", "birds", "nature"],
+      theme: t("wildlifeNature") || "Wildlife & Nature",
+    },
+    {
+      keywords: ["solar", "eco", "sustainable", "green", "environment"],
+      theme: t("ecoFriendly") || "Eco-Friendly",
+    },
+    {
+      keywords: ["quiet", "peaceful", "serene", "relaxing", "tranquil"],
+      theme: t("peacefulSetting") || "Peaceful Setting",
+    },
+    {
+      keywords: ["clean", "beautiful", "amazing", "stunning", "perfect"],
+      theme: t("beautifulClean") || "Beautiful & Clean",
+    },
+    {
+      keywords: ["location", "access", "convenient", "close", "near"],
+      theme: t("greatLocation") || "Great Location",
+    },
+    {
+      keywords: ["host", "staff", "service", "helpful", "friendly"],
+      theme: t("excellentService") || "Excellent Service",
+    },
+    {
+      keywords: ["comfortable", "cozy", "bed", "amenities", "facilities"],
+      theme: t("comfortable") || "Comfortable",
+    },
+  ]
+
+  const themeCounts = themes.map(({ keywords, theme }) => {
+    const count = texts.filter(text =>
+      keywords.some(keyword => text.includes(keyword)),
+    ).length
+    return { theme, count }
+  })
+
+  return themeCounts
+    .filter(({ count }) => count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 4)
+    .map(({ theme }) => theme)
+}
+
+export const ReviewSummary = ({
+  count,
+  highlightFeatures,
+}: ReviewSummaryProps) => {
   const t = useTranslations("reviews")
   const { place } = usePlace()
   const { data: sanityReviews } = useSWR(REVIEWS_QUERY, clientSideFetch)
@@ -29,6 +88,7 @@ export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
   // Calculate summary statistics
   const summaryStats = React.useMemo(() => {
     if (!stableAllReviews.length) return null
+    console.log({ place, stableAllReviews })
 
     const totalReviews = stableAllReviews.length
     const validRatings = stableAllReviews.filter(review => {
@@ -38,12 +98,10 @@ export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
 
     if (!validRatings.length) return null
 
-    // Normalize ratings (Booking.com uses 1-10 scale)
-    const normalizedRatings = validRatings.map(review => {
-      const platform = review.platform || "google"
-      const rating = review?.rating || 0
-      return platform === "booking" ? Math.ceil(rating / 2) : rating
-    })
+    // Normalize all ratings to 5-star scale
+    const normalizedRatings = validRatings.map(review =>
+      normalizeRatingTo5Stars(review?.rating || 0, review.platform || "google"),
+    )
 
     const averageRating =
       normalizedRatings.reduce((sum, rating) => sum + rating, 0) /
@@ -68,7 +126,7 @@ export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
       })
       .map(review => (review?.text || review?.reviewText || "").toLowerCase())
 
-    const commonThemes = extractCommonThemes(reviewTexts)
+    const commonThemes = extractCommonThemes(reviewTexts, t)
 
     return {
       totalReviews,
@@ -79,158 +137,131 @@ export const ReviewSummary = ({ count }: ReviewSummaryProps) => {
     }
   }, [stableAllReviews])
 
-  // Extract common themes from review texts
-  const extractCommonThemes = (texts: string[]): string[] => {
-    const themes = [
-      {
-        keywords: ["wildlife", "animals", "monkeys", "birds", "nature"],
-        theme: t("wildlifeNature") || "Wildlife & Nature",
-      },
-      {
-        keywords: ["solar", "eco", "sustainable", "green", "environment"],
-        theme: t("ecoFriendly") || "Eco-Friendly",
-      },
-      {
-        keywords: ["quiet", "peaceful", "serene", "relaxing", "tranquil"],
-        theme: t("peacefulSetting") || "Peaceful Setting",
-      },
-      {
-        keywords: ["clean", "beautiful", "amazing", "stunning", "perfect"],
-        theme: t("beautifulClean") || "Beautiful & Clean",
-      },
-      {
-        keywords: ["location", "access", "convenient", "close", "near"],
-        theme: t("greatLocation") || "Great Location",
-      },
-      {
-        keywords: ["host", "staff", "service", "helpful", "friendly"],
-        theme: t("excellentService") || "Excellent Service",
-      },
-      {
-        keywords: ["comfortable", "cozy", "bed", "amenities", "facilities"],
-        theme: t("comfortable") || "Comfortable",
-      },
-    ]
-
-    const themeCounts = themes.map(({ keywords, theme }) => {
-      const count = texts.filter(text =>
-        keywords.some(keyword => text.includes(keyword)),
-      ).length
-      return { theme, count }
-    })
-
-    return themeCounts
-      .filter(({ count }) => count > 0)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 4)
-      .map(({ theme }) => theme)
-  }
-
   if (!summaryStats) return null
 
   const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Icon
+    return Array.from({ length: rating }, (_, i) => (
+      <Image
         key={i}
-        icon={i < Math.floor(rating) ? "Star" : "Star"}
-        className={`h-4 w-4 ${i < Math.floor(rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
-        color="currentColor"
+        src={starIcons.filled}
+        alt={"Filled star"}
+        width="17"
+        height="17"
+        loading="lazy"
       />
     ))
   }
 
   return (
-    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm p-6 mb-6">
-      <div className="flex flex-col lg:flex-row gap-6">
+    <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg shadow-sm p-6 mb-6 lg:grid lg:grid-cols-2 gap-4">
+      <div className="md:flex flex-wrap items-start gap-4">
         {/* Overall Rating */}
-        <div className="shrink-0 text-center lg:text-left">
-          <div className="flex items-center justify-center lg:justify-start gap-1 mb-2">
+        <div className="flex-1 flex flex-wrap gap-2">
+          <div className="flex items-center gap-1 mb-2">
             {renderStars(summaryStats.averageRating)}
           </div>
           <div className="text-3xl font-bold text-guarumo-primary dark:text-zinc-50">
             {summaryStats.averageRating}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="flex-none w-full text-sm text-gray-600 dark:text-gray-400">
             {t("basedOnReviews", { count: summaryStats.totalReviews }) ||
               `Based on ${summaryStats.totalReviews} reviews`}
-          </div>
+          </p>
         </div>
 
         {/* Rating Distribution */}
-        <div className="flex-1">
-          <div className="space-y-2">
-            {summaryStats.ratingDistribution.map(
-              ({ stars, count, percentage }) => (
-                <div key={stars} className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400 w-8">
-                    {stars}★
-                  </span>
-                  <div className="flex-1 bg-gray-200 dark:bg-zinc-700 rounded-full h-2">
-                    <div
-                      className="bg-yellow-400 h-2 rounded-full"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400 w-8 text-right">
-                    {count}
-                  </span>
+        <div className="space-y-2 flex-3 shrink-0 mt-4 pt-4 md:ml-6 md:pl-6 md:mt-0 md:pt-0">
+          {summaryStats.ratingDistribution.map(
+            ({ stars, count, percentage }) => (
+              <div key={stars} className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400 w-8">
+                  {stars}★
+                </span>
+                <div className="flex-1 bg-gray-200 dark:bg-zinc-700 rounded-full h-2">
+                  <div
+                    className="bg-yellow-400 h-2 rounded-full"
+                    style={{ width: `${percentage}%` }}
+                  />
                 </div>
-              ),
-            )}
-          </div>
+                <span className="text-sm text-gray-600 dark:text-gray-400 w-8 text-right">
+                  {count}
+                </span>
+              </div>
+            ),
+          )}
         </div>
-
-        {/* Common Themes */}
-        <div className="shrink-0">
-          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      </div>
+      <div className="md:border-l border-zinc-200 dark:border-zinc-700 mt-4 pt-4 md:ml-6 md:pl-6 md:mt-0 md:pt-0">
+        {/* Combined Features & Themes */}
+        <div>
+          <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
             {t("whatGuestsLoveMost") || "What guests love most"}
           </h4>
           <div className="flex flex-wrap gap-1">
+            {/* Static highlight features with icons */}
+            {highlightFeatures &&
+              highlightFeatures.length > 0 &&
+              highlightFeatures.slice(0, 4).map((feature, index) => (
+                <Badge
+                  key={`feature-${index}`}
+                  variant="secondary"
+                  className="text-xs bg-guarumo-primary/20 text-guarumo-primary dark:text-zinc-50 border-guarumo-primary/30"
+                >
+                  {feature.icon && (
+                    <DynamicLucideIcon
+                      icon={feature.icon}
+                      className="h-3 w-3 mr-1"
+                    />
+                  )}
+                  {feature.title}
+                </Badge>
+              ))}
+            {/* Dynamic common themes from reviews */}
             {summaryStats.commonThemes.map((theme, index) => (
               <Badge
-                key={index}
+                key={`theme-${index}`}
                 variant="secondary"
-                className="text-xs bg-guarumo-accent/20 text-guarumo-primary dark:text-zinc-50 border-guarumo-accent/30"
+                className="text-xs bg-guarumo-accent/20 text-guarumo-accent dark:text-zinc-50 border-guarumo-accent/30"
               >
                 {theme}
               </Badge>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Recent Review Snippets */}
-      {summaryStats.recentReviews.length > 0 && (
-        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-zinc-700">
-          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            {t("recentGuestComments") || "Recent guest comments"}
-          </h4>
-          <div className="space-y-2">
-            {summaryStats.recentReviews.slice(0, 2).map((review, index) => {
-              const text = review?.text || review?.reviewText || ""
-              const truncatedText =
-                text.length > 150 ? text.substring(0, 150) + "..." : text
-              const author =
-                review?.authorAttribution?.displayName ||
-                review?.author?.name ||
-                t("guest") ||
-                "Guest"
+        {/* Recent Review Snippets */}
+        {summaryStats.recentReviews.length > 0 && (
+          <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
+            <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">
+              {t("recentGuestComments") || "Recent guest comments"}
+            </h4>
+            <div className="space-y-2">
+              {summaryStats.recentReviews.slice(0, 2).map((review, index) => {
+                const text = review?.text || review?.reviewText || ""
+                const truncatedText =
+                  text.length > 150 ? text.substring(0, 150) + "..." : text
+                const author =
+                  review?.authorAttribution?.displayName ||
+                  review?.author?.name ||
+                  t("guest") ||
+                  "Guest"
 
-              return (
-                <div
-                  key={index}
-                  className="text-sm text-gray-600 dark:text-gray-400 italic"
-                >
-                  "{truncatedText}"
-                  <span className="ml-2 font-normal not-italic">
-                    - {author}
-                  </span>
-                </div>
-              )
-            })}
+                return (
+                  <div
+                    key={index}
+                    className="text-sm text-zinc-600 dark:text-zinc-400 italic"
+                  >
+                    "{truncatedText}"
+                    <span className="ml-2 font-normal not-italic">
+                      - {author}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

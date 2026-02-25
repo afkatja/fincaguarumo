@@ -21,6 +21,9 @@
     "semantic-rag:test": "npm run semantic-rag:build && node dist/src/lib/semantic-rag/test.js",
     "semantic-rag:init-prod": "EMBEDDING_PREFER_LOCAL=false EMBEDDING_FALLBACK_TO_REMOTE=true npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/init-semantic-rag.ts",
     "semantic-rag:validate-prod": "EMBEDDING_PREFER_LOCAL=false EMBEDDING_FALLBACK_TO_REMOTE=true npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/validate.ts",
+    "migrate:villa-bruno": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/migrate-villa-bruno-to-accommodation.ts",
+    "migrate:villa-bruno:dry-run": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/migrate-villa-bruno-to-accommodation.ts --dry-run",
+    "migrate:reviews": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/migrate-reviews.ts",
     "eval": "npx tsx --require dotenv/config test-evaluation.js"
   },
   "lint-staged": {

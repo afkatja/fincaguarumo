@@ -27,6 +27,13 @@ export const accommodationType = defineType({
       validation: rule => rule.required(),
     }),
     defineField({
+      name: "summary",
+      type: "text",
+      title: "Summary",
+      description: "A brief summary to display in the content preview section",
+      rows: 3,
+    }),
+    defineField({
       name: "slug",
       type: "slug",
       options: {

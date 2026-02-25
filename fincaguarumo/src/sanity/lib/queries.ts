@@ -420,6 +420,7 @@ export const REVIEWS_QUERY = groq`*[_type == "review"][] | order(date desc){
 export const ACCOMMODATION_QUERY = groq`
   *[_type == "accommodation" && slug.current == $slug && language == $language][0] {
     title, subtitle, description,
+    summary,
     mainImage ${mainImageMetadataOnly},
     body[]{
       ...,

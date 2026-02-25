@@ -26,6 +26,7 @@ import calculateTotal from "../../../../lib/calculateTotal"
 import { QuickInfoBar } from "@/components/QuickInfoBar"
 import { ReviewSummary } from "@/components/ReviewSummary"
 import { ContentPreview } from "@/components/ContentPreview"
+import { CollapsibleSection } from "@/components/CollapsibleSection"
 
 const AccommodationClientPage = ({
   content,
@@ -37,6 +38,7 @@ const AccommodationClientPage = ({
   const { bookingData, setBookingData } = useBooking()
   const { Link } = createNavigation()
   const t = useTranslations("booking")
+  const b = useTranslations("reviews")
   const tPage = useTranslations("page")
 
   const googleMapsKey = process.env.NEXT_PUBLIC_GMAPS_API_KEY as string
@@ -75,36 +77,56 @@ const AccommodationClientPage = ({
   return (
     <>
       {/* Quick Info Bar - Essential information above the fold */}
-      <QuickInfoBar content={content} price={total} guests={guests} />
+      <div className="w-11/12 mx-auto my-6">
+        <CollapsibleSection
+          title="Quick Info"
+          defaultExpanded={true}
+          className="bg-linear-to-r from-guarumo-primary/10 to-guarumo-accent/10"
+        >
+          <QuickInfoBar content={content} price={total} guests={guests} />
+        </CollapsibleSection>
+      </div>
 
       {/* Reviews Section - Prominently placed with summary */}
       {googleMapsKey && (
         <div className="w-11/12 mx-auto my-8">
-          <ReviewSummary count={4} />
-          <APIProvider
-            apiKey={googleMapsKey}
-            // onLoad={() => console.log("Maps API has loaded.")}
-          >
-            <PlaceProvider placeId={placeId}>
-              <PlaceReviews count={4} />
-            </PlaceProvider>
-          </APIProvider>
-          <Link
-            href={`/reviews`}
-            className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
-          >
-            {t("readMoreReviews") || "Read more reviews"}
-            <Icon
-              icon="ArrowRight"
-              className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
-              color="currentColor"
-            />
-          </Link>
+          <CollapsibleSection title="Reviews" defaultExpanded={false}>
+            <APIProvider
+              apiKey={googleMapsKey}
+              // onLoad={() => console.log("Maps API has loaded.")}
+            >
+              <PlaceProvider placeId={placeId}>
+                <ReviewSummary
+                  count={4}
+                  highlightFeatures={content.highlightFeatures}
+                />
+                <PlaceReviews count={4} />
+              </PlaceProvider>
+            </APIProvider>
+            <Link
+              href={`/reviews`}
+              className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
+            >
+              {b("readMoreReviews") || "Read more reviews"}
+              <Icon
+                icon="ArrowRight"
+                className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+                color="currentColor"
+              />
+            </Link>
+          </CollapsibleSection>
         </div>
       )}
 
       {/* Content Preview - First few sections of Sanity content */}
-      <ContentPreview body={content.body} />
+      <div className="w-11/12 mx-auto">
+        <CollapsibleSection
+          title="About this accommodation"
+          defaultExpanded={false}
+        >
+          <ContentPreview summary={content.summary} />
+        </CollapsibleSection>
+      </div>
 
       {/* Full Content - Complete Sanity body content */}
       <div id="full-content">
@@ -167,7 +189,7 @@ const AccommodationClientPage = ({
                   </DialogTrigger>
                   <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
                     <DialogTitle>
-                      {t("bookYourStay") || "Book your stay"}
+                      {t("bookVilla") || "Book your stay"}
                     </DialogTitle>
                     <div className="mt-8">
                       <BookingOptions

@@ -44,6 +44,7 @@ export type AccommodationContent = {
   title: string
   subtitle?: string
   description: string
+  summary?: string
   mainImage: SanityImageObject
   body: any
   slug: { current: string }
@@ -113,7 +114,7 @@ export async function generateMetadata({
 
   const content: AccommodationContent = await sanityFetch({
     query: ACCOMMODATION_QUERY,
-    params: { slug, language: locale },
+    params: { slug: "villa-bruno", language: locale },
     revalidate: 0,
   })
 
@@ -182,7 +183,7 @@ const AccommodationPage = async ({ params }: { params: any }) => {
 
   const content: AccommodationContent = await sanityFetch({
     query: ACCOMMODATION_QUERY,
-    params: { slug, language: locale },
+    params: { slug: "villa-bruno", language: locale },
     revalidate: 0,
   })
 
@@ -191,7 +192,7 @@ const AccommodationPage = async ({ params }: { params: any }) => {
   return (
     <Layout
       locale={locale}
-      pageName={slug}
+      pageName="Villa Bruno"
       title={content?.title}
       subtitle={content?.subtitle}
       description={content?.description}

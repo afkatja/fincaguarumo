@@ -1,8 +1,10 @@
 "use client"
-import { AccommodationContent } from "@/app/[locale]/(pages)/stay/page"
+import { AccommodationContent } from "@/app/[locale]/(pages)/villa-bruno/page"
 import Icon from "./Icon"
+import { DynamicLucideIcon } from "./DynamicLucideIcon"
 import { Badge } from "./ui/badge"
 import { useTranslations } from "next-intl"
+import { DollarSign, HomeIcon, User2Icon } from "lucide-react"
 
 interface QuickInfoBarProps {
   content: AccommodationContent
@@ -21,14 +23,11 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
   }
 
   return (
-    <div className="w-11/12 mx-auto my-6 bg-linear-to-r from-guarumo-primary/10 to-guarumo-accent/10 rounded-lg p-6 border border-guarumo-primary/20">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="rounded-lg p-6 border border-guarumo-primary/20">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Price */}
-        <div className="flex flex-col items-center text-center p-4 bg-white/50 rounded-lg">
-          <Icon
-            icon="DollarSign"
-            className="h-8 w-8 text-guarumo-primary mb-2"
-          />
+        <div className="flex flex-col items-center text-center p-4 bg-zinc-50/50 rounded-lg">
+          <DollarSign className="h-8 w-8 text-guarumo-primary mb-2" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
             {t("from") || "From"}
           </span>
@@ -42,8 +41,8 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
         </div>
 
         {/* Capacity */}
-        <div className="flex flex-col items-center text-center p-4 bg-white/50 rounded-lg">
-          <Icon icon="Users" className="h-8 w-8 text-guarumo-primary mb-2" />
+        <div className="flex flex-col items-center text-center p-4 bg-zinc-50/50 rounded-lg">
+          <User2Icon className="h-8 w-8 text-guarumo-primary mb-2" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
             {t("capacity") || "Capacity"}
           </span>
@@ -56,8 +55,8 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
         </div>
 
         {/* Property Type */}
-        <div className="flex flex-col items-center text-center p-4 bg-white/50 rounded-lg">
-          <Icon icon="Home" className="h-8 w-8 text-guarumo-primary mb-2" />
+        <div className="flex flex-col items-center text-center p-4 bg-zinc-50/50 rounded-lg">
+          <HomeIcon className="h-8 w-8 text-guarumo-primary mb-2" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
             {t("type") || "Type"}
           </span>
@@ -71,8 +70,8 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
         </div>
 
         {/* Location */}
-        <div className="flex flex-col items-center text-center p-4 bg-white/50 rounded-lg">
-          <Icon icon="MapPin" className="h-8 w-8 text-guarumo-primary mb-2" />
+        <div className="flex flex-col items-center text-center p-4 bg-zinc-50/50 rounded-lg">
+          <Icon icon="Pin" className="h-8 w-8 text-guarumo-primary mb-2" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
             {t("location") || "Location"}
           </span>
@@ -84,29 +83,6 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
           </span>
         </div>
       </div>
-
-      {/* Highlight Features */}
-      {content.highlightFeatures && content.highlightFeatures.length > 0 && (
-        <div className="mt-6 pt-6 border-t border-guarumo-primary/20">
-          <h3 className="text-lg font-semibold text-guarumo-primary dark:text-zinc-50 mb-3 text-center">
-            {t("whatGuestsLoveMost") || "What guests love most"}
-          </h3>
-          <div className="flex flex-wrap justify-center gap-2">
-            {content.highlightFeatures.slice(0, 4).map((feature, index) => (
-              <Badge
-                key={index}
-                variant="secondary"
-                className="bg-guarumo-accent/20 text-guarumo-primary dark:text-zinc-50 border-guarumo-accent/30"
-              >
-                {feature.icon && (
-                  <Icon icon={feature.icon} className="h-3 w-3 mr-1" />
-                )}
-                {feature.title}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Check-in/Check-out Times */}
       <div className="mt-4 pt-4 border-t border-guarumo-primary/20 flex justify-center gap-8 text-sm">
