@@ -24,11 +24,13 @@ import { paymentMethodsType } from "./schemaTypes/paymentMethodsType"
 import { cancellationPoliciesType } from "./schemaTypes/cancellationPoliciesType"
 import { logisticsType } from "./schemaTypes/logisticsType"
 import { propertyType } from "./schemaTypes/propertyType"
+import { accommodationType } from "./schemaTypes/accommodationType"
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     homeType,
     propertyType,
+    accommodationType,
     blockContentType,
     categoryType,
     postType,

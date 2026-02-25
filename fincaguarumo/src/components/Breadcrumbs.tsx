@@ -7,7 +7,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "./ui/breadcrumb"
-import Script from "next/script"
 
 const schema = {
   "@context": "https://schema.org",
@@ -23,7 +22,7 @@ const schema = {
       "@type": "ListItem",
       position: 2,
       name: "Villa Bruno",
-      item: "https://fincaguarumo.com/stay",
+      item: "https://fincaguarumo.com/villa-bruno",
     },
   ],
 }
@@ -55,14 +54,9 @@ const Breadcrumbs = ({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <Script
-        id="json-ld"
-        strategy="afterInteractive"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(schema).replace(/</g, "\\u003c"),
-        }}
-      />
+      <script type="application/ld+json">
+        {JSON.stringify(schema).replace(/</g, "\\u003c")}
+      </script>
     </>
   )
 }

@@ -1,12 +1,12 @@
 "use client"
 import Image from "next/image"
 import { useParams } from "next/navigation"
-import Script from "next/script"
 import { TReview } from "../types"
+import { normalizeRatingTo5Stars } from "../lib/ratingUtils"
 
 import { containsPlace } from "../lib/villa-json-ld"
 
-const platformIcons = {
+export const platformIcons = {
   google: "https://cdn.trustindex.io/assets/platform/Google/icon.svg",
   airbnb:
     "https://cdn.freebiesupply.com/logos/large/2x/airbnb-2-logo-png-transparent.png",
@@ -14,13 +14,13 @@ const platformIcons = {
     "https://upload.wikimedia.org/wikipedia/commons/6/6b/Booking.com_Icon_2022.svg",
 }
 
-const starIcons = {
+export const starIcons = {
   filled: "https://cdn.trustindex.io/assets/platform/Google/star/f.svg",
   empty: "https://cdn.trustindex.io/assets/platform/Google/star/e.svg",
 }
 
 // Default user icons
-const defaultUserIcon = {
+export const defaultUserIcon = {
   google: "https://cdn.trustindex.io/assets/platform/Google/user.svg",
   airbnb: "https://a0.muscache.com/defaults/user_pic-225x225.png",
   booking: "https://a0.muscache.com/defaults/user_pic-225x225.png",
@@ -30,11 +30,11 @@ const Review = ({ review }: { review: TReview }) => {
   const { locale } = useParams()
   const platform = review.platform || "google"
 
-  // Centralized derived values
-  const normalizedRating =
-    platform === "booking" && review?.rating
-      ? Math.ceil(review?.rating / 2)
-      : review?.rating || 0
+  // Centralized derived values using utility function
+  const normalizedRating = Math.max(
+    0,
+    Math.min(5, normalizeRatingTo5Stars(review?.rating || 0, platform)),
+  )
 
   const publishDate = (() => {
     const dateValue = review?.publishTime || review?.date
@@ -225,14 +225,9 @@ const Review = ({ review }: { review: TReview }) => {
         </div>
       </div>
       {schema && (
-        <Script
-          id={schemaScriptId}
-          strategy="afterInteractive"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(schema).replace(/</g, "\\u003c"),
-          }}
-        />
+        <script id={schemaScriptId} type="application/ld+json">
+          {JSON.stringify(schema).replace(/</g, "\\u003c")}
+        </script>
       )}
     </div>
   )

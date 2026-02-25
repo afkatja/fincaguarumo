@@ -45,6 +45,8 @@ export const reviewType = defineType({
       title: "Rating",
       type: "number",
       validation: rule => rule.required().min(1).max(10),
+      description:
+        "Rating in original platform scale (1-5 for Airbnb/Google, 1-10 for Booking.com)",
     }),
     defineField({
       name: "date",

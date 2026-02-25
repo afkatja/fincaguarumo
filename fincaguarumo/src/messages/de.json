@@ -58,11 +58,32 @@
     "reserveButtonTour": "Buchen Sie jetzt",
     "reserveButton": "Buchen Sie jetzt",
     "discount10": "Rabatt (10% für Aufenthalte ab 7+ Nächten)",
-    "discount20": "Rabatt (20% für Aufenthalte ab 28+ Nächten)"
+    "discount20": "Rabatt (20% für Aufenthalte ab 28+ Nächten)",
+    "checkinDate": "Check-in-Datum",
+    "back": "Zurück",
+    "next": "Nächste",
+    "submitButton": "Buchung abschicken",
+    "available": "Verfügbar",
+    "notAvailable": "Nicht verfügbar",
+    "availabilityError": "Fehler bei der Überprüfung der Verfügbarkeit. Bitte versuchen Sie es erneut.",
+    "checkingAvailability": "Verfügbarkeit prüfen...",
+    "stepPersonal": "Persönliche Informationen",
+    "paymentStepInfo": "Sie werden zu einer sicheren Zahlungsseite weitergeleitet, um Ihre Buchung abzuschließen",
+    "stepPayment": "Zahlung",
+    "chatHelpDates": "Ich kann Ihnen helfen, die Verfügbarkeit zu prüfen und Ihren Aufenthalt in der Villa Bruno zu buchen. Fragen Sie mich nach verfügbaren Terminen, Preisen und eventuellen Sonderwünschen.",
+    "chatHelpPersonal": "Ich kann Ihnen bei Ihren Buchungsdetails behilflich sein. Bitte geben Sie Ihren Namen, Ihre E-Mail-Adresse, Ihre Telefonnummer und etwaige Sonderwünsche an.",
+    "chatHelpPayment": "Ich kann Ihnen bei Ihren Zahlungsdetails behilflich sein. Bitte geben Sie Ihre Zahlungsinformationen an.",
+    "stepDates": "Wählen Sie Daten aus",
+    "loadingCalendar": "Kalender wird geladen..."
   },
   "page": {
     "moreFAQ": "Mehr FAQ",
-    "FAQ": "FAQ"
+    "FAQ": "FAQ",
+    "greetings": {
+      "homepage": "Willkommen in der Villa Bruno! Wie kann ich Ihnen heute helfen?",
+      "stay": "Hallo! Ich bin hier, um Ihnen bei der Buchung von {propertyTitle} zu helfen. Was möchten Sie wissen?",
+      "other": "Hallo! Wie kann ich Ihnen heute helfen?"
+    }
   },
   "map": {
     "location": "Standort"
@@ -85,11 +106,43 @@
     "initialMessage": "Hallo! Wie kann ich Ihnen helfen, die Villa Bruno noch heute zu buchen?",
     "errorMessage": "Es tut mir leid, es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
     "inputPlaceholder": "Fragen Sie nach der Buchung...",
-    "sendButton": "Schicken"
+    "sendButton": "Schicken",
+    "title": "Villa Bruno Buchungsassistent"
   },
   "greetings": {
     "homepage": "Willkommen bei Villa Bruno! Wie kann ich Ihnen heute helfen?",
     "stay": "Hallo! Ich bin hier, um Ihnen bei der Buchung von {propertyTitle} zu helfen. Was möchten Sie wissen?",
     "other": "Hallo! Wie kann ich Ihnen heute helfen?"
+  },
+  "accommodation": {
+    "from": "Aus",
+    "person": "Person",
+    "people": "Menschen",
+    "type": "Typ",
+    "bed": "Bett",
+    "bath": "Bad",
+    "checkIn": "Einchecken",
+    "checkOut": "Kasse",
+    "capacity": "Kapazität",
+    "guests": "Gäste",
+    "location": "Standort",
+    "whatGuestsLoveMost": "Was Gäste am meisten lieben",
+    "aboutThisAccommodation": "Über diese Unterkunft",
+    "continueReading": "Lesen Sie weiter, um mehr über dieses einzigartige Öko-Villa-Erlebnis zu erfahren ...",
+    "readMore": "Mehr lesen"
+  },
+  "reviews": {
+    "wildlifeNature": "Tierwelt und Natur",
+    "ecoFriendly": "Umweltfreundlich",
+    "peacefulSetting": "Friedliche Umgebung",
+    "beautifulClean": "Schön und sauber",
+    "greatLocation": "Tolle Lage",
+    "excellentService": "Exzellenter Service",
+    "comfortable": "Bequem",
+    "basedOnReviews": "Basierend auf Bewertungen",
+    "whatGuestsLoveMost": "Was Gäste am meisten lieben",
+    "recentGuestComments": "Aktuelle Gästekommentare",
+    "guest": "Gast",
+    "readMoreReviews": "Mehr Bewertungen lesen"
   }
 }
