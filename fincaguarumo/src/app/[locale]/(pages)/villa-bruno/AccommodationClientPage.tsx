@@ -27,6 +27,7 @@ import { QuickInfoBar } from "@/components/QuickInfoBar"
 import { ReviewSummary } from "@/components/ReviewSummary"
 import { ContentPreview } from "@/components/ContentPreview"
 import { CollapsibleSection } from "@/components/CollapsibleSection"
+import InPageNavigation from "@/components/InPageNavigation"
 
 const AccommodationClientPage = ({
   content,
@@ -42,6 +43,16 @@ const AccommodationClientPage = ({
   const tPage = useTranslations("page")
 
   const googleMapsKey = process.env.NEXT_PUBLIC_GMAPS_API_KEY as string
+
+  // Define navigation sections with translatable labels
+  const navigationSections = [
+    { id: "quick-info", label: tPage("quickInfo") || "Quick Info" },
+    { id: "reviews-summary", label: tPage("reviews") || "Reviews" },
+    { id: "about", label: tPage("about") || "About" },
+    { id: "full-content", label: tPage("details") || "Details" },
+    { id: "faq", label: tPage("FAQ") || "FAQ" },
+    { id: "reviews", label: tPage("allReviews") || "More Reviews" },
+  ]
 
   useEffect(() => {
     setBookingData((prev: BookingData) => {
@@ -76,8 +87,11 @@ const AccommodationClientPage = ({
 
   return (
     <>
+      {/* In-Page Navigation */}
+      <InPageNavigation sections={navigationSections} />
+
       {/* Quick Info Bar - Essential information above the fold */}
-      <div className="w-11/12 mx-auto my-6">
+      <div id="quick-info" className="w-11/12 mx-auto my-6">
         <CollapsibleSection
           title="Quick Info"
           defaultExpanded={true}
@@ -89,7 +103,7 @@ const AccommodationClientPage = ({
 
       {/* Reviews Section - Prominently placed with summary */}
       {googleMapsKey && (
-        <div className="w-11/12 mx-auto my-8">
+        <div id="reviews-summary" className="w-11/12 mx-auto my-8">
           <CollapsibleSection title="Reviews" defaultExpanded={false}>
             <APIProvider
               apiKey={googleMapsKey}
@@ -108,7 +122,7 @@ const AccommodationClientPage = ({
       )}
 
       {/* Content Preview - First few sections of Sanity content */}
-      <div className="w-11/12 mx-auto mb-6">
+      <div id="about" className="w-11/12 mx-auto mb-6">
         <CollapsibleSection
           title="About this accommodation"
           defaultExpanded={false}
@@ -123,7 +137,7 @@ const AccommodationClientPage = ({
       </div>
 
       {/* FAQ Section */}
-      <div className="w-11/12 mx-auto mt-3 mb-8 flex flex-col">
+      <div id="faq" className="w-11/12 mx-auto mt-3 mb-8 flex flex-col">
         <Title
           title={tPage("FAQ") || "FAQ"}
           Heading="h2"
