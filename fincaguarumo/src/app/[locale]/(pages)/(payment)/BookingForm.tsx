@@ -9,7 +9,7 @@ import Input from "@/components/Input"
 import { getInternationalizedValue } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import calculateDuration from "@/lib/calculateDuration"
-import calculateTotal from "@/lib/calculateTotal"
+import { calculateTotal } from "@/lib/calculateTotal"
 import {
   BookingType,
   BOOKING_TYPE,
@@ -59,12 +59,12 @@ const BookingForm = ({
           bookingDetails: {
             ...bookingData.bookingDetails,
             type: bookingType,
-            totalPrice: calculateTotal(
-              bookingData.bookingDetails.price,
-              bookingData.bookingDetails.guests,
+            totalPrice: calculateTotal({
+              price: bookingData.bookingDetails.basePrice,
+              guests: bookingData.bookingDetails.guests,
               bookingType,
               duration,
-            ).total,
+            }).total,
           },
         })
 
@@ -240,7 +240,17 @@ const BookingForm = ({
 
         <DialogFooter className="flex-wrap">
           <PriceCalculation
-            price={bookingData.bookingDetails.price}
+            pricingRules={[
+              {
+                _id: "legacy-base-rate",
+                title: "Legacy Base Rate",
+                ruleType: "base_rate" as const,
+                basePrice: bookingData.bookingDetails.basePrice,
+                description: "Legacy base rate from booking data",
+                language: "en",
+                isActive: true,
+              },
+            ]}
             guests={bookingData.bookingDetails.guests}
             bookingType={bookingType}
             locale={locale}

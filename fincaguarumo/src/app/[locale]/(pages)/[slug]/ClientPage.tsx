@@ -61,11 +61,11 @@ const ClientPage = ({
   const guestsRaw = bookingData?.bookingDetails?.guests
   const guests = typeof guestsRaw === "number" && guestsRaw > 0 ? guestsRaw : 1
 
-  const { total } = calculateTotal(
-    content.price ?? 0,
+  const { total } = calculateTotal({
+    price: content.price ?? 0,
     guests,
-    BOOKING_TYPE.villa,
-  )
+    bookingType: BOOKING_TYPE.villa,
+  })
 
   return (
     <>
