@@ -6,6 +6,7 @@ import { ACCOMMODATION_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import AccommodationClientPage from "./AccommodationClientPage"
 import { FAQType, SanityImageObject } from "@/types"
+import { PricingRule } from "@/lib/pricingEngine"
 import { title } from "process"
 
 const slug = "villa-bruno"
@@ -56,7 +57,7 @@ export type AccommodationContent = {
   slideshow: {
     images: SanityImageObject[]
   }
-  price?: number
+  pricingRules?: PricingRule[]
   categories?: { title: string }[]
   faq?: FAQType[]
   capacity?: number
@@ -84,11 +85,6 @@ export type AccommodationContent = {
     title: string
     description: string
     icon?: string
-  }>
-  pricingRules?: Array<{
-    title: string
-    description: string
-    rules?: string[]
   }>
   paymentMethods?: Array<{
     title: string

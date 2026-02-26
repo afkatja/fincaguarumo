@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { BOOKING_TYPE, BookingData } from "@/types"
+import { calculateTotalWithRules } from "@/lib/calculateTotal"
 import BookingDialog from "../BookingDialog"
 import { AccommodationContent } from "./page"
 import { useBooking } from "../../../providers/BookingProvider"
@@ -22,7 +23,6 @@ import { APIProvider } from "@vis.gl/react-google-maps"
 import { PlaceProvider } from "../../../providers/PlaceProvider"
 import { placeId } from "../../../../../data/geo"
 import { PlaceReviews } from "../../../../components/PlaceReviews"
-import calculateTotal from "../../../../lib/calculateTotal"
 import { QuickInfoBar } from "@/components/QuickInfoBar"
 import { ReviewSummary } from "@/components/ReviewSummary"
 import { ContentPreview } from "@/components/ContentPreview"
@@ -60,7 +60,7 @@ const AccommodationClientPage = ({
         type: BOOKING_TYPE.villa,
         title: content.title,
         description: content.description,
-        price: content.price ?? 0,
+        price: 0, // Will be calculated dynamically
         body: content.body,
         guests: 1,
         location: "Finca Guarumo",
@@ -78,11 +78,17 @@ const AccommodationClientPage = ({
   const guestsRaw = bookingData?.bookingDetails?.guests
   const guests = typeof guestsRaw === "number" && guestsRaw > 0 ? guestsRaw : 1
 
-  const { total } = calculateTotal(
-    content.price ?? 0,
-    guests,
-    BOOKING_TYPE.villa,
-  )
+  // Calculate total using pricing rules or fallback to legacy calculation
+  const { total } =
+    content.pricingRules && content.pricingRules.length > 0
+      ? calculateTotalWithRules({
+          pricingRules: content.pricingRules,
+          guests,
+          bookingType: BOOKING_TYPE.villa,
+          duration: 1, // Default 1 night for display
+          checkInDate: new Date(), // Required for villa bookings
+        })
+      : { total: 0 } // Fallback - will be updated when booking details are set
 
   return (
     <>

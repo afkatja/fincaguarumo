@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
           checkIn: parsePropertyDate(metadata?.checkIn || ""),
           checkOut: parsePropertyDate(metadata?.checkOut || ""),
           price: Number(metadata?.price) || 0,
+          basePrice: Number(metadata?.price) || 0, // Use price as basePrice for webhook
           totalPrice: (metadata?.totalPrice as unknown as number) || 0,
           currency: metadata?.currency || "USD",
           guests: Number(metadata?.guests) || 0,
