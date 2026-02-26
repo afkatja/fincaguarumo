@@ -178,7 +178,7 @@ export const PAGE_QUERY = groq`
   }
 `
 export const NAV_QUERY = groq`
-  *[_type == 'page' && language == $language && $category in categories[] -> title] {
+  *[(_type == 'page' || _type == 'accommodation') && language == $language && $category in categories[] -> title] {
     title, slug, language, isPublished,
     "translations": *[
       _type == "translation.metadata" && 
@@ -434,7 +434,6 @@ export const ACCOMMODATION_QUERY = groq`
     slideshow->{
       "images": images[]${galleryImageProjection}
     },
-    price, 
     faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} }, 
     capacity, 
     bedrooms, 
@@ -445,7 +444,21 @@ export const ACCOMMODATION_QUERY = groq`
     checkInTime, 
     checkOutTime,
     amenities[]->{ title, description, icon },
-    pricingRules[]->{ title, description, rules },
+    pricingRules[]->{ 
+      title, 
+      description, 
+      ruleType,
+      season,
+      startDate,
+      endDate,
+      basePrice,
+      percentage,
+      fixedAmount,
+      minimumNights,
+      isActive,
+      displayOrder,
+      language
+    },
     paymentMethods[]->{ title, description, type },
     cancellationPolicy->{ title, description, rules },
     logistics[]->{ title, description, type },

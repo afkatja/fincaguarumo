@@ -1,51 +1,68 @@
 import { BookingType, BOOKING_TYPE } from "../types"
+import { calculateTotalWithPricingRules, PricingRule } from "./pricingEngine"
 
 export const EXTRA_GUEST_FEE = 20
 export const MAX_EXTRA_GUESTS = 4
 
-const calculateTotal = (
-  price: number,
-  guests: number,
-  bookingType: BookingType,
-  duration?: number,
-) => {
-  const priceWithoutVat = price / 1.13
-  // Villa pricing: base price for 1 person, +$20 for each additional person up to 4
-  const priceForPeople =
-    priceWithoutVat + Math.min(guests - 1, MAX_EXTRA_GUESTS) * EXTRA_GUEST_FEE
+// Legacy function for backward compatibility - creates pricingRules from price
+export const calculateTotal = ({
+  price,
+  guests,
+  bookingType,
+  duration,
+}: {
+  price: number
+  guests: number
+  bookingType: BookingType
+  duration?: number
+}) => {
+  // Create a mock pricing rule for backward compatibility
+  const mockPricingRules: PricingRule[] = [
+    {
+      _id: "legacy-base-rate",
+      title: "Legacy Base Rate",
+      ruleType: "base_rate",
+      basePrice: price,
+      description: "Legacy base rate from hardcoded price",
+      language: "en",
+      isActive: true,
+    },
+  ]
 
-  if (bookingType === BOOKING_TYPE.tour) {
-    return {
-      priceForPeople: priceWithoutVat,
-      priceWithVat: priceWithoutVat * 1.13,
-      total: priceWithoutVat * 1.13 * guests,
-    }
-  } else {
-    const stay = duration ?? 1
-    // apply a discount for longer stays
-    if (stay >= 7) {
-      // 13% discount
-      return {
-        priceForPeople,
-        priceWithVat: priceForPeople * 1.13,
-        total: priceForPeople * 1.13 * stay * 0.87,
-      }
-    }
-    if (stay >= 28) {
-      // 33% discount
-      return {
-        priceForPeople,
-        priceWithVat: priceForPeople * 1.13,
-        total: priceForPeople * 1.13 * stay * 0.67,
-      }
-    }
-    // no discount
-    return {
-      priceForPeople,
-      priceWithVat: priceForPeople * 1.13,
-      total: priceForPeople * 1.13 * stay,
-    }
+  return calculateTotalWithPricingRules({
+    pricingRules: mockPricingRules,
+    guests,
+    bookingType,
+    duration,
+  })
+}
+
+// New function that uses pricingRules
+export const calculateTotalWithRules = ({
+  pricingRules,
+  guests,
+  bookingType,
+  duration,
+  checkInDate,
+}: {
+  pricingRules: PricingRule[]
+  guests: number
+  bookingType: BookingType
+  duration?: number
+  checkInDate?: Date
+}) => {
+  // For villa bookings, checkInDate is required
+  if (bookingType === BOOKING_TYPE.villa && !checkInDate) {
+    throw new Error("checkInDate is required for villa bookings")
   }
+
+  return calculateTotalWithPricingRules({
+    pricingRules,
+    guests,
+    bookingType,
+    duration,
+    checkInDate,
+  })
 }
 
 export default calculateTotal

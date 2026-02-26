@@ -52,7 +52,8 @@ export const initialBookingData = {
     checkIn: tomorrow,
     checkOut: later,
     guests: 1,
-    price: 0,
+    price: 0, // Legacy field for backward compatibility
+    basePrice: 0, // Base price for calculation (per-night for villa, per-person for tour)
     totalPrice: 0,
     currency: "usd",
     geo: { lat: 0, lng: 0 },

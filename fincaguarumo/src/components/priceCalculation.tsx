@@ -1,12 +1,13 @@
 "use client"
 import { useDialog } from "../app/providers/DialogProvider"
-import calculateTotal from "../lib/calculateTotal"
+import { calculateTotalWithRules } from "../lib/calculateTotal"
 import { getInternationalizedValue, titleCase } from "../lib/utils"
 import { BOOKING_TYPE, BookingType } from "../types"
+import { PricingRule } from "../lib/pricingEngine"
 import { Separator } from "@/components/ui/separator"
 
 const PriceCalculation = ({
-  price,
+  pricingRules,
   guests,
   bookingType,
   locale,
@@ -14,7 +15,7 @@ const PriceCalculation = ({
   duration,
   currency: currencyProp = "USD",
 }: {
-  price: number
+  pricingRules?: PricingRule[]
   guests: number
   bookingType: BookingType
   locale: string
@@ -25,12 +26,18 @@ const PriceCalculation = ({
 }) => {
   const { dialogData: dialog } = useDialog()
 
-  const { priceForPeople, priceWithVat, total } = calculateTotal(
-    price,
-    guests,
-    bookingType,
-    duration,
-  )
+  // Calculate total using pricing rules or fallback
+  const { priceForPeople, priceWithVat, total } =
+    pricingRules && pricingRules.length > 0
+      ? calculateTotalWithRules({
+          pricingRules,
+          guests,
+          bookingType,
+          duration,
+          checkInDate:
+            bookingType === BOOKING_TYPE.villa ? new Date() : undefined,
+        })
+      : { priceForPeople: 0, priceWithVat: 0, total: 0 }
 
   const discountAmount =
     duration && duration >= 7
