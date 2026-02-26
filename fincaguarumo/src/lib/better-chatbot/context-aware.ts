@@ -2,7 +2,7 @@ import { BookingData } from "@/types"
 
 // Context types
 export type ChatContext = {
-  page: "homepage" | "stay" | "other"
+  page: "homepage" | "villa-bruno" | "other"
   locale: string
   bookingData?: BookingData
   propertyTitle?: string
@@ -87,7 +87,7 @@ Focus on:
 `
       break
 
-    case "stay":
+    case "villa-bruno":
       contextPrompt = `
 The user is viewing the ${propertyTitle || "Villa Bruno"} page. They may be:
 - Interested in this specific property
@@ -189,7 +189,7 @@ export const getPersonalizedGreeting = (
   switch (page) {
     case "homepage":
       return t("greetings.homepage")
-    case "stay":
+    case "villa-bruno":
       return t("greetings.stay", {
         propertyTitle: propertyTitle || "Villa Bruno",
       })
@@ -212,7 +212,7 @@ export const suggestNextActions = (context: ChatContext): string[] => {
       )
       break
 
-    case "stay":
+    case "villa-bruno":
       actions.push(
         "Check availability for dates",
         "Book now",

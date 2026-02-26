@@ -162,6 +162,16 @@ function formatContextForLLM(
         }
         if (context.metadata.price) {
           formattedText += `   Price: $${context.metadata.price}\n`
+        } else if (
+          context.metadata.pricingRules &&
+          context.metadata.pricingRules.length > 0
+        ) {
+          const baseRate = context.metadata.pricingRules.find(
+            (rule: any) => rule.ruleType === "base_rate",
+          )
+          if (baseRate && baseRate.basePrice) {
+            formattedText += `   Base Price: $${baseRate.basePrice}\n`
+          }
         }
       }
     })

@@ -80,7 +80,9 @@ export async function extractAllPricingRules() {
     fixedAmount,
     minimumNights,
     description,
-    language
+    language,
+    isActive,
+    displayOrder
   }`
   return await client.fetch(query)
 }
@@ -99,9 +101,56 @@ export async function extractPricingRulesByType(ruleType: string) {
     fixedAmount,
     minimumNights,
     description,
-    language
+    language,
+    isActive,
+    displayOrder
   }`
   return await client.fetch(query, { ruleType })
+}
+
+// Get effective pricing rules for a specific accommodation and date range
+export async function getEffectivePricingRules(
+  accommodationSlug: string,
+  checkInDate?: Date,
+) {
+  const query = groq`*[_type == "accommodation" && slug.current == $slug && isPublished == true][0] {
+    pricingRules[]->{ 
+      _id,
+      title,
+      ruleType,
+      season,
+      startDate,
+      endDate,
+      basePrice,
+      percentage,
+      fixedAmount,
+      minimumNights,
+      description,
+      language,
+      isActive,
+      displayOrder
+    }
+  }`
+  const result = await client.fetch(query, { slug: accommodationSlug })
+
+  if (!result || !result.pricingRules) {
+    return []
+  }
+
+  // Filter rules based on date if provided
+  if (checkInDate) {
+    return result.pricingRules.filter((rule: any) => {
+      if (rule.ruleType === "seasonal" && rule.startDate && rule.endDate) {
+        const checkDate = new Date(checkInDate)
+        const start = new Date(rule.startDate)
+        const end = new Date(rule.endDate)
+        return checkDate >= start && checkDate <= end
+      }
+      return true
+    })
+  }
+
+  return result.pricingRules
 }
 
 // Extract all payment methods

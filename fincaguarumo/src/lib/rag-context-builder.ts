@@ -437,6 +437,20 @@ async function buildKeywordBasedRAGContext(
       contextText += `Description: ${pageInfo.description}\n`
       if (pageInfo.price) {
         contextText += `Price: $${pageInfo.price} per person\n`
+      } else if (pageInfo.pricingRules && pageInfo.pricingRules.length > 0) {
+        const baseRate = pageInfo.pricingRules.find(
+          (rule: any) => rule.ruleType === "base_rate",
+        )
+        if (baseRate && baseRate.basePrice) {
+          contextText += `Base Price: $${baseRate.basePrice} per person\n`
+        }
+        // Add discount information
+        const discounts = pageInfo.pricingRules.filter(
+          (rule: any) => rule.ruleType === "discount",
+        )
+        if (discounts.length > 0) {
+          contextText += `Available discounts: ${discounts.map((d: any) => `${d.title} (${d.percentage}% off for ${d.minimumNights}+ nights)`).join(", ")}\n`
+        }
       }
       if (pageInfo.body) {
         const plainText = portableTextToPlain(pageInfo.body)

@@ -83,6 +83,13 @@ export async function processPageDocuments(
 
       if (page.price) {
         content += `Price: $${page.price} per person\n`
+      } else if (page.pricingRules && page.pricingRules.length > 0) {
+        const baseRate = page.pricingRules.find(
+          (rule: any) => rule.ruleType === "base_rate",
+        )
+        if (baseRate && baseRate.basePrice) {
+          content += `Base Price: $${baseRate.basePrice} per person\n`
+        }
       }
 
       if (page.body) {
@@ -104,6 +111,7 @@ export async function processPageDocuments(
           subtitle: page.subtitle,
           description: page.description,
           price: page.price,
+          pricingRules: page.pricingRules,
           categories: page.categories?.map((c: any) => c.title) || [],
           slug: page.slug,
         },

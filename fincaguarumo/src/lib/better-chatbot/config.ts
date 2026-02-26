@@ -459,12 +459,12 @@ export const bookingTools = {
 
         // Calculate pricing using the existing calculateTotal function
         const BOOKING_TYPE_VILLA = "villa"
-        const pricing = calculateTotal(
-          basePricePerNight,
-          validGuests,
-          BOOKING_TYPE_VILLA,
-          nights,
-        )
+        const pricing = calculateTotal({
+          price: basePricePerNight,
+          guests: validGuests,
+          bookingType: BOOKING_TYPE_VILLA,
+          duration: nights,
+        })
 
         // Calculate extra guest fee
         const extraGuests = Math.max(0, validGuests - 1)
