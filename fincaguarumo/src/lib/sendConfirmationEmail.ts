@@ -14,24 +14,23 @@ const safeFormatForEmail = (date: Date): string => {
   return isNaN(date.getTime()) ? "TBD" : formatForEmail(date)
 }
 
-export async function sendConfirmationEmail(
-  { customerDetails, bookingDetails }: BookingData,
-) {
+export async function sendConfirmationEmail({
+  customerDetails,
+  bookingDetails,
+}: BookingData) {
   if (!customerDetails || !bookingDetails) {
     throw new Error("Missing customer or booking details")
   }
   try {
     const getBookingType = () => {
-      return bookingDetails.type === BOOKING_TYPE.villa
-        ? "Villa"
-        : "Tour"
+      return bookingDetails.type === BOOKING_TYPE.villa ? "Villa" : "Tour"
     }
 
     const getBookingDetails = () => {
       const commonDetails = `
         <li>Date: ${safeFormatForEmail(bookingDetails.date)}</li>
         <li>Number of Guests: ${bookingDetails.guests}</li>
-        <li>Total Amount: $${bookingDetails.totalPrice}</li>      `
+        <li>Total Amount: $${bookingDetails.totalPrice || (bookingDetails.basePrice && bookingDetails.guests ? Math.round(bookingDetails.basePrice * 1.13 * (bookingDetails.type === BOOKING_TYPE.tour ? bookingDetails.guests : 1)) : 0)}</li>      `
 
       if (bookingDetails.type === BOOKING_TYPE.villa) {
         return `
@@ -217,7 +216,7 @@ export async function sendConfirmationEmail(
         error: "Failed to send email",
         details: error.response?.body || error.message,
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

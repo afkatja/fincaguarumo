@@ -38,6 +38,7 @@ async function main() {
     checkIn: new Date(metadata.checkIn || ""),
     checkOut: new Date(metadata.checkOut || ""),
     price: Number(metadata.price) || 0,
+    basePrice: Number(metadata.price) || 0, // Use price as basePrice for email script
     totalPrice: (metadata.totalPrice as unknown as number) || 0,
     currency: metadata.currency || "USD",
     guests: Number(metadata.guests) || 0,
