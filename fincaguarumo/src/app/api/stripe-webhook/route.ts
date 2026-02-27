@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
             const response = await sendConfirmationEmail({
               customerDetails,
               bookingDetails,
+              pricingRules: [], // Webhook doesn't need pricingRules, but it's required by BookingData type
             })
             console.log("Confirmation email sent successfully.", response)
           } else {
