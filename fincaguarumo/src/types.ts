@@ -4,6 +4,7 @@ import {
   parsePropertyDate,
   toUTCISOString,
 } from "./lib/dateUtils"
+import type { PricingRule } from "./lib/pricingEngine"
 
 export const BOOKING_TYPE = {
   tour: "tour",
@@ -58,6 +59,7 @@ export const initialBookingData = {
     currency: "usd",
     geo: { lat: 0, lng: 0 },
   },
+  pricingRules: [] as PricingRule[], // Dynamic pricing rules from Sanity CMS
 }
 
 type Serialize<T> = {

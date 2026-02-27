@@ -44,15 +44,13 @@ export function calculateEffectivePrice({
 
   // Get base price from base_rate rules
   let basePrice = getDefaultBasePrice(pricingRules)
-  console.log("Base price:", basePrice, { checkInDate })
   appliedRules.push("Base rate")
 
   // Apply seasonal adjustments if checkInDate provided
   if (checkInDate) {
-    const seasonalAdjustment = getSeasonalAdjustment(pricingRules, checkInDate)
-    console.log("Seasonal adjustment:", seasonalAdjustment)
-    if (seasonalAdjustment !== 0) {
-      basePrice = basePrice * (1 + seasonalAdjustment)
+    const seasonalBasePrice = getSeasonalAdjustment(pricingRules, checkInDate)
+    if (seasonalBasePrice !== 0) {
+      basePrice = seasonalBasePrice // Override base price with seasonal rate
       appliedRules.push("Seasonal adjustment")
     }
   }
@@ -115,17 +113,18 @@ function getSeasonalAdjustment(
     rule =>
       rule.ruleType === "seasonal" &&
       rule.isActive &&
-      rule.percentage &&
+      rule.basePrice && // Seasonal rules use basePrice, not percentage
       isDateInRange(checkInDate, rule.startDate, rule.endDate),
   )
 
   if (seasonalRules.length > 0) {
     // Use the first matching seasonal rule (ordered by displayOrder)
     const rule = seasonalRules[0]
-    return rule.percentage! / 100
+    // Return the seasonal base price - this will override the default base price
+    return rule.basePrice!
   }
 
-  return 0
+  return 0 // No seasonal adjustment
 }
 
 function getDurationDiscount(
@@ -163,8 +162,6 @@ function isDateInRange(
   const checkDate = new Date(date)
   const start = new Date(startDate)
   const end = new Date(endDate)
-  console.log("IS DATE IN RANGE", { checkDate, start, end })
-
   return checkDate >= start && checkDate <= end
 }
 
