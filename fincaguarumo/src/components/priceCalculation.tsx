@@ -5,6 +5,7 @@ import { getInternationalizedValue, titleCase } from "../lib/utils"
 import { BOOKING_TYPE, BookingType } from "../types"
 import { PricingRule } from "../lib/pricingEngine"
 import { Separator } from "@/components/ui/separator"
+import { useTranslations } from "next-intl"
 
 const PriceCalculation = ({
   pricingRules,
@@ -14,6 +15,7 @@ const PriceCalculation = ({
   t,
   duration,
   currency: currencyProp = "USD",
+  checkInDate,
 }: {
   pricingRules?: PricingRule[]
   guests: number
@@ -21,11 +23,12 @@ const PriceCalculation = ({
   locale: string
   duration?: number
   currency?: string
+  checkInDate?: Date
   t?: Record<string, any> &
     ((key: string, values?: Record<string, any>) => string)
 }) => {
   const { dialogData: dialog } = useDialog()
-
+  const b = useTranslations("booking")
   // Calculate total using pricing rules or fallback
   const { priceForPeople, priceWithVat, total } =
     pricingRules && pricingRules.length > 0
@@ -35,7 +38,8 @@ const PriceCalculation = ({
           bookingType,
           duration,
           checkInDate:
-            bookingType === BOOKING_TYPE.villa ? new Date() : undefined,
+            checkInDate ||
+            (bookingType === BOOKING_TYPE.villa ? new Date() : undefined),
         })
       : { priceForPeople: 0, priceWithVat: 0, total: 0 }
 
@@ -57,19 +61,34 @@ const PriceCalculation = ({
       ? `${getInternationalizedValue(dialog?.total, locale, "Total")} ${duration ? `for ${duration} nights` : null}`
       : getInternationalizedValue(dialog?.total, locale, "Total")
 
+  const priceForPeopleLabel =
+    bookingType === BOOKING_TYPE.villa
+      ? `${t?.("priceLabel")} ${guests} ${b(guests === 1 ? "person" : "people")}`
+      : t?.("rateLabel", { defaultValue: "Price" })
+
+  const discountPercentage =
+    duration! >= 28
+      ? b("discount20", {
+          discount: parseInt(
+            String(
+              pricingRules?.find(rule => rule.ruleType === "discount")
+                ?.percentage || "20",
+            ),
+          ),
+        })
+      : b("discount10", {
+          discount: parseInt(
+            String(
+              pricingRules?.find(rule => rule.ruleType === "discount")
+                ?.percentage || "10",
+            ),
+          ),
+        })
+
   return (
     <div className="grid gap-2 flex-none w-full">
       <dl className="grid grid-cols-2 items-center justify-between">
-        <dt className="text-muted-foreground">
-          {bookingType === BOOKING_TYPE.villa
-            ? `${t?.("priceLabel")} ${guests}
-          ${getInternationalizedValue(
-            guests === 1 ? dialog?.person : dialog?.people,
-            locale,
-            "people",
-          )}`
-            : t?.("rateLabel", { defaultValue: "Price" })}
-        </dt>
+        <dt className="text-muted-foreground">{priceForPeopleLabel}</dt>
         <dd className="text-right">{currency(priceForPeople)}</dd>
         <dt className="text-muted-foreground">
           {t?.("rateVATlabel", { defaultValue: "Price (incl 13% VAT)" })}
@@ -77,12 +96,7 @@ const PriceCalculation = ({
         <dd className="text-right">{currency(priceWithVat)}</dd>
         {discountAmount > 0 && (
           <>
-            <dt className="text-muted-foreground">
-              {(duration! >= 28 ? t?.discount20 : t?.discount10) ||
-                (duration! >= 28
-                  ? "Discount (20% for stays 28+ nights)"
-                  : "Discount (10% for stays 7+ nights)")}
-            </dt>
+            <dt className="text-muted-foreground">{discountPercentage}</dt>
             <dd className="text-right">-{currency(discountAmount)}</dd>
           </>
         )}

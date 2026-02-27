@@ -240,23 +240,18 @@ const BookingForm = ({
 
         <DialogFooter className="flex-wrap">
           <PriceCalculation
-            pricingRules={[
-              {
-                _id: "legacy-base-rate",
-                title: "Legacy Base Rate",
-                ruleType: "base_rate" as const,
-                basePrice: bookingData.bookingDetails.basePrice,
-                description: "Legacy base rate from booking data",
-                language: "en",
-                isActive: true,
-              },
-            ]}
+            pricingRules={bookingData.pricingRules}
             guests={bookingData.bookingDetails.guests}
             bookingType={bookingType}
             locale={locale}
             t={t}
             duration={duration}
             currency={bookingData.bookingDetails.currency}
+            checkInDate={
+              bookingType === BOOKING_TYPE.villa
+                ? bookingData.bookingDetails.checkIn
+                : undefined
+            }
           />
           <div className="mt-5 flex justify-end gap-2 w-full flex-none">
             <div>

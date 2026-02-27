@@ -260,23 +260,32 @@ export default function ProgressiveBookingForm({
             {t("priceSummary", { defaultValue: "Price Summary" })}
           </h3>
           <PriceCalculation
-            pricingRules={[
-              {
-                _id: "legacy-base-rate",
-                title: "Legacy Base Rate",
-                ruleType: "base_rate" as const,
-                basePrice: bookingData.bookingDetails.basePrice,
-                description: "Legacy base rate from booking data",
-                language: "en",
-                isActive: true,
-              },
-            ]}
+            pricingRules={
+              bookingType === BOOKING_TYPE.villa
+                ? bookingData.pricingRules
+                : [
+                    {
+                      _id: "tourBasePrice",
+                      title: "Tour base price",
+                      ruleType: "base_rate",
+                      basePrice: bookingData.bookingDetails.basePrice,
+                      description: "Tour base price",
+                      language: locale,
+                      isActive: true,
+                    },
+                  ]
+            }
             guests={bookingData.bookingDetails.guests}
             bookingType={bookingType}
             locale={locale}
             t={t}
             duration={duration}
             currency={bookingData.bookingDetails.currency}
+            checkInDate={
+              bookingType === BOOKING_TYPE.villa
+                ? bookingData.bookingDetails.checkIn
+                : undefined
+            }
           />
         </div>
       )}
@@ -360,23 +369,18 @@ export default function ProgressiveBookingForm({
           {t("priceSummary", { defaultValue: "Price Summary" })}
         </h3>
         <PriceCalculation
-          pricingRules={[
-            {
-              _id: "legacy-base-rate",
-              title: "Legacy Base Rate",
-              ruleType: "base_rate" as const,
-              basePrice: bookingData.bookingDetails.basePrice,
-              description: "Legacy base rate from booking data",
-              language: "en",
-              isActive: true,
-            },
-          ]}
+          pricingRules={bookingData.pricingRules}
           guests={bookingData.bookingDetails.guests}
           bookingType={bookingType}
           locale={locale}
           t={t}
           duration={duration}
           currency={bookingData.bookingDetails.currency}
+          checkInDate={
+            bookingType === BOOKING_TYPE.villa
+              ? bookingData.bookingDetails.checkIn
+              : undefined
+          }
         />
       </div>
     </div>
@@ -385,23 +389,18 @@ export default function ProgressiveBookingForm({
   const renderPaymentStep = () => (
     <div className="space-y-4">
       <PriceCalculation
-        pricingRules={[
-          {
-            _id: "legacy-base-rate",
-            title: "Legacy Base Rate",
-            ruleType: "base_rate" as const,
-            basePrice: bookingData.bookingDetails.basePrice,
-            description: "Legacy base rate from booking data",
-            language: "en",
-            isActive: true,
-          },
-        ]}
+        pricingRules={bookingData.pricingRules}
         guests={bookingData.bookingDetails.guests}
         bookingType={bookingType}
         locale={locale}
         t={t}
         duration={duration}
         currency={bookingData.bookingDetails.currency}
+        checkInDate={
+          bookingType === BOOKING_TYPE.villa
+            ? bookingData.bookingDetails.checkIn
+            : undefined
+        }
       />
       <div className="p-4 bg-guarumo-primary/20 rounded-lg border border-guarumo-primary">
         <p className="text-sm text-guarumo-primary">

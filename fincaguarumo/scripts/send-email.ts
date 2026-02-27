@@ -45,7 +45,11 @@ async function main() {
     geo: metadata.geo ? JSON.parse(metadata.geo) : {},
   }
 
-  const res = await sendConfirmationEmail({ customerDetails, bookingDetails })
+  const res = await sendConfirmationEmail({
+    customerDetails,
+    bookingDetails,
+    pricingRules: [], // Email script doesn't need pricingRules, but it's required by BookingData type
+  })
   console.log("Email result:", res)
 }
 
