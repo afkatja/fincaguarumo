@@ -67,11 +67,17 @@ const AccommodationClientPage = ({
       }
       if (
         JSON.stringify(prev.bookingDetails) ===
-        JSON.stringify(nextBookingDetails)
+          JSON.stringify(nextBookingDetails) &&
+        JSON.stringify(prev.pricingRules) ===
+          JSON.stringify(content.pricingRules || [])
       ) {
         return prev
       }
-      return { ...prev, bookingDetails: nextBookingDetails }
+      return {
+        ...prev,
+        bookingDetails: nextBookingDetails,
+        pricingRules: content.pricingRules || [],
+      }
     })
   }, [content, setBookingData])
 
@@ -80,13 +86,13 @@ const AccommodationClientPage = ({
 
   // Calculate total using pricing rules or fallback to legacy calculation
   const { total } =
-    content.pricingRules && content.pricingRules.length > 0
+    bookingData.pricingRules && bookingData.pricingRules.length > 0
       ? calculateTotalWithRules({
-          pricingRules: content.pricingRules,
+          pricingRules: bookingData.pricingRules,
           guests,
           bookingType: BOOKING_TYPE.villa,
           duration: 1, // Default 1 night for display
-          checkInDate: new Date(), // Required for villa bookings
+          checkInDate: bookingData.bookingDetails.checkIn || new Date(), // Use actual checkInDate or fallback to today
         })
       : { total: 0 } // Fallback - will be updated when booking details are set
 
