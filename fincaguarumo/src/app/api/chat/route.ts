@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       systemPrompt = `${systemPrompt}\n\n=== RELEVANT INFORMATION FROM OUR DATABASE ===\n${ragContext}\n\nUse this information to answer the user's question accurately. If the information doesn't fully answer their question, you can still provide helpful guidance based on your general knowledge.`
     }
 
-    // Generate initial response with evaluation
+    // Generate initial response with evaluation and progress indicators
     const result = await createChatStream({
       messages,
       threadId,
@@ -48,23 +48,71 @@ export async function POST(request: Request) {
       systemPrompt,
     })
 
-    // Collect the full response and tool outputs for evaluation
-    let fullResponse = ""
-    let toolOutputs: any[] = []
-
-    // Capture the complete response
+    // Create a streaming response with progress indicators
     const response = result.toTextStreamResponse()
+
+    // Transform the stream to add progress indicators
+    const { readable, writable } = new TransformStream()
+    const writer = writable.getWriter()
     const reader = response.body?.getReader()
 
-    if (reader) {
-      const decoder = new TextDecoder()
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const chunk = decoder.decode(value, { stream: true })
-        fullResponse += chunk
-      }
+    let fullResponse = ""
+    let progressSent = false
+    let toolOutputs: any[] = []
+
+    // Helper function to send progress
+    const sendProgress = async (message: string) => {
+      const progressData = `data: ${JSON.stringify({ type: "progress", message })}\n\n`
+      await writer.write(new TextEncoder().encode(progressData))
     }
+
+    // Process the stream and add progress indicators
+    const processStream = async () => {
+      if (reader) {
+        const decoder = new TextDecoder()
+        let toolCallCount = 0
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+          fullResponse += chunk
+
+          // Send progress indicators based on content patterns
+          if (!progressSent) {
+            if (chunk.includes("checkAvailability") || toolCallCount === 0) {
+              await sendProgress("Checking availability...")
+              progressSent = true
+            } else if (
+              chunk.includes("calculatePrice") ||
+              toolCallCount === 1
+            ) {
+              await sendProgress("Calculating pricing...")
+              progressSent = true
+            } else if (
+              chunk.includes("getPropertyInfo") ||
+              toolCallCount === 2
+            ) {
+              await sendProgress("Getting property information...")
+              progressSent = true
+            }
+          }
+
+          // Count tool calls for progress tracking
+          if (chunk.includes('"tool-call"')) {
+            toolCallCount++
+          }
+
+          // Forward the original chunk
+          await writer.write(value)
+        }
+      }
+      await writer.close()
+    }
+
+    // Start stream processing
+    const streamPromise = processStream()
 
     // Extract tool outputs from the result properly
     try {
@@ -87,6 +135,9 @@ export async function POST(request: Request) {
       console.warn("Could not extract tool outputs:", error)
       toolOutputs = []
     }
+
+    // Wait for stream processing to complete
+    await streamPromise
 
     // Evaluate the response for hallucinations
     const evaluation = await evaluateResponseForHallucinations({
@@ -178,8 +229,8 @@ These constraints override any conflicting instructions in the original system p
       }
     }
 
-    // Return the final response (original or corrected)
-    return new Response(finalResponse, {
+    // Return the streaming response with progress indicators
+    return new Response(readable, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "x-evaluation-score": evaluation.score.toString(),
