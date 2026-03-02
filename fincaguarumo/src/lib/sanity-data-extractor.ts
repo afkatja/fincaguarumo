@@ -437,32 +437,17 @@ export async function extractHomeContent() {
 // Extract property configuration for chatbot (pricing, capacity, etc.)
 export async function extractPropertyConfig() {
   const query = groq`{
-    "property": *[_type == "property" && isPublished == true][0] {
+    "property": *[_type == "accommodation" && isPublished == true][0] {
       propertyType,
       title,
       subtitle,
       description,
       price,
-      capacity {
-        maxGuests,
-        bedrooms,
-        bathrooms
-      },
-      locationDetails {
-        address,
-        region,
-        country,
-        proximity,
-        coordinates
-      },
-      propertyOverview {
-        title,
-        subtitle,
-        description,
-        features,
-        highlights
-      },
-      keyFeatures,
+      capacity,
+      bedrooms,
+      bathrooms,
+      location,
+      highlightFeatures,
       amenities[]-> {
         title,
         category,
@@ -471,6 +456,35 @@ export async function extractPropertyConfig() {
         isFeatured,
         keywords,
         language
+      },
+      pricingRules[]-> {
+        _id,
+        title,
+        ruleType,
+        season,
+        startDate,
+        endDate,
+        basePrice,
+        percentage,
+        fixedAmount,
+        minimumNights,
+        description,
+        language,
+        isActive,
+        displayOrder
+      },
+      paymentMethods[]-> {
+        title,
+        methodType,
+        processor,
+        description,
+        isRecommended
+      },
+      cancellationPolicy-> {
+        title,
+        policyType,
+        description,
+        timeframes
       }
     },
     "home": *[_type == "home"][0] {
@@ -485,6 +499,22 @@ export async function extractPropertyConfig() {
       basePrice,
       title,
       description
+    },
+    "pricingRules": *[_type == "pricingRules" && isActive == true] | order(displayOrder asc) {
+      _id,
+      title,
+      ruleType,
+      season,
+      startDate,
+      endDate,
+      basePrice,
+      percentage,
+      fixedAmount,
+      minimumNights,
+      description,
+      language,
+      isActive,
+      displayOrder
     },
     "paymentMethods": *[_type == "paymentMethods" && isAvailable == true] {
       title,

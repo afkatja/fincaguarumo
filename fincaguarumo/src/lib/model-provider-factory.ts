@@ -3,20 +3,19 @@
  * Allows easy switching between different AI models for generation and evaluation
  */
 
-import { LanguageModel } from "ai"
+import { LanguageModelV3 } from "@ai-sdk/provider"
 import { perplexity } from "@ai-sdk/perplexity"
 import { mistral } from "@ai-sdk/mistral"
-import { LanguageModelV3 } from "@ai-sdk/provider"
 
 export interface ModelConfig {
   provider: "perplexity" | "mistral" | "openai" | "anthropic"
   modelId: string
-  maxTokens?: number
+  maxTokens: number
   temperature?: number
 }
 
 export interface ModelProvider {
-  model: LanguageModel
+  model: LanguageModelV3
   modelId: string
   provider: string
   capabilities: {
@@ -25,74 +24,58 @@ export interface ModelProvider {
     evaluation: boolean
     generation: boolean
   }
+  maxTokens: number
 }
 
-// Model configurations
+// Model configurations from environment variables
 const modelConfigs: Record<string, ModelConfig> = {
-  // Current generation model
+  // Main generation model (with tools)
   generation: {
-    provider: "perplexity",
-    modelId: "sonar-pro",
-    maxTokens: 1000,
-    temperature: 0.7,
+    provider: (process.env.MAIN_MODEL_PROVIDER as any) || "mistral",
+    modelId: process.env.MAIN_MODEL_ID || "mistral-large-latest",
+    maxTokens: parseInt(process.env.MAIN_MODEL_MAX_TOKENS || "1000"),
+    temperature: parseFloat(process.env.MAIN_MODEL_TEMPERATURE || "0.7"),
   },
 
-  // Current evaluation model
+  // Evaluation model (without tools, uses cached data)
   evaluation: {
-    provider: "mistral",
-    modelId: "mistral-large-latest",
-    maxTokens: 2000,
-    temperature: 0.1,
-  },
-
-  // Alternative models for testing
-  "perplexity-sonar": {
-    provider: "perplexity",
-    modelId: "sonar-pro",
-    maxTokens: 1000,
-    temperature: 0.7,
-  },
-
-  "mistral-small": {
-    provider: "mistral",
-    modelId: "mistral-small-latest",
-    maxTokens: 1000,
-    temperature: 0.7,
-  },
-
-  "mistral-medium": {
-    provider: "mistral",
-    modelId: "mistral-medium-latest",
-    maxTokens: 2000,
-    temperature: 0.7,
-  },
-
-  "mistral-large": {
-    provider: "mistral",
-    modelId: "mistral-large-latest",
-    maxTokens: 4000,
-    temperature: 0.7,
+    provider: (process.env.EVALUATOR_MODEL_PROVIDER as any) || "perplexity",
+    modelId: process.env.EVALUATOR_MODEL_ID || "sonar-pro",
+    maxTokens: parseInt(process.env.EVALUATOR_MODEL_MAX_TOKENS || "2000"),
+    temperature: parseFloat(process.env.EVALUATOR_MODEL_TEMPERATURE || "0.1"),
   },
 }
 
-/**
- * Create a model provider based on configuration key
- */
-export function createModelProvider(configKey: string): ModelProvider {
+// Model provider factory
+export function createModelProvider(
+  configKey: "generation" | "evaluation",
+): ModelProvider {
   const config = modelConfigs[configKey]
 
-  if (!config) {
-    throw new Error(`Unknown model configuration: ${configKey}`)
-  }
-
   let model: LanguageModelV3
+  let capabilities: ModelProvider["capabilities"]
+  let maxTokens: number
 
-  switch (config.provider) {
-    case "perplexity":
-      model = perplexity(config.modelId as any)
+  switch (configKey) {
+    case "generation":
+      model = mistral(config.modelId)
+      capabilities = {
+        streaming: true,
+        tools: true,
+        evaluation: true,
+        generation: true,
+      }
+      maxTokens = config.maxTokens
       break
-    case "mistral":
-      model = mistral(config.modelId as any)
+    case "evaluation":
+      model = perplexity(config.modelId)
+      capabilities = {
+        streaming: true,
+        tools: false, // Perplexity doesn't support function calling
+        evaluation: true,
+        generation: true,
+      }
+      maxTokens = config.maxTokens
       break
     default:
       throw new Error(`Unsupported provider: ${config.provider}`)
@@ -102,13 +85,36 @@ export function createModelProvider(configKey: string): ModelProvider {
     model,
     modelId: config.modelId,
     provider: config.provider,
-    capabilities: {
-      streaming: true,
-      tools: configKey !== "evaluation", // Evaluation models typically don't need tools
-      evaluation: configKey === "evaluation",
-      generation: configKey !== "evaluation",
-    },
+    capabilities,
+    maxTokens,
   }
+}
+
+// Cache for evaluation data to avoid re-running tools
+const evaluationCache = new Map<string, any>()
+
+export function cacheEvaluationData(key: string, data: any) {
+  evaluationCache.set(key, {
+    data,
+    timestamp: Date.now(),
+  })
+}
+
+export function getCachedEvaluationData(key: string): any | null {
+  const cached = evaluationCache.get(key)
+  if (!cached) return null
+
+  // Cache expires after 5 minutes
+  if (Date.now() - cached.timestamp > 5 * 60 * 1000) {
+    evaluationCache.delete(key)
+    return null
+  }
+
+  return cached.data
+}
+
+export function clearEvaluationCache() {
+  evaluationCache.clear()
 }
 
 /**
@@ -146,7 +152,9 @@ export async function testModelConnectivity(configKey: string): Promise<{
   latency?: number
 }> {
   try {
-    const provider = createModelProvider(configKey)
+    const provider = createModelProvider(
+      configKey as "generation" | "evaluation",
+    )
     const startTime = Date.now()
 
     // Simple test request
