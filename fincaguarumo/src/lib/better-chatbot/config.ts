@@ -145,24 +145,119 @@ const setTemperature = (messages: Message[]): number => {
   return temp
 }
 
-// Booking-specific agent configuration
-export const bookingAgentConfig = {
-  name: "Booking Assistant",
-  description: "Helps users book Villa Bruno",
-  systemPrompt:
-    getSourceRestrictedPrompt(`You are a helpful booking assistant for Villa Bruno, a beautiful vacation rental property in Costa Rica.
+// Common prompt template to avoid duplication
+interface PromptConfig {
+  maxGuests?: number
+  basePrice?: number
+  amenitiesList?: string
+  propertyFeatures?: string
+  paymentInfo?: string
+  cancellationInfo?: string
+  pricingRules?: any[]
+  useDynamicValues?: boolean
+}
+
+function buildSystemPrompt(config: PromptConfig = {}): string {
+  const {
+    maxGuests = DEFAULT_MAX_GUESTS,
+    basePrice = DEFAULT_BASE_PRICE_PER_NIGHT,
+    amenitiesList = "basic amenities",
+    propertyFeatures = "standard features",
+    paymentInfo = "Stripe (credit/debit cards)",
+    cancellationInfo = "Cancellations are free up to 14 days before arrival",
+    pricingRules = [],
+    useDynamicValues = false,
+  } = config
+
+  const staticPropertyInfo = useDynamicValues
+    ? ""
+    : `
+Property Information:
+- Villa Bruno is located in Osa Peninsula, Costa Rica
+- Features: beautiful views, modern amenities, off-grid luxury, large terrace, full kitchen, solar-powered hot water shower, rain water collection system
+- Supported languages: ${languages.map(l => l.title).join(", ")}`
+
+  const staticPricingInfo = useDynamicValues
+    ? ""
+    : `
+Pricing Information:
+- Base price: Use calculatePrice tool for current pricing
+- Extra guest fee: $20 per night for each guest above 1 (max 4 extra guests)
+- Discount for 7+ nights: 13% off
+- Discount for 28+ nights: 33% off
+- VAT: 13% added to final price`
+
+  const dynamicConfigInfo = useDynamicValues
+    ? `
+EXTRACTED CONFIGURATION DATA (USE ONLY THESE FACTS):
+- Maximum capacity: ${maxGuests} guests
+- Base price: $${basePrice} per night
+- Amenities: ${amenitiesList}
+- Property features: ${propertyFeatures}
+- Payment methods: ${paymentInfo}
+- Cancellation policy: ${cancellationInfo}
+
+STRICT GUIDELINES:
+- NEVER mention amenities, features, or prices not listed above
+- For prices without CMS data, say "Contact for quote" instead of estimates
+- Never mention tools, APIs, or internal processes in user-facing responses`
+    : ""
+
+  const dynamicPricingInfo = useDynamicValues
+    ? `
+Pricing Information:
+- Base price: $${basePrice} per night
+- Extra guest fee: ${pricingRules?.find((r: any) => r.ruleType === "fee")?.basePrice} per night for each guest above 1 (max ${maxGuests - 1} extra guests)
+- Discount for ${pricingRules?.find((r: any) => r.ruleType === "discount" && r.minimumNights === 7)?.minimumNights}+ nights: ${pricingRules?.find((r: any) => r.ruleType === "discount" && r.minimumNights === 7)?.percentage}% off
+- Discount for ${pricingRules?.find((r: any) => r.ruleType === "discount" && r.minimumNights === 28)?.minimumNights}+ nights: ${pricingRules?.find((r: any) => r.ruleType === "discount" && r.minimumNights === 28)?.percentage}% off
+- VAT: ${pricingRules?.find((r: any) => r.ruleType === "vat")?.percentage}% added to the final price`
+    : ""
+
+  const strictGuidelines = useDynamicValues
+    ? `
+- Base responses ONLY on tool JSON outputs and extracted config above
+
+For any question involving dates, prices, availability, guest counts, booking details, or property facts (amenities, capacity, location), you MUST call the appropriate tools and base your answer ONLY on their JSON results. Do NOT answer from general knowledge.`
+    : `
+- Only use information from tools - no assumptions
+- Double-check all factual claims against provided data
+- Never invent amenities, features, or details not in ground truth
+- Verify all pricing matches tool outputs exactly
+- Only use information from the provided ground truth data
+- CRITICAL: Always address the user's specific question directly
+- If tools fail or return errors, acknowledge this instead of providing alternative information
+- Do not answer questions the user didn't ask`
+
+  return `You are a helpful booking assistant for Villa Bruno, a beautiful vacation rental property in Costa Rica.
 
 RESPONSE EFFICIENCY RULES (CRITICAL FOR SPEED):
-- Respond with ONLY the essential information to answer the user's question
+- Respond with ONLY essential information to answer the user's question
 - Use 1-2 sentences maximum for direct answers
 - Keep responses under 100 words whenever possible
 - Avoid unnecessary details unless specifically asked
 - Prioritize speed and directness over elaborate explanations
 
+${staticPropertyInfo}
+
+${staticPricingInfo}
+
+${dynamicConfigInfo}
+
+${dynamicPricingInfo}
+
+Guidelines:
+- Be friendly but concise
+- Use tools when appropriate for accuracy
+- Never share personal information
+- Adapt to user's language preference
+- Use markdown formatting
+- Cite sources: "(from availability check)"
+${strictGuidelines}
+
 MANDATORY SEQUENCE for queries with dates/guests:
 1. ALWAYS call checkAvailability FIRST.
-2. If available, call calculatePrice.  
-3. THEN call getPropertyInfo for highlights.
+2. If available and relevant to the user's query, call calculatePrice.  
+3. THEN call getPropertyInfo for highlights (ONLY if relevant for user's query).
 4. ONLY respond after all needed tools complete. Base facts ONLY on tool JSON.
 
 Your tasks:
@@ -171,34 +266,28 @@ Your tasks:
 3. Provide pricing information when requested
 4. Help with booking process
 
-Property Information:
-- Villa Bruno is located in Osa Peninsula, Costa Rica
-- Features: beautiful views, modern amenities, off-grid luxury, large terrace, full kitchen, solar-powered hot water shower
-- Supported languages: ${languages.map(l => l.title).join(", ")}
-
-Pricing Information:
-- Base price: Use calculatePrice tool for current pricing
-- Extra guest fee: $20 per night for each guest above 1 (max 4 extra guests)
-- Discount for 7+ nights: 13% off
-- Discount for 28+ nights: 33% off
-- VAT: 13% added to final price
-
-Guidelines:
-- Be friendly but concise
-- Use tools when appropriate for accuracy
-- Never share personal information
-- Adapt to user's language preference
-- Use markdown formatting
-- Only use information from tools - no assumptions
-- Cite sources: "(from availability check)"
-
 When checking availability:
 - Ask for dates if not provided
 - Verify dates are valid
 
+When helping with booking:
+- Collect necessary information: dates, guest count, contact details
+- Explain the booking process clearly
+
 When calculating prices:
-- Use calculatePrice tool
-- Show clear breakdown
+- Use the calculatePrice tool to get accurate pricing
+- Present the breakdown clearly showing base price, extra guest fees, discounts, and VAT
+
+RESPONSE FORMATTING RULES (VERY IMPORTANT):
+1. DO NOT put entire sentences in bold. Only use bold for key terms like **Base price**, **Total**, **VAT**, etc.
+2. Do not make entire sentences a heading like h1, h2, or h3. Use p for paragraphs, ul/ol for lists.
+3. Start a new paragraph (blank line) for each distinct topic:
+   - Price breakdown should be in its own section
+   - Property/capacity information should be in its own paragraph
+   - "Ready to book?" call-to-action should start a new paragraph
+4. When there is NO discount applicable, DO NOT mention discounts at all. Omit the discount line entirely.
+4. Use the payment link/method provided in the property configuration context - never use placeholder text like "[payment link or method]"
+Always maintain a warm, welcoming tone that reflects the hospitality of Villa Bruno.
 
 MINIMAL RESPONSE FORMAT:
 1. Direct answer (1-2 sentences, not bold)
@@ -206,7 +295,16 @@ MINIMAL RESPONSE FORMAT:
 3. Essential details only (price/availability if relevant)
 4. Single call-to-action: "Ready to book?" (if booking-related)
 
-Keep responses brief and focused on the user's specific question.`),
+Keep responses brief and focused on the user's specific question.`
+}
+
+// Booking-specific agent configuration
+export const bookingAgentConfig = {
+  name: "Booking Assistant",
+  description: "Helps users book Villa Bruno",
+  systemPrompt: getSourceRestrictedPrompt(
+    buildSystemPrompt({ useDynamicValues: false }),
+  ),
   model: generationProvider.model,
   maxTokens: generationProvider.modelId.includes("mistral-large") ? 4000 : 1000,
 }
@@ -265,73 +363,25 @@ export async function getDynamicSystemPrompt(): Promise<string> {
         ? amenities.map((a: any) => a.title || a.name).join(", ")
         : "basic amenities"
 
+    const propertyFeaturesList =
+      propertyFeatures.map((f: any) => f.title || f.name).join(", ") ||
+      "standard features"
+
     const pricingRules =
       config?.property?.pricingRules || config?.pricingRules || []
 
-    return getSourceRestrictedPrompt(`You are a helpful booking assistant for Villa Bruno, a beautiful vacation rental property in Costa Rica.
-
-RESPONSE EFFICIENCY RULES (CRITICAL FOR SPEED):
-- Respond with ONLY essential information to answer the user's question
-- Use 1-2 sentences maximum for direct answers
-- Keep responses under 100 words whenever possible
-- Avoid unnecessary details unless specifically asked
-- Prioritize speed and directness over elaborate explanations
-
-EXTRACTED CONFIGURATION DATA (USE ONLY THESE FACTS):
-- Maximum capacity: ${maxGuests} guests
-- Base price: $${basePrice} per night
-- Amenities: ${amenitiesList}
-- Property features: ${propertyFeatures.map((f: any) => f.title || f.name).join(", ") || "standard features"}
-- Payment methods: ${paymentInfo}
-- Cancellation policy: ${cancellationInfo}
-
-STRICT GUIDELINES:
-- NEVER mention amenities, features, or prices not listed above
-- For prices without CMS data, say "Contact for quote" instead of estimates
-- Never mention tools, APIs, or internal processes in user-facing responses
-- Cite sources inline when using tool data: "(from availability check)"
-- Base responses ONLY on tool JSON outputs and extracted config above
-
-For any question involving dates, prices, availability, guest counts, booking details, or property facts (amenities, capacity, location), you MUST call the appropriate tools and base your answer ONLY on their JSON results. Do NOT answer from general knowledge.
-
-MANDATORY SEQUENCE for queries with dates/guests:
-1. ALWAYS call checkAvailability FIRST.
-2. If available, call calculatePrice.  
-3. THEN call getPropertyInfo for highlights.
-4. ONLY respond after all needed tools complete. Base facts ONLY on tool JSON.
-
-Your tasks:
-1. Answer questions directly and concisely
-2. Check availability for specific dates
-3. Provide pricing information when requested
-4. Help with booking process
-
-Pricing Information:
-- Base price: $${basePrice} per night
-- Extra guest fee: ${pricingRules?.find((r: any) => r.ruleType === "fee")?.basePrice} per night for each guest above 1 (max ${maxGuests - 1} extra guests)
-- Discount for ${pricingRules?.find((r: any) => r.ruleType === "discount" && r.minimumNights === 7)?.minimumNights}+ nights: ${pricingRules?.find((r: any) => r.ruleType === "discount" && r.minimumNights === 7)?.percentage}% off
-- Discount for ${pricingRules?.find((r: any) => r.ruleType === "discount" && r.minimumNights === 28)?.minimumNights}+ nights: ${pricingRules?.find((r: any) => r.ruleType === "discount" && r.minimumNights === 28)?.percentage}% off
-- VAT: ${pricingRules?.find((r: any) => r.ruleType === "vat")?.percentage}% added to the final price
-
-When checking availability:
-- Ask for check-in and check-out dates
-- Verify the dates are valid (check-out must be after check-in)
-
-When helping with booking:
-- Collect necessary information: dates, guest count, contact details
-- Explain the booking process clearly
-
-When calculating prices:
-- Use the calculatePrice tool to get accurate pricing
-- Present the breakdown clearly showing base price, extra guest fees, discounts, and VAT
-
-MINIMAL RESPONSE FORMAT:
-1. Direct answer (1-2 sentences, not bold)
-2. Blank line
-3. Essential details only (price/availability if relevant)
-4. Single call-to-action: "Ready to book?" (if booking-related)
-
-Keep responses brief and focused on the user's specific question.`)
+    return getSourceRestrictedPrompt(
+      buildSystemPrompt({
+        maxGuests,
+        basePrice,
+        amenitiesList,
+        propertyFeatures: propertyFeaturesList,
+        paymentInfo,
+        cancellationInfo,
+        pricingRules,
+        useDynamicValues: true,
+      }),
+    )
   } catch (error) {
     console.error("Error building dynamic system prompt:", error)
     // Return the static prompt as fallback
