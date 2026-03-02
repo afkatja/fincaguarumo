@@ -15,6 +15,7 @@ import {
 import Input from "../Input"
 import Textarea from "../Textarea"
 import { Button } from "../ui/button"
+import { useBooking } from "../../app/providers/BookingProvider"
 
 interface Message {
   role: "user" | "assistant" | "tool"
@@ -42,6 +43,7 @@ export default function ChatInterface({
   const { locale } = useParams()
   const t = useTranslations("bookingChat")
   const tGreetings = useTranslations("greetings")
+  const { bookingData } = useBooking()
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
@@ -56,14 +58,23 @@ export default function ChatInterface({
   const chatContext: ChatContext = {
     page: context?.page || "other",
     locale: locale as string,
-    bookingData: context?.bookingData,
+    bookingData: bookingData,
     propertyTitle: context?.propertyTitle,
     userIntent: context?.userIntent,
   }
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
+    const scrollToBottom = () => {
+      const chatBody = messagesEndRef.current?.parentElement
+      if (chatBody) {
+        chatBody.scrollTop = chatBody.scrollHeight
+      }
+    }
+
+    // Use both scrollIntoView and direct scrollTop for better reliability
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    scrollToBottom()
   }, [messages])
 
   // Initialize with greeting message
@@ -276,13 +287,14 @@ export default function ChatInterface({
   // Embedded variant
   return (
     <div
-      className={`flex flex-col bg-zinc-50 rounded-lg border overflow-hidden ${className}`}
+      className={`flex flex-col bg-zinc-50 rounded-lg ${className} h-[300px] sm:h-[400px]`}
     >
       <ChatHeader onClose={toggleOpen} />
       <ChatBody
         messages={messages}
         isLoading={isLoading}
         messagesEndRef={messagesEndRef}
+        variant="embedded"
       />
       <ChatFooter
         input={input}
@@ -297,7 +309,7 @@ export default function ChatInterface({
 function ChatHeader({ onClose }: { onClose?: () => void }) {
   const t = useTranslations("bookingChat")
   return (
-    <div className="flex items-center justify-between p-4 border-b bg-guarumo-primary text-zinc-50">
+    <div className="flex items-center justify-between p-4 border-b bg-guarumo-primary text-zinc-50 rounded-t-lg">
       <div className="flex items-center gap-2">
         <MessageCircle className="w-5 h-5" />
         <h3 className="font-semibold">
@@ -322,13 +334,19 @@ function ChatBody({
   messages,
   isLoading,
   messagesEndRef,
+  variant,
 }: {
   messages: Message[]
   isLoading: boolean
   messagesEndRef: React.RefObject<HTMLDivElement | null>
+  variant?: "floating" | "sidebar" | "embedded"
 }) {
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 mt-auto flex flex-col justify-end">
+    <div
+      className={`${
+        variant === "embedded" ? "min-h-0 h-0" : ""
+      } flex-1 overflow-y-scroll p-4 space-y-4 flex flex-col`}
+    >
       {messages.map((msg, i) => (
         <div
           key={i}
@@ -386,7 +404,7 @@ function ChatFooter({
   }
 
   return (
-    <form onSubmit={onSubmit} className="p-4 mt-auto">
+    <form onSubmit={onSubmit} className="p-4">
       <div className="flex gap-2 w-full items-end">
         <Textarea
           id="chat-user-input"
@@ -405,12 +423,17 @@ function ChatFooter({
           type="submit"
           variant="secondary"
           disabled={isLoading || !input.trim()}
-          className="mb-2"
+          className="mb-2 flex items-center gap-1"
         >
           {isLoading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <Send className="w-5 h-5" />
+            <>
+              <Send className="w-5 h-5" />
+              <span className="text-xs opacity-60 hidden sm:inline">
+                {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"}+Enter
+              </span>
+            </>
           )}
         </Button>
       </div>

@@ -22,16 +22,33 @@ export async function POST(request: Request) {
 
     // First, sync with the merged iCal endpoint to get latest bookings
     try {
-      const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ||
-        (process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}`
-          : "http://localhost:3000")
-      await fetch(`${siteUrl}/api/ical/merged`, {
+      // In production, use the same host as the current request
+      // In development, use localhost
+      let siteUrl: string
+
+      if (process.env.NODE_ENV === "production") {
+        // Get the current request URL to avoid self-calling issues
+        const requestUrl = new URL(request.url)
+        siteUrl = `${requestUrl.protocol}//${requestUrl.host}`
+      } else {
+        siteUrl = "https://localhost:3000"
+      }
+
+
+      const syncResponse = await fetch(`${siteUrl}/api/ical/merged`, {
         method: "GET",
       })
+
+      // Only process if we got a successful response
+      if (!syncResponse.ok) {
+        console.warn(
+          `Sync endpoint returned ${syncResponse.status}: ${syncResponse.statusText}`,
+        )
+      } else {
+        console.log("Bookings sync completed successfully")
+      }
     } catch (syncError) {
-      console.error("Error syncing bookings:", syncError)
+      console.warn("Error syncing bookings (continuing anyway):", syncError)
       // Continue anyway - we'll check what we have
     }
 
@@ -46,7 +63,7 @@ export async function POST(request: Request) {
       .gte("end_date", checkIn)
 
     if (error) {
-      console.error("Error checking availability:", error)
+      console.error("Error checking availability from supabase:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
@@ -58,22 +75,24 @@ export async function POST(request: Request) {
       .gte("check_out", checkIn)
 
     if (bookingsError) {
-      console.error("Error checking bookings:", bookingsError)
+      console.error("Error checking bookings from supabase:", bookingsError)
     }
 
     // Check if the requested date range is available
     const isUnavailable = data && data.length > 0
     const hasBookingConflict = bookingsData && bookingsData.length > 0
     const isAvailable = !isUnavailable && !hasBookingConflict
-    console.log("Availability", { data, bookingsData })
 
-    return NextResponse.json({
+    const responseData = {
       isAvailable,
       conflictingRanges: data || [],
       bookingConflicts: bookingsData || [],
-    })
+    }
+
+    console.log("Returning availability response:", responseData)
+    return NextResponse.json(responseData)
   } catch (error) {
-    console.error("Error in availability check:", error)
+    console.error("Error in availability check on supabase:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },
@@ -93,13 +112,13 @@ export async function GET() {
       .order("start_date", { ascending: true })
 
     if (error) {
-      console.error("Error fetching availability:", error)
+      console.error("Error fetching availability from supabase:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ unavailableRanges: data })
   } catch (error) {
-    console.error("Error fetching availability:", error)
+    console.error("Error fetching availability from supabase:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },
@@ -156,7 +175,7 @@ export async function PUT(request: Request) {
         .select()
 
       if (error) {
-        console.error("Error updating availability:", error)
+        console.error("Error updating availability from supabase:", error)
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
       result = data
@@ -183,7 +202,7 @@ export async function PUT(request: Request) {
         .select()
 
       if (error) {
-        console.error("Error creating availability entry:", error)
+        console.error("Error creating availability entry from supabase:", error)
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
       result = data
@@ -191,7 +210,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true, data: result })
   } catch (error) {
-    console.error("Error updating availability:", error)
+    console.error("Error updating availability from supabase:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },
@@ -214,13 +233,13 @@ export async function DELETE(request: Request) {
     const { error } = await supabase.from("availability").delete().eq("id", id)
 
     if (error) {
-      console.error("Error deleting availability entry:", error)
+      console.error("Error deleting availability entry from supabase:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error deleting availability entry:", error)
+    console.error("Error deleting availability entry from supabase:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },

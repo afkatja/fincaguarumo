@@ -486,7 +486,7 @@ export default function ProgressiveBookingForm({
       <div className="mt-4 pt-4 border-t">
         <EmbeddedChat
           key={`chat-${currentStep}`}
-          className="max-h-64"
+          className="max-h-104"
           initialMessage={
             currentStep === "dates"
               ? t("chatHelpDates", {
