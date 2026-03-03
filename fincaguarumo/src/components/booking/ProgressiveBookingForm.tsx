@@ -20,7 +20,6 @@ import BookingProgressIndicator, {
   BookingStep,
 } from "./BookingProgressIndicator"
 import AvailabilityPreview from "./AvailabilityPreview"
-import { EmbeddedChat } from "@/components/better-chatbot"
 
 interface ProgressiveBookingFormProps {
   onSubmit: () => void
@@ -483,28 +482,6 @@ export default function ProgressiveBookingForm({
           </div>
         </DialogFooter>
       </form>
-      <div className="mt-4 pt-4 border-t">
-        <EmbeddedChat
-          key={`chat-${currentStep}`}
-          className="max-h-104"
-          initialMessage={
-            currentStep === "dates"
-              ? t("chatHelpDates", {
-                  defaultValue:
-                    "Need help selecting dates? I'm here to assist you!",
-                })
-              : currentStep === "personal"
-                ? t("chatHelpPersonal", {
-                    defaultValue:
-                      "Need help with your personal details? I'm here to assist you!",
-                  })
-                : t("chatHelpPayment", {
-                    defaultValue:
-                      "Need help with payment? I'm here to assist you!",
-                  })
-          }
-        />
-      </div>
     </>
   )
 }

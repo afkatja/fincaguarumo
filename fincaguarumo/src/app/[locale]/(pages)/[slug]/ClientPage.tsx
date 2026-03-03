@@ -19,7 +19,6 @@ import FAQ from "@/components/FAQ"
 import Title from "@/components/Title"
 import Icon from "../../../../components/Icon"
 import calculateTotal from "../../../../lib/calculateTotal"
-import { SidebarChat } from "@/components/better-chatbot"
 
 const ClientPage = ({
   content,
@@ -144,14 +143,6 @@ const ClientPage = ({
           </div>
         </footer>
       )}
-
-      {/* Chat Widget - Only show on relevant pages */}
-      <SidebarChat
-        propertyTitle={content.title || "Finca Guarumo"}
-        initialMessage={tPage("greetings.general", {
-          pageTitle: content.title || "Finca Guarumo",
-        })}
-      />
     </>
   )
 }
