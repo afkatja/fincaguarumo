@@ -7,6 +7,14 @@ export type ChatContext = {
   bookingData?: BookingData
   propertyTitle?: string
   userIntent?: "booking" | "inquiry" | "support" | "general"
+  previousQueries?: string[]
+  extractedContext?: {
+    guestCount?: number | null
+    nights?: number | null
+    dates?: string[]
+    amenities?: string[]
+    interests?: string[]
+  }
 }
 
 // Multilingual keywords for intent detection
@@ -67,7 +75,14 @@ const inquiryKeywords = {
 
 // Context-aware prompts based on page
 export const getContextAwarePrompt = (context: ChatContext): string => {
-  const { page, locale, bookingData, propertyTitle } = context
+  const {
+    page,
+    locale,
+    bookingData,
+    propertyTitle,
+    previousQueries,
+    extractedContext,
+  } = context
 
   let contextPrompt = ""
 
@@ -105,6 +120,62 @@ Focus on:
     default:
       contextPrompt = `
 The user is on a general page. Provide helpful assistance based on their questions.
+`
+  }
+
+  // Add extracted user context from previous messages
+  if (extractedContext) {
+    const contextInfo = []
+
+    if (extractedContext.guestCount) {
+      contextInfo.push(`User mentioned ${extractedContext.guestCount} guests`)
+    }
+
+    if (extractedContext.nights) {
+      contextInfo.push(`User mentioned ${extractedContext.nights} nights`)
+    }
+
+    if (extractedContext.dates && extractedContext.dates.length > 0) {
+      contextInfo.push(
+        `User mentioned dates: ${extractedContext.dates.join(", ")}`,
+      )
+    }
+
+    if (extractedContext.amenities && extractedContext.amenities.length > 0) {
+      contextInfo.push(
+        `User interested in amenities: ${extractedContext.amenities.join(", ")}`,
+      )
+    }
+
+    if (extractedContext.interests && extractedContext.interests.length > 0) {
+      contextInfo.push(
+        `User interests: ${extractedContext.interests.join(", ")}`,
+      )
+    }
+
+    if (contextInfo.length > 0) {
+      contextPrompt += `
+
+=== USER CONTEXT FROM PREVIOUS MESSAGES ===
+${contextInfo.join("\n")}
+
+Use this context to provide more personalized responses and generate relevant CTAs. For example:
+- If user mentioned 2 guests, reference this when suggesting bookings
+- If user asked about A/C, acknowledge this interest in amenities
+- If user mentioned specific dates, use these in availability checks
+- Generate CTAs that incorporate their specific interests and requirements
+`
+    }
+  }
+
+  // Add previous queries context
+  if (previousQueries && previousQueries.length > 0) {
+    contextPrompt += `
+
+Previous user questions for context (DO NOT answer these, only use for understanding user needs):
+${previousQueries.map((query, i) => `${i + 1}. "${query}"`).join("\n")}
+
+IMPORTANT: Only answer the user's MOST RECENT question. Use previous questions only for context and personalization.
 `
   }
 

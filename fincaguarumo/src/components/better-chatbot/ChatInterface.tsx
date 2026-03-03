@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl"
 import { MessageCircle, X, Send, Loader2 } from "lucide-react"
 import Markdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-// import { getLanguagePrompt } from "@/lib/better-chatbot/config"
 import {
   ChatContext,
   getPersonalizedGreeting,
@@ -16,6 +15,76 @@ import Input from "../Input"
 import Textarea from "../Textarea"
 import { Button } from "../ui/button"
 import { useBooking } from "../../app/providers/BookingProvider"
+
+// Extract relevant context from previous user messages
+function extractUserContext(previousMessages: Message[]) {
+  const context = {
+    guestCount: null as number | null,
+    nights: null as number | null,
+    dates: [] as string[],
+    amenities: [] as string[],
+    interests: [] as string[],
+  }
+
+  previousMessages.forEach(msg => {
+    const content = msg.content.toLowerCase()
+
+    // Extract guest count
+    const guestMatch = content.match(/(\d+)\s+(guests?|people?)\b/)
+    if (guestMatch) {
+      context.guestCount = parseInt(guestMatch[1])
+    }
+
+    // Extract number of nights
+    const nightsMatch = content.match(/(\d+)\s+(nights?)\b/)
+    if (nightsMatch) {
+      context.nights = parseInt(nightsMatch[1])
+    }
+
+    // Extract dates (simple patterns)
+    const dateMatches = content.match(
+      /\b(april|march|may|january|february|june|july|august|september|october|november|december)\s+\d{1,2}\b/gi,
+    )
+    if (dateMatches) {
+      context.dates.push(...dateMatches)
+    }
+
+    // Extract amenities
+    const amenitiesKeywords = [
+      "ac",
+      "air conditioning",
+      "wifi",
+      "pool",
+      "kitchen",
+      "parking",
+      "beach",
+      "ocean",
+    ]
+    amenitiesKeywords.forEach(amenity => {
+      if (content.includes(amenity)) {
+        context.amenities.push(amenity)
+      }
+    })
+
+    // Extract general interests
+    const interestKeywords = [
+      "price",
+      "cost",
+      "availability",
+      "booking",
+      "reservation",
+      "cancel",
+      "payment",
+    ]
+    interestKeywords.forEach(interest => {
+      if (content.includes(interest)) {
+        context.interests.push(interest)
+      }
+    })
+  })
+
+  return context
+}
 
 interface Message {
   role: "user" | "assistant" | "tool"
@@ -48,6 +117,8 @@ export default function ChatInterface({
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [progressMessage, setProgressMessage] = useState("")
+  const [hasAssistantResponse, setHasAssistantResponse] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const isOpen =
@@ -72,7 +143,6 @@ export default function ChatInterface({
       }
     }
 
-    // Use both scrollIntoView and direct scrollTop for better reliability
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     scrollToBottom()
   }, [messages])
@@ -89,6 +159,7 @@ export default function ChatInterface({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!input.trim() || isLoading) return
 
     const userMessage = input.trim()
@@ -98,36 +169,34 @@ export default function ChatInterface({
     // Add user message to state
     setMessages(prev => [...prev, { role: "user", content: userMessage }])
 
-    // Build messages array for API call
-    // Only include user messages in the history to comply with API requirements
-    // The API expects: [system] → user → assistant → user → assistant...
-    const userOnlyMessages = messages
+    // Build messages array for API call - only send current user message for response
+    // but extract context from previous messages for better understanding
+    const previousUserMessages = messages
       .filter(msg => msg.role === "user")
-      .map(msg => ({
-        role: msg.role,
-        content: msg.content,
-      }))
+      .slice(-3) // Keep last 3 user messages for context
 
-    const messagesWithUser = [
-      ...userOnlyMessages,
-      { role: "user", content: userMessage },
-    ]
+    const messagesForAPI = [{ role: "user", content: userMessage }]
+
+    // Build enhanced context with previous user preferences
+    const enhancedContext = {
+      ...chatContext,
+      previousQueries: previousUserMessages.map(msg => msg.content),
+      extractedContext: extractUserContext(previousUserMessages),
+    }
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: messagesWithUser.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-          })),
+          messages: messagesForAPI,
           locale,
-          context: chatContext,
+          context: enhancedContext,
         }),
       })
 
       if (!response.ok) {
+        console.error("Failed to parse chat response", response)
         throw new Error(
           `Failed to get response: ${response.status} ${response.statusText}`,
         )
@@ -139,6 +208,10 @@ export default function ChatInterface({
       let assistantMessage = ""
       let buffer = ""
 
+      // Reset progress message when starting new request
+      setProgressMessage("")
+      setHasAssistantResponse(false)
+
       if (reader) {
         try {
           while (true) {
@@ -148,66 +221,125 @@ export default function ChatInterface({
             const chunk = decoder.decode(value, { stream: true })
             buffer += chunk
 
-            // Process complete lines
+            // split by newlines because you send `...\n`
             const lines = buffer.split("\n")
-            buffer = lines.pop() || "" // Keep incomplete line in buffer
+            buffer = lines.pop() || "" // keep incomplete line
 
             for (const line of lines) {
-              const trimmedLine = line.trim()
+              if (!line.trim()) continue
 
-              // Handle both SSE format and plain text content
-              if (trimmedLine.startsWith("data: ")) {
-                const data = trimmedLine.slice(6)
-                if (data === "[DONE]" || data === "") continue
+              // line looks like: 0:"Checking availability..."
 
-                try {
-                  const parsed = JSON.parse(data)
-                  if (parsed.content && typeof parsed.content === "string") {
-                    assistantMessage += parsed.content
-
-                    setMessages(prev => {
-                      const newMessages = [...prev]
-                      const lastMessage = newMessages[newMessages.length - 1]
-                      if (lastMessage?.role === "assistant") {
-                        lastMessage.content = assistantMessage
-                      } else {
-                        newMessages.push({
-                          role: "assistant",
-                          content: assistantMessage,
-                        })
-                      }
-                      return newMessages
-                    })
+              const match = line.match(/^(\d+):(.*)$/)
+              const id = match?.[1]
+              const payload = match?.[2]
+              if (match && payload) {
+                if (id === "0") {
+                  try {
+                    const parsed = JSON.parse(payload)
+                    if (
+                      parsed.type === "progress" &&
+                      typeof parsed.message === "string"
+                    ) {
+                      setProgressMessage(parsed.message)
+                    }
+                  } catch {
+                    // ignore
                   }
-                } catch (parseError) {
-                  console.warn("Failed to parse SSE data:", data, parseError)
+                  continue
+
+                  // non-zero IDs → treat as normal AI chunks or ignore
+                } else {
+                  // normal assistant text; append to the answer
+                  assistantMessage += payload
+
+                  // Mark that we've received assistant response
+                  if (!hasAssistantResponse) {
+                    setHasAssistantResponse(true)
+                  }
+
+                  setMessages(prev => {
+                    const newMessages = [...prev]
+                    const lastMessage = newMessages[newMessages.length - 1]
+                    if (lastMessage?.role === "assistant") {
+                      lastMessage.content = assistantMessage
+                    } else {
+                      newMessages.push({
+                        role: "assistant",
+                        content: assistantMessage,
+                      })
+                    }
+                    return newMessages
+                  })
                 }
-              } else if (
-                trimmedLine &&
-                !trimmedLine.startsWith("event:") &&
-                !trimmedLine.startsWith("id:")
-              ) {
-                // Treat as plain text content
-                // Use newline instead of space to preserve markdown block elements
-                assistantMessage += trimmedLine + "\n"
-                setMessages(prev => {
-                  const newMessages = [...prev]
-                  const lastMessage = newMessages[newMessages.length - 1]
-                  if (lastMessage?.role === "assistant") {
-                    lastMessage.content = assistantMessage
-                  } else {
-                    newMessages.push({
-                      role: "assistant",
-                      content: assistantMessage,
-                    })
+              } else {
+                // Handle SSE format or other content as fallback
+                const trimmedLine = line.trim()
+                if (trimmedLine.startsWith("data: ")) {
+                  const data = trimmedLine.slice(6)
+                  if (data === "[DONE]" || data === "") continue
+
+                  try {
+                    const parsed = JSON.parse(data)
+                    if (parsed.content && typeof parsed.content === "string") {
+                      assistantMessage += parsed.content
+
+                      // Mark that we've received assistant response
+                      if (!hasAssistantResponse) {
+                        setHasAssistantResponse(true)
+                      }
+
+                      setMessages(prev => {
+                        const newMessages = [...prev]
+                        const lastMessage = newMessages[newMessages.length - 1]
+                        if (lastMessage?.role === "assistant") {
+                          lastMessage.content = assistantMessage
+                        } else {
+                          newMessages.push({
+                            role: "assistant",
+                            content: assistantMessage,
+                          })
+                        }
+                        return newMessages
+                      })
+                    }
+                  } catch (parseError) {
+                    console.warn("Failed to parse SSE data:", data, parseError)
                   }
-                  return newMessages
-                })
+                } else if (
+                  trimmedLine &&
+                  !trimmedLine.startsWith("event:") &&
+                  !trimmedLine.startsWith("id:")
+                ) {
+                  // Treat as plain text content
+                  assistantMessage += trimmedLine + "\n"
+
+                  // Mark that we've received assistant response
+                  if (!hasAssistantResponse) {
+                    setHasAssistantResponse(true)
+                  }
+
+                  setMessages(prev => {
+                    const newMessages = [...prev]
+                    const lastMessage = newMessages[newMessages.length - 1]
+                    if (lastMessage?.role === "assistant") {
+                      lastMessage.content = assistantMessage
+                    } else {
+                      newMessages.push({
+                        role: "assistant",
+                        content: assistantMessage,
+                      })
+                    }
+                    return newMessages
+                  })
+                }
               }
             }
           }
         } finally {
           reader.releaseLock()
+          // Clear progress message when done
+          setProgressMessage("")
         }
       }
     } catch (error) {
@@ -250,6 +382,8 @@ export default function ChatInterface({
               messages={messages}
               isLoading={isLoading}
               messagesEndRef={messagesEndRef}
+              progressMessage={progressMessage}
+              hasAssistantResponse={hasAssistantResponse}
             />
             <ChatFooter
               input={input}
@@ -273,6 +407,8 @@ export default function ChatInterface({
           messages={messages}
           isLoading={isLoading}
           messagesEndRef={messagesEndRef}
+          progressMessage={progressMessage}
+          hasAssistantResponse={hasAssistantResponse}
         />
         <ChatFooter
           input={input}
@@ -295,6 +431,8 @@ export default function ChatInterface({
         isLoading={isLoading}
         messagesEndRef={messagesEndRef}
         variant="embedded"
+        progressMessage={progressMessage}
+        hasAssistantResponse={hasAssistantResponse}
       />
       <ChatFooter
         input={input}
@@ -335,11 +473,15 @@ function ChatBody({
   isLoading,
   messagesEndRef,
   variant,
+  progressMessage,
+  hasAssistantResponse,
 }: {
   messages: Message[]
   isLoading: boolean
   messagesEndRef: React.RefObject<HTMLDivElement | null>
   variant?: "floating" | "sidebar" | "embedded"
+  progressMessage?: string
+  hasAssistantResponse?: boolean
 }) {
   return (
     <div
@@ -369,7 +511,17 @@ function ChatBody({
           </div>
         </div>
       ))}
-      {isLoading && (
+      {progressMessage && (
+        <div className="flex justify-start">
+          <div className="bg-blue-50 border border-guarumo-primary/80 rounded-2xl px-4 py-2 text-guarumo-primary/80 text-sm">
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {progressMessage}
+            </div>
+          </div>
+        </div>
+      )}
+      {isLoading && !progressMessage && !hasAssistantResponse && (
         <div className="flex justify-start">
           <div className="bg-zinc-100 rounded-2xl px-4 py-2">
             <Loader2 className="w-5 h-5 animate-spin text-guarumo-primary" />

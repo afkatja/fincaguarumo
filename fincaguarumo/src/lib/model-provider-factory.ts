@@ -37,10 +37,10 @@ const modelConfigs: Record<string, ModelConfig> = {
     temperature: parseFloat(process.env.MAIN_MODEL_TEMPERATURE || "0.7"),
   },
 
-  // Evaluation model (without tools, uses cached data)
+  // Evaluation model (uses same generation model for introspection mode)
   evaluation: {
-    provider: (process.env.EVALUATOR_MODEL_PROVIDER as any) || "perplexity",
-    modelId: process.env.EVALUATOR_MODEL_ID || "sonar-pro",
+    provider: (process.env.EVALUATOR_MODEL_PROVIDER as any) || "mistral",
+    modelId: process.env.EVALUATOR_MODEL_ID || "mistral-large-latest",
     maxTokens: parseInt(process.env.EVALUATOR_MODEL_MAX_TOKENS || "2000"),
     temperature: parseFloat(process.env.EVALUATOR_MODEL_TEMPERATURE || "0.1"),
   },
@@ -68,10 +68,10 @@ export function createModelProvider(
       maxTokens = config.maxTokens
       break
     case "evaluation":
-      model = perplexity(config.modelId)
+      model = mistral(config.modelId)
       capabilities = {
         streaming: true,
-        tools: false, // Perplexity doesn't support function calling
+        tools: true, // Mistral supports function calling
         evaluation: true,
         generation: true,
       }

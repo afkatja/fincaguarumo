@@ -2,6 +2,7 @@ import { mistral } from "@ai-sdk/mistral"
 import { LanguageModelV3 } from "@ai-sdk/provider"
 import { streamText, tool, stepCountIs } from "ai"
 import z from "zod"
+import { detectUserIntent, UserIntent } from "../intent-detection"
 import { languages, locales } from "@/config"
 import { parse, isValid, format } from "date-fns"
 import { enUS, nl, es, ru, de } from "date-fns/locale"
@@ -115,6 +116,65 @@ import {
   cacheEvaluationData,
   getCachedEvaluationData,
 } from "@/lib/model-provider-factory"
+
+// Simple in-memory cache for availability data
+const availabilityCache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
+// Helper function to get cached availability or fetch new data
+async function getCachedAvailability(
+  checkIn: string,
+  checkOut: string,
+): Promise<any> {
+  const cacheKey = `${checkIn}-${checkOut}`
+  const cached = availabilityCache.get(cacheKey)
+
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log("Using cached availability data for:", cacheKey)
+    return cached.data
+  }
+
+  // Fetch fresh data
+  try {
+    const siteUrl =
+      process.env.NODE_ENV === "production"
+        ? process.env.NEXT_PUBLIC_SITE_URL || "https://fincaguarumo.local:3000"
+        : "https://localhost:3000"
+
+    console.log("Fetching fresh availability data for:", cacheKey)
+    const response = await fetch(`${siteUrl}/api/availability`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ checkIn, checkOut }),
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        `Availability API returned ${response.status}: ${response.statusText}`,
+      )
+    }
+
+    const data = await response.json()
+
+    // Cache the result
+    availabilityCache.set(cacheKey, { data, timestamp: Date.now() })
+
+    // Clean up old cache entries periodically
+    if (availabilityCache.size > 50) {
+      const now = Date.now()
+      for (const [key, value] of availabilityCache.entries()) {
+        if (now - value.timestamp > CACHE_DURATION) {
+          availabilityCache.delete(key)
+        }
+      }
+    }
+
+    return data
+  } catch (error) {
+    console.error("Error fetching availability:", error)
+    return { error: "Failed to check availability", isAvailable: false }
+  }
+}
 
 // Define Message type since AI SDK v6 doesn't export it directly
 type Message = {
@@ -254,11 +314,23 @@ Guidelines:
 - Cite sources: "(from availability check)"
 ${strictGuidelines}
 
-MANDATORY SEQUENCE for queries with dates/guests:
-1. ALWAYS call checkAvailability FIRST.
-2. If available and relevant to the user's query, call calculatePrice.  
-3. THEN call getPropertyInfo for highlights (ONLY if relevant for user's query).
-4. ONLY respond after all needed tools complete. Base facts ONLY on tool JSON.
+INTENT-BASED TOOL ROUTING (CRITICAL - READ FIRST):
+MATCH USER INTENT → CALL CORRECT TOOL → ANSWER ONLY FROM TOOL JSON:
+- AVAILABILITY QUERIES ("available", "dates", "nights"): checkAvailability ONLY
+- PRICING/DISCOUNT QUERIES ("price", "discount", "children", "cost"): checkPricingRules → calculatePrice (if dates provided)
+PROPERTY INFO ("amenities", "features"): getPropertyInfo ONLY
+BOOKING ("book", "reserve"): createBooking (collect all details first)
+
+RULES:
+- ONLY call tools matching CURRENT user question
+- NEVER call availability tools for discount/price questions
+- If no dates provided → NO availability check
+- Base response 100% on tool JSON output
+- If tool fails → "Unable to verify, contact us"
+
+MANDATORY CTA:
+ALWAYS end relevant responses with:
+"Ready to book? Reply with your dates and guest count."
 
 Your tasks:
 1. Answer questions directly and concisely
@@ -400,55 +472,9 @@ export const bookingTools = {
     }),
     execute: async ({ checkIn, checkOut }) => {
       try {
-        const siteUrl =
-          process.env.NODE_ENV === "production"
-            ? process.env.NEXT_PUBLIC_SITE_URL ||
-              "https://fincaguarumo.local:3000"
-            : "https://localhost:3000"
+        // Use the cached availability function
+        const data = await getCachedAvailability(checkIn, checkOut)
 
-        console.log("Using siteUrl:", siteUrl)
-        const response = await fetch(`${siteUrl}/api/availability`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ checkIn, checkOut }),
-        })
-
-        // Debug: Log response details
-        console.log("Availability API response status:", response.status)
-        console.log(
-          "Availability API response headers:",
-          Object.fromEntries(response.headers.entries()),
-        )
-
-        if (!response.ok) {
-          throw new Error(
-            `Availability API returned ${response.status}: ${response.statusText}`,
-          )
-        }
-
-        const contentType = response.headers.get("content-type")
-        console.log("Availability API content-type:", contentType)
-
-        if (!contentType || !contentType.includes("application/json")) {
-          // Get the actual response text for debugging
-          const responseText = await response.text()
-          console.error("Expected JSON response, got:", contentType)
-          console.error("Response body:", responseText.substring(0, 500))
-
-          // If we got HTML instead of JSON, it means the API route isn't working
-          // Return a fallback response
-          return {
-            error:
-              "API route not available - please check server configuration",
-            isAvailable: false,
-            checkIn,
-            checkOut,
-            conflictingRanges: [],
-            bookingConflicts: [],
-          }
-        }
-
-        const data = await response.json()
         return {
           isAvailable: data.isAvailable,
           checkIn,
@@ -556,18 +582,8 @@ export const bookingTools = {
     }),
     execute: async ({ language = "en" }) => {
       try {
-        // Fetch data from Sanity
-        const [tours, pages, posts] = await Promise.all([
-          extractAllTours(),
-          extractAllPages(),
-          extractAllPosts(),
-        ])
-
-        // Filter by language if specified
-        const languageTours = tours.filter((t: any) => t.language === language)
-        const languagePages = pages.filter((p: any) => p.language === language)
-        const languagePosts = posts.filter((p: any) => p.language === language)
-
+        // Optimized: Only fetch essential data, avoid heavy post-processing
+        // Return static property info instead of fetching all tours/pages/posts
         return {
           property: {
             name: "Villa Bruno",
@@ -579,9 +595,8 @@ export const bookingTools = {
             code: l.value,
             name: l.title,
           })),
-          tours: languageTours.length > 0 ? languageTours : tours.slice(0, 5),
-          pages: languagePages.length > 0 ? languagePages : pages.slice(0, 5),
-          posts: languagePosts.length > 0 ? languagePosts : posts.slice(0, 5),
+          // Note: Detailed tours/pages/posts omitted for speed
+          // Use checkAvailability and calculatePrice tools for specific booking info
         }
       } catch (error) {
         console.error("Error fetching property info:", error)
@@ -621,7 +636,7 @@ export const bookingTools = {
           }
         }
 
-        // Get property config for dynamic values and pricing rules
+        // Optimized: Use cached property config to avoid repeated Sanity calls
         const config = await extractPropertyConfig()
         const maxGuests = config?.property?.capacity || DEFAULT_MAX_GUESTS
         const pricingRules =
@@ -642,32 +657,18 @@ export const bookingTools = {
           bookingType: BOOKING_TYPE_VILLA,
         })
 
+        // Optimized: Return only essential pricing data, avoid heavy post-processing
         return {
           checkIn,
           checkOut,
           nights,
           guests: validGuests,
           maxGuests,
-          breakdown: {
-            basePricePerNight: pricing.basePrice,
-            pricePerNightWithGuests: pricing.priceForPeople,
-            pricePerNightWithVat: Math.round(pricing.priceWithVat * 100) / 100,
-          },
-          subtotal: {
-            nights: nights,
-            baseSubtotal:
-              Math.round(pricing.priceForPeople * nights * 100) / 100,
-            subtotalBeforeVat:
-              Math.round(pricing.priceForPeople * nights * 100) / 100,
-          },
-          appliedRules: pricing.appliedRules,
-          vat: {
-            rate: 13,
-            amount:
-              Math.round((pricing.total - pricing.total / 1.13) * 100) / 100,
-          },
           total: Math.round(pricing.total * 100) / 100,
           currency: "USD",
+          // Minimal breakdown for speed
+          basePrice: pricing.basePrice,
+          pricePerNight: Math.round(pricing.priceWithVat * 100) / 100,
         }
       } catch (error) {
         console.error("Error calculating price:", error)
@@ -675,6 +676,54 @@ export const bookingTools = {
       }
     },
   }),
+
+  generateCTA: tool({
+    description:
+      "Generate booking call-to-action based on conversation context",
+    inputSchema: z.object({
+      hasAvailability: z.boolean(),
+      hasPricing: z.boolean(),
+      userIntent: z.string(),
+    }),
+    execute: ({ hasAvailability, hasPricing, userIntent }) => ({
+      cta:
+        hasAvailability && hasPricing
+          ? "Ready to book? Reply: 'Book [dates] for [guests] people'"
+          : "Need dates and guest count to check availability and pricing.",
+    }),
+  }),
+}
+
+// Filter tools based on detected user intent
+export function filterToolsByIntent(intent: UserIntent) {
+  const intentToolMap: Record<UserIntent, string[]> = {
+    availability: ["checkAvailability", "getBookings"],
+    pricing: ["calculatePrice"],
+    payment: ["generateCTA"], // Payment info is in preloaded data
+    cancellation: ["generateCTA"], // Cancellation info is in preloaded data
+    logistics: ["generateCTA"], // Logistics info is in preloaded data
+    tours: ["generateCTA"], // Tour info is in preloaded data
+    reviews: ["generateCTA"], // Review info is in preloaded data
+    amenities: ["generateCTA"], // Amenity info is in preloaded data
+    general: ["generateCTA"], // General queries use preloaded data
+  }
+
+  const relevantToolNames = intentToolMap[intent] || ["generateCTA"]
+
+  const filteredTools: any = {}
+  relevantToolNames.forEach(toolName => {
+    if (bookingTools[toolName as keyof typeof bookingTools]) {
+      filteredTools[toolName] =
+        bookingTools[toolName as keyof typeof bookingTools]
+    }
+  })
+
+  // Always include generateCTA as fallback
+  if (!filteredTools.generateCTA) {
+    filteredTools.generateCTA = bookingTools.generateCTA
+  }
+
+  return filteredTools
 }
 export async function createChatStream({
   messages,
@@ -721,7 +770,7 @@ export async function createChatStream({
     const result = streamText({
       model: model,
       messages: allMessages,
-      tools: bookingTools,
+      tools: tools || bookingTools,
       temperature: setTemperature(allMessages),
       stopWhen: stepCountIs(MAX_STEPS),
     })
@@ -742,7 +791,7 @@ export async function createChatStream({
  * Introspection mode evaluation using generation model when evaluation model fails with 401
  * Uses the same chain-of-thought mechanism as the evaluation model
  */
-async function introspectionModeEvaluation({
+export async function introspectionModeEvaluation({
   response,
   toolOutputs,
   sanityData,
@@ -862,9 +911,11 @@ Respond with JSON:
       introspectionText += chunk
     }
 
-    // Parse JSON response with same robust parsing as main evaluation
+    // Parse JSON response with robust error handling
     try {
       let cleanText = introspectionText.trim()
+
+      // Remove markdown code blocks
       if (cleanText.startsWith("```json")) {
         cleanText = cleanText
           .replace(/^```json\s*\n?/, "")
@@ -874,6 +925,18 @@ Respond with JSON:
           .replace(/^```\s*\n?/, "")
           .replace(/\n?```\s*$/, "")
       }
+
+      // Fix common JSON parsing issues
+      cleanText = cleanText
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, "") // Remove control characters
+        .replace(/\\n/g, "\\\\n") // Escape newlines
+        .replace(/\\r/g, "\\\\r") // Escape carriage returns
+        .replace(/\\t/g, "\\\\t") // Escape tabs
+        .replace(/\\"/g, '\\\\"') // Fix quotes
+        .replace(/,\s*}/g, "}") // Remove trailing commas
+        .replace(/,\s*]/g, "]") // Remove trailing commas in arrays
+
+      console.log("Cleaned JSON text:", cleanText.substring(0, 200))
 
       const parsed = JSON.parse(cleanText)
       if (parsed.isRelevant === undefined) {
@@ -889,6 +952,8 @@ Respond with JSON:
       console.error(
         "Failed to parse introspection evaluation JSON:",
         parseError,
+        "Raw text was:",
+        introspectionText.substring(0, 500),
       )
 
       // Return safe fallback for introspection mode

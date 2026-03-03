@@ -27,6 +27,7 @@ import {
   buildSemanticRAGContext,
   validateSemanticRAGSetup,
 } from "./semantic-rag/semantic-context-builder"
+import { detectUserIntent, enhanceQuery } from "./intent-detection"
 
 export interface RAGContext {
   faqs?: any[]
@@ -41,102 +42,6 @@ export interface RAGContext {
   paymentMethods?: any[]
   cancellationPolicy?: any
   logistics?: any[]
-}
-
-// Intent detection for better context selection
-function detectUserIntent(query: string): string {
-  const lowerQuery = query.toLowerCase()
-
-  if (
-    lowerQuery.includes("amenit") ||
-    lowerQuery.includes("facilit") ||
-    lowerQuery.includes("feature") ||
-    lowerQuery.includes("pool") ||
-    lowerQuery.includes("wifi") ||
-    lowerQuery.includes("kitchen")
-  ) {
-    return "amenities"
-  }
-  if (
-    lowerQuery.includes("price") ||
-    lowerQuery.includes("cost") ||
-    lowerQuery.includes("fee") ||
-    lowerQuery.includes("discount") ||
-    lowerQuery.includes("season") ||
-    lowerQuery.includes("rate")
-  ) {
-    return "pricing"
-  }
-  if (
-    lowerQuery.includes("payment") ||
-    lowerQuery.includes("pay") ||
-    lowerQuery.includes("card") ||
-    lowerQuery.includes("stripe") ||
-    lowerQuery.includes("paypal")
-  ) {
-    return "payment"
-  }
-  if (
-    lowerQuery.includes("cancel") ||
-    lowerQuery.includes("refund") ||
-    lowerQuery.includes("modification") ||
-    lowerQuery.includes("change")
-  ) {
-    return "cancellation"
-  }
-  if (
-    lowerQuery.includes("check") ||
-    lowerQuery.includes("arrival") ||
-    lowerQuery.includes("departure") ||
-    lowerQuery.includes("transport") ||
-    lowerQuery.includes("direction") ||
-    lowerQuery.includes("parking")
-  ) {
-    return "logistics"
-  }
-  if (
-    lowerQuery.includes("tour") ||
-    lowerQuery.includes("activity") ||
-    lowerQuery.includes("excursion") ||
-    lowerQuery.includes("trip")
-  ) {
-    return "tours"
-  }
-  if (
-    lowerQuery.includes("review") ||
-    lowerQuery.includes("rating") ||
-    lowerQuery.includes("guest") ||
-    lowerQuery.includes("experience")
-  ) {
-    return "reviews"
-  }
-
-  return "general"
-}
-
-// Enhanced query matching with synonyms and related terms
-function enhanceQuery(query: string): string[] {
-  const lowerQuery = query.toLowerCase()
-  const terms = [lowerQuery]
-
-  // Add synonyms based on detected intent
-  if (lowerQuery.includes("amenit")) {
-    terms.push("facilities", "features", "equipment", "conveniences")
-  }
-  if (lowerQuery.includes("price")) {
-    terms.push("cost", "rate", "fee", "pricing", "rates")
-  }
-  if (lowerQuery.includes("payment")) {
-    terms.push("pay", "transaction", "charge", "billing")
-  }
-  if (lowerQuery.includes("cancel")) {
-    terms.push("refund", "cancellation", "modify", "change")
-  }
-  if (lowerQuery.includes("check")) {
-    terms.push("arrival", "departure", "checkin", "checkout")
-  }
-
-  return terms
 }
 
 // Build context based on user query and page context
