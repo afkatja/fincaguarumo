@@ -10,7 +10,7 @@ const FEEDS: Record<string, string | undefined> = {
   airbnb: process.env.AIRBNB_ICAL,
   booking: process.env.BOOKING_ICAL,
   vrbo: process.env.VRBO_ICAL,
-  yourrentals: process.env.YOURRENTALS_ICAL,
+  // yourrentals: process.env.YOURRENTALS_ICAL,
   // expedia: process.env.ICAL_EXPEDIA,
 }
 
@@ -209,9 +209,9 @@ function mergeBookings(bookings: Booking[]) {
 async function saveBookingToSupabase(booking: Booking & { source: string }) {
   try {
     // Log what we're trying to save
-    console.log(
-      `Saving booking: ${booking.guestName || "Unknown"} from ${booking.source}, UID: ${booking.uid}`,
-    )
+    // console.log(
+    //   `Saving booking: ${booking.guestName || "Unknown"} from ${booking.source}, UID: ${booking.uid}`,
+    // )
 
     // Check if booking already exists by UID
     const { data: existing, error: checkError } = await supabase
@@ -249,11 +249,11 @@ async function saveBookingToSupabase(booking: Booking & { source: string }) {
     // bookingData.currency = "usd"
     // bookingData.guests = (booking as any).guests || 1
 
-    console.log("Inserting booking data:", JSON.stringify(bookingData, null, 2))
+    // console.log("Inserting booking data:", JSON.stringify(bookingData, null, 2))
 
     if (existing) {
       // Update existing booking
-      console.log(`Updating existing booking with ID: ${existing.id}`)
+      // console.log(`Updating existing booking with ID: ${existing.id}`)
       const { error } = await supabase
         .from("bookings")
         .update(bookingData)
@@ -263,7 +263,7 @@ async function saveBookingToSupabase(booking: Booking & { source: string }) {
         console.error("Error updating booking in Supabase:", error)
         return null
       }
-      console.log(`Successfully updated booking: ${existing.id}`)
+      // console.log(`Successfully updated booking: ${existing.id}`)
       return existing.id
     } else {
       // Insert new booking
@@ -276,7 +276,7 @@ async function saveBookingToSupabase(booking: Booking & { source: string }) {
         console.error("Error inserting booking to Supabase:", error)
         return null
       }
-      console.log(`Successfully inserted new booking: ${data?.[0]?.id}`)
+      // console.log(`Successfully inserted new booking: ${data?.[0]?.id}`)
       return data?.[0]?.id
     }
   } catch (error) {
@@ -295,9 +295,9 @@ async function updateAvailabilityTable(
 ): Promise<void> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(
-        `Updating availability table (attempt ${attempt}/${maxRetries}) with ${bookings.length} bookings`,
-      )
+      // console.log(
+      //   `Updating availability table (attempt ${attempt}/${maxRetries}) with ${bookings.length} bookings`,
+      // )
 
       // First, remove old availability entries that are in the past
       const today = new Date().toISOString()
@@ -405,9 +405,9 @@ async function updateAvailabilityTable(
         }
       }
 
-      console.log(
-        `Availability table update completed: ${successCount} successful, ${errorCount} errors`,
-      )
+      // console.log(
+      //   `Availability table update completed: ${successCount} successful, ${errorCount} errors`,
+      // )
 
       if (errorCount === 0 || attempt === maxRetries) {
         return // Success or final attempt, exit the function
@@ -456,7 +456,7 @@ export async function GET() {
         allBookings.push(...bookings)
 
         // Save each parsed booking to Supabase
-        console.log(`Processing ${bookings.length} bookings from ${name}`)
+        // console.log(`Processing ${bookings.length} bookings from ${name}`)
         let savedCount = 0
         let skippedCount = 0
         let errorCount = 0
@@ -468,7 +468,7 @@ export async function GET() {
             if (!uid) {
               const hashInput = `${name}-${booking.start}-${booking.end}`
               uid = hashIcs(hashInput).substring(0, 32)
-              console.log(`Generated UID for booking: ${uid}`)
+              // console.log(`Generated UID for booking: ${uid}`)
             }
 
             const result = await saveBookingToSupabase({
@@ -488,9 +488,9 @@ export async function GET() {
           }
         }
 
-        console.log(
-          `Saved ${savedCount}, skipped ${skippedCount}, errors ${errorCount} bookings from ${name}`,
-        )
+        // console.log(
+        //   `Saved ${savedCount}, skipped ${skippedCount}, errors ${errorCount} bookings from ${name}`,
+        // )
       } catch (err) {
         console.error(`Error fetching/parsing ${name}:`, err)
         // continue — don't fail the whole response if one feed fails
@@ -513,7 +513,7 @@ export async function GET() {
     // This is critical - always update availability even if some bookings fail
     try {
       await updateAvailabilityTable(deduped)
-      console.log("Successfully updated availability table")
+      // console.log("Successfully updated availability table")
     } catch (availabilityError) {
       console.error("Failed to update availability table:", availabilityError)
       // Continue anyway - the API should still return the booking data
