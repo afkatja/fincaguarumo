@@ -5,6 +5,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
 
+// Sync caching to prevent multiple syncs within short timeframes
+const lastSyncTime = { timestamp: 0 }
+const SYNC_COOLDOWN = 5 * 60 * 1000 // 5 minutes in milliseconds
+
 /**
  * POST: Check if a date range is available
  * Request body: { checkIn: string, checkOut: string }
@@ -20,36 +24,45 @@ export async function POST(request: Request) {
       )
     }
 
-    // First, sync with the merged iCal endpoint to get latest bookings
-    try {
-      // In production, use the same host as the current request
-      // In development, use localhost
-      let siteUrl: string
+    // Sync with the merged iCal endpoint only if cooldown has passed
+    const now = Date.now()
+    if (now - lastSyncTime.timestamp > SYNC_COOLDOWN) {
+      try {
+        // In production, use the same host as the current request
+        // In development, use localhost
+        let siteUrl: string
 
-      if (process.env.NODE_ENV === "production") {
-        // Get the current request URL to avoid self-calling issues
-        const requestUrl = new URL(request.url)
-        siteUrl = `${requestUrl.protocol}//${requestUrl.host}`
-      } else {
-        siteUrl = "https://localhost:3000"
+        if (process.env.NODE_ENV === "production") {
+          // Get the current request URL to avoid self-calling issues
+          const requestUrl = new URL(request.url)
+          siteUrl = `${requestUrl.protocol}//${requestUrl.host}`
+        } else {
+          siteUrl = "https://localhost:3000"
+        }
+
+        const syncResponse = await fetch(`${siteUrl}/api/ical/merged`, {
+          method: "GET",
+        })
+
+        // Only process if we got a successful response
+        if (!syncResponse.ok) {
+          console.warn(
+            `Sync endpoint returned ${syncResponse.status}: ${syncResponse.statusText}`,
+          )
+        } else {
+          console.log("Bookings sync completed successfully")
+          lastSyncTime.timestamp = now // Update last sync time only on success
+        }
+      } catch (syncError) {
+        console.warn("Error syncing bookings (continuing anyway):", syncError)
+        // Continue anyway - we'll check what we have
       }
-
-
-      const syncResponse = await fetch(`${siteUrl}/api/ical/merged`, {
-        method: "GET",
-      })
-
-      // Only process if we got a successful response
-      if (!syncResponse.ok) {
-        console.warn(
-          `Sync endpoint returned ${syncResponse.status}: ${syncResponse.statusText}`,
-        )
-      } else {
-        console.log("Bookings sync completed successfully")
-      }
-    } catch (syncError) {
-      console.warn("Error syncing bookings (continuing anyway):", syncError)
-      // Continue anyway - we'll check what we have
+    } else {
+      console.log(
+        "Skipping sync - using cached data (last sync:",
+        new Date(lastSyncTime.timestamp).toISOString(),
+        ")",
+      )
     }
 
     // Fetch availability data from Supabase
@@ -89,7 +102,7 @@ export async function POST(request: Request) {
       bookingConflicts: bookingsData || [],
     }
 
-    console.log("Returning availability response:", responseData)
+    // console.log("Returning availability response:", responseData)
     return NextResponse.json(responseData)
   } catch (error) {
     console.error("Error in availability check on supabase:", error)
