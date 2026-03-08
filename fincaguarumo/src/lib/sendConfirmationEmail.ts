@@ -21,6 +21,20 @@ export async function sendConfirmationEmail({
   if (!customerDetails || !bookingDetails) {
     throw new Error("Missing customer or booking details")
   }
+
+  // Compute fallback-aware total price for consistent handling
+  const displayTotalPrice =
+    bookingDetails.totalPrice ??
+    (bookingDetails.basePrice && bookingDetails.guests
+      ? Math.round(
+          bookingDetails.basePrice *
+            1.13 *
+            (bookingDetails.type === BOOKING_TYPE.tour
+              ? bookingDetails.guests
+              : 1),
+        )
+      : 0)
+
   try {
     const getBookingType = () => {
       return bookingDetails.type === BOOKING_TYPE.villa ? "Villa" : "Tour"
@@ -30,7 +44,7 @@ export async function sendConfirmationEmail({
       const commonDetails = `
         <li>Date: ${safeFormatForEmail(bookingDetails.date)}</li>
         <li>Number of Guests: ${bookingDetails.guests}</li>
-        <li>Total Amount: $${bookingDetails.totalPrice || (bookingDetails.basePrice && bookingDetails.guests ? Math.round(bookingDetails.basePrice * 1.13 * (bookingDetails.type === BOOKING_TYPE.tour ? bookingDetails.guests : 1)) : 0)}</li>      `
+        <li>Total Amount: $${displayTotalPrice}</li>      `
 
       if (bookingDetails.type === BOOKING_TYPE.villa) {
         return `
@@ -71,7 +85,7 @@ export async function sendConfirmationEmail({
             }
             - Date: ${safeFormatForEmail(bookingDetails.date)}
             - Number of Guests: ${bookingDetails.guests}
-            - Total Amount: $${bookingDetails.totalPrice}
+            - Total Amount: $${displayTotalPrice}
 
             We look forward to welcoming you!
 
@@ -114,7 +128,7 @@ export async function sendConfirmationEmail({
               - Date: ${safeFormatForEmail(bookingDetails.date)}`
             }
               - Number of Guests: ${bookingDetails.guests}
-              - Total Amount: $${bookingDetails.totalPrice}`,
+              - Total Amount: $${displayTotalPrice}`,
       html: `
               <h1>New ${getBookingType()} Booking Received</h1>
               <h2>Customer Details:</h2>
@@ -152,7 +166,7 @@ export async function sendConfirmationEmail({
             account_logo: "https://fincaguarumo.com/logo.jpg",
             account_logo_single: "https://fincaguarumo.com/logo-single.png",
             name: customerDetails.name,
-            total_price: `$${bookingDetails.totalPrice}`,
+            total_price: `$${displayTotalPrice}`,
             guests_number: bookingDetails.guests,
             support_email: process.env.CONTACT_EMAIL!,
             ...(bookingDetails.type === BOOKING_TYPE.villa
