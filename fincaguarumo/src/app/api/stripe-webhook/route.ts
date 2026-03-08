@@ -148,6 +148,9 @@ export async function POST(request: NextRequest) {
           )
 
           // Save to Supabase with all required fields
+          let bookingSaved = false
+          let availabilityUpdated = false
+
           try {
             const siteUrl =
               process.env.NEXT_PUBLIC_SITE_URL ||
@@ -174,6 +177,7 @@ export async function POST(request: NextRequest) {
             })
 
             if (supabaseResponse.ok) {
+              bookingSaved = true
               console.log("Booking saved to Supabase successfully")
 
               // Also update availability table to mark dates as unavailable
@@ -194,6 +198,7 @@ export async function POST(request: NextRequest) {
                 )
 
                 if (availabilityResponse.ok) {
+                  availabilityUpdated = true
                   console.log("Availability updated successfully")
                 } else {
                   console.error("Failed to update availability")
@@ -209,18 +214,34 @@ export async function POST(request: NextRequest) {
             console.error("Error saving booking to Supabase:", supabaseError)
           }
 
-          // Send success notification
+          // Send notification based on operation results
           const checkInFormatted = isNaN(bookingDetails.checkIn.getTime())
             ? "TBD"
             : formatForEmail(bookingDetails.checkIn)
           const checkOutFormatted = isNaN(bookingDetails.checkOut.getTime())
             ? "TBD"
             : formatForEmail(bookingDetails.checkOut)
-          await sendErrorEmail({
-            subject: "New Booking Successfully Created",
-            error: "Booking successful",
-            details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${checkInFormatted}, Check-out: ${checkOutFormatted}`,
-          })
+
+          if (bookingSaved && availabilityUpdated) {
+            // Complete success
+            await sendErrorEmail({
+              subject: "New Booking Successfully Created",
+              error: "Booking successful",
+              details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${checkInFormatted}, Check-out: ${checkOutFormatted}`,
+            })
+          } else {
+            // Partial or complete failure
+            const failedOperations = []
+            if (!bookingSaved) failedOperations.push("Supabase booking save")
+            if (!availabilityUpdated)
+              failedOperations.push("availability update")
+
+            await sendErrorEmail({
+              subject: `Booking ${bookingSaved ? "Partially" : "Fully"} Failed - ${failedOperations.join(" & ")}`,
+              error: "Booking processing incomplete",
+              details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${checkInFormatted}, Check-out: ${checkOutFormatted}, Failed operations: ${failedOperations.join(", ")}`,
+            })
+          }
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error)
