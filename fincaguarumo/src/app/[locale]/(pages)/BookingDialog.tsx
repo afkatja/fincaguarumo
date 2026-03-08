@@ -36,18 +36,21 @@ const BookingDialog = ({
     setDialogId(dialogId || null)
   }, [dialogId, setDialogId])
 
-  const closeHandler = () => {
-    // Reset checkIn and checkOut dates when dialog is closed
-    setBookingData({
-      ...bookingData,
-      bookingDetails: {
-        ...bookingData.bookingDetails,
-        checkIn: initialBookingData.bookingDetails.checkIn,
-        checkOut: initialBookingData.bookingDetails.checkOut,
-      },
-    })
-    setOpen(!open)
-    setPaymentStep(false)
+  const handleOpenChange = (open: boolean) => {
+    setOpen(open)
+
+    // Only reset booking data and payment step when dialog is closing
+    if (!open) {
+      setBookingData({
+        ...bookingData,
+        bookingDetails: {
+          ...bookingData.bookingDetails,
+          checkIn: initialBookingData.bookingDetails.checkIn,
+          checkOut: initialBookingData.bookingDetails.checkOut,
+        },
+      })
+      setPaymentStep(false)
+    }
   }
 
   const buttonText =
@@ -55,7 +58,7 @@ const BookingDialog = ({
     getInternationalizedValue(dialogData?.cta, locale, "Reserve")
 
   return (
-    <Dialog open={open} onOpenChange={() => closeHandler()} key="order-dialog">
+    <Dialog open={open} onOpenChange={handleOpenChange} key="order-dialog">
       <DialogTrigger asChild>
         <Button
           name="booking-button"
@@ -72,7 +75,7 @@ const BookingDialog = ({
         title={dialogOptions.title}
         paymentStep={paymentStep}
         onBookingFormSubmit={() => setPaymentStep(true)}
-        onCancel={closeHandler}
+        onCancel={() => handleOpenChange(false)}
         bookingType={bookingType}
         locale={locale}
       />
