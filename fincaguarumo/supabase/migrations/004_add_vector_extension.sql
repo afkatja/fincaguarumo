@@ -68,7 +68,7 @@ RETURNS TABLE (
   content TEXT,
   metadata JSONB,
   similarity DOUBLE PRECISION
-) AS $
+) AS $$
 BEGIN
   RETURN QUERY
   SELECT 
@@ -87,7 +87,7 @@ BEGIN
   ORDER BY similarity DESC
   LIMIT max_results;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Create a function for hybrid search (semantic + keyword)
 CREATE OR REPLACE FUNCTION hybrid_search(
@@ -110,7 +110,7 @@ RETURNS TABLE (
   similarity DOUBLE PRECISION,
   keyword_score DOUBLE PRECISION,
   combined_score DOUBLE PRECISION
-) AS $
+) AS $$
 BEGIN
   RETURN QUERY
   WITH 
@@ -167,4 +167,4 @@ BEGIN
   ORDER BY combined_score DESC
   LIMIT max_results;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
