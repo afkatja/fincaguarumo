@@ -336,7 +336,8 @@ export async function DELETE(request: Request) {
 
     // First get the booking to find the uid and check ownership
     let bookingUid = uid
-    if (id && !uid) {
+    if (id) {
+      // Always fetch from database when id is provided, never trust incoming uid
       const { data: booking, error: fetchError } = await supabase
         .from("bookings")
         .select("uid")
