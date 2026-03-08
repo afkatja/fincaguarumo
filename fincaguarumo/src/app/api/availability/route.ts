@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import {
+  verifyAdminAuth,
+  createSupabaseAdmin,
+  AuthUser,
+} from "../../../lib/auth"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Use admin client for protected operations
+const supabaseAdmin = createSupabaseAdmin()
 
 // Sync caching to prevent multiple syncs within short timeframes
 const lastSyncTime = { timestamp: 0 }
@@ -145,6 +153,17 @@ export async function GET() {
  */
 export async function PUT(request: Request) {
   try {
+    // Verify admin authentication
+    let authUser: AuthUser
+    try {
+      authUser = await verifyAdminAuth(request)
+    } catch (error: any) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status || 500 },
+      )
+    }
+
     const { startDate, endDate, isAvailable, reason, bookingUid } =
       await request.json()
 
@@ -155,8 +174,8 @@ export async function PUT(request: Request) {
       )
     }
 
-    // Check if this range already exists
-    const { data: existing } = await supabase
+    // Check if this range already exists using admin client
+    const { data: existing } = await supabaseAdmin
       .from("availability")
       .select("id")
       .eq("start_date", startDate)
@@ -180,8 +199,8 @@ export async function PUT(request: Request) {
     }
 
     if (existing) {
-      // Update existing entry
-      const { data, error } = await supabase
+      // Update existing entry using admin client
+      const { data, error } = await supabaseAdmin
         .from("availability")
         .update(availabilityData)
         .eq("id", existing.id)
@@ -209,7 +228,7 @@ export async function PUT(request: Request) {
         insertData.booking_uid = bookingUid
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from("availability")
         .insert(insertData)
         .select()
@@ -236,6 +255,17 @@ export async function PUT(request: Request) {
  */
 export async function DELETE(request: Request) {
   try {
+    // Verify admin authentication
+    let authUser: AuthUser
+    try {
+      authUser = await verifyAdminAuth(request)
+    } catch (error: any) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status || 500 },
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 
@@ -243,7 +273,10 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "id is required" }, { status: 400 })
     }
 
-    const { error } = await supabase.from("availability").delete().eq("id", id)
+    const { error } = await supabaseAdmin
+      .from("availability")
+      .delete()
+      .eq("id", id)
 
     if (error) {
       console.error("Error deleting availability entry from supabase:", error)
