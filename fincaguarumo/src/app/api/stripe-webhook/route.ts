@@ -4,6 +4,7 @@ import { sendConfirmationEmail } from "@/lib/sendConfirmationEmail"
 import { setBookings } from "../../../lib/setBookings"
 import { sendErrorEmail } from "../../../lib/sendErrorEmail"
 import { parsePropertyDate, formatForEmail } from "../../../lib/dateUtils"
+import { createSupabaseAdmin } from "@/lib/auth"
 
 export const runtime = "nodejs"
 
@@ -182,26 +183,27 @@ export async function POST(request: NextRequest) {
 
               // Also update availability table to mark dates as unavailable
               try {
-                const availabilityResponse = await fetch(
-                  `${siteUrl}/api/availability`,
-                  {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      startDate: bookingDetails.checkIn.toISOString(),
-                      endDate: bookingDetails.checkOut.toISOString(),
-                      isAvailable: false,
-                      reason: `Booked via Direct - ${customerDetails.name}`,
-                      bookingUid: event.data.object.id,
-                    }),
-                  },
-                )
+                const supabaseAdmin = createSupabaseAdmin()
 
-                if (availabilityResponse.ok) {
+                const { error: availabilityError } = await supabaseAdmin
+                  .from("availability")
+                  .insert({
+                    start_date: bookingDetails.checkIn.toISOString(),
+                    end_date: bookingDetails.checkOut.toISOString(),
+                    is_available: false,
+                    reason: `Booked via Direct - ${customerDetails.name}`,
+                    booking_uid: event.data.object.id,
+                    updated_at: new Date().toISOString(),
+                  })
+
+                if (!availabilityError) {
                   availabilityUpdated = true
                   console.log("Availability updated successfully")
                 } else {
-                  console.error("Failed to update availability")
+                  console.error(
+                    "Failed to update availability:",
+                    availabilityError,
+                  )
                 }
               } catch (availabilityError) {
                 console.error("Error updating availability:", availabilityError)
