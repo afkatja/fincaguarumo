@@ -87,19 +87,32 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
   RETURN QUERY
+  WITH nearest_candidates AS (
+    SELECT 
+      ce.id,
+      ce.content_id,
+      ce.content_type,
+      ce.language,
+      ce.content,
+      ce.metadata,
+      (ce.embedding <=> query_embedding) as distance
+    FROM content_embeddings ce
+    WHERE 
+      (content_type_filter IS NULL OR ce.content_type = content_type_filter)
+      AND (language_filter IS NULL OR ce.language = language_filter)
+    ORDER BY ce.embedding <=> query_embedding
+    LIMIT max_results * 2  -- Get more candidates to account for filtering
+  )
   SELECT 
-    ce.id,
-    ce.content_id,
-    ce.content_type,
-    ce.language,
-    ce.content,
-    ce.metadata,
-    (1 - (ce.embedding <=> query_embedding))::DOUBLE PRECISION as similarity
-  FROM content_embeddings ce
-  WHERE 
-    (content_type_filter IS NULL OR ce.content_type = content_type_filter)
-    AND (language_filter IS NULL OR ce.language = language_filter)
-    AND (1 - (ce.embedding <=> query_embedding)) >= match_threshold
+    nc.id,
+    nc.content_id,
+    nc.content_type,
+    nc.language,
+    nc.content,
+    nc.metadata,
+    (1 - nc.distance)::DOUBLE PRECISION as similarity
+  FROM nearest_candidates nc
+  WHERE (1 - nc.distance) >= match_threshold
   ORDER BY similarity DESC
   LIMIT max_results;
 END;
@@ -131,20 +144,33 @@ BEGIN
   RETURN QUERY
   WITH 
   semantic_results AS (
+    WITH nearest_candidates AS (
+      SELECT 
+        ce.id,
+        ce.content_id,
+        ce.content_type,
+        ce.language,
+        ce.content,
+        ce.metadata,
+        (ce.embedding <=> query_embedding) as distance
+      FROM content_embeddings ce
+      WHERE 
+        (content_type_filter IS NULL OR ce.content_type = content_type_filter)
+        AND (language_filter IS NULL OR ce.language = language_filter)
+      ORDER BY ce.embedding <=> query_embedding
+      LIMIT max_results * 2  -- Get more candidates to account for filtering
+    )
     SELECT 
-      ce.id,
-      ce.content_id,
-      ce.content_type,
-      ce.language,
-      ce.content,
-      ce.metadata,
-      (1 - (ce.embedding <=> query_embedding))::DOUBLE PRECISION as semantic_similarity,
+      nc.id,
+      nc.content_id,
+      nc.content_type,
+      nc.language,
+      nc.content,
+      nc.metadata,
+      (1 - nc.distance)::DOUBLE PRECISION as semantic_similarity,
       0.0::DOUBLE PRECISION as keyword_score
-    FROM content_embeddings ce
-    WHERE 
-      (content_type_filter IS NULL OR ce.content_type = content_type_filter)
-      AND (language_filter IS NULL OR ce.language = language_filter)
-      AND (1 - (ce.embedding <=> query_embedding)) >= match_threshold
+    FROM nearest_candidates nc
+    WHERE (1 - nc.distance) >= match_threshold
   ),
   keyword_results AS (
     SELECT 
