@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
 import { formatForEmail } from "./dateUtils"
 import { BOOKING_TYPE, BookingData } from "../types"
+import { VAT_RATE } from "./pricingEngine"
+
+const TAX_RATE = 1 + VAT_RATE
 
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_TOKEN || "",
@@ -24,11 +27,11 @@ export async function sendConfirmationEmail({
 
   // Compute fallback-aware total price for consistent handling
   const displayTotalPrice =
-    bookingDetails.totalPrice ??
+    bookingDetails.totalPrice ||
     (bookingDetails.basePrice && bookingDetails.guests
       ? Math.round(
           bookingDetails.basePrice *
-            1.13 *
+            TAX_RATE *
             (bookingDetails.type === BOOKING_TYPE.tour
               ? bookingDetails.guests
               : 1),
