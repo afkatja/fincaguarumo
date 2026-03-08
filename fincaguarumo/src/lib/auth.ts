@@ -47,21 +47,16 @@ export async function verifyUserAuth(request: Request): Promise<AuthUser> {
       throw authError
     }
 
-    // Check admin status from metadata or users table
-    let isAdmin = false
-    if (user.user_metadata?.is_admin === true) {
-      isAdmin = true
-    } else {
-      // Check the users table for admin status
-      const { data: userData, error: userError } = await supabaseAdmin
-        .from("users")
-        .select("is_admin")
-        .eq("id", user.id)
-        .single()
+    // Check admin status from database only (trusted source)
+    const { data: userData, error: userError } = await supabaseAdmin
+      .from("users")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single()
 
-      if (!userError && userData) {
-        isAdmin = userData.is_admin
-      }
+    let isAdmin = false
+    if (!userError && userData) {
+      isAdmin = userData.is_admin
     }
 
     return {
@@ -112,17 +107,7 @@ export async function verifyAdminAuth(request: Request): Promise<AuthUser> {
       throw authError
     }
 
-    // Check if user has admin rights
-    // First, check if there's an is_admin claim in the user metadata
-    if (user.user_metadata?.is_admin === true) {
-      return {
-        id: user.id,
-        email: user.email,
-        is_admin: true,
-      }
-    }
-
-    // If not in metadata, check the users table (you may need to create this table)
+    // Check admin status from database only (trusted source)
     const { data: userData, error: userError } = await supabaseAdmin
       .from("users")
       .select("is_admin")
