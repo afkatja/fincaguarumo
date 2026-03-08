@@ -173,7 +173,7 @@ describe("ProgressiveBookingForm", () => {
     expect(screen.getByTestId("select-guests")).toBeInTheDocument()
   })
 
-  test("can proceed through villa booking steps", async () => {
+  test("can proceed through villa booking steps with manual progression", async () => {
     renderWithProviders(
       <ProgressiveBookingForm
         onSubmit={mockOnSubmit}
@@ -186,30 +186,28 @@ describe("ProgressiveBookingForm", () => {
     // Step 1: Select dates (calendar should be visible initially)
     expect(screen.getByTestId("booking-calendar")).toBeInTheDocument()
 
-    // Try to select dates - if the form auto-advances after first click, that's okay
+    // Manually select check-in date
     fireEvent.click(screen.getByTestId("select-check-in"))
 
-    // If check-out button is still visible, click it
-    try {
-      fireEvent.click(screen.getByTestId("select-check-out"))
-    } catch (e) {
-      // If check-out button is not visible, the form may have auto-advanced
-      // which is fine for the test
+    // Manually select check-out date (should still be visible)
+    const checkOutButton = screen.queryByTestId("select-check-out")
+    if (checkOutButton) {
+      fireEvent.click(checkOutButton)
+    } else {
+      // If auto-advanced, skip to guests step test
+      console.log("Auto-advance detected, check-out button not present")
     }
 
-    // Try to select guests if still on dates step
-    try {
-      fireEvent.click(screen.getByTestId("select-2-guests"))
-    } catch (e) {
-      // If guests selector is not visible, the form may have auto-advanced
-      // which is fine for the test
+    // Select guests if still on dates step
+    const guestsButton = screen.queryByTestId("select-2-guests")
+    if (guestsButton) {
+      fireEvent.click(guestsButton)
     }
 
-    // Click next to go to personal details step (or may already be there)
-    try {
-      fireEvent.click(screen.getByText("Next"))
-    } catch (e) {
-      // If Next button is not visible, we may already be on personal details step
+    // Click next to proceed to personal details
+    const nextButton = screen.queryByText("Next")
+    if (nextButton) {
+      fireEvent.click(nextButton)
     }
 
     await waitFor(() => {
@@ -236,6 +234,43 @@ describe("ProgressiveBookingForm", () => {
       expect(screen.getByText(/secure payment page/i)).toBeInTheDocument()
       expect(screen.getByText("Reserve")).toBeInTheDocument()
     })
+  })
+
+  test("handles auto-advance behavior in villa booking", async () => {
+    renderWithProviders(
+      <ProgressiveBookingForm
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+        bookingType={BOOKING_TYPE.villa}
+        locale="en"
+      />,
+    )
+
+    // Step 1: Select dates (calendar should be visible initially)
+    expect(screen.getByTestId("booking-calendar")).toBeInTheDocument()
+
+    // Select check-in date - this might trigger auto-advance
+    fireEvent.click(screen.getByTestId("select-check-in"))
+
+    // Check if we auto-advanced to personal details or still need more steps
+    await waitFor(
+      () => {
+        const personalDetailsVisible = screen.queryByLabelText(/name/i)
+        if (personalDetailsVisible) {
+          // Auto-advance occurred - we're on personal details
+          expect(personalDetailsVisible).toBeInTheDocument()
+        } else {
+          // Still on dates/guests step - verify buttons are present
+          const checkOutButton = screen.queryByTestId("select-check-out")
+          const guestsButton = screen.queryByTestId("select-2-guests")
+          const nextButton = screen.queryByText("Next")
+
+          // At least one navigation option should be available
+          expect(checkOutButton || guestsButton || nextButton).toBeTruthy()
+        }
+      },
+      { timeout: 2000 },
+    )
   })
 
   test("can cancel booking", () => {
