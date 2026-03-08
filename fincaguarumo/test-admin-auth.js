@@ -1,85 +1,111 @@
 // Test script to verify admin authentication implementation
 // This script demonstrates how to use the protected availability endpoints
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = "http://localhost:3000"
 
 // Example: How to make an authenticated request to PUT /api/availability
 async function testAuthenticatedPut() {
   // First, you need to get a JWT token from Supabase Auth
   // This would typically be done through your login flow
-  
-  const adminToken = 'your_supabase_jwt_token_here'; // Replace with actual token
-  
+
+  const adminToken = "your_supabase_jwt_token_here" // Replace with actual token
+
   const response = await fetch(`${BASE_URL}/api/availability`, {
-    method: 'PUT',
+    method: "PUT",
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${adminToken}`
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${adminToken}`,
     },
     body: JSON.stringify({
-      startDate: '2024-12-25',
-      endDate: '2024-12-26',
+      startDate: "2024-12-25",
+      endDate: "2024-12-26",
       isAvailable: false,
-      reason: 'Test admin update'
-    })
-  });
+      reason: "Test admin update",
+    }),
+  })
 
-  const result = await response.json();
-  
+  const result = await response.json()
+
   if (response.ok) {
-    console.log('✅ Admin PUT request successful:', result);
+    console.log("✅ Admin PUT request successful:", result)
   } else {
-    console.log('❌ Admin PUT request failed:', result);
-    
+    console.log("❌ Admin PUT request failed:", result)
+
     if (response.status === 401) {
-      console.log('   Status: Unauthenticated (missing/invalid token)');
+      console.log("   Status: Unauthenticated (missing/invalid token)")
     } else if (response.status === 403) {
-      console.log('   Status: Unauthorized (user is not admin)');
+      console.log("   Status: Unauthorized (user is not admin)")
+    } else {
+      // Fail script on unexpected status
+      throw new Error(
+        `Unexpected HTTP status ${response.status} for admin PUT request. Response: ${JSON.stringify(result)}`,
+      )
     }
   }
 }
 
 // Example: How to make an authenticated request to DELETE /api/availability
 async function testAuthenticatedDelete() {
-  const adminToken = 'your_supabase_jwt_token_here'; // Replace with actual token
-  const availabilityId = 'your_availability_id_here'; // Replace with actual ID
-  
-  const response = await fetch(`${BASE_URL}/api/availability?id=${availabilityId}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${adminToken}`
-    }
-  });
+  const adminToken = "your_supabase_jwt_token_here" // Replace with actual token
+  const availabilityId = "your_availability_id_here" // Replace with actual ID
 
-  const result = await response.json();
-  
+  const response = await fetch(
+    `${BASE_URL}/api/availability?id=${availabilityId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    },
+  )
+
+  const result = await response.json()
+
   if (response.ok) {
-    console.log('✅ Admin DELETE request successful:', result);
+    console.log("✅ Admin DELETE request successful:", result)
   } else {
-    console.log('❌ Admin DELETE request failed:', result);
+    console.log("❌ Admin DELETE request failed:", result)
+
+    if (response.status === 401) {
+      console.log("   Status: Unauthenticated (missing/invalid token)")
+    } else if (response.status === 403) {
+      console.log("   Status: Unauthorized (user is not admin)")
+    } else if (response.status === 404) {
+      console.log("   Status: Not found (availability ID may not exist)")
+    } else {
+      // Fail script on unexpected status
+      throw new Error(
+        `Unexpected HTTP status ${response.status} for admin DELETE request. Response: ${JSON.stringify(result)}`,
+      )
+    }
   }
 }
 
 // Example: What happens without authentication
 async function testUnauthenticatedRequest() {
   const response = await fetch(`${BASE_URL}/api/availability`, {
-    method: 'PUT',
+    method: "PUT",
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      startDate: '2024-12-25',
-      endDate: '2024-12-26',
-      isAvailable: false
-    })
-  });
+      startDate: "2024-12-25",
+      endDate: "2024-12-26",
+      isAvailable: false,
+    }),
+  })
 
-  const result = await response.json();
-  
+  const result = await response.json()
+
   if (response.status === 401) {
-    console.log('✅ Unauthenticated request correctly blocked:', result);
+    console.log("✅ Unauthenticated request correctly blocked:", result)
+  } else if (response.status === 403) {
+    console.log("✅ Unauthenticated request correctly blocked:", result)
   } else {
-    console.log('❌ Unauthenticated request should have been blocked:', result);
+    // Fail script on unexpected status - should be 401/403
+    throw new Error(
+      `Unexpected HTTP status ${response.status} for unauthenticated request. Expected 401 or 403, got: ${JSON.stringify(result)}`,
+    )
   }
 }
 
@@ -87,8 +113,8 @@ async function testUnauthenticatedRequest() {
 module.exports = {
   testAuthenticatedPut,
   testAuthenticatedDelete,
-  testUnauthenticatedRequest
-};
+  testUnauthenticatedRequest,
+}
 
 console.log(`
 🔐 Admin Authentication Implementation Complete!
@@ -114,4 +140,4 @@ console.log(`
 - testAuthenticatedPut() - Test with valid admin token
 - testAuthenticatedDelete() - Test DELETE with admin token  
 - testUnauthenticatedRequest() - Test without authentication
-`);
+`)
