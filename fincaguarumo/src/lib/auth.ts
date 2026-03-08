@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -7,14 +7,79 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false
-  }
+    persistSession: false,
+  },
 })
 
 export interface AuthUser {
   id: string
   email?: string
   is_admin: boolean
+}
+
+/**
+ * Verifies the current user's authentication (not requiring admin)
+ * @param request - The incoming request object
+ * @returns AuthUser object if authenticated
+ * @throws Error with appropriate status code (401 for unauthenticated)
+ */
+export async function verifyUserAuth(request: Request): Promise<AuthUser> {
+  try {
+    // Extract the Authorization header
+    const authHeader = request.headers.get("authorization")
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      const error = new Error("Missing or invalid authorization header")
+      ;(error as any).status = 401
+      throw error
+    }
+
+    const token = authHeader.substring(7) // Remove 'Bearer ' prefix
+
+    // Verify the JWT token using Supabase admin client
+    const {
+      data: { user },
+      error,
+    } = await supabaseAdmin.auth.getUser(token)
+
+    if (error || !user) {
+      const authError = new Error("Invalid or expired token")
+      ;(authError as any).status = 401
+      throw authError
+    }
+
+    // Check admin status from metadata or users table
+    let isAdmin = false
+    if (user.user_metadata?.is_admin === true) {
+      isAdmin = true
+    } else {
+      // Check the users table for admin status
+      const { data: userData, error: userError } = await supabaseAdmin
+        .from("users")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single()
+
+      if (!userError && userData) {
+        isAdmin = userData.is_admin
+      }
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      is_admin: isAdmin,
+    }
+  } catch (error: any) {
+    // Re-throw errors with their status codes
+    if (error.status) {
+      throw error
+    }
+
+    // For any other errors, treat as internal server error
+    const serverError = new Error("Authentication failed")
+    ;(serverError as any).status = 500
+    throw serverError
+  }
 }
 
 /**
@@ -26,9 +91,9 @@ export interface AuthUser {
 export async function verifyAdminAuth(request: Request): Promise<AuthUser> {
   try {
     // Extract the Authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      const error = new Error('Missing or invalid authorization header')
+    const authHeader = request.headers.get("authorization")
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      const error = new Error("Missing or invalid authorization header")
       ;(error as any).status = 401
       throw error
     }
@@ -36,10 +101,13 @@ export async function verifyAdminAuth(request: Request): Promise<AuthUser> {
     const token = authHeader.substring(7) // Remove 'Bearer ' prefix
 
     // Verify the JWT token using Supabase admin client
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
-    
+    const {
+      data: { user },
+      error,
+    } = await supabaseAdmin.auth.getUser(token)
+
     if (error || !user) {
-      const authError = new Error('Invalid or expired token')
+      const authError = new Error("Invalid or expired token")
       ;(authError as any).status = 401
       throw authError
     }
@@ -50,26 +118,28 @@ export async function verifyAdminAuth(request: Request): Promise<AuthUser> {
       return {
         id: user.id,
         email: user.email,
-        is_admin: true
+        is_admin: true,
       }
     }
 
     // If not in metadata, check the users table (you may need to create this table)
     const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('is_admin')
-      .eq('id', user.id)
+      .from("users")
+      .select("is_admin")
+      .eq("id", user.id)
       .single()
 
     if (userError) {
       // If users table doesn't exist or user not found, deny access
-      const adminError = new Error('User not found or admin status cannot be verified')
+      const adminError = new Error(
+        "User not found or admin status cannot be verified",
+      )
       ;(adminError as any).status = 403
       throw adminError
     }
 
     if (!userData.is_admin) {
-      const forbiddenError = new Error('Admin access required')
+      const forbiddenError = new Error("Admin access required")
       ;(forbiddenError as any).status = 403
       throw forbiddenError
     }
@@ -77,17 +147,16 @@ export async function verifyAdminAuth(request: Request): Promise<AuthUser> {
     return {
       id: user.id,
       email: user.email,
-      is_admin: userData.is_admin
+      is_admin: userData.is_admin,
     }
-
   } catch (error: any) {
     // Re-throw errors with their status codes
     if (error.status) {
       throw error
     }
-    
+
     // For any other errors, treat as internal server error
-    const serverError = new Error('Authentication failed')
+    const serverError = new Error("Authentication failed")
     ;(serverError as any).status = 500
     throw serverError
   }
