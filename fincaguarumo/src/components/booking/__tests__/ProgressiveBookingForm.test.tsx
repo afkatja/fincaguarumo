@@ -24,13 +24,23 @@ jest.mock("@/components/BookingCalendar", () => {
         <div data-testid="calendar-labels">{JSON.stringify(labels)}</div>
         <div data-testid="calendar-error">{error}</div>
         <button
-          onClick={() => onSelectDate(new Date("2024-12-15"), "check-in")}
+          onClick={() =>
+            onSelectDate(
+              new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+              "check-in",
+            )
+          }
           data-testid="select-check-in"
         >
           Select Check-in
         </button>
         <button
-          onClick={() => onSelectDate(new Date("2024-12-18"), "check-out")}
+          onClick={() =>
+            onSelectDate(
+              new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
+              "check-out",
+            )
+          }
           data-testid="select-check-out"
         >
           Select Check-out
@@ -55,7 +65,9 @@ jest.mock("@/components/DatePicker", () => {
       <div data-testid="date-picker">
         <div data-testid="date-picker-label">{label}</div>
         <button
-          onClick={() => onSelectDate(new Date("2024-12-20"))}
+          onClick={() =>
+            onSelectDate(new Date(Date.now() + 10 * 24 * 60 * 60 * 1000))
+          }
           data-testid="select-date"
         >
           Select Date
