@@ -103,8 +103,14 @@ const ClientPage = ({
         <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-dark shadow-sm">
           <div className="w-11/12 mx-auto">
             <p className="font-bold text-center mb-4">
-              Price starting from $ {Math.floor(total)} (for {guests}{" "}
-              {guests === 1 ? "person" : "people"})
+              {t("priceFrom", {
+                price: new Intl.NumberFormat(locale, {
+                  style: "currency",
+                  currency: "USD",
+                }).format(Math.floor(total)),
+                guests: guests,
+                guestsLabel: guests === 1 ? t("person") : t("people"),
+              })}
             </p>
             <div className="flex items-center justify-center gap-4">
               <BookingDialog
