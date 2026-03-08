@@ -3,6 +3,28 @@
 
 const BASE_URL = "http://localhost:3000"
 
+// Safe response parser that handles non-JSON responses
+async function safeParseResponse(response) {
+  const contentType = response.headers.get("content-type")
+
+  if (contentType && contentType.includes("application/json")) {
+    try {
+      return await response.json()
+    } catch (error) {
+      console.warn("Failed to parse JSON response:", error)
+      return {}
+    }
+  } else {
+    try {
+      const text = await response.text()
+      return text ? { rawResponse: text } : {}
+    } catch (error) {
+      console.warn("Failed to read response text:", error)
+      return {}
+    }
+  }
+}
+
 // Example: How to make an authenticated request to PUT /api/availability
 async function testAuthenticatedPut() {
   // First, you need to get a JWT token from Supabase Auth
@@ -24,7 +46,7 @@ async function testAuthenticatedPut() {
     }),
   })
 
-  const result = await response.json()
+  const result = await safeParseResponse(response)
 
   if (response.ok) {
     console.log("✅ Admin PUT request successful:", result)
@@ -59,7 +81,7 @@ async function testAuthenticatedDelete() {
     },
   )
 
-  const result = await response.json()
+  const result = await safeParseResponse(response)
 
   if (response.ok) {
     console.log("✅ Admin DELETE request successful:", result)
@@ -95,7 +117,7 @@ async function testUnauthenticatedRequest() {
     }),
   })
 
-  const result = await response.json()
+  const result = await safeParseResponse(response)
 
   if (response.status === 401) {
     console.log("✅ Unauthenticated request correctly blocked:", result)
