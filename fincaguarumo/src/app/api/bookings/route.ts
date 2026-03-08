@@ -3,8 +3,23 @@ import { createClient } from "@supabase/supabase-js"
 import { verifyAdminAuth, verifyUserAuth } from "@/lib/auth"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
+
+// Helper function to create authenticated Supabase client
+function createAuthenticatedSupabaseClient(request: Request) {
+  const authHeader = request.headers.get("authorization")
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error("Missing or invalid authorization header")
+  }
+  const token = authHeader.substring(7)
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  })
+}
 
 /**
  * POST: Create a new booking
@@ -15,6 +30,9 @@ export async function POST(request: Request) {
   try {
     // Verify user authentication
     const authUser = await verifyUserAuth(request)
+
+    // Create authenticated Supabase client
+    const supabase = createAuthenticatedSupabaseClient(request)
 
     const bookingData = await request.json()
 
@@ -121,6 +139,9 @@ export async function GET(request: Request) {
     // Verify admin authentication before accessing booking data
     await verifyAdminAuth(request)
 
+    // Create authenticated Supabase client
+    const supabase = createAuthenticatedSupabaseClient(request)
+
     const { searchParams } = new URL(request.url)
     const from = searchParams.get("from")
     const to = searchParams.get("to")
@@ -198,6 +219,9 @@ export async function PUT(request: Request) {
   try {
     // Verify user authentication
     const authUser = await verifyUserAuth(request)
+
+    // Create authenticated Supabase client
+    const supabase = createAuthenticatedSupabaseClient(request)
 
     const { id, ...updateData } = await request.json()
 
@@ -283,6 +307,9 @@ export async function DELETE(request: Request) {
   try {
     // Verify user authentication
     const authUser = await verifyUserAuth(request)
+
+    // Create authenticated Supabase client
+    const supabase = createAuthenticatedSupabaseClient(request)
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
