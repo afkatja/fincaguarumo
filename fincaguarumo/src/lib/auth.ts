@@ -115,12 +115,22 @@ export async function verifyAdminAuth(request: Request): Promise<AuthUser> {
       .single()
 
     if (userError) {
-      // If users table doesn't exist or user not found, deny access
-      const adminError = new Error(
-        "User not found or admin status cannot be verified",
-      )
-      ;(adminError as any).status = 403
-      throw adminError
+      // Distinguish between "not found" and actual database failures
+      if ((userError as any).code === "PGRST116" || !userData) {
+        // PGRST116: No rows returned - user not found in users table
+        const adminError = new Error(
+          "User not found or admin status cannot be verified",
+        )
+        ;(adminError as any).status = 403
+        throw adminError
+      } else {
+        // Real database failure (missing table, connection issues, etc.)
+        const serverError = new Error(
+          `Database error during admin verification: ${(userError as any).message || "Unknown database error"}`,
+        )
+        ;(serverError as any).status = 500
+        throw serverError
+      }
     }
 
     if (!userData.is_admin) {
