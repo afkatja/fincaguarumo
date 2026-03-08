@@ -4,6 +4,7 @@ import { BookingProvider } from "@/app/providers/BookingProvider"
 import { DialogProvider } from "@/app/providers/DialogProvider"
 import ProgressiveBookingForm from "../ProgressiveBookingForm"
 import { BOOKING_TYPE, initialBookingData } from "@/types"
+import "@testing-library/jest-dom"
 
 // Mock the booking calendar
 jest.mock("@/components/BookingCalendar", () => {
