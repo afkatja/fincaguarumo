@@ -156,9 +156,9 @@ BEGIN
       ce.metadata,
       0.0::DOUBLE PRECISION as semantic_similarity,
       CASE 
-        WHEN ce.content ILIKE '%' || query_text || '%' THEN 1.0::DOUBLE PRECISION
         WHEN ce.content ILIKE '%' || query_text THEN 0.8::DOUBLE PRECISION
         WHEN ce.content ILIKE query_text || '%' THEN 0.8::DOUBLE PRECISION
+        WHEN ce.content ILIKE '%' || query_text || '%' THEN 1.0::DOUBLE PRECISION
         ELSE 0.0::DOUBLE PRECISION
       END as keyword_score
     FROM content_embeddings ce
