@@ -39,7 +39,7 @@ async function main() {
     checkOut: new Date(metadata.checkOut || ""),
     price: Number(metadata.price) || 0,
     basePrice: Number(metadata.price) || 0, // Use price as basePrice for email script
-    totalPrice: (metadata.totalPrice as unknown as number) || 0,
+    totalPrice: Number(metadata.totalPrice) || 0,
     currency: metadata.currency || "USD",
     guests: Number(metadata.guests) || 0,
     geo: metadata.geo ? JSON.parse(metadata.geo) : {},
