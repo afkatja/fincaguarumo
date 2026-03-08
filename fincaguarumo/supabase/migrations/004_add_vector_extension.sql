@@ -29,6 +29,22 @@ USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 ALTER TABLE content_embeddings ADD CONSTRAINT content_embeddings_unique 
 UNIQUE (content_id, content_type, language);
 
+-- Enable Row Level Security for content_embeddings table
+ALTER TABLE content_embeddings ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies for content_embeddings
+-- Allow authenticated users to read embeddings for search functionality
+CREATE POLICY "Allow authenticated users to read content embeddings" 
+ON content_embeddings FOR SELECT 
+TO authenticated 
+USING (true);
+
+-- Allow service role to manage embeddings (server-side operations)
+CREATE POLICY "Allow service role to manage content embeddings" 
+ON content_embeddings FOR ALL 
+USING (current_setting('request.jwt.claims', true)::jsonb->>'role' = 'service_role')
+WITH CHECK (current_setting('request.jwt.claims', true)::jsonb->>'role' = 'service_role');
+
 -- Create updated_at trigger
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
