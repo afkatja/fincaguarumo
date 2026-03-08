@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { verifyAdminAuth } from "@/lib/auth"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
@@ -93,16 +94,34 @@ export async function POST(request: Request) {
 /**
  * GET: Fetch all bookings
  * Supports filtering by date range and source
+ * Requires admin authentication to prevent PII exposure
  */
 export async function GET(request: Request) {
   try {
+    // Verify admin authentication before accessing booking data
+    await verifyAdminAuth(request)
+
     const { searchParams } = new URL(request.url)
     const from = searchParams.get("from")
     const to = searchParams.get("to")
     const source = searchParams.get("source")
     const limit = searchParams.get("limit")
 
-    let query = supabase.from("bookings").select("*")
+    // Only select non-sensitive fields to prevent PII exposure
+    let query = supabase.from("bookings").select(`
+      id,
+      uid,
+      check_in,
+      check_out,
+      guests,
+      booking_type,
+      total_price,
+      currency,
+      source,
+      status,
+      created_at,
+      updated_at
+    `)
 
     // Filter by date range if provided
     if (from) {
@@ -133,8 +152,17 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(data)
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in GET /api/bookings:", error)
+
+    // Handle authentication errors with proper status codes
+    if (error.status) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      )
+    }
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },
