@@ -179,7 +179,19 @@ export async function GET(request: Request) {
 
     // Apply limit if provided
     if (limit) {
-      query = query.limit(parseInt(limit, 10))
+      const parsedLimit = parseInt(limit, 10)
+      if (
+        !Number.isNaN(parsedLimit) &&
+        Number.isInteger(parsedLimit) &&
+        parsedLimit > 0
+      ) {
+        query = query.limit(parsedLimit)
+      } else {
+        return NextResponse.json(
+          { error: "Invalid 'limit' parameter. Must be a positive integer." },
+          { status: 400 },
+        )
+      }
     }
 
     // Order by check_in date
