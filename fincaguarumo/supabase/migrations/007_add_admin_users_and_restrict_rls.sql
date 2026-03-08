@@ -93,6 +93,13 @@ USING (EXISTS (
   WHERE id = auth.uid() AND is_admin = TRUE
 ));
 
+-- Backfill existing auth.users into public.users table
+INSERT INTO public.users (id, email)
+SELECT id, email 
+FROM auth.users 
+WHERE id NOT IN (SELECT id FROM public.users)
+ON CONFLICT (id) DO NOTHING;
+
 -- Create a function to automatically create user profile
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
