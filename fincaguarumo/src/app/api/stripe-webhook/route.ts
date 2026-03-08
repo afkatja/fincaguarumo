@@ -153,38 +153,32 @@ export async function POST(request: NextRequest) {
           let availabilityUpdated = false
 
           try {
-            const siteUrl =
-              process.env.NEXT_PUBLIC_SITE_URL ||
-              (process.env.VERCEL_URL
-                ? `https://${process.env.VERCEL_URL}`
-                : "http://localhost:3000")
+            const supabaseAdmin = createSupabaseAdmin()
 
-            const supabaseResponse = await fetch(`${siteUrl}/api/bookings`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                checkIn: bookingDetails.checkIn.toISOString(),
-                checkOut: bookingDetails.checkOut.toISOString(),
-                guestName: customerDetails.name,
-                email: customerDetails.email,
-                phone: customerDetails.phoneNumber,
-                source: "direct",
-                uid: event.data.object.id,
-                guests: bookingDetails.guests,
-                bookingType: bookingDetails.type,
-                totalPrice: bookingDetails.totalPrice,
-                currency: bookingDetails.currency,
-              }),
-            })
+            const { data: bookingData, error: bookingError } =
+              await supabaseAdmin
+                .from("bookings")
+                .insert({
+                  check_in: bookingDetails.checkIn.toISOString(),
+                  check_out: bookingDetails.checkOut.toISOString(),
+                  guest_name: customerDetails.name,
+                  email: customerDetails.email,
+                  phone: customerDetails.phoneNumber,
+                  source: "direct",
+                  uid: event.data.object.id,
+                  guests: bookingDetails.guests,
+                  booking_type: bookingDetails.type,
+                  total_price: bookingDetails.totalPrice,
+                  currency: bookingDetails.currency,
+                })
+                .select()
 
-            if (supabaseResponse.ok) {
+            if (!bookingError) {
               bookingSaved = true
               console.log("Booking saved to Supabase successfully")
 
               // Also update availability table to mark dates as unavailable
               try {
-                const supabaseAdmin = createSupabaseAdmin()
-
                 const { error: availabilityError } = await supabaseAdmin
                   .from("availability")
                   .insert({
@@ -209,8 +203,7 @@ export async function POST(request: NextRequest) {
                 console.error("Error updating availability:", availabilityError)
               }
             } else {
-              const errorData = await supabaseResponse.json().catch(() => ({}))
-              console.error("Failed to save booking to Supabase:", errorData)
+              console.error("Failed to save booking to Supabase:", bookingError)
             }
           } catch (supabaseError) {
             console.error("Error saving booking to Supabase:", supabaseError)
