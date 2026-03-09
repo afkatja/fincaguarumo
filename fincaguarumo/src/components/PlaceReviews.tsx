@@ -8,10 +8,14 @@ import Title from "./Title"
 import useSWR from "swr"
 import { REVIEWS_QUERY } from "../sanity/lib/queries"
 import { clientSideFetch } from "../sanity/lib/clientSide"
+import Link from "next/link"
+import Icon from "./Icon"
+import { useTranslations } from "next-intl"
 
 export const PlaceReviews = ({ count }: { count?: number }) => {
   const { place } = usePlace()
   const { data: sanityReviews } = useSWR(REVIEWS_QUERY, clientSideFetch)
+  const b = useTranslations("reviews")
 
   // Compute stable review array and dependency key
   const stableAllReviews = React.useMemo(() => {
@@ -54,6 +58,17 @@ export const PlaceReviews = ({ count }: { count?: number }) => {
           ))}
         </div>
       )}
+      <Link
+        href={`/reviews`}
+        className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
+      >
+        {b("readMoreReviews") || "Read more reviews"}
+        <Icon
+          icon="ArrowRight"
+          className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+          color="currentColor"
+        />
+      </Link>
     </div>
   )
 }
