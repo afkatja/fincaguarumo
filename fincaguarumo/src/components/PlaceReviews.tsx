@@ -8,7 +8,7 @@ import Title from "./Title"
 import useSWR from "swr"
 import { REVIEWS_QUERY } from "../sanity/lib/queries"
 import { clientSideFetch } from "../sanity/lib/clientSide"
-import Link from "next/link"
+import { Link } from "../navigation"
 import Icon from "./Icon"
 import { useTranslations } from "next-intl"
 
