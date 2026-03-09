@@ -24,6 +24,7 @@ interface IDatePicker {
   loading?: boolean
   minDate?: Date
   month?: Date
+  defaultMonth?: Date
 }
 
 const DatePicker = ({
@@ -38,6 +39,7 @@ const DatePicker = ({
   loading,
   minDate,
   month,
+  defaultMonth,
 }: IDatePicker) => {
   const params = useParams()
   const locale = Array.isArray(params.locale)
@@ -85,7 +87,8 @@ const DatePicker = ({
           disabled={date => setDisabledDates(date)}
           onSelect={(_, selectedDay) => onSelectDate(selectedDay)}
           selected={selectedDate}
-          startMonth={month ?? selectedDate ?? new Date()}
+          defaultMonth={defaultMonth || selectedDate || new Date()}
+          startMonth={minDate || new Date()}
         />
       </PopoverContent>
     </Popover>
