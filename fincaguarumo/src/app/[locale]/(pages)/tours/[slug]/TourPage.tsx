@@ -68,7 +68,7 @@ const TourPage = ({ tour, locale }: { tour: TTour; locale: string }) => {
           ) : null
         }
         parent={{ title: "Tours", href: "tours" }}
-        icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
+        // icon={tour?.slug?.current ? titleCase(tour?.slug?.current) : undefined}
         bookingType={BOOKING_TYPE.tour}
         locale={locale}
         dialogId={tour.dialog?._id}
