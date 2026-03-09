@@ -16,7 +16,7 @@ const FEEDS: Record<string, string | undefined> = {
 
 // Initialize Supabase client for saving bookings and updating availability
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 const memoryCache: {

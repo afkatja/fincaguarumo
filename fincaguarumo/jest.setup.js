@@ -69,7 +69,7 @@ afterAll(() => {
 
 // Mock environment variables
 process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost:54321"
-process.env.NEXT_PUBLIC_SUPABASE_API_KEY = "test-key"
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-key"
 process.env.STRIPE_API_KEY = "sk_test_test"
 process.env.STRIPE_SECRET_KEY = "whsec_test"
 process.env.STRIPE_WEBHOOK_SECRET_LOCAL = "whsec_test_local"

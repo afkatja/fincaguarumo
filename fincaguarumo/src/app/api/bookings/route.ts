@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 import { verifyAdminAuth, verifyUserAuth } from "@/lib/auth"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Helper function to create authenticated Supabase client
 function createAuthenticatedSupabaseClient(request: Request) {
