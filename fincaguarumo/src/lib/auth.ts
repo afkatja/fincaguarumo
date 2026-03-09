@@ -65,12 +65,21 @@ export async function verifyUserAuth(request: Request): Promise<AuthUser> {
       .from("users")
       .select("is_admin")
       .eq("id", user.id)
-      .single()
+      .maybeSingle()
 
     let isAdmin = false
-    if (!userError && userData) {
+    if (userError) {
+      // Real database failure (missing table, connection issues, etc.)
+      const serverError = new Error(
+        `Database error during user verification: ${(userError as any).message || "Unknown database error"}`,
+      )
+      ;(serverError as any).status = 500
+      throw serverError
+    } else if (userData) {
+      // User row exists, check admin status
       isAdmin = userData.is_admin
     }
+    // If userData is null, user row doesn't exist - treat as non-admin (isAdmin remains false)
 
     return {
       id: user.id,
