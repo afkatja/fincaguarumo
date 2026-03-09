@@ -1,8 +1,6 @@
 "use client"
 import { AccommodationContent } from "@/app/[locale]/(pages)/villa-bruno/page"
 import Icon from "./Icon"
-import { DynamicLucideIcon } from "./DynamicLucideIcon"
-import { Badge } from "./ui/badge"
 import { useTranslations } from "next-intl"
 import { DollarSign, HomeIcon, User2Icon } from "lucide-react"
 
@@ -14,6 +12,7 @@ interface QuickInfoBarProps {
 
 export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
   const t = useTranslations("accommodation")
+  const b = useTranslations("booking")
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -35,7 +34,10 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
             {formatPrice(price)}
           </span>
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            per {guests === 1 ? t("person") : t("people")}
+            {b("priceFromShort", {
+              guests: 1,
+              guestsLabel: b("person"),
+            })}
           </span>
         </div>
 

@@ -28,6 +28,7 @@ import { ReviewSummary } from "@/components/ReviewSummary"
 import { ContentPreview } from "@/components/ContentPreview"
 import { CollapsibleSection } from "@/components/CollapsibleSection"
 import InPageNavigation from "@/components/InPageNavigation"
+import { cn } from "../../../../lib/utils"
 
 const AccommodationClientPage = ({
   content,
@@ -83,6 +84,32 @@ const AccommodationClientPage = ({
   const guestsRaw = bookingData?.bookingDetails?.guests
   const guests = typeof guestsRaw === "number" && guestsRaw > 0 ? guestsRaw : 1
 
+  // Calculate lowest possible price for display
+  const getLowestPrice = () => {
+    if (!bookingData.pricingRules || bookingData.pricingRules.length === 0) {
+      return 0
+    }
+
+    // Find the lowest base rate from all pricing rules
+    const baseRates = bookingData.pricingRules
+      .filter(rule => rule.isActive && rule.basePrice)
+      .map(rule => rule.basePrice!)
+
+    if (baseRates.length === 0) {
+      return 0
+    }
+
+    const lowestBaseRate = Math.min(...baseRates)
+
+    // Calculate for 1 guest, 1 night with VAT
+    const priceForPerson = lowestBaseRate // No extra guest fees for 1 person
+    const priceWithVat = priceForPerson * (1 + 0.13) // VAT_RATE = 0.13
+
+    return Math.floor(priceWithVat)
+  }
+
+  const lowestPrice = getLowestPrice()
+
   // Calculate total using pricing rules or fallback to legacy calculation
   const { total } =
     bookingData.pricingRules && bookingData.pricingRules.length > 0
@@ -107,7 +134,7 @@ const AccommodationClientPage = ({
           defaultExpanded={true}
           className="bg-linear-to-r from-guarumo-primary/10 to-guarumo-accent/10"
         >
-          <QuickInfoBar content={content} price={total} guests={guests} />
+          <QuickInfoBar content={content} price={lowestPrice} guests={guests} />
         </CollapsibleSection>
       </div>
 
@@ -187,11 +214,16 @@ const AccommodationClientPage = ({
       {content?.showBookingDialog && (
         <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-dark shadow-sm">
           <div className="w-11/12 mx-auto">
-            <p className="font-bold text-center mb-4">
+            <p
+              className={cn(
+                "font-bold text-center mb-4 transition-opacity",
+                !lowestPrice && "opacity-0",
+              )}
+            >
               {t("priceFrom", {
-                price: Math.floor(total),
-                guests: guests,
-                guestsLabel: guests === 1 ? t("person") : t("people"),
+                price: lowestPrice,
+                guests: 1,
+                guestsLabel: t("person"),
               })}
             </p>
             <div className="flex items-center justify-center gap-4 px-6 md:px-0">
