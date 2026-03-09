@@ -267,27 +267,45 @@ function mergeBookings(bookings: Booking[]) {
 }
 
 /**
- * Save or update booking in Supabase
+ * Create a redacted copy of booking data for safe logging
+ * Removes PII while preserving useful debugging information
+ */
+function createRedactedBooking(bookingData: any) {
+  return {
+    uid: bookingData.uid,
+    source: bookingData.source,
+    booking_type: bookingData.booking_type,
+    // Include only non-sensitive fields for debugging
+    has_guest_name: !!bookingData.guest_name,
+    has_total_price: !!bookingData.total_price,
+    guest_count: bookingData.guests,
+    // Redate dates to only show month/year for debugging
+    check_in_month: bookingData.check_in
+      ? new Date(bookingData.check_in).toISOString().slice(0, 7)
+      : null,
+    check_out_month: bookingData.check_out
+      ? new Date(bookingData.check_out).toISOString().slice(0, 7)
+      : null,
+  }
+}
+
+/**
+ * Save or update booking in Supabase using atomic upsert
  */
 async function saveBookingToSupabase(syncRow: IcsSyncRow) {
   try {
     const booking = mapToBookingForSupabase(syncRow)
 
+    // Ensure UID is present for upsert constraint
+    if (!booking.uid) {
+      console.error("Cannot save booking: UID is required for upsert operation")
+      return null
+    }
+
     // Log what we're trying to save
     // console.log(
-    //   `Saving booking: ${booking.guestName || "Unknown"} from ${booking.source}, UID: ${booking.uid}`,
+    //   `Upserting booking: ${booking.guestName || "Unknown"} from ${booking.source}, UID: ${booking.uid}`,
     // )
-
-    // Check if booking already exists by UID
-    const { data: existing, error: checkError } = await supabase
-      .from("bookings")
-      .select("id")
-      .eq("uid", booking.uid)
-      .maybeSingle()
-
-    if (checkError) {
-      console.error("Error checking existing booking:", checkError)
-    }
 
     // Build booking data with only required columns
     const bookingData: any = {
@@ -296,43 +314,35 @@ async function saveBookingToSupabase(syncRow: IcsSyncRow) {
       check_out: booking.end,
       guest_name: booking.guestName || "Unknown",
       source: booking.source || "Unknown",
+      booking_type: "villa",
+      currency: booking.currency || "usd",
+      guests: booking.guests || 1,
     }
 
-    bookingData.booking_type = "villa"
-    bookingData.total_price = booking.totalPrice
-    bookingData.currency = booking.currency || "usd"
-    bookingData.guests = booking.guests || 1
-
-    console.log("Inserting booking data:", JSON.stringify(bookingData, null, 2))
-
-    if (existing) {
-      // Update existing booking
-      // console.log(`Updating existing booking with ID: ${existing.id}`)
-      const { error } = await supabase
-        .from("bookings")
-        .update(bookingData)
-        .eq("id", existing.id)
-
-      if (error) {
-        console.error("Error updating booking in Supabase:", error)
-        return null
-      }
-      // console.log(`Successfully updated booking: ${existing.id}`)
-      return existing.id
-    } else {
-      // Insert new booking
-      const { data, error } = await supabase
-        .from("bookings")
-        .insert([bookingData])
-        .select()
-
-      if (error) {
-        console.error("Error inserting booking to Supabase:", error)
-        return null
-      }
-      // console.log(`Successfully inserted new booking: ${data?.[0]?.id}`)
-      return data?.[0]?.id
+    // Add optional price fields if present
+    if (booking.totalPrice) {
+      bookingData.total_price = booking.totalPrice
     }
+
+    console.log(
+      "Upserting booking data:",
+      JSON.stringify(createRedactedBooking(bookingData), null, 2),
+    )
+
+    // Atomic upsert with conflict resolution on uid
+    const { data, error } = await supabase
+      .from("bookings")
+      .upsert([bookingData], { onConflict: "uid" })
+      .select()
+
+    if (error) {
+      console.error("Error upserting booking to Supabase:", error)
+      return null
+    }
+
+    const recordId = data?.[0]?.id
+    // console.log(`Successfully upserted booking: ${recordId}`)
+    return recordId
   } catch (error) {
     console.error("Error saving booking to Supabase:", error)
     return null
