@@ -12,7 +12,8 @@ import SelectGuestsOptions from "@/app/[locale]/(pages)/(payment)/SelectGuestsOp
 import { getInternationalizedValue } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import calculateDuration from "@/lib/calculateDuration"
-import calculateTotal from "@/lib/calculateTotal"
+import calculateTotal, { calculateTotalWithRules } from "@/lib/calculateTotal"
+import { getDefaultBasePrice } from "@/lib/pricingEngine"
 import { BookingType, BOOKING_TYPE, initialBookingData } from "@/types"
 import { useBooking } from "@/app/providers/BookingProvider"
 import { useDialog } from "@/app/providers/DialogProvider"
@@ -109,18 +110,24 @@ export default function ProgressiveBookingForm({
     } else if (currentStep === "personal") {
       setCurrentStep("payment")
     } else if (currentStep === "payment") {
-      // Calculate total price before submitting
+      // Calculate total price before submitting using the same logic as price preview
+      const totalPrice = calculateTotalWithRules({
+        pricingRules: bookingData.pricingRules,
+        guests: bookingData.bookingDetails.guests,
+        bookingType,
+        duration,
+        checkInDate:
+          bookingType === BOOKING_TYPE.villa
+            ? bookingData.bookingDetails.checkIn
+            : undefined,
+      }).total
+
       setBookingData({
         ...bookingData,
         bookingDetails: {
           ...bookingData.bookingDetails,
           type: bookingType,
-          totalPrice: calculateTotal({
-            price: bookingData.bookingDetails.basePrice,
-            guests: bookingData.bookingDetails.guests,
-            bookingType,
-            duration,
-          }).total,
+          totalPrice,
         },
       })
       onSubmit()
@@ -249,14 +256,14 @@ export default function ProgressiveBookingForm({
         />
       </div>
 
-      {/* Show price calculation when dates and guests are selected */}
-      {((bookingType === BOOKING_TYPE.villa &&
+      {/* Show price preview - starting from message initially, detailed calculation after user input */}
+      {(bookingType === BOOKING_TYPE.villa &&
         bookingData.bookingDetails.checkIn &&
         bookingData.bookingDetails.checkOut &&
         bookingData.bookingDetails.guests) ||
-        (bookingType === BOOKING_TYPE.tour &&
-          bookingData.bookingDetails.date &&
-          bookingData.bookingDetails.guests)) && (
+      (bookingType === BOOKING_TYPE.tour &&
+        bookingData.bookingDetails.date &&
+        bookingData.bookingDetails.guests) ? (
         <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-muted-foreground">
           <h3 className="font-medium mb-3">
             {t("priceSummary", { defaultValue: "Price Summary" })}
@@ -289,6 +296,23 @@ export default function ProgressiveBookingForm({
                 : undefined
             }
           />
+        </div>
+      ) : (
+        <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-muted-foreground">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">
+              {t("priceFrom", {
+                defaultValue:
+                  "Price starting from ${price} for {guests} {guestsLabel}",
+                price: new Intl.NumberFormat(locale, {
+                  style: "currency",
+                  currency: bookingData.bookingDetails.currency || "USD",
+                }).format(getDefaultBasePrice(bookingData.pricingRules)),
+                guests: 1,
+                guestsLabel: t("person", { defaultValue: "person" }),
+              })}
+            </span>
+          </div>
         </div>
       )}
     </div>
