@@ -91,7 +91,7 @@
     "next-transition-router": "^0.2.11",
     "react": "19.2.3",
     "react-country-flag": "^3.1.0",
-    "react-day-picker": "^9.13.0",
+    "react-day-picker": "^9.14.0",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.1",
     "react-loading-skeleton": "^3.5.0",
