@@ -6,6 +6,38 @@ import { Booking, getSanityBookings } from "@/lib/setBookings"
 import bookingToNights from "@/lib/bookingToNights"
 import { createClient } from "@supabase/supabase-js"
 
+/**
+ * Internal sync DTO containing full guest metadata from iCal parsing
+ * Used for persistence and internal deduplication logic
+ */
+interface IcsSyncRow {
+  uid?: string
+  start: string
+  end: string
+  summary?: string
+  source: string
+  guestInfo: {
+    name?: string
+    email?: string
+    phone?: string
+    guests?: number
+  }
+  rawDescription?: string
+}
+
+/**
+ * Sanitized response DTO for client consumption
+ * Only includes non-sensitive booking information
+ */
+interface BookingResponse {
+  uid?: string
+  start: string
+  end: string
+  summary?: string
+  source?: string
+  guestName?: string
+}
+
 const FEEDS: Record<string, string | undefined> = {
   airbnb: process.env.AIRBNB_ICAL,
   booking: process.env.BOOKING_ICAL,
@@ -54,14 +86,14 @@ function parseIcsToBookings(
   sourceName: string,
   lookBackYears = 2,
   lookAheadYears = 1,
-): Booking[] {
+): IcsSyncRow[] {
   const expander = new IcalExpander({ ics: icsText, maxIterations: 1000 })
   const from = subDays(new Date(), 365 * lookBackYears)
   const to = addDays(new Date(), 365 * lookAheadYears)
 
   const { events, occurrences } = expander.between(from, to)
 
-  const out: Booking[] = []
+  const out: IcsSyncRow[] = []
 
   // Single (non-recurring) EVENTs
   for (const e of events) {
@@ -83,8 +115,8 @@ function parseIcsToBookings(
       end,
       summary,
       source: sourceName,
-      guestName: guestInfo.name,
-      description: description || summary,
+      guestInfo,
+      rawDescription: description,
     })
   }
 
@@ -106,8 +138,8 @@ function parseIcsToBookings(
       end,
       summary,
       source: sourceName,
-      guestName: guestInfo.name,
-      description: description || summary,
+      guestInfo,
+      rawDescription: description,
     })
   }
 
@@ -173,6 +205,37 @@ function extractGuestInfo(
   return info
 }
 
+/**
+ * Convert internal IcsSyncRow to sanitized BookingResponse for client consumption
+ */
+function mapToBookingResponse(syncRow: IcsSyncRow): BookingResponse {
+  return {
+    uid: syncRow.uid,
+    start: syncRow.start,
+    end: syncRow.end,
+    summary: syncRow.summary,
+    source: syncRow.source,
+    guestName: syncRow.guestInfo.name,
+  }
+}
+
+/**
+ * Convert internal IcsSyncRow to legacy Booking format for Supabase compatibility
+ */
+function mapToBookingForSupabase(syncRow: IcsSyncRow): Booking {
+  return {
+    uid: syncRow.uid,
+    start: syncRow.start,
+    end: syncRow.end,
+    summary: syncRow.summary,
+    source: syncRow.source,
+    guestName: syncRow.guestInfo.name,
+    email: syncRow.guestInfo.email,
+    phone: syncRow.guestInfo.phone,
+    guests: syncRow.guestInfo.guests,
+  }
+}
+
 function mergeBookings(bookings: Booking[]) {
   if (!bookings.length) return []
 
@@ -206,8 +269,10 @@ function mergeBookings(bookings: Booking[]) {
 /**
  * Save or update booking in Supabase
  */
-async function saveBookingToSupabase(booking: Booking & { source: string }) {
+async function saveBookingToSupabase(syncRow: IcsSyncRow) {
   try {
+    const booking = mapToBookingForSupabase(syncRow)
+
     // Log what we're trying to save
     // console.log(
     //   `Saving booking: ${booking.guestName || "Unknown"} from ${booking.source}, UID: ${booking.uid}`,
@@ -236,7 +301,7 @@ async function saveBookingToSupabase(booking: Booking & { source: string }) {
     bookingData.booking_type = "villa"
     bookingData.total_price = booking.totalPrice
     bookingData.currency = booking.currency || "usd"
-    bookingData.guests = (booking as any).guests || 1
+    bookingData.guests = booking.guests || 1
 
     console.log("Inserting booking data:", JSON.stringify(bookingData, null, 2))
 
@@ -424,12 +489,23 @@ export async function GET() {
       string,
     ][]
 
-    const allBookings: Booking[] = []
+    const allSyncRows: IcsSyncRow[] = []
+    const allBookingResponses: BookingResponse[] = []
 
-    // Fetch Sanity bookings
+    // Fetch Sanity bookings and convert to response format
     try {
       const sanityBookings = await getSanityBookings()
-      allBookings.push(...sanityBookings)
+      const sanityResponses: BookingResponse[] = sanityBookings.map(
+        booking => ({
+          uid: booking.uid,
+          start: booking.start,
+          end: booking.end,
+          summary: booking.summary,
+          source: booking.source,
+          guestName: booking.guestName,
+        }),
+      )
+      allBookingResponses.push(...sanityResponses)
     } catch (err) {
       console.error("Error fetching Sanity bookings:", err)
     }
@@ -440,31 +516,32 @@ export async function GET() {
         const key = `ical_${name}`
         const { ics } = await fetchIcsWithConditional(url!, key)
         if (!ics) continue
-        const bookings = parseIcsToBookings(ics!, name)
+        const syncRows = parseIcsToBookings(ics!, name)
 
-        allBookings.push(...bookings)
+        allSyncRows.push(...syncRows)
+
+        // Convert to sanitized responses for client
+        const bookingResponses = syncRows.map(mapToBookingResponse)
+        allBookingResponses.push(...bookingResponses)
 
         // Save each parsed booking to Supabase
-        // console.log(`Processing ${bookings.length} bookings from ${name}`)
+        // console.log(`Processing ${syncRows.length} bookings from ${name}`)
         let savedCount = 0
         let skippedCount = 0
         let errorCount = 0
 
-        for (const booking of bookings) {
+        for (const syncRow of syncRows) {
           try {
             // Generate a UID if missing (using hash of source + dates)
-            let uid = booking.uid
+            let uid = syncRow.uid
             if (!uid) {
-              const hashInput = `${name}-${booking.start}-${booking.end}`
+              const hashInput = `${name}-${syncRow.start}-${syncRow.end}`
               uid = hashIcs(hashInput).substring(0, 32)
+              syncRow.uid = uid
               // console.log(`Generated UID for booking: ${uid}`)
             }
 
-            const result = await saveBookingToSupabase({
-              ...booking,
-              source: name,
-              uid,
-            })
+            const result = await saveBookingToSupabase(syncRow)
 
             if (result) {
               savedCount++
@@ -485,6 +562,12 @@ export async function GET() {
         // continue — don't fail the whole response if one feed fails
       }
     }
+
+    // Convert all sync rows to Booking format for merge logic
+    const allBookings = [
+      ...allSyncRows.map(mapToBookingForSupabase),
+      ...(await getSanityBookings()),
+    ]
 
     // Optional: deduplicate by UID or by identical ranges (simple)
     const uniqueByUid: Record<string, Booking> = {}
@@ -509,7 +592,7 @@ export async function GET() {
       // but log the error for monitoring
     }
 
-    return NextResponse.json({ bookings: deduped, merged })
+    return NextResponse.json({ bookings: allBookingResponses, merged })
   } catch (err) {
     console.error("API error merging bookings:", err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
