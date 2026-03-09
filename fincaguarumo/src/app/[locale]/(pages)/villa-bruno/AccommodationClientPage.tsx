@@ -38,7 +38,6 @@ const AccommodationClientPage = ({
 }) => {
   const { bookingData, setBookingData } = useBooking()
   const t = useTranslations("booking")
-  const b = useTranslations("reviews")
   const tPage = useTranslations("page")
 
   const googleMapsKey = process.env.NEXT_PUBLIC_GMAPS_API_KEY as string
@@ -182,17 +181,6 @@ const AccommodationClientPage = ({
               <PlaceReviews count={4} />
             </PlaceProvider>
           </APIProvider>
-          <Link
-            href={`/reviews`}
-            className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
-          >
-            {b("readMoreReviews") || "Read more reviews"}
-            <Icon
-              icon="ArrowRight"
-              className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
-              color="currentColor"
-            />
-          </Link>
         </div>
       )}
       {/* Booking Footer - Sticky booking options */}
