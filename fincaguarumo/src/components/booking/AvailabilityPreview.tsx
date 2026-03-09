@@ -10,6 +10,7 @@ interface AvailabilityPreviewProps {
   bookingType: "villa" | "tour"
   className?: string
   calendarLoading?: boolean
+  blockedDates?: Date[] // Add blocked dates from calendar
 }
 
 interface AvailabilityStatus {
@@ -24,6 +25,7 @@ export default function AvailabilityPreview({
   bookingType,
   className = "",
   calendarLoading = false,
+  blockedDates = [],
 }: AvailabilityPreviewProps) {
   const t = useTranslations("booking")
   const [availability, setAvailability] = useState<AvailabilityStatus>({
@@ -33,7 +35,7 @@ export default function AvailabilityPreview({
   })
 
   useEffect(() => {
-    const checkAvailability = async () => {
+    const checkAvailability = () => {
       if (!checkIn || !checkOut || bookingType !== "villa") {
         setAvailability({ isAvailable: null, isLoading: false })
         return
@@ -48,22 +50,25 @@ export default function AvailabilityPreview({
       setAvailability({ isAvailable: null, isLoading: true })
 
       try {
-        const response = await fetch("/api/availability", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            checkIn: checkIn.toISOString(),
-            checkOut: checkOut.toISOString(),
-          }),
-        })
+        // Check availability using blocked dates from calendar
+        // This eliminates the redundant API call
+        const currentDate = new Date(checkIn)
+        let hasConflict = false
 
-        if (!response.ok) {
-          throw new Error("Failed to check availability")
+        while (currentDate < checkOut && !hasConflict) {
+          const dateStr = currentDate.toISOString().split("T")[0]
+          if (
+            blockedDates.some(
+              date => date.toISOString().split("T")[0] === dateStr,
+            )
+          ) {
+            hasConflict = true
+          }
+          currentDate.setDate(currentDate.getDate() + 1)
         }
 
-        const data = await response.json()
         setAvailability({
-          isAvailable: data.isAvailable,
+          isAvailable: !hasConflict,
           isLoading: false,
         })
       } catch (error) {
@@ -79,7 +84,7 @@ export default function AvailabilityPreview({
     // Debounce the availability check
     const timer = setTimeout(checkAvailability, 500)
     return () => clearTimeout(timer)
-  }, [checkIn, checkOut, bookingType, calendarLoading])
+  }, [checkIn, checkOut, bookingType, calendarLoading, blockedDates])
 
   if (bookingType !== "villa") {
     return null

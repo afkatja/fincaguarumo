@@ -10,14 +10,18 @@ const BookingCalendar = ({
   selectedDates,
   error,
   onLoadingChange,
+  onBlockedDatesChange,
 }: {
   onSelectDate: (date: Date, type: string) => void
   labels: { checkinDate: string; checkoutDate: string }
   selectedDates: { checkIn: Date; checkOut: Date }
   error?: string
   onLoadingChange?: (loading: boolean) => void
+  onBlockedDatesChange?: (blockedDates: Date[]) => void
 }) => {
   const [loading, setLoading] = useState(false)
+  const [activePopover, setActivePopover] = useState<string | null>(null)
+  const [blockedDates, setBlockedDates] = useState<Date[]>([])
 
   // Update parent component when loading state changes
   useEffect(() => {
@@ -25,8 +29,13 @@ const BookingCalendar = ({
       onLoadingChange(loading)
     }
   }, [loading, onLoadingChange])
-  const [activePopover, setActivePopover] = useState<string | null>(null)
-  const [blockedDates, setBlockedDates] = useState<Date[]>([])
+
+  // Update parent component when blocked dates change
+  useEffect(() => {
+    if (onBlockedDatesChange) {
+      onBlockedDatesChange(blockedDates)
+    }
+  }, [blockedDates, onBlockedDatesChange])
 
   useEffect(() => {
     setLoading(true)
@@ -82,7 +91,7 @@ const BookingCalendar = ({
           selectedDate={selectedDates.checkIn}
           disabledDates={blockedDates}
           loading={loading}
-          month={selectedDates.checkIn || new Date()}
+          defaultMonth={selectedDates.checkIn || new Date()}
         />
 
         <div className="md:ml-4 mt-4 md:mt-0">
@@ -99,7 +108,7 @@ const BookingCalendar = ({
             disabledDates={blockedDates}
             loading={loading}
             minDate={selectedDates.checkIn}
-            month={selectedDates.checkIn || new Date()}
+            defaultMonth={selectedDates.checkIn || new Date()}
           />
         </div>
       </div>

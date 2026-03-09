@@ -225,7 +225,6 @@ async function saveBookingToSupabase(booking: Booking & { source: string }) {
     }
 
     // Build booking data with only required columns
-    // Exclude optional columns until schema cache updates
     const bookingData: any = {
       uid: booking.uid,
       check_in: booking.start,
@@ -234,22 +233,12 @@ async function saveBookingToSupabase(booking: Booking & { source: string }) {
       source: booking.source || "Unknown",
     }
 
-    // Only add fields that definitely exist in the original schema
-    // Add guests if the column exists in your database
-    // Comment out optional fields until 004_force_schema_refresh.sql is run
+    bookingData.booking_type = "villa"
+    bookingData.total_price = booking.totalPrice
+    bookingData.currency = booking.currency || "usd"
+    bookingData.guests = (booking as any).guests || 1
 
-    // booking_type: "villa",
-    // total_price: null,
-    // currency: "usd",
-    // guests: 1,
-
-    // After running migration 004, uncomment these lines:
-    // bookingData.booking_type = "villa"
-    // bookingData.total_price = null
-    // bookingData.currency = "usd"
-    // bookingData.guests = (booking as any).guests || 1
-
-    // console.log("Inserting booking data:", JSON.stringify(bookingData, null, 2))
+    console.log("Inserting booking data:", JSON.stringify(bookingData, null, 2))
 
     if (existing) {
       // Update existing booking
