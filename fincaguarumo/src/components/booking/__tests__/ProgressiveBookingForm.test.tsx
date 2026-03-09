@@ -389,6 +389,13 @@ describe("ProgressiveBookingForm", () => {
     })
 
     fireEvent.click(screen.getByText("Reserve"))
-    expect(mockOnSubmit).toHaveBeenCalled()
+    expect(mockOnSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bookingDetails: expect.objectContaining({
+          type: BOOKING_TYPE.villa,
+          totalPrice: expect.any(Number),
+        }),
+      }),
+    )
   })
 })

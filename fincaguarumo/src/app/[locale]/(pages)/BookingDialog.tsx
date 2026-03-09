@@ -74,7 +74,11 @@ const BookingDialog = ({
         bookingData={bookingData}
         title={dialogOptions.title}
         paymentStep={paymentStep}
-        onBookingFormSubmit={() => setPaymentStep(true)}
+        onBookingFormSubmit={submittedBookingData => {
+          // Update booking data with the finalized data from the form
+          setBookingData(submittedBookingData)
+          setPaymentStep(true)
+        }}
         onCancel={() => handleOpenChange(false)}
         bookingType={bookingType}
         locale={locale}

@@ -14,7 +14,12 @@ import { useTranslations } from "next-intl"
 import calculateDuration from "@/lib/calculateDuration"
 import calculateTotal, { calculateTotalWithRules } from "@/lib/calculateTotal"
 import { getDefaultBasePrice } from "@/lib/pricingEngine"
-import { BookingType, BOOKING_TYPE, initialBookingData } from "@/types"
+import {
+  BookingType,
+  BOOKING_TYPE,
+  initialBookingData,
+  BookingData,
+} from "@/types"
 import { useBooking } from "@/app/providers/BookingProvider"
 import { useDialog } from "@/app/providers/DialogProvider"
 import BookingProgressIndicator, {
@@ -23,7 +28,7 @@ import BookingProgressIndicator, {
 import AvailabilityPreview from "./AvailabilityPreview"
 
 interface ProgressiveBookingFormProps {
-  onSubmit: () => void
+  onSubmit: (bookingData: BookingData) => void
   onCancel: () => void
   bookingType: BookingType
   locale: string
@@ -41,6 +46,7 @@ export default function ProgressiveBookingForm({
   const [dateError, setDateError] = useState<string>("")
   const [calendarLoading, setCalendarLoading] = useState(false)
   const [blockedDates, setBlockedDates] = useState<Date[]>([])
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [isStepValid, setIsStepValid] = useState<Record<BookingStep, boolean>>({
     dates: false,
     personal: false,
@@ -122,15 +128,28 @@ export default function ProgressiveBookingForm({
             : undefined,
       }).total
 
-      setBookingData({
+      // Create the new booking data object and update state atomically
+      const newBookingData = {
         ...bookingData,
         bookingDetails: {
           ...bookingData.bookingDetails,
           type: bookingType,
           totalPrice,
         },
-      })
-      onSubmit()
+      }
+
+      // Update state with functional updater
+      setBookingData(prev => ({
+        ...prev,
+        bookingDetails: {
+          ...prev.bookingDetails,
+          type: bookingType,
+          totalPrice,
+        },
+      }))
+
+      // Pass the finalized booking data directly to onSubmit
+      onSubmit(newBookingData)
     }
   }
 
@@ -219,9 +238,9 @@ export default function ProgressiveBookingForm({
         </>
       ) : (
         <DatePicker
-          isOpen={false}
-          onClose={() => {}}
-          onOpen={() => {}}
+          isOpen={isDatePickerOpen}
+          onClose={() => setIsDatePickerOpen(false)}
+          onOpen={() => setIsDatePickerOpen(true)}
           onSelectDate={date => {
             setBookingData({
               ...bookingData,

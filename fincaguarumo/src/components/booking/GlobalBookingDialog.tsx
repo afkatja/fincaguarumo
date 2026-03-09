@@ -35,7 +35,11 @@ export default function GlobalBookingDialog() {
         bookingData={bookingData}
         title={bookingData.bookingDetails.title || "Book Your Stay"}
         paymentStep={paymentStep}
-        onBookingFormSubmit={() => setPaymentStep(true)}
+        onBookingFormSubmit={submittedBookingData => {
+          // Update booking data with the finalized data from the form
+          setBookingData(submittedBookingData)
+          setPaymentStep(true)
+        }}
         onCancel={closeHandler}
         bookingType={bookingType}
         locale="en"

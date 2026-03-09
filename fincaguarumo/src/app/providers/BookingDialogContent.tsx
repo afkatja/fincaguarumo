@@ -8,13 +8,13 @@ import {
 import { RemoveScroll } from "react-remove-scroll"
 import ProgressiveBookingForm from "@/components/booking/ProgressiveBookingForm"
 import Payment from "../[locale]/(pages)/(payment)/Payment"
-import { BookingType } from "../../types"
+import { BookingType, BookingData } from "../../types"
 
 interface BookingDialogContentProps {
   bookingData: Record<string, any>
   title?: string
   paymentStep: boolean
-  onBookingFormSubmit: () => void
+  onBookingFormSubmit: (bookingData: BookingData) => void
   onCancel: () => void
   bookingType: BookingType
   locale: string
