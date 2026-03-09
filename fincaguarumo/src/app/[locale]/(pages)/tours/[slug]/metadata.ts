@@ -19,9 +19,9 @@ interface TourData {
 export async function generateTourMetadata({
   params,
 }: {
-  params: { locale: string; slug: string }
+  params: Promise<{ locale: string; slug: string }>
 }): Promise<Metadata> {
-  const { locale, slug } = params
+  const { locale, slug } = await params
 
   const tour: TourData = await sanityFetch({
     query: TOURS_QUERY,
