@@ -200,7 +200,7 @@ const InPageNavigation: React.FC<InPageNavigationProps> = ({ sections }) => {
     <>
       <div
         ref={navRef}
-        className="fixed top-20 left-1/2 z-40 bg-zinc-50/95 dark:bg-zinc-900/95 backdrop-blur-sm border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg px-2 py-2"
+        className="fixed top-20 left-1/2 z-40 bg-zinc-50/95 dark:bg-zinc-900/95 backdrop-blur-sm border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg px-2 py-2 opacity-0"
         style={{
           pointerEvents: isVisible ? "auto" : "none",
           ...(isSupported && isVisible && { opacity: 1 }),
