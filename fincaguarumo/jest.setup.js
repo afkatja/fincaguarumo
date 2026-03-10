@@ -26,7 +26,7 @@ jest.mock("next-intl", () => ({
     if (typeof options === "object" && options.defaultValue) {
       return options.defaultValue
     }
-    return options || key
+    return key
   },
   getTranslations: () => key => key,
 }))
@@ -71,5 +71,4 @@ afterAll(() => {
 process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost:54321"
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-key"
 process.env.STRIPE_API_KEY = "sk_test_test"
-process.env.STRIPE_SECRET_KEY = "whsec_test"
 process.env.STRIPE_WEBHOOK_SECRET_LOCAL = "whsec_test_local"
