@@ -39,8 +39,13 @@ const BookingDialog = ({
   const handleOpenChange = (open: boolean) => {
     setOpen(open)
 
-    // Only reset booking data and payment step when dialog is closing
-    if (!open) {
+    // Set source when page dialog opens
+    if (open && bookingData.source !== "page") {
+      setBookingData(prev => ({ ...prev, source: "page" }))
+    }
+
+    // Only reset booking data and payment step when dialog is closing and it was the source
+    if (!open && bookingData.source === "page") {
       setBookingData(initialBookingData)
       setPaymentStep(false)
     }

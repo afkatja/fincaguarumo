@@ -46,6 +46,7 @@ async function main() {
   }
 
   const res = await sendConfirmationEmail({
+    source: null,
     customerDetails,
     bookingDetails,
     pricingRules: [], // Email script doesn't need pricingRules, but it's required by BookingData type

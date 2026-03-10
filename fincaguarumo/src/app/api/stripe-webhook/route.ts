@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
         try {
           if (process.env.NODE_ENV === "production") {
             const response = await sendConfirmationEmail({
+              source: null,
               customerDetails,
               bookingDetails,
               pricingRules: [], // Webhook doesn't need pricingRules, but it's required by BookingData type

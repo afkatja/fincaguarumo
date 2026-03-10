@@ -12,16 +12,18 @@ export default function GlobalBookingDialog({ locale }: { locale: string }) {
   const { bookingData, setBookingData } = useBooking()
   const { isBookingDialogOpen, closeBookingDialog } = useDialog()
 
+  // Set source when global dialog opens
+  React.useEffect(() => {
+    if (isBookingDialogOpen && bookingData.source !== "global") {
+      setBookingData(prev => ({ ...prev, source: "global" }))
+    }
+  }, [isBookingDialogOpen, bookingData.source, setBookingData])
+
   const closeHandler = () => {
-    // Reset checkIn and checkOut dates when dialog is closed
-    setBookingData({
-      ...bookingData,
-      bookingDetails: {
-        ...bookingData.bookingDetails,
-        checkIn: initialBookingData.bookingDetails.checkIn,
-        checkOut: initialBookingData.bookingDetails.checkOut,
-      },
-    })
+    // Only reset dates if this dialog was the one that set them
+    if (bookingData.source === "global") {
+      setBookingData(initialBookingData)
+    }
     closeBookingDialog()
     setPaymentStep(false)
   }
