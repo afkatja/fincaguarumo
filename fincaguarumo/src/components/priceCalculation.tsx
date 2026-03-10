@@ -78,7 +78,7 @@ const PriceCalculation = ({
           )
 
           return bestDiscountRule && bestDiscountRule.percentage
-            ? (totalWithVat * duration * bestDiscountRule.percentage) / 100
+            ? (totalWithVat * bestDiscountRule.percentage) / 100
             : 0
         })()
       : 0
@@ -132,14 +132,7 @@ const PriceCalculation = ({
           })}
         </dt>
         <dd className="text-right">{currency(totalVatAmount)}</dd>
-        <dt className="text-muted-foreground">
-          {b("totalWithVat", {
-            guests,
-            guestsLabel: b(guests === 1 ? "person" : "people"),
-            nights: duration ? `${duration} nights` : "",
-          })}
-        </dt>
-        <dd className="text-right">{currency(totalWithVat)}</dd>
+
         {discountAmount > 0 && (
           <>
             <dt className="text-muted-foreground">{discountPercentage}</dt>

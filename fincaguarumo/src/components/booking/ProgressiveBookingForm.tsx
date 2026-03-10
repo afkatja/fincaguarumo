@@ -85,18 +85,17 @@ export default function ProgressiveBookingForm({
   useEffect(() => {
     const validateStep = () => {
       switch (currentStep) {
-        case "dates": {
+        case "dates":
           const datesValid =
             bookingType === BOOKING_TYPE.villa
               ? bookingData.bookingDetails.checkIn &&
                 bookingData.bookingDetails.checkOut &&
                 bookingData.bookingDetails.checkOut.getTime() >
                   bookingData.bookingDetails.checkIn.getTime() &&
-                isAvailable !== false // Must not be unavailable
+                isAvailable === true // Must have confirmed availability
               : bookingData.bookingDetails.date
           setIsStepValid(prev => ({ ...prev, dates: !!datesValid }))
           break
-        }
         case "personal": {
           const personalValid =
             bookingData.customerDetails.name &&
@@ -286,7 +285,7 @@ export default function ProgressiveBookingForm({
         bookingData.bookingDetails.checkIn &&
         bookingData.bookingDetails.checkOut &&
         bookingData.bookingDetails.guests &&
-        isAvailable !== false) || // Don't show if unavailable
+        isAvailable === true) || // Only show when availability is confirmed
       (bookingType === BOOKING_TYPE.tour &&
         bookingData.bookingDetails.date &&
         bookingData.bookingDetails.guests) ? (
