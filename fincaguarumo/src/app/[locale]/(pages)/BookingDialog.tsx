@@ -41,14 +41,7 @@ const BookingDialog = ({
 
     // Only reset booking data and payment step when dialog is closing
     if (!open) {
-      setBookingData({
-        ...bookingData,
-        bookingDetails: {
-          ...bookingData.bookingDetails,
-          checkIn: initialBookingData.bookingDetails.checkIn,
-          checkOut: initialBookingData.bookingDetails.checkOut,
-        },
-      })
+      setBookingData(initialBookingData)
       setPaymentStep(false)
     }
   }
