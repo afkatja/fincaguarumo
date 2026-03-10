@@ -7,7 +7,6 @@ import Layout from "../pagesLayout"
 import AccommodationClientPage from "./AccommodationClientPage"
 import { FAQType, SanityImageObject } from "@/types"
 import { PricingRule } from "@/lib/pricingEngine"
-import { title } from "process"
 
 const slug = "villa-bruno"
 

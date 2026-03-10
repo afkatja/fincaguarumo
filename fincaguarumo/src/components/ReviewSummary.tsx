@@ -15,7 +15,6 @@ import { Button } from "./ui/button"
 import { ArrowDown } from "lucide-react"
 
 interface ReviewSummaryProps {
-  count?: number
   highlightFeatures?: Array<{
     title: string
     description?: string
@@ -72,7 +71,6 @@ const extractCommonThemes = (texts: string[], t: any): string[] => {
 }
 
 export const ReviewSummary = ({
-  count,
   highlightFeatures,
   readMoreSection,
 }: ReviewSummaryProps) => {
@@ -153,7 +151,7 @@ export const ReviewSummary = ({
 
   return (
     <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg shadow-sm p-6 mb-6 flex flex-wrap">
-      <div className="lg:grid lg:grid-cols-2 gap-4">
+      <div className="md:grid md:grid-cols-2 gap-4">
         <div className="md:flex flex-wrap items-start gap-4">
           {/* Overall Rating */}
           <div className="flex-1 flex flex-wrap gap-2">

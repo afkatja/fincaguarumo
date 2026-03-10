@@ -30,7 +30,7 @@ const HomeMapContent = () => {
                 "camera changed:",
                 ev.detail.center,
                 "zoom:",
-                ev.detail.zoom
+                ev.detail.zoom,
               )
             }
           >

@@ -148,7 +148,6 @@ const AccommodationClientPage = ({
             >
               <PlaceProvider placeId={placeId}>
                 <ReviewSummary
-                  count={4}
                   highlightFeatures={content.highlightFeatures}
                   readMoreSection="reviews"
                 />

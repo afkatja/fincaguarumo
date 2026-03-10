@@ -1,7 +1,7 @@
 // Test script to verify admin authentication implementation
 // This script demonstrates how to use the protected availability endpoints
 
-const BASE_URL = "http://localhost:3000"
+const BASE_URL = "https://localhost:3000"
 
 // Safe response parser that handles non-JSON responses
 async function safeParseResponse(response) {
