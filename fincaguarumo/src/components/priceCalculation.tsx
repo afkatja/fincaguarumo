@@ -45,7 +45,15 @@ const PriceCalculation = ({
 
   const discountAmount =
     duration && duration >= 7
-      ? priceWithVat * duration * (duration >= 28 ? 0.2 : 0.1)
+      ? (priceWithVat *
+          duration *
+          (pricingRules?.find(
+            rule =>
+              rule.ruleType === "discount" &&
+              rule.minimumNights &&
+              duration >= rule.minimumNights,
+          )?.percentage || 0)) /
+        100
       : 0
 
   const currency = (toFormat: number) =>
@@ -67,23 +75,27 @@ const PriceCalculation = ({
       : t?.("rateLabel", { defaultValue: "Price" })
 
   const discountPercentage =
-    duration! >= 28
+    duration !== null && duration !== undefined && duration >= 28
       ? b("discount20", {
-          discount: parseInt(
-            String(
-              pricingRules?.find(rule => rule.ruleType === "discount")
-                ?.percentage || "20",
-            ),
-          ),
+          discount:
+            pricingRules?.find(
+              rule =>
+                rule.ruleType === "discount" &&
+                rule.minimumNights &&
+                duration >= rule.minimumNights,
+            )?.percentage || 20,
         })
-      : b("discount10", {
-          discount: parseInt(
-            String(
-              pricingRules?.find(rule => rule.ruleType === "discount")
-                ?.percentage || "10",
-            ),
-          ),
-        })
+      : duration !== null && duration !== undefined && duration >= 7
+        ? b("discount10", {
+            discount:
+              pricingRules?.find(
+                rule =>
+                  rule.ruleType === "discount" &&
+                  rule.minimumNights &&
+                  duration >= rule.minimumNights,
+              )?.percentage || 10,
+          })
+        : ""
 
   return (
     <div className="grid gap-2 flex-none w-full">
