@@ -22,19 +22,19 @@ const jsonLd = (faqs: FAQType[]) => ({
 
 const FAQpage = async ({ params }: { params: any }) => {
   const { locale } = await params
-  const messages = await getTranslations(locale)
   const faqs: FAQType[] = await sanityFetch({
     query: FAQ_QUERY,
     params: { language: locale },
     revalidate: 0,
   })
+  const t = await getTranslations("faq")
   if (!faqs) return NotFound()
 
   return (
     <Layout
       locale={locale}
       pageName="FAQ"
-      title={messages("faq.title") ?? "Frequently Asked Questions"}
+      title={t("title", { defaultValue: "Frequently Asked Questions" })}
     >
       <div className="w-11/12 mx-auto py-8">
         <FAQCategories faqs={faqs} />
