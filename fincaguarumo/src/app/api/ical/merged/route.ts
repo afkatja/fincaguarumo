@@ -503,9 +503,10 @@ export async function GET() {
     const allBookingResponses: BookingResponse[] = []
 
     // Fetch Sanity bookings and convert to response format
+    let sanityBookingsCached: any[] = []
     try {
-      const sanityBookings = await getSanityBookings()
-      const sanityResponses: BookingResponse[] = sanityBookings.map(
+      sanityBookingsCached = await getSanityBookings()
+      const sanityResponses: BookingResponse[] = sanityBookingsCached.map(
         booking => ({
           uid: booking.uid,
           start: booking.start,
@@ -576,7 +577,7 @@ export async function GET() {
     // Convert all sync rows to Booking format for merge logic
     const allBookings = [
       ...allSyncRows.map(mapToBookingForSupabase),
-      ...(await getSanityBookings()),
+      ...sanityBookingsCached,
     ]
 
     // Optional: deduplicate by UID or by identical ranges (simple)
