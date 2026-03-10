@@ -49,7 +49,7 @@ export const PlaceReviews = ({ count }: { count?: number }) => {
         icon={{ iconClassName: "fill-guarumo-primary dark:fill-zinc-50" }}
       />
       {reviewsToShow.length > 0 && (
-        <div className="p-4 lg:p-0 md:grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="md:grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {reviewsToShow.map((review: TReview, index) => (
             <Review
               key={`${review?.date}-${review?.author?.name || review?.authorAttribution?.displayName}-${index}`}
@@ -58,17 +58,19 @@ export const PlaceReviews = ({ count }: { count?: number }) => {
           ))}
         </div>
       )}
-      <Link
-        href={`/reviews`}
-        className="w-80 inline-flex ml-auto items-center justify-center h-full group no-underline"
-      >
-        {b("readMoreReviews") || "Read more reviews"}
-        <Icon
-          icon="ArrowRight"
-          className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
-          color="currentColor"
-        />
-      </Link>
+      <div className="w-full flex justify-end">
+        <Link
+          href={`/reviews`}
+          className="w-80 inline-flex items-center justify-end h-full group no-underline mt-8 mr-4"
+        >
+          {b("readMoreReviews") || "Read more reviews"}
+          <Icon
+            icon="ArrowRight"
+            className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+            color="currentColor"
+          />
+        </Link>
+      </div>
     </div>
   )
 }

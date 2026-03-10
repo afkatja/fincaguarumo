@@ -174,7 +174,10 @@ const AccommodationClientPage = ({
       </div>
 
       {/* FAQ Section */}
-      <div id="faq" className="w-11/12 mx-auto mt-3 mb-8 flex flex-col">
+      <div
+        id="faq"
+        className="w-11/12 mx-auto mt-3 mb-8 flex flex-col py-5 lg:px-40"
+      >
         <Title
           title={tPage("FAQ") || "FAQ"}
           Heading="h2"
@@ -185,9 +188,11 @@ const AccommodationClientPage = ({
           {content?.faq && content?.faq.length > 0 && (
             <FAQ faqs={content.faq} />
           )}
+        </div>
+        <div className="w-full flex justify-end">
           <Link
             href={`/faq`}
-            className="w-80 inline-flex items-center justify-center h-full group no-underline"
+            className="w-80 inline-flex items-center justify-end h-full group no-underline mt-8 mr-4"
           >
             {tPage("moreFAQ") || "More FAQ"}
             <Icon
@@ -199,7 +204,7 @@ const AccommodationClientPage = ({
         </div>
       </div>
       {googleMapsKey && (
-        <div id="reviews" className="mb-6">
+        <div id="reviews" className="w-11/12 mx-auto mt-3 mb-8">
           <APIProvider
             apiKey={googleMapsKey}
             // onLoad={() => console.log("Maps API has loaded.")}
