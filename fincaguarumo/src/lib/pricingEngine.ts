@@ -162,7 +162,38 @@ function isDateInRange(
   const checkDate = new Date(date)
   const start = new Date(startDate)
   const end = new Date(endDate)
-  return checkDate >= start && checkDate <= end
+
+  // For recurring seasons, ignore year and only compare month and day
+  const checkMonth = checkDate.getMonth()
+  const checkDay = checkDate.getDate()
+  const startMonth = start.getMonth()
+  const startDay = start.getDate()
+  const endMonth = end.getMonth()
+  const endDay = end.getDate()
+
+  // If start and end are in the same month
+  if (startMonth === endMonth) {
+    return (
+      checkMonth === startMonth && checkDay >= startDay && checkDay <= endDay
+    )
+  }
+
+  // If season spans across year boundary (e.g., Dec 15 - Mar 15)
+  if (startMonth > endMonth) {
+    return (
+      (checkMonth === startMonth && checkDay >= startDay) ||
+      (checkMonth === endMonth && checkDay <= endDay) ||
+      checkMonth > startMonth ||
+      checkMonth < endMonth
+    )
+  }
+
+  // Normal case: season within same year (e.g., Mar 15 - Jun 15)
+  return (
+    (checkMonth === startMonth && checkDay >= startDay) ||
+    (checkMonth === endMonth && checkDay <= endDay) ||
+    (checkMonth > startMonth && checkMonth < endMonth)
+  )
 }
 
 // Backward compatibility function for existing calculateTotal
