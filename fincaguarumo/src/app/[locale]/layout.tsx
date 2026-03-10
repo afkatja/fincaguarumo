@@ -99,7 +99,7 @@ export default async function Layout({
                     )}
                     {children}
                   </main>
-                  <GlobalBookingDialog />
+                  <GlobalBookingDialog locale={locale} />
                 </DialogProvider>
               </BookingProvider>
             </div>

@@ -7,7 +7,7 @@ import { useDialog } from "@/app/providers/DialogProvider"
 import { BookingType, initialBookingData } from "@/types"
 import BookingDialogContent from "@/app/providers/BookingDialogContent"
 
-export default function GlobalBookingDialog() {
+export default function GlobalBookingDialog({ locale }: { locale: string }) {
   const [paymentStep, setPaymentStep] = useState(false)
   const { bookingData, setBookingData } = useBooking()
   const { isBookingDialogOpen, closeBookingDialog } = useDialog()
@@ -42,7 +42,7 @@ export default function GlobalBookingDialog() {
         }}
         onCancel={closeHandler}
         bookingType={bookingType}
-        locale="en"
+        locale={locale}
       />
     </Dialog>
   )
