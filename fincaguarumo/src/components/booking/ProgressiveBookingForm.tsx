@@ -85,7 +85,7 @@ export default function ProgressiveBookingForm({
   useEffect(() => {
     const validateStep = () => {
       switch (currentStep) {
-        case "dates":
+        case "dates": {
           const datesValid =
             bookingType === BOOKING_TYPE.villa
               ? bookingData.bookingDetails.checkIn &&
@@ -96,16 +96,19 @@ export default function ProgressiveBookingForm({
               : bookingData.bookingDetails.date
           setIsStepValid(prev => ({ ...prev, dates: !!datesValid }))
           break
-        case "personal":
+        }
+        case "personal": {
           const personalValid =
             bookingData.customerDetails.name &&
             bookingData.customerDetails.email &&
             bookingData.customerDetails.phoneNumber
           setIsStepValid(prev => ({ ...prev, personal: !!personalValid }))
           break
-        case "payment":
+        }
+        case "payment": {
           setIsStepValid(prev => ({ ...prev, payment: true }))
           break
+        }
       }
     }
 

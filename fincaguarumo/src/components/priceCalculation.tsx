@@ -57,15 +57,30 @@ const PriceCalculation = ({
       .trim()
 
   const discountAmount =
-    duration && duration >= 7
-      ? (totalWithVat *
-          (pricingRules?.find(
-            rule =>
-              rule.ruleType === "discount" &&
-              rule.minimumNights &&
-              duration >= rule.minimumNights,
-          )?.percentage || 0)) /
-        100
+    duration && duration >= 7 && pricingRules
+      ? (() => {
+          // Find the best discount rule (highest percentage) that applies to this duration
+          const bestDiscountRule = pricingRules.reduce(
+            (best: PricingRule | null, current) => {
+              if (
+                current.ruleType === "discount" &&
+                current.minimumNights &&
+                duration >= current.minimumNights &&
+                current.percentage
+              ) {
+                return !best || current.percentage > (best.percentage || 0)
+                  ? current
+                  : best
+              }
+              return best
+            },
+            null,
+          )
+
+          return bestDiscountRule && bestDiscountRule.percentage
+            ? (totalWithVat * duration * bestDiscountRule.percentage) / 100
+            : 0
+        })()
       : 0
 
   const finalTotal = totalWithVat - discountAmount

@@ -118,8 +118,13 @@ function getSeasonalAdjustment(
   )
 
   if (seasonalRules.length > 0) {
-    // Use the first matching seasonal rule (ordered by displayOrder)
-    const rule = seasonalRules[0]
+    // Use the first matching seasonal rule (sorted by displayOrder)
+    const sortedSeasonalRules = seasonalRules
+      .slice()
+      .sort(
+        (a, b) => (a.displayOrder ?? Infinity) - (b.displayOrder ?? Infinity),
+      )
+    const rule = sortedSeasonalRules[0]
     // Return the seasonal base price - this will override the default base price
     return rule.basePrice!
   }
