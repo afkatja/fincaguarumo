@@ -11,6 +11,7 @@ interface AvailabilityPreviewProps {
   className?: string
   calendarLoading?: boolean
   blockedDates?: Date[] // Add blocked dates from calendar
+  onAvailabilityChange?: (isAvailable: boolean | null) => void
 }
 
 interface AvailabilityStatus {
@@ -26,6 +27,7 @@ export default function AvailabilityPreview({
   className = "",
   calendarLoading = false,
   blockedDates = [],
+  onAvailabilityChange,
 }: AvailabilityPreviewProps) {
   const t = useTranslations("booking")
   const [availability, setAvailability] = useState<AvailabilityStatus>({
@@ -38,12 +40,18 @@ export default function AvailabilityPreview({
     const checkAvailability = () => {
       if (!checkIn || !checkOut || bookingType !== "villa") {
         setAvailability({ isAvailable: null, isLoading: false })
+        if (onAvailabilityChange) {
+          onAvailabilityChange(null)
+        }
         return
       }
 
       // Don't check availability if calendar is still loading
       if (calendarLoading) {
         setAvailability({ isAvailable: null, isLoading: true })
+        if (onAvailabilityChange) {
+          onAvailabilityChange(null)
+        }
         return
       }
 
@@ -71,6 +79,11 @@ export default function AvailabilityPreview({
           isAvailable: !hasConflict,
           isLoading: false,
         })
+
+        // Notify parent component of availability change
+        if (onAvailabilityChange) {
+          onAvailabilityChange(!hasConflict)
+        }
       } catch (error) {
         console.error("Error checking availability:", error)
         setAvailability({
@@ -78,13 +91,23 @@ export default function AvailabilityPreview({
           isLoading: false,
           error: error instanceof Error ? error.message : "Unknown error",
         })
+        if (onAvailabilityChange) {
+          onAvailabilityChange(null)
+        }
       }
     }
 
     // Debounce the availability check
     const timer = setTimeout(checkAvailability, 500)
     return () => clearTimeout(timer)
-  }, [checkIn, checkOut, bookingType, calendarLoading, blockedDates])
+  }, [
+    checkIn,
+    checkOut,
+    bookingType,
+    calendarLoading,
+    blockedDates,
+    onAvailabilityChange,
+  ])
 
   if (bookingType !== "villa") {
     return null

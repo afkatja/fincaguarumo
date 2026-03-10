@@ -43,18 +43,10 @@ const PriceCalculation = ({
         })
       : { priceForPeople: 0, priceWithVat: 0, total: 0 }
 
-  const discountAmount =
-    duration && duration >= 7
-      ? (priceWithVat *
-          duration *
-          (pricingRules?.find(
-            rule =>
-              rule.ruleType === "discount" &&
-              rule.minimumNights &&
-              duration >= rule.minimumNights,
-          )?.percentage || 0)) /
-        100
-      : 0
+  // Calculate totals for the entire stay
+  const totalWithoutVat = priceForPeople * (duration || 1)
+  const totalVatAmount = totalWithoutVat * 0.13 // 13% VAT rate
+  const totalWithVat = totalWithoutVat + totalVatAmount
 
   const currency = (toFormat: number) =>
     new Intl.NumberFormat(locale, {
@@ -64,15 +56,19 @@ const PriceCalculation = ({
       .format(toFormat)
       .trim()
 
-  const totalDisplayed =
-    bookingType === BOOKING_TYPE.villa
-      ? `${getInternationalizedValue(dialog?.total, locale, "Total")} ${duration ? `for ${duration} nights` : null}`
-      : getInternationalizedValue(dialog?.total, locale, "Total")
+  const discountAmount =
+    duration && duration >= 7
+      ? (totalWithVat *
+          (pricingRules?.find(
+            rule =>
+              rule.ruleType === "discount" &&
+              rule.minimumNights &&
+              duration >= rule.minimumNights,
+          )?.percentage || 0)) /
+        100
+      : 0
 
-  const priceForPeopleLabel =
-    bookingType === BOOKING_TYPE.villa
-      ? `${t?.("priceLabel")} ${guests} ${b(guests === 1 ? "person" : "people")}`
-      : t?.("rateLabel", { defaultValue: "Price" })
+  const finalTotal = totalWithVat - discountAmount
 
   const discountPercentage =
     duration !== null && duration !== undefined && duration >= 28
@@ -97,15 +93,38 @@ const PriceCalculation = ({
           })
         : ""
 
+  const totalDisplayed =
+    bookingType === BOOKING_TYPE.villa
+      ? `${getInternationalizedValue(dialog?.total, locale, "Total")} ${duration ? `for ${duration} nights` : null}`
+      : getInternationalizedValue(dialog?.total, locale, "Total")
+
   return (
     <div className="grid gap-2 flex-none w-full">
       <dl className="grid grid-cols-2 items-center justify-between">
-        <dt className="text-muted-foreground">{priceForPeopleLabel}</dt>
-        <dd className="text-right">{currency(priceForPeople)}</dd>
         <dt className="text-muted-foreground">
-          {t?.("rateVATlabel", { defaultValue: "Price (incl 13% VAT)" })}
+          {b("totalWithoutVat", {
+            guests,
+            guestsLabel: b(guests === 1 ? "person" : "people"),
+            nights: duration ? `${duration} nights` : "",
+          })}
         </dt>
-        <dd className="text-right">{currency(priceWithVat)}</dd>
+        <dd className="text-right">{currency(totalWithoutVat)}</dd>
+        <dt className="text-muted-foreground">
+          {b("totalVat", {
+            guests,
+            guestsLabel: b(guests === 1 ? "person" : "people"),
+            nights: duration ? `${duration} nights` : "",
+          })}
+        </dt>
+        <dd className="text-right">{currency(totalVatAmount)}</dd>
+        <dt className="text-muted-foreground">
+          {b("totalWithVat", {
+            guests,
+            guestsLabel: b(guests === 1 ? "person" : "people"),
+            nights: duration ? `${duration} nights` : "",
+          })}
+        </dt>
+        <dd className="text-right">{currency(totalWithVat)}</dd>
         {discountAmount > 0 && (
           <>
             <dt className="text-muted-foreground">{discountPercentage}</dt>
@@ -116,7 +135,7 @@ const PriceCalculation = ({
       <Separator />
       <div className="flex items-center justify-between font-medium">
         <span>{titleCase(totalDisplayed)}</span>
-        <span>{currency(total)}</span>
+        <span>{currency(finalTotal)}</span>
       </div>
     </div>
   )

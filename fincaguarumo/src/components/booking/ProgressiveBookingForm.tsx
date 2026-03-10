@@ -53,6 +53,7 @@ export default function ProgressiveBookingForm({
     payment: false,
     complete: false,
   })
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
 
   const { bookingData, setBookingData } = useBooking()
   const { dialogData: dialog } = useDialog()
@@ -90,7 +91,8 @@ export default function ProgressiveBookingForm({
               ? bookingData.bookingDetails.checkIn &&
                 bookingData.bookingDetails.checkOut &&
                 bookingData.bookingDetails.checkOut.getTime() >
-                  bookingData.bookingDetails.checkIn.getTime()
+                  bookingData.bookingDetails.checkIn.getTime() &&
+                isAvailable !== false // Must not be unavailable
               : bookingData.bookingDetails.date
           setIsStepValid(prev => ({ ...prev, dates: !!datesValid }))
           break
@@ -108,7 +110,7 @@ export default function ProgressiveBookingForm({
     }
 
     validateStep()
-  }, [currentStep, bookingData, bookingType])
+  }, [currentStep, bookingData, bookingType, isAvailable])
 
   const handleNext = () => {
     if (currentStep === "dates") {
@@ -234,6 +236,7 @@ export default function ProgressiveBookingForm({
             className="mt-2"
             calendarLoading={calendarLoading}
             blockedDates={blockedDates}
+            onAvailabilityChange={setIsAvailable}
           />
         </>
       ) : (
@@ -279,7 +282,8 @@ export default function ProgressiveBookingForm({
       {(bookingType === BOOKING_TYPE.villa &&
         bookingData.bookingDetails.checkIn &&
         bookingData.bookingDetails.checkOut &&
-        bookingData.bookingDetails.guests) ||
+        bookingData.bookingDetails.guests &&
+        isAvailable !== false) || // Don't show if unavailable
       (bookingType === BOOKING_TYPE.tour &&
         bookingData.bookingDetails.date &&
         bookingData.bookingDetails.guests) ? (
