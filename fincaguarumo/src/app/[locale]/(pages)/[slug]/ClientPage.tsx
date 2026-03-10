@@ -85,7 +85,7 @@ const ClientPage = ({
             )}
             <Link
               href={`/faq`}
-              className="w-80 inline-flex items-center justify-center h-full group no-underline"
+              className="w-80 inline-flex items-center justify-center h-full group no-underline mt-8"
             >
               {tPage("moreFAQ")}
               <Icon
