@@ -102,6 +102,34 @@ export async function POST(request: NextRequest) {
           geo: metadata?.geo ? JSON.parse(metadata.geo) : {},
         }
 
+        // Validate dates before proceeding
+        const checkInValid =
+          bookingDetails.checkIn && !isNaN(bookingDetails.checkIn.getTime())
+        const checkOutValid =
+          bookingDetails.checkOut && !isNaN(bookingDetails.checkOut.getTime())
+
+        if (!checkInValid || !checkOutValid) {
+          console.error("Invalid dates in booking details:", {
+            checkIn: bookingDetails.checkIn,
+            checkOut: bookingDetails.checkOut,
+            checkInValid,
+            checkOutValid,
+            metadata: {
+              checkIn: metadata?.checkIn,
+              checkOut: metadata?.checkOut,
+            },
+          })
+          await sendErrorEmail({
+            subject: "Invalid Dates in Booking Webhook",
+            error: "Date parsing failed",
+            details: `Session ID: ${id}, Customer: ${customerDetails.email}, Invalid dates - Check-in: ${metadata?.checkIn}, Check-out: ${metadata?.checkOut}`,
+          })
+          return NextResponse.json(
+            { error: "Invalid booking dates" },
+            { status: 400 },
+          )
+        }
+
         // Send confirmation email - continue even if fails
         try {
           if (process.env.NODE_ENV === "production") {
@@ -180,11 +208,16 @@ export async function POST(request: NextRequest) {
 
               // Also update availability table to mark dates as unavailable
               try {
+                // Double-check dates before using them for availability
+                const availabilityCheckIn = bookingDetails.checkIn.toISOString()
+                const availabilityCheckOut =
+                  bookingDetails.checkOut.toISOString()
+
                 const { error: availabilityError } = await supabaseAdmin
                   .from("availability")
                   .insert({
-                    start_date: bookingDetails.checkIn.toISOString(),
-                    end_date: bookingDetails.checkOut.toISOString(),
+                    start_date: availabilityCheckIn,
+                    end_date: availabilityCheckOut,
                     is_available: false,
                     reason: `Booked via Direct - ${customerDetails.name}`,
                     booking_uid: event.data.object.id,
@@ -211,12 +244,8 @@ export async function POST(request: NextRequest) {
           }
 
           // Send notification based on operation results
-          const checkInFormatted = isNaN(bookingDetails.checkIn.getTime())
-            ? "TBD"
-            : formatForEmail(bookingDetails.checkIn)
-          const checkOutFormatted = isNaN(bookingDetails.checkOut.getTime())
-            ? "TBD"
-            : formatForEmail(bookingDetails.checkOut)
+          const checkInFormatted = formatForEmail(bookingDetails.checkIn)
+          const checkOutFormatted = formatForEmail(bookingDetails.checkOut)
 
           if (bookingSaved && availabilityUpdated) {
             // Complete success
