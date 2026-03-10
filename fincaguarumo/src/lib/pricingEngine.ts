@@ -69,15 +69,18 @@ export function calculateEffectivePrice({
   let priceForPeople: number
   let priceWithVat: number
 
+  // Ensure guests is a non-negative number
+  const safeGuests = Math.max(0, guests || 0)
+
   if (bookingType === BOOKING_TYPE.tour) {
     // Tour pricing: basePrice * guests + VAT (no extra guest fees)
     priceForPeople = basePrice
     priceWithVat = basePrice * (1 + VAT_RATE)
-    total = priceWithVat * guests
+    total = priceWithVat * safeGuests
   } else {
     // Villa pricing: basePrice + extra guest fees + VAT
-    priceForPeople =
-      basePrice + Math.min(guests - 1, MAX_EXTRA_GUESTS) * EXTRA_GUEST_FEE
+    const extraGuests = Math.max(0, Math.min(safeGuests - 1, MAX_EXTRA_GUESTS))
+    priceForPeople = basePrice + extraGuests * EXTRA_GUEST_FEE
     priceWithVat = priceForPeople * (1 + VAT_RATE)
     total = priceWithVat * duration
   }
