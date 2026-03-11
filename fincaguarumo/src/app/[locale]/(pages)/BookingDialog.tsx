@@ -29,7 +29,13 @@ const BookingDialog = ({
   const [paymentStep, setPaymentStep] = useState(false)
 
   const { bookingData, setBookingData } = useBooking()
-  const { dialogData, setDialogId, isLoading } = useDialog()
+  const {
+    dialogData,
+    setDialogId,
+    isLoading,
+    openBookingDialog,
+    closeBookingDialog,
+  } = useDialog()
 
   // Set dialog ID when component mounts
   React.useEffect(() => {
@@ -38,6 +44,13 @@ const BookingDialog = ({
 
   const handleOpenChange = (open: boolean) => {
     setOpen(open)
+
+    // Sync with DialogProvider state
+    if (open) {
+      openBookingDialog()
+    } else {
+      closeBookingDialog()
+    }
 
     // Set source when page dialog opens
     if (open) {

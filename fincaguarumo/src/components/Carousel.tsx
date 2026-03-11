@@ -11,6 +11,7 @@ import {
 import Autoplay from "embla-carousel-autoplay"
 import { ImageWithFallback } from "./ImageWithFallback"
 import type { CarouselImage } from "@/lib/sanityImages"
+import { useDialog } from "@/app/providers/DialogProvider"
 
 const SIZES = "(max-width: 640px) 640px, (max-width: 1024px) 1024px, 2016px"
 
@@ -61,13 +62,19 @@ const ImgSlider = React.memo(
     className?: string
     [prop: string]: any
   }) => {
+    const { isBookingDialogOpen } = useDialog()
     const autoplayRef = React.useRef(Autoplay(options ?? {}))
+
+    // Only include autoplay plugin if dialog is not open
+    const carouselPlugins = isBookingDialogOpen
+      ? [...(plugins ?? [])]
+      : [autoplayRef.current, ...(plugins ?? [])]
 
     return (
       <Carousel
         {...props}
         opts={options ?? (props as any).opts}
-        plugins={[autoplayRef.current, ...(plugins ?? [])]}
+        plugins={carouselPlugins}
         className={`w-11/12 mx-auto md:max-h-[90dvh] flex flex-col ${className}`}
       >
         <CarouselContent>
