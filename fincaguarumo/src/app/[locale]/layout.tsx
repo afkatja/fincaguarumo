@@ -11,7 +11,7 @@ import "react-day-picker/style.css"
 import { locales } from "../../config"
 
 import Footer from "../../components/Footer"
-import TransitionProvider from "./providers"
+import TransitionProvider, { GlobalLoader } from "./providers"
 
 import { BookingProvider } from "../providers/BookingProvider"
 import { DialogProvider } from "../providers/DialogProvider"
@@ -84,6 +84,7 @@ export default async function Layout({
       >
         <NextIntlClientProvider locale={locale}>
           <TransitionProvider>
+            <GlobalLoader />
             <div className="flex flex-col min-h-[calc(100dvh-var(--header-height))] animation-container transition-opacity ">
               <BookingProvider>
                 <DialogProvider locale={locale}>
