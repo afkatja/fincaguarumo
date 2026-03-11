@@ -1,9 +1,10 @@
-"use client"
+import { formatCurrency } from "@/lib/currency"
 
 import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { DialogFooter } from "@/components/ui/dialog"
-import PriceCalculation from "@/components/priceCalculation"
+import VillaPriceCalculation from "@/components/VillaPriceCalculation"
+import TourPriceCalculation from "@/components/TourPriceCalculation"
 import Input from "@/components/Input"
 import PhoneInput from "@/components/PhoneInput"
 import BookingCalendar from "@/components/BookingCalendar"
@@ -13,7 +14,7 @@ import { getInternationalizedValue } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import calculateDuration from "@/lib/calculateDuration"
 import calculateTotal, { calculateTotalWithRules } from "@/lib/calculateTotal"
-import { getDefaultBasePrice } from "@/lib/pricingEngine"
+import { getDefaultBasePrice, getLowestPrice } from "@/lib/pricingEngine"
 import {
   BookingType,
   BOOKING_TYPE,
@@ -61,8 +62,8 @@ export default function ProgressiveBookingForm({
 
   // Calculate duration based on check-in and check-out dates
   const duration = calculateDuration(
-    bookingData.bookingDetails.checkIn,
-    bookingData.bookingDetails.checkOut,
+    bookingData.bookingDetails.checkIn || undefined,
+    bookingData.bookingDetails.checkOut || undefined,
   )
 
   // Define steps based on booking type
@@ -128,7 +129,7 @@ export default function ProgressiveBookingForm({
         duration,
         checkInDate:
           bookingType === BOOKING_TYPE.villa
-            ? bookingData.bookingDetails.checkIn
+            ? bookingData.bookingDetails.checkIn || undefined
             : undefined,
       }).total
 
@@ -169,6 +170,75 @@ export default function ProgressiveBookingForm({
     setCurrentStep(step)
   }
 
+  const renderPricePreview = () => {
+    const shouldShowPricePreview =
+      (bookingType === BOOKING_TYPE.villa &&
+        bookingData.bookingDetails.checkIn &&
+        bookingData.bookingDetails.checkOut &&
+        bookingData.bookingDetails.guests &&
+        isAvailable === true) || // Only show when availability is confirmed
+      (bookingType === BOOKING_TYPE.tour &&
+        bookingData.bookingDetails.date &&
+        bookingData.bookingDetails.guests)
+
+    if (!shouldShowPricePreview) {
+      return (
+        <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-muted-foreground">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">
+              {t("priceFrom", {
+                defaultValue:
+                  "Price starting from ${price} for {guests} {guestsLabel}",
+                price: formatCurrency(
+                  getLowestPrice(bookingData.pricingRules),
+                  {
+                    locale,
+                    currency: bookingData.bookingDetails.currency || "USD",
+                  },
+                ),
+                guests: 1,
+                guestsLabel: t("person", { defaultValue: "person" }),
+              })}
+            </span>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-muted-foreground">
+        <h3 className="font-medium mb-3">
+          {t("priceSummary", { defaultValue: "Price Summary" })}
+        </h3>
+        {bookingType === BOOKING_TYPE.villa ? (
+          <VillaPriceCalculation
+            key={`${bookingType}-${bookingData.bookingDetails.checkIn?.getTime() || ""}-${bookingData.bookingDetails.checkOut?.getTime() || ""}-${bookingData.bookingDetails.guests}-${JSON.stringify(bookingData.pricingRules)}`}
+            pricingRules={
+              bookingData.pricingRules?.length > 0
+                ? bookingData.pricingRules
+                : []
+            }
+            guests={bookingData.bookingDetails.guests}
+            locale={locale}
+            t={t}
+            duration={duration}
+            currency={bookingData.bookingDetails.currency}
+            checkInDate={bookingData.bookingDetails.checkIn || undefined}
+          />
+        ) : (
+          <TourPriceCalculation
+            key={`${bookingType}-${bookingData.bookingDetails.date?.getTime() || ""}-${bookingData.bookingDetails.guests}-${bookingData.bookingDetails.price}`}
+            price={bookingData.bookingDetails.price}
+            guests={bookingData.bookingDetails.guests}
+            locale={locale}
+            t={t}
+            currency={bookingData.bookingDetails.currency}
+          />
+        )}
+      </div>
+    )
+  }
+
   const renderDatesStep = () => (
     <div className="space-y-4">
       {bookingType === BOOKING_TYPE.villa ? (
@@ -195,7 +265,8 @@ export default function ProgressiveBookingForm({
                 })
               } else {
                 const newCheckOut = new Date(date)
-                const checkInTime = bookingData.bookingDetails.checkIn.getTime()
+                const checkInTime =
+                  bookingData.bookingDetails.checkIn?.getTime() || 0
                 const checkOutTime = newCheckOut.getTime()
 
                 if (checkOutTime <= checkInTime) {
@@ -218,8 +289,8 @@ export default function ProgressiveBookingForm({
               }
             }}
             selectedDates={{
-              checkIn: bookingData.bookingDetails.checkIn,
-              checkOut: bookingData.bookingDetails.checkOut,
+              checkIn: bookingData.bookingDetails.checkIn || undefined,
+              checkOut: bookingData.bookingDetails.checkOut || undefined,
             }}
             labels={{
               checkinDate: t("checkinDate", { defaultValue: "Check-in date" }),
@@ -254,6 +325,7 @@ export default function ProgressiveBookingForm({
                 date,
               },
             })
+            setIsDatePickerOpen(false)
           }}
           label={getInternationalizedValue(
             dialog?.selectDate,
@@ -279,67 +351,6 @@ export default function ProgressiveBookingForm({
           }
         />
       </div>
-
-      {/* Show price preview - starting from message initially, detailed calculation after user input */}
-      {(bookingType === BOOKING_TYPE.villa &&
-        bookingData.bookingDetails.checkIn &&
-        bookingData.bookingDetails.checkOut &&
-        bookingData.bookingDetails.guests &&
-        isAvailable === true) || // Only show when availability is confirmed
-      (bookingType === BOOKING_TYPE.tour &&
-        bookingData.bookingDetails.date &&
-        bookingData.bookingDetails.guests) ? (
-        <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-muted-foreground">
-          <h3 className="font-medium mb-3">
-            {t("priceSummary", { defaultValue: "Price Summary" })}
-          </h3>
-          <PriceCalculation
-            pricingRules={
-              bookingType === BOOKING_TYPE.villa
-                ? bookingData.pricingRules
-                : [
-                    {
-                      _id: "tourBasePrice",
-                      title: "Tour base price",
-                      ruleType: "base_rate",
-                      basePrice: bookingData.bookingDetails.basePrice,
-                      description: "Tour base price",
-                      language: locale,
-                      isActive: true,
-                    },
-                  ]
-            }
-            guests={bookingData.bookingDetails.guests}
-            bookingType={bookingType}
-            locale={locale}
-            t={t}
-            duration={duration}
-            currency={bookingData.bookingDetails.currency}
-            checkInDate={
-              bookingType === BOOKING_TYPE.villa
-                ? bookingData.bookingDetails.checkIn
-                : undefined
-            }
-          />
-        </div>
-      ) : (
-        <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-muted-foreground">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">
-              {t("priceFrom", {
-                defaultValue:
-                  "Price starting from ${price} for {guests} {guestsLabel}",
-                price: new Intl.NumberFormat(locale, {
-                  style: "currency",
-                  currency: bookingData.bookingDetails.currency || "USD",
-                }).format(getDefaultBasePrice(bookingData.pricingRules)),
-                guests: 1,
-                guestsLabel: t("person", { defaultValue: "person" }),
-              })}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   )
 
@@ -413,46 +424,34 @@ export default function ProgressiveBookingForm({
           }
         />
       </div>
-
-      {/* Show price summary in personal step */}
-      <div className="mt-6 p-4 bg-muted/50 rounded-lg border">
-        <h3 className="font-medium mb-3">
-          {t("priceSummary", { defaultValue: "Price Summary" })}
-        </h3>
-        <PriceCalculation
-          pricingRules={bookingData.pricingRules}
-          guests={bookingData.bookingDetails.guests}
-          bookingType={bookingType}
-          locale={locale}
-          t={t}
-          duration={duration}
-          currency={bookingData.bookingDetails.currency}
-          checkInDate={
-            bookingType === BOOKING_TYPE.villa
-              ? bookingData.bookingDetails.checkIn
-              : undefined
-          }
-        />
-      </div>
     </div>
   )
 
   const renderPaymentStep = () => (
     <div className="space-y-4">
-      <PriceCalculation
-        pricingRules={bookingData.pricingRules}
-        guests={bookingData.bookingDetails.guests}
-        bookingType={bookingType}
-        locale={locale}
-        t={t}
-        duration={duration}
-        currency={bookingData.bookingDetails.currency}
-        checkInDate={
-          bookingType === BOOKING_TYPE.villa
-            ? bookingData.bookingDetails.checkIn
-            : undefined
-        }
-      />
+      {bookingType === BOOKING_TYPE.villa ? (
+        <VillaPriceCalculation
+          key={`${bookingType}-${bookingData.bookingDetails.checkIn?.getTime()}-${bookingData.bookingDetails.checkOut?.getTime()}-${bookingData.bookingDetails.guests}-${JSON.stringify(bookingData.pricingRules)}`}
+          pricingRules={
+            bookingData.pricingRules?.length > 0 ? bookingData.pricingRules : []
+          }
+          guests={bookingData.bookingDetails.guests}
+          locale={locale}
+          t={t}
+          duration={duration}
+          currency={bookingData.bookingDetails.currency}
+          checkInDate={bookingData.bookingDetails.checkIn || undefined}
+        />
+      ) : (
+        <TourPriceCalculation
+          key={`${bookingType}-${bookingData.bookingDetails.date?.getTime() || ""}-${bookingData.bookingDetails.guests}-${bookingData.bookingDetails.basePrice}`}
+          price={bookingData.bookingDetails.basePrice}
+          guests={bookingData.bookingDetails.guests}
+          locale={locale}
+          t={t}
+          currency={bookingData.bookingDetails.currency}
+        />
+      )}
       <div className="p-4 bg-guarumo-primary/20 rounded-lg border border-guarumo-primary">
         <p className="text-sm text-guarumo-primary">
           {t("paymentStepInfo", {
@@ -495,6 +494,9 @@ export default function ProgressiveBookingForm({
         />
 
         <div className="min-h-75">{renderStepContent()}</div>
+
+        {/* Show price preview on all steps except payment */}
+        {currentStep !== "payment" && renderPricePreview()}
 
         <DialogFooter className="flex-wrap">
           <div className="mt-5 flex justify-between w-full flex-none gap-2">

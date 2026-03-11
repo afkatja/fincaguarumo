@@ -21,6 +21,36 @@ export const EXTRA_GUEST_FEE = 20
 export const MAX_EXTRA_GUESTS = 4
 export const VAT_RATE = 0.13
 
+export function getVatRate(pricingRules: PricingRule[]): number {
+  return (
+    (pricingRules.find(rule => rule.ruleType === "tax")?.percentage || 0) / 100
+  )
+}
+
+export function getLowestPrice(pricingRules: PricingRule[]): number {
+  if (!pricingRules || pricingRules.length === 0) {
+    return 0
+  }
+
+  // Find lowest base rate from all pricing rules
+  const baseRates = pricingRules
+    .filter(rule => rule.isActive && rule.basePrice)
+    .map(rule => rule.basePrice!)
+
+  if (baseRates.length === 0) {
+    return 0
+  }
+
+  const lowestBaseRate = Math.min(...baseRates)
+  const vatRate = getVatRate(pricingRules)
+
+  // Calculate for 1 guest, 1 night with VAT
+  const priceForPerson = lowestBaseRate // No extra guest fees for 1 person
+  const priceWithVat = priceForPerson * (1 + vatRate)
+
+  return Math.floor(priceWithVat)
+}
+
 export function calculateEffectivePrice({
   pricingRules,
   guests,
@@ -74,14 +104,14 @@ export function calculateEffectivePrice({
 
   if (bookingType === BOOKING_TYPE.tour) {
     // Tour pricing: basePrice * guests + VAT (no extra guest fees)
-    priceForPeople = basePrice
-    priceWithVat = basePrice * (1 + VAT_RATE)
-    total = priceWithVat * safeGuests
+    priceForPeople = basePrice * safeGuests
+    priceWithVat = priceForPeople * (1 + getVatRate(pricingRules))
+    total = priceWithVat
   } else {
     // Villa pricing: basePrice + extra guest fees + VAT
     const extraGuests = Math.max(0, Math.min(safeGuests - 1, MAX_EXTRA_GUESTS))
     priceForPeople = basePrice + extraGuests * EXTRA_GUEST_FEE
-    priceWithVat = priceForPeople * (1 + VAT_RATE)
+    priceWithVat = priceForPeople * (1 + getVatRate(pricingRules))
     total = priceWithVat * duration
   }
 
@@ -227,6 +257,7 @@ export function calculateTotalWithPricingRules({
     checkInDate,
     bookingType,
   })
+  console.log({ guests, result })
 
   return {
     priceForPeople: result.priceForPeople,

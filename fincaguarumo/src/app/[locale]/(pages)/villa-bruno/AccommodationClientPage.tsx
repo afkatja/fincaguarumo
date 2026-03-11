@@ -1,5 +1,6 @@
 "use client"
-import React, { useEffect } from "react"
+import { useEffect } from "react"
+import { createCurrencyFormatter } from "@/lib/currency"
 import { Link } from "@/navigation"
 import { useTranslations } from "next-intl"
 import RichText from "@/components/RichText"
@@ -12,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { BOOKING_TYPE, BookingData } from "@/types"
-import { calculateTotalWithRules } from "@/lib/calculateTotal"
+import { getLowestPrice } from "@/lib/pricingEngine"
 import BookingDialog from "../BookingDialog"
 import { AccommodationContent } from "./page"
 import { useBooking } from "../../../providers/BookingProvider"
@@ -84,43 +85,12 @@ const AccommodationClientPage = ({
   const guestsRaw = bookingData?.bookingDetails?.guests
   const guests = typeof guestsRaw === "number" && guestsRaw > 0 ? guestsRaw : 1
 
-  // Calculate lowest possible price for display
-  const getLowestPrice = () => {
-    if (!bookingData.pricingRules || bookingData.pricingRules.length === 0) {
-      return 0
-    }
-
-    // Find the lowest base rate from all pricing rules
-    const baseRates = bookingData.pricingRules
-      .filter(rule => rule.isActive && rule.basePrice)
-      .map(rule => rule.basePrice!)
-
-    if (baseRates.length === 0) {
-      return 0
-    }
-
-    const lowestBaseRate = Math.min(...baseRates)
-
-    // Calculate for 1 guest, 1 night with VAT
-    const priceForPerson = lowestBaseRate // No extra guest fees for 1 person
-    const priceWithVat = priceForPerson * (1 + 0.13) // VAT_RATE = 0.13
-
-    return Math.floor(priceWithVat)
-  }
-
-  const lowestPrice = getLowestPrice()
-
-  // Calculate total using pricing rules or fallback to legacy calculation
-  const { total } =
-    bookingData.pricingRules && bookingData.pricingRules.length > 0
-      ? calculateTotalWithRules({
-          pricingRules: bookingData.pricingRules,
-          guests,
-          bookingType: BOOKING_TYPE.villa,
-          duration: 1, // Default 1 night for display
-          checkInDate: bookingData.bookingDetails.checkIn || new Date(), // Use actual checkInDate or fallback to today
-        })
-      : { total: 0 } // Fallback - will be updated when booking details are set
+  const lowestPrice = getLowestPrice(bookingData.pricingRules)
+  const currency = createCurrencyFormatter({
+    locale,
+    currency: bookingData?.bookingDetails?.currency || "USD",
+    minimumFractionDigits: 0,
+  })
 
   return (
     <>
@@ -225,7 +195,7 @@ const AccommodationClientPage = ({
               )}
             >
               {t("priceFrom", {
-                price: lowestPrice,
+                price: currency(lowestPrice),
                 guests: 1,
                 guestsLabel: t("person"),
               })}
