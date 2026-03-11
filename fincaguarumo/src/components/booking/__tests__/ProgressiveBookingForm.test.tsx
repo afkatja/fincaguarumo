@@ -77,25 +77,39 @@ jest.mock("@/components/DatePicker", () => {
   }
 })
 
-// Mock the price calculation component
-jest.mock("@/components/priceCalculation", () => {
-  return function MockPriceCalculation({
+// Mock the price calculation components
+jest.mock("@/components/VillaPriceCalculation", () => {
+  return function MockVillaPriceCalculation({
     guests,
-    bookingType,
     locale,
     duration,
   }: {
     guests: number
-    bookingType: string
     locale: string
     duration: number
   }) {
     return (
-      <div data-testid="price-calculation">
+      <div data-testid="villa-price-calculation">
         <div data-testid="price-guests">{guests}</div>
-        <div data-testid="price-type">{bookingType}</div>
         <div data-testid="price-duration">{duration}</div>
         <div data-testid="total-price">$345</div>
+      </div>
+    )
+  }
+})
+
+jest.mock("@/components/TourPriceCalculation", () => {
+  return function MockTourPriceCalculation({
+    guests,
+    locale,
+  }: {
+    guests: number
+    locale: string
+  }) {
+    return (
+      <div data-testid="tour-price-calculation">
+        <div data-testid="price-guests">{guests}</div>
+        <div data-testid="total-price">$200</div>
       </div>
     )
   }
