@@ -18,7 +18,7 @@ interface IDatePicker {
   onOpen?: () => void
   onSelectDate: (date: Date) => void
   label: string
-  selectedDate: Date
+  selectedDate?: Date
   className?: string
   disabledDates?: Date[]
   loading?: boolean
@@ -86,7 +86,7 @@ const DatePicker = ({
           mode="single"
           disabled={date => setDisabledDates(date)}
           onSelect={(_, selectedDay) => onSelectDate(selectedDay)}
-          selected={selectedDate}
+          selected={selectedDate || undefined}
           defaultMonth={defaultMonth || selectedDate || new Date()}
           startMonth={minDate || new Date()}
         />

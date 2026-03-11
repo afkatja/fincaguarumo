@@ -14,7 +14,7 @@ const BookingCalendar = ({
 }: {
   onSelectDate: (date: Date, type: string) => void
   labels: { checkinDate: string; checkoutDate: string }
-  selectedDates: { checkIn: Date; checkOut: Date }
+  selectedDates: { checkIn?: Date; checkOut?: Date }
   error?: string
   onLoadingChange?: (loading: boolean) => void
   onBlockedDatesChange?: (blockedDates: Date[]) => void
@@ -88,7 +88,7 @@ const BookingCalendar = ({
             setActivePopover(null)
           }}
           label={checkinDate}
-          selectedDate={selectedDates.checkIn}
+          selectedDate={selectedDates.checkIn || undefined}
           disabledDates={blockedDates}
           loading={loading}
           defaultMonth={selectedDates.checkIn || new Date()}
@@ -97,7 +97,7 @@ const BookingCalendar = ({
         <div className="md:ml-4 mt-4 md:mt-0">
           <DatePicker
             label={checkoutDate}
-            selectedDate={selectedDates.checkOut}
+            selectedDate={selectedDates.checkOut || undefined}
             isOpen={activePopover === "check-out"}
             onClose={() => setActivePopover(null)}
             onOpen={() => setActivePopover("check-out")}

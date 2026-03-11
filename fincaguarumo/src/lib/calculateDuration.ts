@@ -1,6 +1,9 @@
 import { differenceInDays } from "date-fns"
 
-const calculateDuration = (checkIn: Date, checkOut: Date): number => {
+const calculateDuration = (
+  checkIn: Date | undefined,
+  checkOut: Date | undefined,
+): number => {
   if (!checkIn || !checkOut) return 0
 
   try {
