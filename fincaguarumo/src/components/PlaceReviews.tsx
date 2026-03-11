@@ -12,7 +12,13 @@ import { Link } from "../navigation"
 import Icon from "./Icon"
 import { useTranslations } from "next-intl"
 
-export const PlaceReviews = ({ count }: { count?: number }) => {
+export const PlaceReviews = ({
+  count,
+  showMoreLink = true,
+}: {
+  count?: number
+  showMoreLink?: boolean
+}) => {
   const { place } = usePlace()
   const { data: sanityReviews } = useSWR(REVIEWS_QUERY, clientSideFetch)
   const b = useTranslations("reviews")
@@ -58,19 +64,21 @@ export const PlaceReviews = ({ count }: { count?: number }) => {
           ))}
         </div>
       )}
-      <div className="w-full flex justify-end">
-        <Link
-          href={`/reviews`}
-          className="w-80 inline-flex items-center justify-end h-full group no-underline mt-8 mr-4"
-        >
-          {b("readMoreReviews") || "Read more reviews"}
-          <Icon
-            icon="ArrowRight"
-            className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
-            color="currentColor"
-          />
-        </Link>
-      </div>
+      {showMoreLink && (
+        <div className="w-full flex justify-end">
+          <Link
+            href={`/reviews`}
+            className="w-80 inline-flex items-center justify-end h-full group no-underline mt-8 mr-4"
+          >
+            {b("readMoreReviews") || "Read more reviews"}
+            <Icon
+              icon="ArrowRight"
+              className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+              color="currentColor"
+            />
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

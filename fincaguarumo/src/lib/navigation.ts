@@ -41,6 +41,13 @@ const navigation = async ({ locale }: { locale: string }) => {
       language: locale,
       isPublished: true,
     },
+    {
+      title: "Reviews",
+      slug: { current: "reviews" },
+      href: "reviews",
+      language: locale,
+      isPublished: true,
+    },
   ]
 
   const navItems = [...main, ...utils]
