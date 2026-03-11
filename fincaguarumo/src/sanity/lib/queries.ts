@@ -125,6 +125,16 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && (la
   body[]{
     ...,
     ${imageWithMetadata},
+    markDefs[] {
+        ...,
+        _type == "internalLink" => {
+          ...,
+          "reference": {
+            "slug": reference->slug,
+            "_type": reference->_type
+          }
+        }
+      },
     columnsBlock {
       columnCount,
       content[]{
@@ -151,7 +161,17 @@ export const PAGE_QUERY = groq`
     mainImage ${mainImageWithDimensions}, 
     body[]{
       ...,
-      ${imageWithMetadata}
+      ${imageWithMetadata},
+      markDefs[] {
+        ...,
+        _type == "internalLink" => {
+          ...,
+          "reference": {
+            "slug": reference->slug,
+            "_type": reference->_type
+          }
+        }
+      }
     }, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,
     slideshow->{ 
       "images": images[]${galleryImageProjection} 
@@ -293,7 +313,20 @@ export const TOUR_QUERY = groq`
 
 export const ABOUT_QUERY = groq`
   *[_type == 'page' && slug.current == 'about' && language == $language][0] {
-    title, description, mainImage, body, language,
+    title, description, mainImage, body[] {
+      ...,
+      ${imageWithMetadata},
+      markDefs[] {
+      ...,
+      _type == "internalLink" => {
+        ...,
+        "reference": {
+          "slug": reference->slug,
+          "_type": reference->_type
+        }
+      }
+    }
+    }, language,
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -331,12 +364,15 @@ export const HOME_QUERY = groq`
       ...,
       ${imageWithMetadata},
       markDefs[] {
+      ...,
+      _type == "internalLink" => {
         ...,
-        _type == "internalLink" => {
-          ...,
-          "slug": @.reference-> slug
+        "reference": {
+          "slug": reference->slug,
+          "_type": reference->_type
         }
       }
+    }
     },
     'translations': *[
       _type == "translation.metadata" &&
