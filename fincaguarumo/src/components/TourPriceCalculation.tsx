@@ -1,7 +1,7 @@
 import { formatCurrency, createCurrencyFormatter } from "../lib/currency"
 import { calculateTotalWithRules } from "../lib/calculateTotal"
 import { titleCase } from "../lib/utils"
-import { PricingRule } from "../lib/pricingEngine"
+import { getVatAmount, PricingRule } from "../lib/pricingEngine"
 import { Separator } from "@/components/ui/separator"
 import { useTranslations } from "next-intl"
 import { BOOKING_TYPE } from "../types"
@@ -35,9 +35,20 @@ const TourPriceCalculation = ({
     isActive: true,
   }
 
+  // Create tax rule for VAT
+  const taxRule: PricingRule = {
+    _id: "tourVat",
+    title: "VAT",
+    ruleType: "tax",
+    percentage: 13,
+    description: "VAT tax",
+    language: locale,
+    isActive: true,
+  }
+
   // Calculate total using pricing rules - the engine handles all calculations
-  const { priceForPeople, priceWithVat, total } = calculateTotalWithRules({
-    pricingRules: [tourPricingRule],
+  const { priceForPeople, total } = calculateTotalWithRules({
+    pricingRules: [tourPricingRule, taxRule],
     guests,
     bookingType: BOOKING_TYPE.tour,
   })
@@ -59,7 +70,13 @@ const TourPriceCalculation = ({
         <dd className="text-right">{currency(priceForPeople)}</dd>
         <dt className="text-muted-foreground">{b("vatLabel")}</dt>
         <dd className="text-right">
-          {currency(priceWithVat - priceForPeople)}
+          {currency(
+            getVatAmount({
+              pricingRules: [tourPricingRule, taxRule],
+              priceForPeople,
+              bookingType: BOOKING_TYPE.tour,
+            }),
+          )}
         </dd>
       </dl>
       <Separator />

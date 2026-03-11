@@ -27,6 +27,28 @@ export function getVatRate(pricingRules: PricingRule[]): number {
   )
 }
 
+export function getVatAmount({
+  pricingRules,
+  priceForPeople,
+  bookingType = BOOKING_TYPE.villa,
+  duration = 1,
+}: {
+  pricingRules: PricingRule[]
+  priceForPeople: number
+  bookingType?: BookingType
+  duration?: number
+}): number {
+  const vatRate = getVatRate(pricingRules)
+
+  if (bookingType === BOOKING_TYPE.tour) {
+    // Tour pricing: VAT on total price for all people
+    return priceForPeople * vatRate
+  } else {
+    // Villa pricing: VAT on price for people per night, multiplied by duration
+    return priceForPeople * duration * vatRate
+  }
+}
+
 export function getLowestPrice(pricingRules: PricingRule[]): number {
   if (!pricingRules || pricingRules.length === 0) {
     return 0
@@ -257,7 +279,6 @@ export function calculateTotalWithPricingRules({
     checkInDate,
     bookingType,
   })
-  console.log({ guests, result })
 
   return {
     priceForPeople: result.priceForPeople,

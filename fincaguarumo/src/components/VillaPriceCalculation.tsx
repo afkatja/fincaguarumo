@@ -1,6 +1,6 @@
 import { formatCurrency, createCurrencyFormatter } from "../lib/currency"
 import { calculateTotalWithRules } from "../lib/calculateTotal"
-import { getVatRate } from "../lib/pricingEngine"
+import { getVatRate, getVatAmount } from "../lib/pricingEngine"
 import { titleCase } from "../lib/utils"
 import { PricingRule } from "../lib/pricingEngine"
 import { Separator } from "@/components/ui/separator"
@@ -94,7 +94,14 @@ const VillaPriceCalculation = ({
           })}
         </dt>
         <dd className="text-right">
-          {currency(priceForPeople * duration * vatRate)}
+          {currency(
+            getVatAmount({
+              pricingRules: pricingRules || [],
+              priceForPeople,
+              bookingType: BOOKING_TYPE.villa,
+              duration,
+            }),
+          )}
         </dd>
 
         {discountAmount > 0 && (
