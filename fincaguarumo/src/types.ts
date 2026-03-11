@@ -51,8 +51,8 @@ export const initialBookingData = {
     location: "",
     body: "",
     date: tomorrow,
-    checkIn: tomorrow,
-    checkOut: later,
+    checkIn: null as Date | null,
+    checkOut: null as Date | null,
     guests: 1,
     price: 0, // Legacy field for backward compatibility
     basePrice: 0, // Base price for calculation (per-night for villa, per-person for tour)
@@ -65,12 +65,34 @@ export const initialBookingData = {
 
 type Serialize<T> = {
   [K in keyof T]: T[K] extends Date
-    ? string
+    ? string | null
     : T[K] extends object
       ? Serialize<T[K]>
       : T[K]
 }
-export type SerializedBookingData = Serialize<BookingData>
+
+export type SerializedBookingData = {
+  source: "global" | "page" | null
+  customerDetails: { name: string; email: string; phoneNumber: string }
+  bookingDetails: {
+    type: "tour" | "villa"
+    title: string
+    description: string
+    duration: number
+    location: string
+    body: string
+    date: string | null
+    checkIn: string | null
+    checkOut: string | null
+    guests: number
+    price: number
+    basePrice: number
+    totalPrice: number
+    currency: string
+    geo: { lat: number; lng: number }
+  }
+  pricingRules: PricingRule[]
+}
 export type BookingData = typeof initialBookingData
 
 export function serializeBookingData(data: BookingData): SerializedBookingData {
@@ -79,10 +101,14 @@ export function serializeBookingData(data: BookingData): SerializedBookingData {
     bookingDetails: {
       ...data.bookingDetails,
       date: toUTCISOString(normalizeToNoon(data.bookingDetails.date)),
-      checkIn: toUTCISOString(normalizeToNoon(data.bookingDetails.checkIn)),
-      checkOut: toUTCISOString(normalizeToNoon(data.bookingDetails.checkOut)),
+      checkIn: data.bookingDetails.checkIn
+        ? toUTCISOString(normalizeToNoon(data.bookingDetails.checkIn))
+        : null,
+      checkOut: data.bookingDetails.checkOut
+        ? toUTCISOString(normalizeToNoon(data.bookingDetails.checkOut))
+        : null,
     },
-  }
+  } as SerializedBookingData
 }
 
 export function deserializeBookingData(
@@ -92,15 +118,21 @@ export function deserializeBookingData(
     ...data,
     bookingDetails: {
       ...data.bookingDetails,
-      date: parsePropertyDate(data.bookingDetails.date),
-      checkIn: parsePropertyDate(data.bookingDetails.checkIn),
-      checkOut: parsePropertyDate(data.bookingDetails.checkOut),
+      date: data.bookingDetails.date
+        ? parsePropertyDate(data.bookingDetails.date!)
+        : null,
+      checkIn: data.bookingDetails.checkIn
+        ? parsePropertyDate(data.bookingDetails.checkIn)
+        : null,
+      checkOut: data.bookingDetails.checkOut
+        ? parsePropertyDate(data.bookingDetails.checkOut)
+        : null,
       price: Number(data.bookingDetails.price),
       totalPrice: Number(data.bookingDetails.totalPrice),
       duration: Number(data.bookingDetails.duration),
       guests: Number(data.bookingDetails.guests),
     },
-  }
+  } as BookingData
 }
 
 // LocalStorage utilities that handle date conversion
