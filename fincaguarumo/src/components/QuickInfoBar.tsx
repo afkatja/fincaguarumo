@@ -1,4 +1,4 @@
-"use client"
+import { formatCurrency, createCurrencyFormatter } from "../lib/currency"
 import { AccommodationContent } from "@/app/[locale]/(pages)/villa-bruno/page"
 import Icon from "./Icon"
 import { useTranslations } from "next-intl"
@@ -13,13 +13,11 @@ interface QuickInfoBarProps {
 export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
   const t = useTranslations("accommodation")
   const b = useTranslations("booking")
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-    }).format(price)
-  }
+  const formatPrice = createCurrencyFormatter({
+    locale: "en-US",
+    currency: "USD",
+    minimumFractionDigits: 0,
+  })
 
   return (
     <div className="rounded-lg p-6 border border-guarumo-primary/20">

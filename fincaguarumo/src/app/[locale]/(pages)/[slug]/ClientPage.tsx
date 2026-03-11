@@ -1,5 +1,6 @@
 "use client"
 import { useEffect } from "react"
+import { formatCurrency } from "@/lib/currency"
 import { createNavigation } from "next-intl/navigation"
 import { useTranslations } from "next-intl"
 import RichText from "@/components/RichText"
@@ -104,10 +105,10 @@ const ClientPage = ({
           <div className="w-11/12 mx-auto">
             <p className="font-bold text-center mb-4">
               {t("priceFrom", {
-                price: new Intl.NumberFormat(locale, {
-                  style: "currency",
+                price: formatCurrency(Math.floor(total), {
+                  locale,
                   currency: "USD",
-                }).format(Math.floor(total)),
+                }),
                 guests: guests,
                 guestsLabel: guests === 1 ? t("person") : t("people"),
               })}
