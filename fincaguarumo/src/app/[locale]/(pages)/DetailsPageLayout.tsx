@@ -32,6 +32,7 @@ const DetailsPageLayout = ({
   dialogId?: string
 }) => {
   const { title, description, duration, location, price, body } = bookingDetails
+
   const t = useTranslations("booking")
   return (
     <>
@@ -88,7 +89,7 @@ const DetailsPageLayout = ({
                         ? t("reserveButtonTour")
                         : t("reserveButton", { defaultValue: "Book now" }),
                     buttonClassName: "ml-auto",
-                    title: t("reserveButton", { defaultValue: "Book now" }),
+                    title,
                   }}
                   dialogId={dialogId}
                   locale={locale}

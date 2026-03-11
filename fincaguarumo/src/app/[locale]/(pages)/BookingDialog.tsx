@@ -40,14 +40,18 @@ const BookingDialog = ({
     setOpen(open)
 
     // Set source when page dialog opens
-    if (open && bookingData.source !== "page") {
+    if (open) {
       setBookingData(prev => ({ ...prev, source: "page" }))
     }
 
-    // Only reset booking data and payment step when dialog is closing and it was the source
-    if (!open && bookingData.source === "page") {
+    // Reset booking data and payment step when dialog is closing
+    if (!open) {
       setBookingData(initialBookingData)
       setPaymentStep(false)
+      // Clear localStorage to ensure fresh start next time
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("bookingData")
+      }
     }
   }
 
