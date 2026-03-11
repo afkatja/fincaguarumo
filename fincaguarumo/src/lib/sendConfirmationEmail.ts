@@ -11,10 +11,13 @@ const mailerSend = new MailerSend({
 })
 
 /**
- * Safely format a date for email display, returning "TBD" for invalid dates
+ * Safely format a date for email display, returning "TBD" for invalid or null dates
  */
-const safeFormatForEmail = (date: Date): string => {
-  return isNaN(date.getTime()) ? "TBD" : formatForEmail(date)
+const safeFormatForEmail = (date: Date | null): string => {
+  if (!date || isNaN(date.getTime())) {
+    return "TBD"
+  }
+  return formatForEmail(date)
 }
 
 export async function sendConfirmationEmail({
