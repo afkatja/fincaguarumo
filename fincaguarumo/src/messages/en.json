@@ -28,6 +28,7 @@
     "checkOut": "Check out",
     "checkinDate": "Check-in date",
     "checkoutDate": "Check-out date",
+    "selectDates": "Select dates to check availability",
     "emailError": "Please enter a valid email address",
     "emailLabel": "Your email *",
     "guests": "Guests",
@@ -70,7 +71,8 @@
     "chatHelpPersonal": "I can help you with your booking details. Please provide your name, email, phone number, and any special requests.",
     "chatHelpPayment": "I can help you with your payment details. Please provide your payment information.",
     "stepDates": "Select Dates",
-    "loadingCalendar": "Loading calendar..."
+    "loadingCalendar": "Loading calendar...",
+    "checkOutAfterCheckIn": "Check-out must be after check-in"
   },
   "page": {
     "moreFAQ": "More FAQ",

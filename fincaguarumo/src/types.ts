@@ -41,7 +41,7 @@ const later = new Date(+today + 259200000)
 
 export const initialBookingData = {
   // type: "tour",
-  source: null as "global" | "page" | null,
+  source: null as "global" | "page" | "external" | null,
   customerDetails: { name: "", email: "", phoneNumber: "" },
   bookingDetails: {
     type: "tour",

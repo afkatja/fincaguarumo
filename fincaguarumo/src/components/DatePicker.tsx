@@ -1,5 +1,4 @@
 "use client"
-import React from "react"
 import {
   Popover,
   PopoverTrigger,
@@ -11,6 +10,7 @@ import CalendarIcon from "./icons/Calendar"
 import { useParams } from "next/navigation"
 import Loading from "../app/[locale]/(pages)/loading"
 import { formatForDisplay } from "../lib/dateUtils"
+import { useTranslations } from "next-intl"
 
 interface IDatePicker {
   isOpen?: boolean
@@ -42,6 +42,8 @@ const DatePicker = ({
   defaultMonth,
 }: IDatePicker) => {
   const params = useParams()
+  const t = useTranslations("booking")
+
   const locale = Array.isArray(params.locale)
     ? params.locale[0]
     : params.locale || "en"
@@ -54,7 +56,15 @@ const DatePicker = ({
     )
   }
 
-  if (loading) return <Loading />
+  if (loading)
+    return (
+      <div className="flex flex-col items-center">
+        <Loading />{" "}
+        <span className="my-4">
+          {t("loadingCalendar", { defaultValue: "Loading calendar..." })}
+        </span>
+      </div>
+    )
 
   return (
     <Popover open={isOpen}>

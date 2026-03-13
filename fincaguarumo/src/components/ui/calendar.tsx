@@ -110,11 +110,6 @@ function Calendar({
               nextMonth.getFullYear() < props.endMonth.getFullYear() ||
               (nextMonth.getFullYear() === props.endMonth.getFullYear() &&
                 nextMonth.getMonth() <= props.endMonth.getMonth()))
-          console.log({
-            previousMonth,
-            startMonth: props.startMonth,
-            canGoPrevious,
-          })
 
           return (
             <div className="absolute top-0 left-0 h-9 w-full flex gap-1 animate-fadeIn transition-all duration-300 ease-in-out">
