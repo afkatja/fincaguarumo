@@ -1,4 +1,5 @@
 import { sendConfirmationEmail } from "../src/lib/sendConfirmationEmail.js"
+import type { BookingType } from "../src/types.js"
 
 async function main() {
   const metadata = {
@@ -28,7 +29,7 @@ async function main() {
   }
 
   const bookingDetails = {
-    type: metadata.type || "",
+    type: (metadata.type || "") as BookingType,
     title: metadata.title || "",
     description: metadata.description || "",
     duration: Number(metadata.duration) || 0,

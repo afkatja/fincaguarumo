@@ -5,6 +5,7 @@ import { setBookings } from "../../../lib/setBookings"
 import { sendErrorEmail } from "../../../lib/sendErrorEmail"
 import { parsePropertyDate, formatForEmail } from "../../../lib/dateUtils"
 import { createSupabaseAdmin } from "@/lib/auth"
+import type { BookingType } from "@/types"
 
 export const runtime = "nodejs"
 
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
           phoneNumber: metadata?.customerPhone || "",
         }
         const bookingDetails = {
-          type: metadata?.type || "",
+          type: (metadata?.type || "") as BookingType,
           title: metadata?.title || "",
           description: metadata?.description || "",
           duration: Number(metadata?.duration) || 0,

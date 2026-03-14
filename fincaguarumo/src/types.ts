@@ -41,10 +41,10 @@ const later = new Date(+today + 259200000)
 
 export const initialBookingData = {
   // type: "tour",
-  source: null as "global" | "page" | "external" | null,
+  source: null as "page" | "external" | null,
   customerDetails: { name: "", email: "", phoneNumber: "" },
   bookingDetails: {
-    type: "tour",
+    type: "tour" as BookingType,
     title: "",
     description: "",
     duration: 0,
@@ -75,7 +75,7 @@ export type SerializedBookingData = {
   source: "global" | "page" | null
   customerDetails: { name: string; email: string; phoneNumber: string }
   bookingDetails: {
-    type: "tour" | "villa"
+    type: BookingType
     title: string
     description: string
     duration: number
@@ -139,6 +139,8 @@ export function deserializeBookingData(
 export function saveBookingDataToLocalStorage(data: BookingData): void {
   if (typeof window !== "undefined") {
     const serialized = serializeBookingData(data)
+    console.log({ serialized })
+
     localStorage.setItem("bookingData", JSON.stringify(serialized))
   }
 }
