@@ -480,20 +480,24 @@ export const ACCOMMODATION_QUERY = groq`
     checkInTime, 
     checkOutTime,
     amenities[]->{ title, description, icon },
-    pricingRules[]->{ 
-      title, 
-      description, 
-      ruleType,
-      season,
-      startDate,
-      endDate,
-      basePrice,
-      percentage,
-      fixedAmount,
-      minimumNights,
-      isActive,
-      displayOrder,
-      language
+    'pricingRules': *[
+      _type == "accommodation" &&
+      language == "en" &&
+      slug.current == ^.slug.current
+      ][0].pricingRules[]-> { 
+        title, 
+        description, 
+        ruleType,
+        season,
+        startDate,
+        endDate,
+        basePrice,
+        percentage,
+        fixedAmount,
+        minimumNights,
+        isActive,
+        displayOrder,
+        language
     },
     paymentMethods[]->{ title, description, type },
     cancellationPolicy->{ title, description, rules },
@@ -527,3 +531,20 @@ export const ACCOMMODATION_QUERY = groq`
     )
   }
 `
+
+export const PRICING_RULES_QUERY = groq`*[_type == 'pricingRules' && _id in $rulesIds][] { 
+      title, 
+      description, 
+      ruleType,
+      season,
+      startDate,
+      endDate,
+      basePrice,
+      percentage,
+      fixedAmount,
+      minimumNights,
+      isActive,
+      displayOrder,
+      language
+    }
+    `

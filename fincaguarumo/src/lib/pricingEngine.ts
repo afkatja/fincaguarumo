@@ -54,20 +54,32 @@ export function getLowestPrice(pricingRules: PricingRule[]): number {
     return 0
   }
 
-  // Find lowest base rate from all pricing rules
+  // Get all possible rates including base rates and seasonal rates
+  const allRates: number[] = []
+
+  // Add base rates
   const baseRates = pricingRules
-    .filter(rule => rule.isActive && rule.basePrice)
+    .filter(rule => rule.ruleType === "base_rate" && rule.basePrice)
     .map(rule => rule.basePrice!)
 
-  if (baseRates.length === 0) {
+  allRates.push(...baseRates)
+
+  // Add seasonal rates
+  const seasonalRates = pricingRules
+    .filter(rule => rule.ruleType === "seasonal" && rule.basePrice)
+    .map(rule => rule.basePrice!)
+
+  allRates.push(...seasonalRates)
+
+  if (allRates.length === 0) {
     return 0
   }
 
-  const lowestBaseRate = Math.min(...baseRates)
+  const lowestRate = Math.min(...allRates)
   const vatRate = getVatRate(pricingRules)
 
   // Calculate for 1 guest, 1 night with VAT
-  const priceForPerson = lowestBaseRate // No extra guest fees for 1 person
+  const priceForPerson = lowestRate // No extra guest fees for 1 person
   const priceWithVat = priceForPerson * (1 + vatRate)
 
   return Math.floor(priceWithVat)
@@ -148,7 +160,7 @@ export function calculateEffectivePrice({
 
 export function getDefaultBasePrice(pricingRules: PricingRule[]): number {
   const baseRateRule = pricingRules.find(
-    rule => rule.ruleType === "base_rate" && rule.isActive && rule.basePrice,
+    rule => rule.ruleType === "base_rate" && rule.basePrice,
   )
 
   if (baseRateRule) {
@@ -167,7 +179,6 @@ function getSeasonalAdjustment(
   const seasonalRules = pricingRules.filter(
     rule =>
       rule.ruleType === "seasonal" &&
-      rule.isActive &&
       rule.basePrice && // Seasonal rules use basePrice, not percentage
       isDateInRange(checkInDate, rule.startDate, rule.endDate),
   )
@@ -195,7 +206,6 @@ function getDurationDiscount(
   const discountRules = pricingRules.filter(
     rule =>
       rule.ruleType === "discount" &&
-      rule.isActive &&
       rule.percentage &&
       (!rule.minimumNights || duration >= rule.minimumNights),
   )
