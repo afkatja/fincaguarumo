@@ -3,48 +3,32 @@
 import React from "react"
 import { Button } from "@/components/ui/button"
 import { useDialog } from "@/app/providers/DialogProvider"
-import { useBooking } from "@/app/providers/BookingProvider"
 import { BookingType, BOOKING_TYPE } from "@/types"
+import { bookingEventBus } from "@/app/providers/BookingEventBus"
 
 interface BookingDialogTriggerProps {
   bookingType: BookingType
-  title: string
-  description?: string
   buttonText?: string
   buttonClassName?: string
   className?: string
-  price?: number
   children?: React.ReactNode
 }
 
 export default function BookingDialogTrigger({
   bookingType,
-  title,
-  description,
   buttonText,
   buttonClassName,
   className,
-  price,
   children,
 }: BookingDialogTriggerProps) {
-  const { openBookingDialog } = useDialog()
-  const { setBookingData } = useBooking()
-
   const handleTrigger = () => {
-    // Set booking data for the dialog
-    setBookingData(prev => ({
-      ...prev,
-      source: "external", // Using a single source for external triggers
-      bookingDetails: {
-        ...prev.bookingDetails,
-        type: bookingType,
-        title,
-        description: description || "",
-        price: price || prev.bookingDetails.price,
+    bookingEventBus.emit({
+      type: "DIALOG_OPEN_REQUESTED",
+      payload: {
+        bookingType,
+        source: "page",
       },
-    }))
-    // Open the booking dialog
-    openBookingDialog()
+    })
   }
 
   // If children provided, use them as trigger (allows custom styling)
@@ -60,6 +44,7 @@ export default function BookingDialogTrigger({
       className={buttonClassName || className}
       variant="secondary"
       onClick={handleTrigger}
+      // disabled={bookingType === BOOKING_TYPE.villa && loading}
     >
       {buttonText || "Book Now"}
     </Button>
