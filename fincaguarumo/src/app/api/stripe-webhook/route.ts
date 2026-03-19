@@ -6,6 +6,7 @@ import { sendErrorEmail } from "../../../lib/sendErrorEmail"
 import { parsePropertyDate, formatForEmail } from "../../../lib/dateUtils"
 import { createSupabaseAdmin } from "@/lib/auth"
 import type { BookingType } from "@/types"
+import { loadCoreBookingDataFromLocalStorage } from "@/app/providers/BookingCoreProvider"
 
 export const runtime = "nodejs"
 
@@ -80,65 +81,77 @@ export async function POST(request: NextRequest) {
       case "checkout.session.completed": {
         const { id, metadata } = event.data.object
         console.log(`Checkout session completed: ${id}`)
-        const customerDetails = {
-          name: metadata?.customerName || "",
-          email: metadata?.customerEmail || "",
-          phoneNumber: metadata?.customerPhone || "",
-        }
-        const bookingDetails = {
-          type: (metadata?.type || "") as BookingType,
-          title: metadata?.title || "",
-          description: metadata?.description || "",
-          duration: Number(metadata?.duration) || 0,
-          location: metadata?.location || "",
-          body: metadata?.body || "",
-          date: parsePropertyDate(metadata?.date || ""),
-          checkIn: parsePropertyDate(metadata?.checkIn || ""),
-          checkOut: parsePropertyDate(metadata?.checkOut || ""),
-          price: Number(metadata?.price) || 0,
-          basePrice: Number(metadata?.price) || 0, // Use price as basePrice for webhook
-          totalPrice: Number(metadata?.totalPrice) || 0,
-          currency: metadata?.currency || "USD",
-          guests: Number(metadata?.guests) || 0,
-          geo: metadata?.geo ? JSON.parse(metadata.geo) : {},
-        }
 
-        // Validate dates before proceeding
-        const checkInValid =
-          bookingDetails.checkIn && !isNaN(bookingDetails.checkIn.getTime())
-        const checkOutValid =
-          bookingDetails.checkOut && !isNaN(bookingDetails.checkOut.getTime())
+        // Try to get booking data from new localStorage structure first
+        const coreBookingData = loadCoreBookingDataFromLocalStorage()
 
-        if (!checkInValid || !checkOutValid) {
-          console.error("Invalid dates in booking details:", {
-            checkIn: bookingDetails.checkIn,
-            checkOut: bookingDetails.checkOut,
-            checkInValid,
-            checkOutValid,
-            metadata: {
-              checkIn: metadata?.checkIn,
-              checkOut: metadata?.checkOut,
-            },
-          })
-          await sendErrorEmail({
-            subject: "Invalid Dates in Booking Webhook",
-            error: "Date parsing failed",
-            details: `Session ID: ${id}, Customer: ${customerDetails.email}, Invalid dates - Check-in: ${metadata?.checkIn}, Check-out: ${metadata?.checkOut}`,
-          })
-          return NextResponse.json(
-            { error: "Invalid booking dates" },
-            { status: 400 },
-          )
-        }
+        if (coreBookingData) {
+          // Use new structure
+          const customerDetails = {
+            name:
+              metadata?.customerName || coreBookingData.customerDetails.name,
+            email:
+              metadata?.customerEmail || coreBookingData.customerDetails.email,
+            phoneNumber:
+              metadata?.customerPhone ||
+              coreBookingData.customerDetails.phoneNumber,
+          }
 
-        // Send confirmation email - continue even if fails
-        try {
+          // TODO: use core booking data
+          const bookingDetails = {
+            type: (metadata?.type ||
+              coreBookingData.bookingType) as BookingType,
+            title: metadata?.title || "",
+            description: metadata?.description || "",
+            duration: Number(metadata?.duration) || 0,
+            location: metadata?.location || "",
+            body: metadata?.body || "",
+            date: parsePropertyDate(metadata?.date || ""),
+            checkIn: parsePropertyDate(metadata?.checkIn || ""),
+            checkOut: parsePropertyDate(metadata?.checkOut || ""),
+            price: Number(metadata?.price) || 0,
+            basePrice: Number(metadata?.price) || 0, // Use price as basePrice for webhook
+            totalPrice:
+              Number(metadata?.totalPrice) || coreBookingData.totalPrice,
+            currency: metadata?.currency || coreBookingData.currency,
+            guests: Number(metadata?.guests) || coreBookingData.guests,
+            geo: metadata?.geo ? JSON.parse(metadata.geo) : {},
+          }
+
+          // Validate dates before proceeding
+          const checkInValid =
+            bookingDetails.checkIn && !isNaN(bookingDetails.checkIn.getTime())
+          const checkOutValid =
+            bookingDetails.checkOut && !isNaN(bookingDetails.checkOut.getTime())
+
+          if (!checkInValid || !checkOutValid) {
+            console.error("Invalid dates in booking details:", {
+              checkIn: bookingDetails.checkIn,
+              checkOut: bookingDetails.checkOut,
+              checkInValid,
+              checkOutValid,
+              metadata: {
+                checkIn: metadata?.checkIn,
+                checkOut: metadata?.checkOut,
+              },
+            })
+            await sendErrorEmail({
+              subject: "Invalid Dates in Booking Webhook",
+              error: "Date parsing failed",
+              details: `Session ID: ${id}, Customer: ${customerDetails.email}, Invalid dates - Check-in: ${metadata?.checkIn}, Check-out: ${metadata?.checkOut}`,
+            })
+            return NextResponse.json(
+              { error: "Invalid booking dates" },
+              { status: 400 },
+            )
+          }
+
           if (process.env.NODE_ENV === "production") {
             const response = await sendConfirmationEmail({
               source: null,
               customerDetails,
               bookingDetails,
-              pricingRules: [], // Webhook doesn't need pricingRules, but it's required by BookingData type
+              pricingRules: [], // Webhook doesn't need pricingRules, but it's required by BookingData type TODO: update whether still true
             })
             console.log("Confirmation email sent successfully.", response)
           } else {
@@ -147,48 +160,34 @@ export async function POST(request: NextRequest) {
               bookingDetails,
             })
           }
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error)
-          console.error("Failed to send confirmation email:", error)
-          await sendErrorEmail({
-            subject: "Failed to Send Booking Confirmation Email",
-            error: "Email sending failed",
-            details: `Session ID: ${id}, Customer: ${customerDetails.email}, Error: ${errorMessage}`,
-          })
-        }
 
-        // Create booking - continue even if fails
-        try {
           // Save to Sanity with all details
-          const bookingResponse = await setBookings({
-            checkIn: bookingDetails.checkIn,
-            checkOut: bookingDetails.checkOut,
-            guestName: customerDetails.name,
-            source: "direct",
-            uid: event.data.object.id,
-            email: customerDetails.email,
-            phone: customerDetails.phoneNumber,
-            guests: bookingDetails.guests,
-            totalPrice: bookingDetails.totalPrice,
-            currency: bookingDetails.currency,
-          })
-          console.log(
-            "Booking created in Sanity successfully.",
-            bookingResponse,
-          )
-
-          // Save to Supabase with all required fields
-          let bookingSaved = false
-          let availabilityUpdated = false
-
           try {
-            const supabaseAdmin = createSupabaseAdmin()
+            const bookingResponse = await setBookings({
+              checkIn: bookingDetails.checkIn,
+              checkOut: bookingDetails.checkOut,
+              guestName: customerDetails.name,
+              source: "direct",
+              uid: event.data.object.id,
+              email: customerDetails.email,
+              phone: customerDetails.phoneNumber,
+              guests: bookingDetails.guests,
+              totalPrice: bookingDetails.totalPrice,
+              currency: bookingDetails.currency,
+            })
+            console.log(
+              "Booking created in Sanity successfully.",
+              bookingResponse,
+            )
+            let bookingSaved = false
+            let availabilityUpdated = false
+            try {
+              // Save to Supabase with all required fields
 
-            const { data: bookingData, error: bookingError } =
-              await supabaseAdmin
-                .from("bookings")
-                .insert({
+              const supabaseAdmin = createSupabaseAdmin()
+
+              const { data: bookingData, error: bookingError } =
+                await supabaseAdmin.from("bookings").insert({
                   check_in: bookingDetails.checkIn.toISOString(),
                   check_out: bookingDetails.checkOut.toISOString(),
                   guest_name: customerDetails.name,
@@ -201,94 +200,103 @@ export async function POST(request: NextRequest) {
                   total_price: bookingDetails.totalPrice,
                   currency: bookingDetails.currency,
                 })
-                .select()
 
-            if (!bookingError) {
-              bookingSaved = true
-              console.log("Booking saved to Supabase successfully")
+              if (bookingData) {
+                bookingSaved = true
+                console.log("Booking saved to Supabase successfully")
 
-              // Also update availability table to mark dates as unavailable
-              try {
-                // Double-check dates before using them for availability
-                const availabilityCheckIn = bookingDetails.checkIn.toISOString()
-                const availabilityCheckOut =
-                  bookingDetails.checkOut.toISOString()
+                // Also update availability table to mark dates as unavailable
+                try {
+                  // Double-check dates before using them for availability
+                  const availabilityCheckIn =
+                    bookingDetails.checkIn.toISOString()
+                  const availabilityCheckOut =
+                    bookingDetails.checkOut.toISOString()
 
-                const { error: availabilityError } = await supabaseAdmin
-                  .from("availability")
-                  .insert({
-                    start_date: availabilityCheckIn,
-                    end_date: availabilityCheckOut,
-                    is_available: false,
-                    reason: `Booked via Direct - ${customerDetails.name}`,
-                    booking_uid: event.data.object.id,
-                    updated_at: new Date().toISOString(),
-                  })
+                  const { error: availabilityError } = await supabaseAdmin
+                    .from("availability")
+                    .insert({
+                      start_date: availabilityCheckIn,
+                      end_date: availabilityCheckOut,
+                      is_available: false,
+                      reason: `Booked via Direct - ${customerDetails.name}`,
+                      booking_uid: event.data.object.id,
+                      updated_at: new Date().toISOString(),
+                    })
 
-                if (!availabilityError) {
-                  availabilityUpdated = true
-                  console.log("Availability updated successfully")
-                } else {
+                  if (!availabilityError) {
+                    availabilityUpdated = true
+                    console.log("Availability updated successfully")
+                  } else {
+                    console.error(
+                      "Failed to update availability:",
+                      availabilityError,
+                    )
+                  }
+                } catch (availabilityError) {
                   console.error(
-                    "Failed to update availability:",
+                    "Error updating availability:",
                     availabilityError,
                   )
                 }
-              } catch (availabilityError) {
-                console.error("Error updating availability:", availabilityError)
+              } else {
+                console.error(
+                  "Failed to save booking to Supabase:",
+                  bookingError,
+                )
               }
-            } else {
-              console.error("Failed to save booking to Supabase:", bookingError)
+            } catch (supabaseError) {
+              console.error("Error saving booking to Supabase:", supabaseError)
             }
-          } catch (supabaseError) {
-            console.error("Error saving booking to Supabase:", supabaseError)
-          }
 
-          // Send notification based on operation results
-          const checkInFormatted = formatForEmail(bookingDetails.checkIn)
-          const checkOutFormatted = formatForEmail(bookingDetails.checkOut)
+            // Send notification based on operation results
+            const checkInFormatted = formatForEmail(bookingDetails.checkIn)
+            const checkOutFormatted = formatForEmail(bookingDetails.checkOut)
 
-          if (bookingSaved && availabilityUpdated) {
-            // Complete success
+            if (bookingSaved && availabilityUpdated) {
+              // Complete success
+              await sendErrorEmail({
+                subject: "New Booking Successfully Created",
+                error: "Booking successful",
+                details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${checkInFormatted}, Check-out: ${checkOutFormatted}`,
+              })
+            } else {
+              // Partial or complete failure
+              const failedOperations = []
+              if (!bookingSaved) failedOperations.push("Supabase booking save")
+              if (!availabilityUpdated)
+                failedOperations.push("availability update")
+
+              await sendErrorEmail({
+                subject: `Booking ${bookingSaved ? "Partially" : "Fully"} Failed - ${failedOperations.join(" & ")}`,
+                error: "Booking processing incomplete",
+                details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${checkInFormatted}, Check-out: ${checkOutFormatted}, Failed operations: ${failedOperations.join(", ")}`,
+              })
+            }
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error)
+            console.error("Failed to create booking in Sanity:", error)
             await sendErrorEmail({
-              subject: "New Booking Successfully Created",
-              error: "Booking successful",
-              details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${checkInFormatted}, Check-out: ${checkOutFormatted}`,
-            })
-          } else {
-            // Partial or complete failure
-            const failedOperations = []
-            if (!bookingSaved) failedOperations.push("Supabase booking save")
-            if (!availabilityUpdated)
-              failedOperations.push("availability update")
-
-            await sendErrorEmail({
-              subject: `Booking ${bookingSaved ? "Partially" : "Fully"} Failed - ${failedOperations.join(" & ")}`,
-              error: "Booking processing incomplete",
-              details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${checkInFormatted}, Check-out: ${checkOutFormatted}, Failed operations: ${failedOperations.join(", ")}`,
+              subject: "Failed to Create Booking in Sanity",
+              error: "Booking creation failed",
+              details: `Session ID: ${id}, Customer: ${customerDetails.email}, Error: ${errorMessage}`,
             })
           }
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error)
-          console.error("Failed to create booking in Sanity:", error)
-          await sendErrorEmail({
-            subject: "Failed to Create Booking in Sanity",
-            error: "Booking creation failed",
-            details: `Session ID: ${id}, Customer: ${customerDetails.email}, Error: ${errorMessage}`,
-          })
         }
         break
       }
       case "payment_intent.succeeded": {
-        const paymentIntent = event.data.object
-        console.log(`PaymentIntent for ${paymentIntent.amount} was successful!`)
+        const paymentIntent = event.data.object as Stripe.PaymentIntent
+        console.log(
+          `PaymentIntent for ${paymentIntent.amount || 0} was successful!`,
+        )
         // TODO: Handle successful payment intent (e.g., update booking/payment status)
         break
       }
       case "payment_intent.payment_failed": {
-        const paymentIntent = event.data.object
-        console.log(`PaymentIntent for ${paymentIntent.amount} failed.`)
+        const paymentIntent = event.data.object as Stripe.PaymentIntent
+        console.log(`PaymentIntent for ${paymentIntent.amount || 0} failed.`)
         // TODO: Handle failed payment (e.g., notify user, update booking/payment status)
         break
       }
