@@ -159,6 +159,8 @@ export function calculateEffectivePrice({
 }
 
 export function getDefaultBasePrice(pricingRules: PricingRule[]): number {
+  console.error({ pricingRules })
+
   const baseRateRule = pricingRules.find(
     rule => rule.ruleType === "base_rate" && rule.basePrice,
   )
