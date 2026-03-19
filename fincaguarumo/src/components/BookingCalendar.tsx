@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import DatePicker from "./DatePicker"
 
 const BookingCalendar = ({
@@ -19,6 +20,7 @@ const BookingCalendar = ({
   onLoadingChange?: (loading: boolean) => void
   onBlockedDatesChange?: (blockedDates: Date[]) => void
 }) => {
+  const t = useTranslations("booking")
   const [loading, setLoading] = useState(false)
   const [activePopover, setActivePopover] = useState<string | null>(null)
   const [blockedDates, setBlockedDates] = useState<Date[]>([])
@@ -38,6 +40,7 @@ const BookingCalendar = ({
   }, [blockedDates, onBlockedDatesChange])
 
   useEffect(() => {
+    if (blockedDates.length) return
     setLoading(true)
 
     const fetchData = async () => {
@@ -71,7 +74,7 @@ const BookingCalendar = ({
     }
 
     fetchData()
-  }, [])
+  }, [blockedDates])
 
   return (
     <>

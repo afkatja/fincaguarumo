@@ -29,6 +29,7 @@
     "checkinDate": "Check-in date",
     "checkoutDate": "Check-out date",
     "selectDates": "Select dates to check availability",
+    "selectCheckInFirst": "Please select a check-in date first",
     "emailError": "Please enter a valid email address",
     "emailLabel": "Your email *",
     "guests": "Guests",
