@@ -13,5 +13,8 @@ export const clientSideClient = createClient({
   },
 })
 
-export const clientSideFetch = async (query: string, params?: QueryParams) =>
-  await clientSideClient.fetch(query, params)
+export const clientSideFetch = async (
+  query: string,
+  params?: QueryParams,
+  revalidate: number = 0,
+) => await clientSideClient.fetch(query, params, { next: { revalidate } })
