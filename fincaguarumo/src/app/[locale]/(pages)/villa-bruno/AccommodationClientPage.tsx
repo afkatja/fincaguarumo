@@ -12,11 +12,11 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { BOOKING_TYPE, BookingData } from "@/types"
+import { BOOKING_TYPE } from "@/types"
 import { getLowestPrice } from "@/lib/pricingEngine"
 import BookingDialog from "../BookingDialog"
 import { AccommodationContent } from "./page"
-import { useBooking } from "../../../providers/BookingProvider"
+import { useBookingCore } from "../../../providers/BookingCoreProvider"
 import FAQ from "@/components/FAQ"
 import Title from "@/components/Title"
 import Icon from "../../../../components/Icon"
@@ -30,6 +30,7 @@ import { ContentPreview } from "@/components/ContentPreview"
 import { CollapsibleSection } from "@/components/CollapsibleSection"
 import InPageNavigation from "@/components/InPageNavigation"
 import { cn } from "../../../../lib/utils"
+import Loading from "../loading"
 
 const AccommodationClientPage = ({
   content,
@@ -38,7 +39,7 @@ const AccommodationClientPage = ({
   content: AccommodationContent
   locale: string
 }) => {
-  const { bookingData, setBookingData } = useBooking()
+  const { setBookingType, setBasicDetails } = useBookingCore()
   const t = useTranslations("booking")
   const tPage = useTranslations("page")
 
@@ -55,40 +56,22 @@ const AccommodationClientPage = ({
   ]
 
   useEffect(() => {
-    setBookingData((prev: BookingData) => {
-      const nextBookingDetails = {
-        ...(prev?.bookingDetails ?? {}),
-        type: BOOKING_TYPE.villa,
-        title: content.title,
-        description: content.description,
-        price: 0, // Will be calculated dynamically
-        body: content.body,
-        guests: 1,
-        location: "Finca Guarumo",
-      }
-      if (
-        JSON.stringify(prev.bookingDetails) ===
-          JSON.stringify(nextBookingDetails) &&
-        JSON.stringify(prev.pricingRules) ===
-          JSON.stringify(content.pricingRules || [])
-      ) {
-        return prev
-      }
-      return {
-        ...prev,
-        bookingDetails: nextBookingDetails,
-        pricingRules: content.pricingRules || [],
-      }
+    setBookingType(BOOKING_TYPE.villa)
+    setBasicDetails({
+      title: content.title,
+      description: content.description,
+      location: content.location?.address || "Finca Guarumo",
     })
-  }, [content, setBookingData])
+  }, [content])
 
-  const guestsRaw = bookingData?.bookingDetails?.guests
-  const guests = typeof guestsRaw === "number" && guestsRaw > 0 ? guestsRaw : 1
+  const guests = 1 // Default to 1 for villa pages
 
-  const lowestPrice = getLowestPrice(bookingData.pricingRules)
+  if (!content.pricingRules || !content.pricingRules.length) return <Loading />
+
+  const lowestPrice = getLowestPrice(content.pricingRules)
   const currency = createCurrencyFormatter({
     locale,
-    currency: bookingData?.bookingDetails?.currency || "USD",
+    currency: "USD",
     minimumFractionDigits: 0,
   })
 
