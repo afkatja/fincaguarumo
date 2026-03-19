@@ -1,6 +1,7 @@
-import { formatCurrency } from "@/lib/currency"
+// ProgressiveBookingForm.tsx
+"use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { DialogFooter } from "@/components/ui/dialog"
 import VillaPriceCalculation from "@/components/VillaPriceCalculation"
@@ -15,23 +16,20 @@ import { useTranslations } from "next-intl"
 import calculateDuration from "@/lib/calculateDuration"
 import calculateTotal, { calculateTotalWithRules } from "@/lib/calculateTotal"
 import { getDefaultBasePrice, getLowestPrice } from "@/lib/pricingEngine"
-import {
-  BookingType,
-  BOOKING_TYPE,
-  initialBookingData,
-  BookingData,
-} from "@/types"
-import { useBooking } from "@/app/providers/BookingProvider"
+import { BookingType, BOOKING_TYPE, BookingData } from "@/types"
+import { useVillaBooking } from "@/app/providers/VillaBookingProvider"
 import { useDialog } from "@/app/providers/DialogProvider"
 import BookingProgressIndicator, {
   BookingStep,
 } from "./BookingProgressIndicator"
 import AvailabilityPreview from "./AvailabilityPreview"
+import { useBookingCore } from "@/app/providers/BookingCoreProvider"
+import Loading from "../../app/[locale]/loading"
+import { formatCurrency } from "../../lib/currency"
 
 interface ProgressiveBookingFormProps {
   onSubmit: (bookingData: BookingData) => void
   onCancel: () => void
-  bookingType: BookingType
   locale: string
   className?: string
 }
@@ -39,12 +37,11 @@ interface ProgressiveBookingFormProps {
 export default function ProgressiveBookingForm({
   onSubmit,
   onCancel,
-  bookingType,
   locale,
   className = "",
 }: ProgressiveBookingFormProps) {
   const [currentStep, setCurrentStep] = useState<BookingStep>("dates")
-  const [dateError, setDateError] = useState<string>("")
+  const [dateError, setDateError] = useState("")
   const [calendarLoading, setCalendarLoading] = useState(false)
   const [blockedDates, setBlockedDates] = useState<Date[]>([])
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
@@ -56,105 +53,206 @@ export default function ProgressiveBookingForm({
   })
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
 
-  const { bookingData, setBookingData } = useBooking()
+  const {
+    state,
+    setDates,
+    setGuests,
+    setCustomerDetails,
+    setPricing,
+    persistToStorage,
+  } = useBookingCore()
+  const { fetchVillaPricingRules } = useVillaBooking()
   const { dialogData: dialog } = useDialog()
   const t = useTranslations("booking")
 
-  // Calculate duration based on check-in and check-out dates
-  const duration = calculateDuration(
-    bookingData.bookingDetails.checkIn || undefined,
-    bookingData.bookingDetails.checkOut || undefined,
+  // Debounced phone number handler to prevent cascading updates
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const handlePhoneChange = useCallback(
+    (phoneNumber: string) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+      timeoutRef.current = setTimeout(() => {
+        setCustomerDetails({ phoneNumber })
+      }, 300)
+    },
+    [setCustomerDetails],
   )
 
-  // Define steps based on booking type
-  const steps = [
+  const bookingType: BookingType | null = state.data.bookingType
+
+  // Store pricing rules to avoid multiple fetches
+  // const [pricingRules, setPricingRules] = useState<any[]>([])
+  const pricingRulesRef = useRef<any[]>([])
+  const [pricingRulesLoading, setPricingRulesLoading] = useState(false)
+
+  // Clear pricing rules when booking type changes
+  useEffect(() => {
+    pricingRulesRef.current = []
+  }, [bookingType])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Helper to compute duration for villa
+  const villaDuration = useMemo(
+    () =>
+      calculateDuration(
+        state.data.dates.checkIn || undefined,
+        state.data.dates.checkOut || undefined,
+      ),
+    [state.data.dates.checkIn, state.data.dates.checkOut],
+  )
+
+  // Fetch pricing rules once for villa bookings
+  useEffect(() => {
+    if (
+      bookingType === BOOKING_TYPE.villa &&
+      pricingRulesRef.current.length === 0
+    ) {
+      setPricingRulesLoading(true)
+      fetchVillaPricingRules()
+        .then(rules => {
+          // setPricingRules(rules)
+          pricingRulesRef.current = rules
+        })
+        .catch(error => {
+          console.error("Error fetching pricing rules:", error)
+        })
+        .finally(() => {
+          setPricingRulesLoading(false)
+        })
+    }
+  }, [bookingType, fetchVillaPricingRules])
+
+  // Validate current step against core state
+  useEffect(() => {
+    if (!bookingType) return
+
+    setIsStepValid(prev => {
+      const datesValid =
+        bookingType === BOOKING_TYPE.villa
+          ? !!(
+              state.data.dates.checkIn &&
+              state.data.dates.checkOut &&
+              state.data.dates.checkOut.getTime() >
+                state.data.dates.checkIn.getTime() &&
+              isAvailable === true
+            )
+          : !!state.data.dates.date
+
+      const personalValid =
+        !!state.data.customerDetails.name &&
+        !!state.data.customerDetails.email &&
+        !!state.data.customerDetails.phoneNumber &&
+        state.data.customerDetails.phoneNumber.trim().length >= 7 // Basic validation
+
+      return {
+        ...prev,
+        dates: datesValid,
+        personal: personalValid,
+        payment: true, // if payment step is just info + redirect
+      }
+    })
+  }, [bookingType, state.data, isAvailable])
+
+  if (!bookingType) {
+    return <Loading />
+  }
+
+  const steps: { id: BookingStep; label: string }[] = [
     {
-      id: "dates" as BookingStep,
+      id: "dates",
       label: t("stepDates", { defaultValue: "Dates" }),
     },
     {
-      id: "personal" as BookingStep,
+      id: "personal",
       label: t("stepPersonal", { defaultValue: "Personal" }),
     },
     {
-      id: "payment" as BookingStep,
+      id: "payment",
       label: t("stepPayment", { defaultValue: "Payment" }),
     },
   ]
 
-  // Validate current step
-  useEffect(() => {
-    const validateStep = () => {
-      switch (currentStep) {
-        case "dates":
-          const datesValid =
-            bookingType === BOOKING_TYPE.villa
-              ? bookingData.bookingDetails.checkIn &&
-                bookingData.bookingDetails.checkOut &&
-                bookingData.bookingDetails.checkOut.getTime() >
-                  bookingData.bookingDetails.checkIn.getTime() &&
-                isAvailable === true // Must have confirmed availability
-              : bookingData.bookingDetails.date
-          setIsStepValid(prev => ({ ...prev, dates: !!datesValid }))
-          break
-        case "personal": {
-          const personalValid =
-            bookingData.customerDetails.name &&
-            bookingData.customerDetails.email &&
-            bookingData.customerDetails.phoneNumber
-          setIsStepValid(prev => ({ ...prev, personal: !!personalValid }))
-          break
-        }
-        case "payment": {
-          setIsStepValid(prev => ({ ...prev, payment: true }))
-          break
-        }
-      }
+  const handleNext = async () => {
+    if (currentStep === "dates") {
+      if (!isStepValid.dates) return
+      setCurrentStep("personal")
+      return
     }
 
-    validateStep()
-  }, [currentStep, bookingData, bookingType, isAvailable])
-
-  const handleNext = () => {
-    if (currentStep === "dates") {
-      setCurrentStep("personal")
-    } else if (currentStep === "personal") {
+    if (currentStep === "personal") {
+      if (!isStepValid.personal) return
       setCurrentStep("payment")
-    } else if (currentStep === "payment") {
-      // Calculate total price before submitting using the same logic as price preview
-      const totalPrice = calculateTotalWithRules({
-        pricingRules: bookingData.pricingRules,
-        guests: bookingData.bookingDetails.guests,
-        bookingType,
-        duration,
-        checkInDate:
-          bookingType === BOOKING_TYPE.villa
-            ? bookingData.bookingDetails.checkIn || undefined
-            : undefined,
-      }).total
+      return
+    }
 
-      // Create the new booking data object and update state atomically
-      const newBookingData = {
-        ...bookingData,
-        bookingDetails: {
-          ...bookingData.bookingDetails,
-          type: bookingType,
-          totalPrice,
-        },
+    if (currentStep === "payment") {
+      // Finalize bookingData for submit
+      let totalPrice = state.data.totalPrice
+      let basePrice = state.data.baseUnitPrice
+      let pricingRulesForCalculation: any[] = []
+
+      if (bookingType === BOOKING_TYPE.villa) {
+        // Use cached pricing rules instead of fetching detailed villa
+        pricingRulesForCalculation = pricingRulesRef.current
+
+        const totalResult = calculateTotalWithRules({
+          pricingRules: pricingRulesForCalculation,
+          guests: state.data.guests,
+          bookingType,
+          duration: villaDuration,
+          checkInDate: state.data.dates.checkIn || undefined,
+        })
+        totalPrice = totalResult.total
+        basePrice = getDefaultBasePrice(pricingRulesForCalculation) ?? 0
+        setPricing({ baseUnitPrice: basePrice })
+      } else {
+        // Tour: core already has baseUnitPrice; recompute total if needed
+        const totalResult = calculateTotal({
+          price: state.data.baseUnitPrice,
+          guests: state.data.guests,
+          bookingType,
+          duration: 1,
+        })
+        totalPrice = totalResult.total
       }
 
-      // Update state with functional updater
-      setBookingData(prev => ({
-        ...prev,
+      // Build legacy BookingData payload expected by your backend/email
+      const bookingData: BookingData = {
+        source: state.data.source,
+        customerDetails: state.data.customerDetails,
         bookingDetails: {
-          ...prev.bookingDetails,
           type: bookingType,
+          title: state.data.bookingDetails.title,
+          description: state.data.bookingDetails.description,
+          duration: bookingType === BOOKING_TYPE.villa ? villaDuration : 1,
+          location: state.data.bookingDetails.location,
+          body: "", // can be filled if needed
+          date: state.data.dates.date || state.data.dates.checkIn || new Date(),
+          checkIn: state.data.dates.checkIn,
+          checkOut: state.data.dates.checkOut,
+          guests: state.data.guests,
+          price: state.data.baseUnitPrice,
+          basePrice,
           totalPrice,
+          currency: state.data.currency,
+          geo: { lat: 0, lng: 0 }, // enhance from villa/tour if needed
         },
-      }))
+        pricingRules: pricingRulesForCalculation,
+      }
 
-      // Pass the finalized booking data directly to onSubmit
-      onSubmit(newBookingData)
+      // Save to localStorage only on final submission
+      persistToStorage()
+
+      onSubmit(bookingData)
     }
   }
 
@@ -170,103 +268,114 @@ export default function ProgressiveBookingForm({
     setCurrentStep(step)
   }
 
+  // Price preview using core + optional villa rules
   const renderPricePreview = () => {
-    const shouldShowPricePreview =
-      (bookingType === BOOKING_TYPE.villa &&
-        bookingData.bookingDetails.checkIn &&
-        bookingData.bookingDetails.checkOut &&
-        bookingData.bookingDetails.guests &&
-        isAvailable === true) || // Only show when availability is confirmed
-      (bookingType === BOOKING_TYPE.tour &&
-        bookingData.bookingDetails.date &&
-        bookingData.bookingDetails.guests)
+    if (!bookingType) return null
 
-    if (!shouldShowPricePreview) {
-      return (
-        <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-muted-foreground">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">
-              {t("priceFrom", {
-                defaultValue:
-                  "Price starting from ${price} for {guests} {guestsLabel}",
-                price: formatCurrency(
-                  getLowestPrice(bookingData.pricingRules),
-                  {
+    if (bookingType === BOOKING_TYPE.villa) {
+      // Use cached pricing rules instead of fetching from state
+      const currentPricingRules = pricingRulesRef.current
+
+      // Only show once dates & guests & availability are okay
+      const shouldShow =
+        !!state.data.dates.checkIn &&
+        !!state.data.dates.checkOut &&
+        !!state.data.guests &&
+        isAvailable === true
+
+      if (!shouldShow) {
+        return (
+          <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-muted-foreground">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">
+                {t("priceFrom", {
+                  defaultValue:
+                    "Price starting from ${price} for {guests} {guestsLabel}",
+                  price: formatCurrency(getLowestPrice(currentPricingRules), {
                     locale,
-                    currency: bookingData.bookingDetails.currency || "USD",
-                  },
-                ),
-                guests: 1,
-                guestsLabel: t("person", { defaultValue: "person" }),
-              })}
-            </span>
+                    currency: state.data.currency || "USD",
+                  }),
+                  guests: 1,
+                  guestsLabel: t("person", { defaultValue: "person" }),
+                })}
+              </span>
+            </div>
           </div>
+        )
+      }
+
+      return (
+        <div className="mt-6">
+          <h3 className="mb-2 font-semibold">
+            {t("priceSummary", { defaultValue: "Price Summary" })}
+          </h3>
+          <VillaPriceCalculation
+            // Pass cached rules to avoid re-fetching
+            guests={state.data.guests}
+            locale={locale}
+            duration={villaDuration}
+            currency={state.data.currency}
+            checkInDate={state.data.dates.checkIn || undefined}
+          />
         </div>
       )
     }
+
+    // Tour price preview
+    if (!state.data.baseUnitPrice || !state.data.guests) return null
 
     return (
       <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-muted-foreground">
         <h3 className="font-medium mb-3">
           {t("priceSummary", { defaultValue: "Price Summary" })}
         </h3>
-        {bookingType === BOOKING_TYPE.villa ? (
-          <VillaPriceCalculation
-            key={`${bookingType}-${bookingData.bookingDetails.checkIn?.getTime() || ""}-${bookingData.bookingDetails.checkOut?.getTime() || ""}-${bookingData.bookingDetails.guests}-${JSON.stringify(bookingData.pricingRules)}`}
-            pricingRules={
-              bookingData.pricingRules?.length > 0
-                ? bookingData.pricingRules
-                : []
-            }
-            guests={bookingData.bookingDetails.guests}
-            locale={locale}
-            t={t}
-            duration={duration}
-            currency={bookingData.bookingDetails.currency}
-            checkInDate={bookingData.bookingDetails.checkIn || undefined}
-          />
-        ) : (
-          <TourPriceCalculation
-            key={`${bookingType}-${bookingData.bookingDetails.date?.getTime() || ""}-${bookingData.bookingDetails.guests}-${bookingData.bookingDetails.price}`}
-            price={bookingData.bookingDetails.price}
-            guests={bookingData.bookingDetails.guests}
-            locale={locale}
-            t={t}
-            currency={bookingData.bookingDetails.currency}
-          />
-        )}
+        <TourPriceCalculation
+          price={state.data.baseUnitPrice}
+          guests={state.data.guests}
+          locale={locale}
+          t={t}
+          currency={state.data.currency}
+        />
       </div>
     )
   }
 
-  const renderDatesStep = () => (
-    <div className="space-y-4">
-      {bookingType === BOOKING_TYPE.villa ? (
-        <>
+  const renderDatesStep = () => {
+    if (bookingType === BOOKING_TYPE.villa) {
+      return (
+        <div className="space-y-4">
           <BookingCalendar
-            onSelectDate={(date: Date, type: string) => {
+            onBlockedDatesChange={setBlockedDates}
+            onLoadingChange={setCalendarLoading}
+            selectedDates={{
+              checkIn: state.data.dates.checkIn || undefined,
+              checkOut: state.data.dates.checkOut || undefined,
+            }}
+            onSelectDate={(date, type) => {
               setDateError("")
               if (type === "check-in") {
                 const checkInDate = new Date(date)
                 const checkOutDate = new Date(date)
                 checkOutDate.setDate(checkOutDate.getDate() + 1)
-                setBookingData({
-                  ...bookingData,
-                  bookingDetails: {
-                    ...bookingData.bookingDetails,
-                    checkIn: checkInDate,
-                    checkOut:
-                      bookingData.bookingDetails.checkOut &&
-                      bookingData.bookingDetails.checkOut.getTime() >
-                        checkInDate.getTime()
-                        ? bookingData.bookingDetails.checkOut
-                        : checkOutDate,
-                  },
+                setDates({
+                  date,
+                  checkIn: checkInDate,
+                  checkOut: checkOutDate,
                 })
               } else {
                 const newCheckOut = new Date(date)
-                const checkInTime =
-                  bookingData.bookingDetails.checkIn?.getTime() || 0
+                const checkInDate = state.data.dates.checkIn
+
+                if (!checkInDate) {
+                  setDateError(
+                    t("selectCheckInFirst", {
+                      defaultValue: "Please select check-in date first",
+                    }),
+                  )
+                  return
+                }
+
+                const checkInTime = checkInDate.getTime()
                 const checkOutTime = newCheckOut.getTime()
 
                 if (checkOutTime <= checkInTime) {
@@ -279,18 +388,10 @@ export default function ProgressiveBookingForm({
                   return
                 }
 
-                setBookingData({
-                  ...bookingData,
-                  bookingDetails: {
-                    ...bookingData.bookingDetails,
-                    checkOut: newCheckOut,
-                  },
+                setDates({
+                  checkOut: newCheckOut,
                 })
               }
-            }}
-            selectedDates={{
-              checkIn: bookingData.bookingDetails.checkIn || undefined,
-              checkOut: bookingData.bookingDetails.checkOut || undefined,
             }}
             labels={{
               checkinDate: t("checkinDate", { defaultValue: "Check-in date" }),
@@ -299,31 +400,39 @@ export default function ProgressiveBookingForm({
               }),
             }}
             error={dateError}
-            onLoadingChange={setCalendarLoading}
-            onBlockedDatesChange={setBlockedDates}
           />
+
           <AvailabilityPreview
-            checkIn={bookingData.bookingDetails.checkIn}
-            checkOut={bookingData.bookingDetails.checkOut}
             bookingType={bookingType}
-            className="mt-2"
-            calendarLoading={calendarLoading}
+            checkIn={state.data.dates.checkIn}
+            checkOut={state.data.dates.checkOut}
             blockedDates={blockedDates}
             onAvailabilityChange={setIsAvailable}
+            calendarLoading={calendarLoading}
+            className="mt-2"
           />
-        </>
-      ) : (
+
+          <div className="grid gap-2">
+            <SelectGuestsOptions
+              guests={state.data.guests}
+              onChange={val => setGuests(val)}
+              locale={locale}
+            />
+          </div>
+        </div>
+      )
+    }
+
+    // Tour: single date picker
+    return (
+      <div className="space-y-4">
         <DatePicker
           isOpen={isDatePickerOpen}
           onClose={() => setIsDatePickerOpen(false)}
           onOpen={() => setIsDatePickerOpen(true)}
           onSelectDate={date => {
-            setBookingData({
-              ...bookingData,
-              bookingDetails: {
-                ...bookingData.bookingDetails,
-                date,
-              },
+            setDates({
+              date,
             })
             setIsDatePickerOpen(false)
           }}
@@ -332,98 +441,64 @@ export default function ProgressiveBookingForm({
             locale,
             "Select date",
           )}
-          selectedDate={bookingData.bookingDetails.date}
+          selectedDate={state.data.dates.date || undefined}
         />
-      )}
 
-      <div className="grid gap-2">
-        <SelectGuestsOptions
-          locale={locale}
-          guests={bookingData.bookingDetails.guests}
-          onChange={val =>
-            setBookingData({
-              ...bookingData,
-              bookingDetails: {
-                ...bookingData.bookingDetails,
-                guests: val,
-              },
-            })
-          }
-        />
+        <div className="grid gap-2">
+          <SelectGuestsOptions
+            guests={state.data.guests}
+            onChange={val => setGuests(val)}
+            locale={locale}
+          />
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   const renderPersonalStep = () => (
-    <div className="space-y-4">
-      <div>
-        <Input
-          id="name"
-          type="text"
-          required
-          labelText={t("nameLabel", { defaultValue: "Your name" })}
-          errorMessage={t("nameError", {
-            defaultValue: "Please enter your name",
-          })}
-          placeholder="Jane Doe"
-          value={bookingData.customerDetails.name}
-          onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setBookingData({
-              ...bookingData,
-              customerDetails: {
-                ...bookingData.customerDetails,
-                name: e.target.value,
-              },
-            })
-          }
-        />
-      </div>
-      <div>
-        <Input
-          id="email"
-          type="email"
-          required
-          errorMessage={t("emailError", {
-            defaultValue: "Please enter a valid email address",
-          })}
-          labelText={t("emailLabel", { defaultValue: "Your email *" })}
-          placeholder="jane@doe.com"
-          pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-          value={bookingData.customerDetails.email}
-          onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setBookingData({
-              ...bookingData,
-              customerDetails: {
-                ...bookingData.customerDetails,
-                email: e.target.value,
-              },
-            })
-          }
-        />
-      </div>
-      <div>
-        <PhoneInput
-          id="phone"
-          required
-          defaultCountry={"CR"}
-          errorMessage={t("phoneError", {
-            defaultValue: "Please enter a valid phone number",
-          })}
-          labelText={t("phoneLabel", { defaultValue: "Your phone number *" })}
-          placeholder="12345678"
-          pattern="^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$"
-          value={bookingData.customerDetails.phoneNumber}
-          onChange={(value: string) =>
-            setBookingData({
-              ...bookingData,
-              customerDetails: {
-                ...bookingData.customerDetails,
-                phoneNumber: value,
-              },
-            })
-          }
-        />
-      </div>
+    <div className="flex flex-col space-y-4">
+      <Input
+        id="name"
+        type="text"
+        required
+        labelText={t("nameLabel", { defaultValue: "Your name" })}
+        errorMessage={t("nameError", {
+          defaultValue: "Please enter your name",
+        })}
+        placeholder="Jane Doe"
+        onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setCustomerDetails({ name: e.target.value })
+        }
+        value={state.data.customerDetails.name}
+      />
+      <Input
+        id="email"
+        type="email"
+        required
+        errorMessage={t("emailError", {
+          defaultValue: "Please enter a valid email address",
+        })}
+        labelText={t("emailLabel", { defaultValue: "Your email *" })}
+        placeholder="jane@doe.com"
+        pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        value={state.data.customerDetails.email}
+        onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setCustomerDetails({ email: e.target.value })
+        }
+      />
+      <PhoneInput
+        id="phone"
+        required
+        defaultCountry="CR"
+        errorMessage={t("phoneError", {
+          defaultValue: "Please enter a valid phone number",
+        })}
+        labelText={t("phoneLabel", { defaultValue: "Your phone number *" })}
+        placeholder="12345678"
+        pattern="^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$"
+        value={state.data.customerDetails.phoneNumber}
+        onChange={handlePhoneChange}
+      />
     </div>
   )
 
@@ -431,35 +506,28 @@ export default function ProgressiveBookingForm({
     <div className="space-y-4">
       {bookingType === BOOKING_TYPE.villa ? (
         <VillaPriceCalculation
-          key={`${bookingType}-${bookingData.bookingDetails.checkIn?.getTime()}-${bookingData.bookingDetails.checkOut?.getTime()}-${bookingData.bookingDetails.guests}-${JSON.stringify(bookingData.pricingRules)}`}
-          pricingRules={
-            bookingData.pricingRules?.length > 0 ? bookingData.pricingRules : []
-          }
-          guests={bookingData.bookingDetails.guests}
+          guests={state.data.guests}
           locale={locale}
-          t={t}
-          duration={duration}
-          currency={bookingData.bookingDetails.currency}
-          checkInDate={bookingData.bookingDetails.checkIn || undefined}
+          duration={villaDuration}
+          currency={state.data.currency}
+          checkInDate={state.data.dates.checkIn || undefined}
         />
       ) : (
         <TourPriceCalculation
-          key={`${bookingType}-${bookingData.bookingDetails.date?.getTime() || ""}-${bookingData.bookingDetails.guests}-${bookingData.bookingDetails.basePrice}`}
-          price={bookingData.bookingDetails.basePrice}
-          guests={bookingData.bookingDetails.guests}
+          price={state.data.baseUnitPrice}
+          guests={state.data.guests}
           locale={locale}
           t={t}
-          currency={bookingData.bookingDetails.currency}
+          currency={state.data.currency}
         />
       )}
-      <div className="p-4 bg-guarumo-primary/20 rounded-lg border border-guarumo-primary">
-        <p className="text-sm text-guarumo-primary">
-          {t("paymentStepInfo", {
-            defaultValue:
-              "You'll be redirected to a secure payment page to complete your booking.",
-          })}
-        </p>
-      </div>
+
+      <p className="text-sm text-muted-foreground">
+        {t("paymentStepInfo", {
+          defaultValue:
+            "You'll be redirected to a secure payment page to complete your booking.",
+        })}
+      </p>
     </div>
   )
 
@@ -477,65 +545,46 @@ export default function ProgressiveBookingForm({
   }
 
   return (
-    <>
-      <form
-        className={`grid gap-4 group ${className}`}
-        noValidate
-        onSubmit={e => {
-          e.preventDefault()
-          handleNext()
-        }}
-      >
-        <BookingProgressIndicator
-          currentStep={currentStep}
-          steps={steps}
-          onStepClick={handleStepClick}
-          className="mb-6"
-        />
+    <form
+      noValidate
+      className={`grid gap-4 group ${className}`}
+      onSubmit={e => {
+        e.preventDefault()
+        void handleNext()
+      }}
+    >
+      <BookingProgressIndicator
+        steps={steps}
+        currentStep={currentStep}
+        onStepClick={handleStepClick}
+        // isStepValid={isStepValid}
+      />
 
-        <div className="min-h-75">{renderStepContent()}</div>
+      <div className="min-h-45 mt-6">{renderStepContent()}</div>
 
-        {/* Show price preview on all steps except payment */}
-        {currentStep !== "payment" && renderPricePreview()}
+      {currentStep !== "payment" && renderPricePreview()}
 
-        <DialogFooter className="flex-wrap">
-          <div className="mt-5 flex justify-between w-full flex-none gap-2">
-            <Button
-              name="booking-back-button"
-              type="button"
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === "dates"}
-            >
-              {t("back", { defaultValue: "Back" })}
+      <DialogFooter className="mt-auto flex justify-between flex-wrap">
+        <div className="pt-5 flex justify-between w-full flex-none gap-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {getInternationalizedValue(dialog?.cancel, locale, "Cancel")}
+          </Button>
+
+          <div className="space-x-2">
+            {currentStep !== "dates" && (
+              <Button type="button" variant="ghost" onClick={handleBack}>
+                {t("back", { defaultValue: "Back" })}
+              </Button>
+            )}
+
+            <Button type="submit" disabled={!isStepValid[currentStep]}>
+              {currentStep === "payment"
+                ? getInternationalizedValue(dialog?.ok, locale, "Reserve")
+                : t("next", { defaultValue: "Next" })}
             </Button>
-            <div className="flex gap-2">
-              <Button
-                name="booking-cancel-button"
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setBookingData(initialBookingData)
-                  localStorage.removeItem("bookingData")
-                  onCancel()
-                }}
-              >
-                {getInternationalizedValue(dialog?.cancel, locale, "Cancel")}
-              </Button>
-              <Button
-                name="booking-next-button"
-                type="submit"
-                disabled={!isStepValid[currentStep]}
-                className="group-invalid:pointer-events-none group-invalid:opacity-30"
-              >
-                {currentStep === "payment"
-                  ? getInternationalizedValue(dialog?.ok, locale, "Reserve")
-                  : t("next", { defaultValue: "Next" })}
-              </Button>
-            </div>
           </div>
-        </DialogFooter>
-      </form>
-    </>
+        </div>
+      </DialogFooter>
+    </form>
   )
 }
