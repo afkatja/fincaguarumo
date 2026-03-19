@@ -7,6 +7,7 @@ export interface CurrencyFormatOptions {
   locale?: string
   currency?: string
   minimumFractionDigits?: number
+  maximumFractionDigits?: number
 }
 
 /**
@@ -17,18 +18,20 @@ export interface CurrencyFormatOptions {
  */
 export function formatCurrency(
   amount: number,
-  options: CurrencyFormatOptions = {}
+  options: CurrencyFormatOptions = {},
 ): string {
   const {
     locale = "en-US",
     currency = "USD",
     minimumFractionDigits = 0,
+    maximumFractionDigits = 2,
   } = options
 
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     minimumFractionDigits,
+    maximumFractionDigits,
   })
     .format(amount)
     .trim()
@@ -39,8 +42,14 @@ export function formatCurrency(
  * @param options - Default formatting options
  * @returns A function that formats numbers with the given options
  */
-export function createCurrencyFormatter(
-  options: CurrencyFormatOptions = {}
-) {
-  return (amount: number) => formatCurrency(amount, options)
+export function createCurrencyFormatter(options: CurrencyFormatOptions = {}) {
+  return (amount: number) => {
+    const isInteger = Number.isInteger(amount)
+    const formattedOptions = {
+      ...options,
+      minimumFractionDigits: isInteger ? 0 : 2,
+      maximumFractionDigits: isInteger ? 0 : 2,
+    }
+    return formatCurrency(amount, formattedOptions)
+  }
 }
