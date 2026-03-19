@@ -165,13 +165,17 @@ const InPageNavigation: React.FC<InPageNavigationProps> = ({ sections }) => {
     const element = document.getElementById(sectionId)
     if (!element) return
 
+    const headerHeight = 80 // Adjust based on your header height
+    const elementPosition = element.getBoundingClientRect().top + window.scrollY
+    const offsetPosition = elementPosition - headerHeight
+
     if (!isSupported) {
       // Fallback to GSAP
       gsap.to(window, {
         duration: 0.8,
         scrollTo: {
           y: element,
-          offsetY: 80,
+          offsetY: headerHeight,
           autoKill: false,
         },
         ease: "power2.inOut",
@@ -181,10 +185,10 @@ const InPageNavigation: React.FC<InPageNavigationProps> = ({ sections }) => {
         },
       })
     } else {
-      // Prefer native CSS scroll() function
-      element.scrollIntoView({
+      // Prefer native CSS scroll() function with manual offset calculation
+      window.scrollTo({
+        top: offsetPosition,
         behavior: "smooth",
-        block: "start",
       })
 
       // Collapse mobile menu after a short delay to allow scroll to complete
@@ -208,8 +212,8 @@ const InPageNavigation: React.FC<InPageNavigationProps> = ({ sections }) => {
         }}
       >
         <nav className="flex items-center space-x-1">
-          {/* Always show primary sections */}
-          {primarySections.map(section => (
+          {/* Desktop: Show all sections */}
+          {sections.map(section => (
             <Button
               key={section.id}
               onClick={() => scrollToSection(section.id)}
@@ -252,45 +256,12 @@ const InPageNavigation: React.FC<InPageNavigationProps> = ({ sections }) => {
               )}
             </Button>
           )}
-
-          {/* Desktop: Show all sections */}
-          {primarySections.slice(2).map(section => (
-            <Button
-              key={`desktop-${section.id}`}
-              onClick={() => scrollToSection(section.id)}
-              variant={activeSection === section.id ? "default" : "outline"}
-              className="px-3 py-2 text-sm transition-all duration-200 border hidden sm:inline-flex"
-            >
-              {section.label}
-            </Button>
-          ))}
-
-          {secondarySections.map(section => (
-            <Button
-              key={section.id}
-              onClick={() => scrollToSection(section.id)}
-              variant={activeSection === section.id ? "default" : "outline"}
-              className="px-3 py-2 text-sm transition-all duration-200 border hidden sm:inline-flex"
-            >
-              {section.label}
-            </Button>
-          ))}
         </nav>
 
         {/* Expanded mobile sections */}
-        {isExpanded && secondarySections.length > 0 && (
+        {isExpanded && (
           <nav className="flex flex-col space-y-1 mt-2 sm:hidden">
-            {primarySections.slice(2).map(section => (
-              <Button
-                key={`expanded-mobile-${section.id}`}
-                onClick={() => scrollToSection(section.id)}
-                variant={activeSection === section.id ? "default" : "outline"}
-                className="px-3 py-2 text-sm transition-all duration-200 border justify-start"
-              >
-                {section.label}
-              </Button>
-            ))}
-            {secondarySections.map(section => (
+            {sections.slice(2).map(section => (
               <Button
                 key={`expanded-${section.id}`}
                 onClick={() => scrollToSection(section.id)}
