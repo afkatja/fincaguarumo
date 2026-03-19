@@ -1,14 +1,15 @@
 "use client"
-import React, { useState } from "react"
+import { memo, useEffect, useState } from "react"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 
 import { Button } from "@/components/ui/button"
 
-import { useBooking } from "../../providers/BookingProvider"
 import { useDialog } from "../../providers/DialogProvider"
-import { BookingType, initialBookingData } from "../../../types"
 import { getInternationalizedValue } from "../../../lib/utils"
 import BookingDialogContent from "@/app/providers/BookingDialogContent"
+import BookingDialogTrigger from "../../../components/booking/BookingDialogTrigger"
+import { BookingType } from "../../../types"
+import { bookingEventBus } from "@/app/providers/BookingEventBus"
 
 const BookingDialog = ({
   bookingType,
@@ -25,46 +26,34 @@ const BookingDialog = ({
   locale: string
   dialogId?: string
 }) => {
-  const [open, setOpen] = useState(false)
-  const [paymentStep, setPaymentStep] = useState(false)
-
-  const { bookingData, setBookingData } = useBooking()
   const {
     dialogData,
     setDialogId,
     isLoading,
-    openBookingDialog,
     closeBookingDialog,
+    isBookingDialogOpen,
   } = useDialog()
+  console.error("DIALOG DATA", bookingType, isBookingDialogOpen)
 
   // Set dialog ID when component mounts
-  React.useEffect(() => {
-    setDialogId(dialogId || null)
+  useEffect(() => {
+    if (dialogId) {
+      setDialogId(dialogId)
+    }
   }, [dialogId, setDialogId])
 
   const handleOpenChange = (open: boolean) => {
-    setOpen(open)
-
-    // Sync with DialogProvider state
     if (open) {
-      openBookingDialog()
+      console.log("dialog open")
+      bookingEventBus.emit({
+        type: "DIALOG_OPEN_REQUESTED",
+        payload: {
+          bookingType,
+          source: "page",
+        },
+      })
     } else {
       closeBookingDialog()
-    }
-
-    // Set source when page dialog opens
-    if (open) {
-      setBookingData(prev => ({ ...prev, source: "page" }))
-    }
-
-    // Reset booking data and payment step when dialog is closing
-    if (!open) {
-      setBookingData(initialBookingData)
-      setPaymentStep(false)
-      // Clear localStorage to ensure fresh start next time
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("bookingData")
-      }
     }
   }
 
@@ -73,33 +62,19 @@ const BookingDialog = ({
     getInternationalizedValue(dialogData?.cta, locale, "Reserve")
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange} key="order-dialog">
-      <DialogTrigger asChild>
-        <Button
-          name="booking-button"
-          size="lg"
-          className={dialogOptions.buttonClassName}
-          variant="secondary"
-          disabled={isLoading}
-        >
-          {buttonText}
-        </Button>
-      </DialogTrigger>
-      <BookingDialogContent
-        bookingData={bookingData}
-        title={dialogOptions.title}
-        paymentStep={paymentStep}
-        onBookingFormSubmit={submittedBookingData => {
-          // Update booking data with the finalized data from the form
-          setBookingData(submittedBookingData)
-          setPaymentStep(true)
-        }}
-        onCancel={() => handleOpenChange(false)}
+    <Dialog
+      open={isBookingDialogOpen}
+      onOpenChange={handleOpenChange}
+      key={dialogId}
+    >
+      <BookingDialogTrigger
         bookingType={bookingType}
-        locale={locale}
+        buttonText={buttonText}
+        className={dialogOptions.buttonClassName}
       />
+      <BookingDialogContent title={dialogOptions.title} locale={locale} />
     </Dialog>
   )
 }
 
-export default BookingDialog
+export default memo(BookingDialog)

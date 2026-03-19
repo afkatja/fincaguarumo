@@ -8,7 +8,9 @@ import Loading from "../loading"
 import { useParams, useSearchParams } from "next/navigation"
 import { createNavigation } from "next-intl/navigation"
 import AddToCalendar from "@/components/AddToCalendar"
-import { useBooking } from "../../../providers/BookingProvider"
+import { useBookingCore } from "../../../providers/BookingCoreProvider"
+import { useVillaBooking } from "../../../providers/VillaBookingProvider"
+import { useTourBooking } from "../../../providers/TourBookingProvider"
 
 const { Success, Info, Error } = icons
 
@@ -60,7 +62,15 @@ export default function CompletePage() {
 
   const stripe = useStripe()
 
-  const { bookingData } = useBooking()
+  const { coreState } = useBookingCore()
+  const villaBooking = useVillaBooking()
+  const tourBooking = useTourBooking()
+
+  // Get combined booking data based on booking type
+  const bookingData =
+    coreState.data.bookingType === "villa"
+      ? villaBooking.getVillaBookingData()
+      : tourBooking.getTourBookingData()
 
   const [status, setStatus] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
