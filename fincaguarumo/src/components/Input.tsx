@@ -27,7 +27,7 @@ const Input = ({
   ...props
 }: TextInputProps) => {
   return (
-    <div className={`my-1 ${className}`}>
+    <div className={`my-2 ${className}`}>
       {!!labelText && (
         <Label
           htmlFor={id}

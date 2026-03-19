@@ -14,11 +14,10 @@ interface DropdownOption {
   [key: string]: any
 }
 
-interface PhoneInputProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    "onChange" | "value"
-  > {
+interface PhoneInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "onChange" | "value"
+> {
   onChange: (val: string) => void
   defaultCountry: string
   id: string
@@ -51,7 +50,7 @@ const PhoneInput: React.FC<PhoneInputProps> = function PhoneInput({
   }
 
   return (
-    <>
+    <div className="my-2">
       <Label htmlFor={id} className="block input-required:outline-destructive">
         {labelText}
       </Label>
@@ -71,10 +70,10 @@ const PhoneInput: React.FC<PhoneInputProps> = function PhoneInput({
           errorMessage={errorMessage}
           placeholder={placeholder}
           required={required || false}
-          className="flex-1"
+          className="flex-1 mt-0"
         />
       </div>
-    </>
+    </div>
   )
 }
 
