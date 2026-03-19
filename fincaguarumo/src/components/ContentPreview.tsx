@@ -11,6 +11,7 @@ interface ContentPreviewProps {
 
 export const ContentPreview = ({ summary }: ContentPreviewProps) => {
   const t = useTranslations("accommodation")
+
   if (!summary) return null
 
   return (

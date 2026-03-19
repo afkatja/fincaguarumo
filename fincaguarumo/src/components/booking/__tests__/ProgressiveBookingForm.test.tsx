@@ -1,10 +1,11 @@
 import React from "react"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
-import { BookingProvider } from "@/app/providers/BookingProvider"
-import { DialogProvider } from "@/app/providers/DialogProvider"
-import ProgressiveBookingForm from "../ProgressiveBookingForm"
-import { BOOKING_TYPE, initialBookingData } from "@/types"
 import "@testing-library/jest-dom"
+import ProgressiveBookingForm from "../ProgressiveBookingForm"
+import { BOOKING_TYPE } from "@/types"
+import { BookingCoreProvider } from "@/app/providers/BookingCoreProvider"
+import { VillaBookingProvider } from "@/app/providers/VillaBookingProvider"
+import { DialogProvider } from "@/app/providers/DialogProvider"
 
 // Mock the booking calendar
 jest.mock("@/components/BookingCalendar", () => {
@@ -151,9 +152,11 @@ describe("ProgressiveBookingForm", () => {
     bookingType: string = BOOKING_TYPE.villa,
   ) => {
     return render(
-      <BookingProvider>
-        <DialogProvider>{component}</DialogProvider>
-      </BookingProvider>,
+      <BookingCoreProvider>
+        <VillaBookingProvider>
+          <DialogProvider>{component}</DialogProvider>
+        </VillaBookingProvider>
+      </BookingCoreProvider>,
     )
   }
 
