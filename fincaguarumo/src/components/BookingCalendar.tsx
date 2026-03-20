@@ -61,10 +61,6 @@ const BookingCalendar = ({
           (date: string) => new Date(date),
         )
         setBlockedDates(blockedDatesArray)
-
-        console.log(
-          `Loaded ${blockedDatesArray.length} blocked dates from availability table`,
-        )
       } catch (error) {
         console.error("Error fetching calendar availability:", error)
         setBlockedDates([])

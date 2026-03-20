@@ -33,7 +33,6 @@ const BookingDialog = ({
     closeBookingDialog,
     isBookingDialogOpen,
   } = useDialog()
-  console.error("DIALOG DATA", bookingType, isBookingDialogOpen)
 
   // Set dialog ID when component mounts
   useEffect(() => {
@@ -44,7 +43,6 @@ const BookingDialog = ({
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
-      console.log("dialog open")
       bookingEventBus.emit({
         type: "DIALOG_OPEN_REQUESTED",
         payload: {

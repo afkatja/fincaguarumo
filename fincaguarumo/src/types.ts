@@ -139,7 +139,6 @@ export function deserializeBookingData(
 export function saveBookingDataToLocalStorage(data: BookingData): void {
   if (typeof window !== "undefined") {
     const serialized = serializeBookingData(data)
-    console.log({ serialized })
 
     localStorage.setItem("bookingData", JSON.stringify(serialized))
   }
