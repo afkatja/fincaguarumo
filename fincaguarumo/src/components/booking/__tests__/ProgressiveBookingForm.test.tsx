@@ -2,16 +2,28 @@ import React from "react"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import "@testing-library/jest-dom"
 import ProgressiveBookingForm from "../ProgressiveBookingForm"
-import { BOOKING_TYPE } from "@/types"
+import { BOOKING_TYPE, BookingData } from "@/types"
 import { BookingCoreProvider } from "@/app/providers/BookingCoreProvider"
 import { VillaBookingProvider } from "@/app/providers/VillaBookingProvider"
 import { DialogProvider } from "@/app/providers/DialogProvider"
+
+// Mock Next.js navigation
+jest.mock("next/navigation", () => ({
+  useParams: () => ({ locale: "en" }),
+}))
+
+// Mock the useBookingCore hook
+const mockUseBookingCore = jest.fn()
+jest.mock("@/app/providers/BookingCoreProvider", () => ({
+  useBookingCore: () => mockUseBookingCore(),
+  BookingCoreProvider: ({ children }: { children: React.ReactNode }) =>
+    children,
+}))
 
 // Mock the booking calendar
 jest.mock("@/components/BookingCalendar", () => {
   return function MockBookingCalendar({
     onSelectDate,
-    selectedDates,
     labels,
     error,
   }: {
@@ -144,13 +156,56 @@ describe("ProgressiveBookingForm", () => {
   const mockOnCancel = jest.fn()
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    // Reset mock before each test
+    mockUseBookingCore.mockReset()
   })
+
+  const setupMockUseBookingCore = (
+    bookingType: string = BOOKING_TYPE.villa,
+  ) => {
+    mockUseBookingCore.mockReturnValue({
+      state: {
+        data: {
+          bookingType,
+          bookingDetails: {
+            title:
+              bookingType === "villa"
+                ? "Villa Bruno"
+                : "Rainforest Adventure Tour",
+            description:
+              bookingType === "villa" ? "Beautiful villa" : "Exciting tour",
+            location: bookingType === "villa" ? "Santa Teresa" : "Monteverde",
+          },
+          dates: { checkIn: null, checkOut: null, date: null },
+          guests: 1,
+          customerDetails: { name: "", email: "", phoneNumber: "" },
+          locale: "en",
+          source: "page",
+          baseUnitPrice: bookingType === "villa" ? 200 : 150,
+          totalPrice: bookingType === "villa" ? 400 : 150,
+          currency: "USD",
+        },
+        loading: false,
+      },
+      setBookingType: jest.fn(),
+      setBasicDetails: jest.fn(),
+      setDates: jest.fn(),
+      setGuests: jest.fn(),
+      setCustomerDetails: jest.fn(),
+      setPricing: jest.fn(),
+      setLocale: jest.fn(),
+      setMeta: jest.fn(),
+      resetAll: jest.fn(),
+      persistToStorage: jest.fn(),
+    })
+  }
 
   const renderWithProviders = (
     component: React.ReactNode,
     bookingType: string = BOOKING_TYPE.villa,
   ) => {
+    setupMockUseBookingCore(bookingType)
+
     return render(
       <BookingCoreProvider>
         <VillaBookingProvider>
@@ -165,15 +220,15 @@ describe("ProgressiveBookingForm", () => {
       <ProgressiveBookingForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
-        bookingType={BOOKING_TYPE.villa}
         locale="en"
       />,
+      BOOKING_TYPE.villa,
     )
 
     expect(screen.getByTestId("booking-calendar")).toBeInTheDocument()
     expect(screen.getByTestId("select-guests")).toBeInTheDocument()
-    expect(screen.getByText("Back")).toBeDisabled()
-    expect(screen.getByText("Next")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /next/i })).toBeInTheDocument()
   })
 
   test("renders date picker for tour booking", () => {
@@ -181,9 +236,9 @@ describe("ProgressiveBookingForm", () => {
       <ProgressiveBookingForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
-        bookingType={BOOKING_TYPE.tour}
         locale="en"
       />,
+      BOOKING_TYPE.tour,
     )
 
     expect(screen.getByTestId("date-picker")).toBeInTheDocument()
@@ -195,9 +250,9 @@ describe("ProgressiveBookingForm", () => {
       <ProgressiveBookingForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
-        bookingType={BOOKING_TYPE.villa}
         locale="en"
       />,
+      BOOKING_TYPE.villa,
     )
 
     // Step 1: Select dates (calendar should be visible initially)
@@ -258,9 +313,9 @@ describe("ProgressiveBookingForm", () => {
       <ProgressiveBookingForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
-        bookingType={BOOKING_TYPE.villa}
         locale="en"
       />,
+      BOOKING_TYPE.villa,
     )
 
     // Step 1: Select dates (calendar should be visible initially)
@@ -295,9 +350,9 @@ describe("ProgressiveBookingForm", () => {
       <ProgressiveBookingForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
-        bookingType={BOOKING_TYPE.villa}
         locale="en"
       />,
+      BOOKING_TYPE.villa,
     )
 
     fireEvent.click(screen.getByText("Cancel"))
@@ -309,9 +364,9 @@ describe("ProgressiveBookingForm", () => {
       <ProgressiveBookingForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
-        bookingType={BOOKING_TYPE.villa}
         locale="en"
       />,
+      BOOKING_TYPE.villa,
     )
 
     // Proceed to personal details step
@@ -355,9 +410,9 @@ describe("ProgressiveBookingForm", () => {
       <ProgressiveBookingForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
-        bookingType={BOOKING_TYPE.villa}
         locale="en"
       />,
+      BOOKING_TYPE.villa,
     )
 
     // Complete all steps
