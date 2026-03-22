@@ -22,6 +22,7 @@ const BookingDialog = ({
     title: string
     buttonText?: string
     buttonClassName?: string
+    buttonDataId?: string
   }
   locale: string
   dialogId?: string
@@ -69,6 +70,7 @@ const BookingDialog = ({
         bookingType={bookingType}
         buttonText={buttonText}
         className={dialogOptions.buttonClassName}
+        dataId={dialogOptions.buttonDataId}
       />
       <BookingDialogContent title={dialogOptions.title} locale={locale} />
     </Dialog>

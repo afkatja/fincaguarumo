@@ -52,6 +52,7 @@ export default function ProgressiveBookingForm({
     complete: false,
   })
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
+  const [personalSubmitAttempted, setPersonalSubmitAttempted] = useState(false)
 
   const {
     state,
@@ -65,16 +66,9 @@ export default function ProgressiveBookingForm({
   const { dialogData: dialog } = useDialog()
   const t = useTranslations("booking")
 
-  // Debounced phone number handler to prevent cascading updates
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const handlePhoneChange = useCallback(
     (phoneNumber: string) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-      timeoutRef.current = setTimeout(() => {
-        setCustomerDetails({ phoneNumber })
-      }, 300)
+      setCustomerDetails({ phoneNumber })
     },
     [setCustomerDetails],
   )
@@ -90,15 +84,6 @@ export default function ProgressiveBookingForm({
   useEffect(() => {
     pricingRulesRef.current = []
   }, [bookingType])
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-    }
-  }, [])
 
   // Helper to compute duration for villa
   const villaDuration = useMemo(
@@ -189,7 +174,15 @@ export default function ProgressiveBookingForm({
     }
 
     if (currentStep === "personal") {
-      if (!isStepValid.personal) return
+      const phone = state.data.customerDetails.phoneNumber?.trim() ?? ""
+      const personalOk =
+        !!state.data.customerDetails.name?.trim() &&
+        !!state.data.customerDetails.email?.trim() &&
+        phone.length >= 7
+      if (!personalOk) {
+        setPersonalSubmitAttempted(true)
+        return
+      }
       setCurrentStep("payment")
       return
     }
@@ -258,8 +251,10 @@ export default function ProgressiveBookingForm({
 
   const handleBack = () => {
     if (currentStep === "personal") {
+      setPersonalSubmitAttempted(false)
       setCurrentStep("dates")
     } else if (currentStep === "payment") {
+      setPersonalSubmitAttempted(false)
       setCurrentStep("personal")
     }
   }
@@ -426,23 +421,26 @@ export default function ProgressiveBookingForm({
     // Tour: single date picker
     return (
       <div className="space-y-4">
-        <DatePicker
-          isOpen={isDatePickerOpen}
-          onClose={() => setIsDatePickerOpen(false)}
-          onOpen={() => setIsDatePickerOpen(true)}
-          onSelectDate={date => {
-            setDates({
-              date,
-            })
-            setIsDatePickerOpen(false)
-          }}
-          label={getInternationalizedValue(
-            dialog?.selectDate,
-            locale,
-            "Select date",
-          )}
-          selectedDate={state.data.dates.date || undefined}
-        />
+        <div data-testid="date-picker">
+          <DatePicker
+            isOpen={isDatePickerOpen}
+            onClose={() => setIsDatePickerOpen(false)}
+            onOpen={() => setIsDatePickerOpen(true)}
+            onSelectDate={date => {
+              setDates({
+                date,
+              })
+              setIsDatePickerOpen(false)
+            }}
+            label={getInternationalizedValue(
+              dialog?.selectDate,
+              locale,
+              "Select date",
+            )}
+            selectedDate={state.data.dates.date || undefined}
+            triggerTestId="select-date"
+          />
+        </div>
 
         <div className="grid gap-2">
           <SelectGuestsOptions
@@ -455,52 +453,67 @@ export default function ProgressiveBookingForm({
     )
   }
 
-  const renderPersonalStep = () => (
-    <div className="flex flex-col space-y-4">
-      <Input
-        id="name"
-        type="text"
-        required
-        labelText={t("nameLabel", { defaultValue: "Your name" })}
-        errorMessage={t("nameError", {
-          defaultValue: "Please enter your name",
-        })}
-        placeholder="Jane Doe"
-        onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setCustomerDetails({ name: e.target.value })
-        }
-        value={state.data.customerDetails.name}
-      />
-      <Input
-        id="email"
-        type="email"
-        required
-        errorMessage={t("emailError", {
-          defaultValue: "Please enter a valid email address",
-        })}
-        labelText={t("emailLabel", { defaultValue: "Your email *" })}
-        placeholder="jane@doe.com"
-        pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-        value={state.data.customerDetails.email}
-        onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setCustomerDetails({ email: e.target.value })
-        }
-      />
-      <PhoneInput
-        id="phone"
-        required
-        defaultCountry="CR"
-        errorMessage={t("phoneError", {
-          defaultValue: "Please enter a valid phone number",
-        })}
-        labelText={t("phoneLabel", { defaultValue: "Your phone number *" })}
-        placeholder="12345678"
-        pattern="^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$"
-        value={state.data.customerDetails.phoneNumber}
-        onChange={handlePhoneChange}
-      />
-    </div>
-  )
+  const renderPersonalStep = () => {
+    const phone = state.data.customerDetails.phoneNumber?.trim() ?? ""
+    const phoneFieldInvalid = !phone || phone.length < 7
+    return (
+      <div className="flex flex-col space-y-4">
+        <Input
+          id="name"
+          type="text"
+          required
+          data-testid="name"
+          labelText={t("nameLabel", { defaultValue: "Your name" })}
+          errorMessage={t("nameError", {
+            defaultValue: "Please enter your name",
+          })}
+          placeholder="Jane Doe"
+          onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setCustomerDetails({ name: e.target.value })
+          }
+          value={state.data.customerDetails.name}
+          forceShowError={
+            personalSubmitAttempted &&
+            !state.data.customerDetails.name?.trim()
+          }
+        />
+        <Input
+          id="email"
+          type="email"
+          required
+          data-testid="email"
+          errorMessage={t("emailError", {
+            defaultValue: "Please enter a valid email address",
+          })}
+          labelText={t("emailLabel", { defaultValue: "Your email *" })}
+          placeholder="jane@doe.com"
+          pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+          value={state.data.customerDetails.email}
+          onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setCustomerDetails({ email: e.target.value })
+          }
+          forceShowError={
+            personalSubmitAttempted &&
+            !state.data.customerDetails.email?.trim()
+          }
+        />
+        <PhoneInput
+          id="phone"
+          required
+          defaultCountry="CR"
+          errorMessage={t("phoneError", {
+            defaultValue: "Please enter a valid phone number",
+          })}
+          labelText={t("phoneLabel", { defaultValue: "Your phone number *" })}
+          placeholder="12345678"
+          pattern="^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$"
+          value={state.data.customerDetails.phoneNumber}
+          onChange={handlePhoneChange}
+          forceShowError={personalSubmitAttempted && phoneFieldInvalid}
+        />
+      </div>
+    )
+  }
 
   const renderPaymentStep = () => (
     <div className="space-y-4">
@@ -548,6 +561,8 @@ export default function ProgressiveBookingForm({
     <form
       noValidate
       className={`grid gap-4 group ${className}`}
+      data-testid="booking-form"
+      data-active-step={currentStep}
       onSubmit={e => {
         e.preventDefault()
         void handleNext()
@@ -566,18 +581,36 @@ export default function ProgressiveBookingForm({
 
       <DialogFooter className="mt-auto flex justify-between flex-wrap">
         <div className="pt-5 flex justify-between w-full flex-none gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            data-testid="booking-cancel"
+          >
             {getInternationalizedValue(dialog?.cancel, locale, "Cancel")}
           </Button>
 
           <div className="space-x-2">
             {currentStep !== "dates" && (
-              <Button type="button" variant="ghost" onClick={handleBack}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleBack}
+                data-testid="booking-back"
+              >
                 {t("back", { defaultValue: "Back" })}
               </Button>
             )}
 
-            <Button type="submit" disabled={!isStepValid[currentStep]}>
+            <Button
+              type="submit"
+              disabled={
+                currentStep === "personal"
+                  ? false
+                  : !isStepValid[currentStep]
+              }
+              data-testid="submit"
+            >
               {currentStep === "payment"
                 ? getInternationalizedValue(dialog?.ok, locale, "Reserve")
                 : t("next", { defaultValue: "Next" })}

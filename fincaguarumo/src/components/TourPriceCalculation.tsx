@@ -64,8 +64,11 @@ const TourPriceCalculation = ({
   })
 
   return (
-    <div className="grid gap-2 flex-none w-full">
-      <dl className="grid grid-cols-2 items-center justify-between">
+    <div
+      className="grid gap-2 flex-none w-full"
+      data-testid="tour-price-calculation"
+    >
+      <dl className="grid grid-cols-[2fr_1fr] items-center justify-between space-y-1">
         <dt className="text-muted-foreground">{b("rateLabel")}</dt>
         <dd className="text-right">{currency(priceForPeople)}</dd>
         <dt className="text-muted-foreground">{b("vatLabel")}</dt>

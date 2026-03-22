@@ -25,6 +25,8 @@ interface IDatePicker {
   minDate?: Date
   month?: Date
   defaultMonth?: Date
+  /** Forwarded to the trigger button for e2e tests */
+  triggerTestId?: string
 }
 
 const DatePicker = ({
@@ -40,6 +42,7 @@ const DatePicker = ({
   minDate,
   month,
   defaultMonth,
+  triggerTestId,
 }: IDatePicker) => {
   const params = useParams()
   const t = useTranslations("booking")
@@ -56,31 +59,28 @@ const DatePicker = ({
     )
   }
 
-  if (loading)
-    return (
-      <div className="flex flex-col items-center">
-        <Loading />{" "}
-        <span className="my-4">
-          {t("loadingCalendar", { defaultValue: "Loading calendar..." })}
-        </span>
-      </div>
-    )
+  const loadingLabel = t("loadingCalendar", {
+    defaultValue: "Loading calendar...",
+  })
 
   return (
-    <Popover open={isOpen}>
-      {isOpen && (
-        <div
-          className="overlay fixed top-0 left-0 w-screen h-screen"
-          onClick={onClose}
-        />
-      )}
-      <PopoverTrigger asChild onClick={onOpen}>
+    <Popover
+      open={isOpen}
+      onOpenChange={open => {
+        if (!open) onClose?.()
+      }}
+    >
+      <PopoverTrigger asChild onClick={loading ? undefined : onOpen}>
         <Button
           variant="outline"
+          disabled={loading}
           className={`flex-col items-start w-full h-auto dark:bg-zinc-600 hover:dark:text-zinc-50 hover:transform-none ${className}`}
           name="select-date-button"
+          data-testid={triggerTestId}
         >
-          {!selectedDate ? (
+          {loading ? (
+            <span className="font-semibold">{loadingLabel}</span>
+          ) : !selectedDate ? (
             <span className="font-semibold flex items-center">
               <CalendarIcon size={16} className="mr-2" /> {label}
             </span>
@@ -92,14 +92,21 @@ const DatePicker = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 ">
-        <Calendar
-          mode="single"
-          disabled={date => setDisabledDates(date)}
-          onSelect={(_, selectedDay) => onSelectDate(selectedDay)}
-          selected={selectedDate || undefined}
-          defaultMonth={defaultMonth || selectedDate || new Date()}
-          startMonth={minDate || new Date()}
-        />
+        {loading ? (
+          <div className="flex flex-col items-center p-6">
+            <Loading />
+            <span className="my-4">{loadingLabel}</span>
+          </div>
+        ) : (
+          <Calendar
+            mode="single"
+            disabled={date => setDisabledDates(date)}
+            onSelect={(_, selectedDay) => onSelectDate(selectedDay)}
+            selected={selectedDate || undefined}
+            defaultMonth={defaultMonth || selectedDate || new Date()}
+            startMonth={minDate || new Date()}
+          />
+        )}
       </PopoverContent>
     </Popover>
   )

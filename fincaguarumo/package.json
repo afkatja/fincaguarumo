@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --experimental-https",
+    "dev:http": "next dev --port=3000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

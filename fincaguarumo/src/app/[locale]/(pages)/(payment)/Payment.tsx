@@ -116,9 +116,13 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
   }
 
   if (!stripePromise || !clientSecret.current || loading)
-    return <Loading className="absolute top-0" />
+    return (
+      <div data-testid="booking-payment">
+        <Loading className="absolute top-0" />
+      </div>
+    )
   return (
-    <>
+    <div data-testid="booking-payment">
       <CheckoutProvider options={options} stripe={stripePromise} {...props}>
         <CheckoutForm />
       </CheckoutProvider>
@@ -129,7 +133,7 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
         alt="stripe badge"
         className="w-full h-auto"
       />
-    </>
+    </div>
   )
 }
 

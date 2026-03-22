@@ -189,6 +189,7 @@ const AccommodationClientPage = ({
                 dialogOptions={{
                   buttonText: t("bookNow") || "Book now",
                   title: t("bookNow") || "Book now",
+                  buttonDataId: "booking-button-villa",
                 }}
                 locale={locale}
               />

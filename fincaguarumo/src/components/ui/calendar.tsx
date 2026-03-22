@@ -44,6 +44,7 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  const defaultClassNames = getDefaultClassNames()
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -52,7 +53,7 @@ function Calendar({
       weekStartsOn={1}
       className={cn("p-3 border rounded-md", className)}
       classNames={{
-        ...getDefaultClassNames(),
+        ...defaultClassNames,
         months: "months w-full relative flex gap-1 overflow-hidden",
         month:
           "month w-full flex flex-col gap-1 animate-fadeIn transition-all duration-300 ease-in-out",
@@ -77,6 +78,7 @@ function Calendar({
             : "[&:has([aria-selected])]:rounded-md",
         ),
         day_button: cn(
+          defaultClassNames.day_button,
           buttonVariants({ variant: "ghost" }),
           "w-full h-full p-0 font-normal aria-selected:opacity-100 hover:bg-gray-100 transition-colors duration-200 cursor-pointer hover:translate-y-0",
         ),

@@ -136,8 +136,11 @@ const VillaPriceCalculation = ({
 
   if (loading) return <Loading />
   return (
-    <div className="grid gap-2 flex-none w-full">
-      <dl className="grid grid-cols-2 items-center justify-between">
+    <div
+      className="grid gap-2 flex-none w-full"
+      data-testid="villa-price-calculation"
+    >
+      <dl className="grid grid-cols-[2fr_1fr] items-center justify-between space-y-1">
         <dt className="text-muted-foreground">
           {b("totalWithoutVat", {
             guests,

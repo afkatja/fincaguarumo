@@ -27,6 +27,7 @@ interface PhoneInputProps extends Omit<
   labelText: string
   placeholder: string
   required?: boolean
+  forceShowError?: boolean
 }
 
 const PhoneInput: React.FC<PhoneInputProps> = function PhoneInput({
@@ -37,6 +38,9 @@ const PhoneInput: React.FC<PhoneInputProps> = function PhoneInput({
   placeholder,
   onChange,
   required = false,
+  value,
+  pattern,
+  forceShowError,
 }) {
   const defaultCountry = countries.CR
   const [country, setCountry] = useState("")
@@ -68,9 +72,14 @@ const PhoneInput: React.FC<PhoneInputProps> = function PhoneInput({
           type="tel"
           inputMode="tel"
           errorMessage={errorMessage}
+          errorTestId="phone-error"
+          forceShowError={forceShowError}
           placeholder={placeholder}
+          pattern={pattern}
           required={required || false}
           className="flex-1 mt-0"
+          data-testid="phone"
+          value={value}
         />
       </div>
     </div>

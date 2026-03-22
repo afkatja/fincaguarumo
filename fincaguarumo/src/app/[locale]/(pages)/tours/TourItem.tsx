@@ -45,7 +45,12 @@ const TourItem = ({
   const t = useTranslations("cards")
 
   return (
-    <Link href={href} className="group tour no-underline" prefetch>
+    <Link
+      href={href}
+      className="group tour no-underline"
+      prefetch
+      data-testid="tour-item"
+    >
       <Card className="h-full overflow-hidden rounded-xl bg-muted shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border-background">
         <CardContent className="flex h-full flex-col justify-between p-6">
           <div className="relative">

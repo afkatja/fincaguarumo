@@ -12,6 +12,7 @@ interface BookingDialogTriggerProps {
   buttonClassName?: string
   className?: string
   children?: React.ReactNode
+  dataId?: string
 }
 
 export default function BookingDialogTrigger({
@@ -20,6 +21,7 @@ export default function BookingDialogTrigger({
   buttonClassName,
   className,
   children,
+  dataId,
 }: BookingDialogTriggerProps) {
   const handleTrigger = () => {
     bookingEventBus.emit({
@@ -44,6 +46,7 @@ export default function BookingDialogTrigger({
       className={buttonClassName || className}
       variant="secondary"
       onClick={handleTrigger}
+      data-testid={dataId}
       // disabled={bookingType === BOOKING_TYPE.villa && loading}
     >
       {buttonText || "Book Now"}

@@ -89,6 +89,7 @@ const DetailsPageLayout = ({
                         : t("reserveButton", { defaultValue: "Book now" }),
                     buttonClassName: "ml-auto",
                     title,
+                    buttonDataId: `booking-button-${bookingType}`,
                   }}
                   dialogId={dialogId}
                   locale={locale}

@@ -73,7 +73,7 @@ const BookingCalendar = ({
   }, [blockedDates])
 
   return (
-    <>
+    <div data-testid="booking-calendar">
       <div className="space-y-2">
         {error && <div className="text-red-500 text-sm">{error}</div>}
       </div>
@@ -91,6 +91,7 @@ const BookingCalendar = ({
           disabledDates={blockedDates}
           loading={loading}
           defaultMonth={selectedDates.checkIn || new Date()}
+          triggerTestId="select-check-in"
         />
 
         <div className="md:ml-4 mt-4 md:mt-0">
@@ -108,10 +109,11 @@ const BookingCalendar = ({
             loading={loading}
             minDate={selectedDates.checkIn}
             defaultMonth={selectedDates.checkIn || new Date()}
+            triggerTestId="select-check-out"
           />
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
