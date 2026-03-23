@@ -473,8 +473,7 @@ export default function ProgressiveBookingForm({
           }
           value={state.data.customerDetails.name}
           forceShowError={
-            personalSubmitAttempted &&
-            !state.data.customerDetails.name?.trim()
+            personalSubmitAttempted && !state.data.customerDetails.name?.trim()
           }
         />
         <Input
@@ -493,8 +492,7 @@ export default function ProgressiveBookingForm({
             setCustomerDetails({ email: e.target.value })
           }
           forceShowError={
-            personalSubmitAttempted &&
-            !state.data.customerDetails.email?.trim()
+            personalSubmitAttempted && !state.data.customerDetails.email?.trim()
           }
         />
         <PhoneInput
@@ -605,9 +603,7 @@ export default function ProgressiveBookingForm({
             <Button
               type="submit"
               disabled={
-                currentStep === "personal"
-                  ? false
-                  : !isStepValid[currentStep]
+                currentStep === "personal" ? false : !isStepValid[currentStep]
               }
               data-testid="submit"
             >

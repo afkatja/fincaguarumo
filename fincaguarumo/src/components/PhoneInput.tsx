@@ -46,11 +46,15 @@ const PhoneInput: React.FC<PhoneInputProps> = function PhoneInput({
   const [country, setCountry] = useState("")
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(country + e.target.value)
+    onChange(e.target.value)
   }
 
   const handleCountrySelect = (val: string) => {
     setCountry(val)
+    // Prepend the new country code to the existing phone number
+    if (value && !value.startsWith(val)) {
+      onChange(val + value.replace(/^\+\d+/, ""))
+    }
   }
 
   return (
