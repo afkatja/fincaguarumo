@@ -72,15 +72,14 @@ function Calendar({
           "h-9 w-9 text-muted-foreground rounded-md font-normal text-[0.8rem] leading-9",
         week: "flex w-full justify-center",
         day: cn(
-          "h-9 w-9 relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].range-end)]:rounded-r-md rounded-md font-normal aria-selected:opacity-100 hover:bg-gray-100 transition-colors duration-200 cursor-pointer",
+          "h-9 w-9 relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].range-end)]:rounded-r-md rounded-md font-normal aria-selected:opacity-100 ",
           props.mode === "range"
             ? "[&:has(>.range-end)]:rounded-r-md [&:has(>.range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
             : "[&:has([aria-selected])]:rounded-md",
         ),
         day_button: cn(
-          defaultClassNames.day_button,
           buttonVariants({ variant: "ghost" }),
-          "w-full h-full p-0 font-normal aria-selected:opacity-100 hover:bg-gray-100 transition-colors duration-200 cursor-pointer hover:translate-y-0",
+          "w-full h-full p-0 font-normal aria-selected:opacity-100 hover:bg-gray-100 transition-colors duration-200 cursor-pointer hover:translate-y-0 hover:bg-gray-100",
         ),
         range_start:
           "range-start aria-selected:bg-primary aria-selected:text-primary-foreground",
