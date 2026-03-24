@@ -63,7 +63,7 @@ export default function CompletePage() {
   const { state } = useBookingCore()
 
   // Get combined booking data based on booking type
-  const bookingData: any = state.data.bookingDetails || {
+  const bookingData: any = state.data || {
     title: "",
     description: "",
     location: "",
@@ -119,6 +119,7 @@ export default function CompletePage() {
             return
           }
           const data = await response.json()
+
           setSession(data.session)
           setStatus(data.session?.status)
           setIsLoading(false)
@@ -138,20 +139,36 @@ export default function CompletePage() {
   }, [searchParams, stripe, paymentIntent, session])
 
   useEffect(() => {
-    // Check if this is a page reload
-    const isReload = sessionStorage.getItem("payment-success-loaded")
-    if (isReload) {
+    const clientSecret = searchParams.get("payment_intent_client_secret")
+    const sessionId = searchParams.get("session_id")
+
+    // Check if this is a reload scenario:
+    // - No payment parameters in URL
+    // - No booking data available
+    // - Payment success flag already set from previous visit
+    const isReload = sessionStorage.getItem("payment-success-loaded") === "true"
+    const hasPaymentParams = clientSecret || sessionId
+    const hasBookingData = state.data && Object.keys(state.data).length > 0
+
+    if (isReload && !hasPaymentParams && !hasBookingData) {
+      // This is definitely a reload with no data - redirect to home
       redirect({ href: "/", locale: (locale as string) ?? "en" })
       sessionStorage.removeItem("payment-success-loaded")
-    } else {
+      return
+    }
+
+    if (!isReload && (hasPaymentParams || hasBookingData)) {
+      // First successful visit with data - set the flag
       sessionStorage.setItem("payment-success-loaded", "true")
     }
+
+    // Clear state if we're not on the payment success page
     if (pathname !== `/payment-success`) {
       setSession(null)
       setStatus(null)
       setPaymentIntent(null)
     }
-  }, [router, locale, pathname])
+  }, [router, locale, pathname, searchParams, state.data, redirect])
 
   const getBookingTitle = () => {
     return bookingData.bookingDetails?.title || "Villa Bruno Stay"
@@ -192,10 +209,10 @@ export default function CompletePage() {
               {(status === Status.Success || status == Status.Complete) && (
                 <p>
                   Your booking of the <strong>{getBookingTitle()}</strong> for{" "}
-                  {bookingData.bookingDetails?.guests} guests on{" "}
+                  {bookingData.guests} guests on{" "}
                   <strong>
                     {new Date(
-                      bookingData.bookingDetails?.checkIn ??
+                      bookingData.dates?.checkIn ??
                         bookingData.bookingDetails?.date,
                     ).toLocaleDateString(locale, {
                       year: "numeric",
@@ -223,11 +240,9 @@ export default function CompletePage() {
                   title: getBookingTitle(),
                   description: getBookingDescription(),
                   checkIn:
-                    bookingData.bookingDetails?.checkIn ??
-                    bookingData.bookingDetails?.date,
+                    bookingData.dates?.checkIn ?? bookingData.dates?.date,
                   checkOut:
-                    bookingData.bookingDetails?.checkOut ??
-                    bookingData.bookingDetails?.date,
+                    bookingData.dates?.checkOut ?? bookingData.dates?.date,
                   url:
                     typeof window !== "undefined" ? window.location.href : "",
                   location: getBookingLocation(),
