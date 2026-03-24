@@ -1,4 +1,3 @@
-// ProgressiveBookingForm.tsx
 "use client"
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
@@ -75,8 +74,6 @@ export default function ProgressiveBookingForm({
 
   const bookingType: BookingType | null = state.data.bookingType
 
-  // Store pricing rules to avoid multiple fetches
-  // const [pricingRules, setPricingRules] = useState<any[]>([])
   const pricingRulesRef = useRef<any[]>([])
   const [pricingRulesLoading, setPricingRulesLoading] = useState(false)
 
@@ -106,6 +103,8 @@ export default function ProgressiveBookingForm({
         .then(rules => {
           // setPricingRules(rules)
           pricingRulesRef.current = rules
+          // Also store pricing rules in the booking core state
+          setPricing({ pricingRules: rules })
         })
         .catch(error => {
           console.error("Error fetching pricing rules:", error)
@@ -114,7 +113,7 @@ export default function ProgressiveBookingForm({
           setPricingRulesLoading(false)
         })
     }
-  }, [bookingType, fetchVillaPricingRules])
+  }, [bookingType, fetchVillaPricingRules, setPricing])
 
   // Validate current step against core state
   useEffect(() => {
@@ -194,8 +193,8 @@ export default function ProgressiveBookingForm({
       let pricingRulesForCalculation: any[] = []
 
       if (bookingType === BOOKING_TYPE.villa) {
-        // Use cached pricing rules instead of fetching detailed villa
-        pricingRulesForCalculation = pricingRulesRef.current
+        // Use pricing rules from state (now available in state.data.pricingRules)
+        pricingRulesForCalculation = state.data.pricingRules
 
         const totalResult = calculateTotalWithRules({
           pricingRules: pricingRulesForCalculation,
@@ -228,7 +227,7 @@ export default function ProgressiveBookingForm({
           description: state.data.bookingDetails.description,
           duration: bookingType === BOOKING_TYPE.villa ? villaDuration : 1,
           location: state.data.bookingDetails.location,
-          body: "", // can be filled if needed
+          body: "",
           date: state.data.dates.date || state.data.dates.checkIn || new Date(),
           checkIn: state.data.dates.checkIn,
           checkOut: state.data.dates.checkOut,
@@ -315,6 +314,7 @@ export default function ProgressiveBookingForm({
         </div>
       )
     }
+    console.log({ stateData: state.data })
 
     // Tour price preview
     if (!state.data.baseUnitPrice || !state.data.guests) return null
