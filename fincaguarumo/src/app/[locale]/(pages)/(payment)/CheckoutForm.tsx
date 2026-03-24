@@ -9,15 +9,20 @@ import {
 import { Button } from "@/components/ui/button"
 import Loading from "../loading"
 import Title from "@/components/Title"
+import { useBookingCore } from "../../../providers/BookingCoreProvider"
 
 export default function CheckoutForm() {
   const stripe = useStripe()
   const checkout = useCheckout()
+  const { state } = useBookingCore()
 
   const [message, setMessage] = useState<null | string | undefined>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isElementReady, setIsElementReady] = useState(false)
   const [isFormComplete, setIsFormComplete] = useState(false)
+
+  // Use Stripe's amount for consistency with currency selector and backend calculations
+  const displayAmount = checkout?.total?.total?.amount || 0
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async e => {
     e.preventDefault()
@@ -50,10 +55,7 @@ export default function CheckoutForm() {
   return (
     <>
       <CurrencySelectorElement />
-      <Title
-        title={`Pay ${checkout.total.total.amount} now`}
-        titleClassName="my-4"
-      />
+      <Title title={`Pay ${displayAmount} now`} titleClassName="my-4" />
       <form
         id="payment-form"
         onSubmit={handleSubmit}

@@ -208,15 +208,25 @@ export const BookingCoreProvider = ({
   // recompute totalPrice whenever baseUnitPrice or guests change
   useEffect(() => {
     setState(prev => {
-      const { baseUnitPrice, guests } = prev.data
-      const totalPrice = baseUnitPrice * Math.max(guests, 1)
+      const { baseUnitPrice, guests, bookingType } = prev.data
+      let totalPrice: number
+
+      if (bookingType === "tour") {
+        // Tour pricing: basePrice * guests + 13% VAT
+        const priceForPeople = baseUnitPrice * Math.max(guests, 1)
+        totalPrice = priceForPeople * 1.13 // 13% VAT
+      } else {
+        // Villa pricing: basePrice * guests (VAT handled separately by pricing engine)
+        totalPrice = baseUnitPrice * Math.max(guests, 1)
+      }
+
       if (totalPrice === prev.data.totalPrice) return prev
       return {
         ...prev,
         data: { ...prev.data, totalPrice },
       }
     })
-  }, [state.data.baseUnitPrice, state.data.guests])
+  }, [state.data.baseUnitPrice, state.data.guests, state.data.bookingType])
 
   // validation
   useEffect(() => {
