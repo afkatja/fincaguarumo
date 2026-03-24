@@ -1,8 +1,6 @@
 "use client"
-import { memo, useEffect, useState } from "react"
-import { Dialog, DialogTrigger } from "@/components/ui/dialog"
-
-import { Button } from "@/components/ui/button"
+import { memo, useEffect } from "react"
+import { Dialog } from "@/components/ui/dialog"
 
 import { useDialog } from "../../providers/DialogProvider"
 import { getInternationalizedValue } from "../../../lib/utils"
@@ -16,8 +14,9 @@ const BookingDialog = ({
   dialogOptions,
   dialogId,
   locale,
+  hideTrigger = false,
 }: {
-  bookingType: BookingType
+  bookingType?: BookingType
   dialogOptions: {
     title: string
     buttonText?: string
@@ -26,13 +25,14 @@ const BookingDialog = ({
   }
   locale: string
   dialogId?: string
+  hideTrigger?: boolean
 }) => {
   const {
     dialogData,
     setDialogId,
-    isLoading,
-    closeBookingDialog,
+    currentBookingType,
     isBookingDialogOpen,
+    activeDialogId,
   } = useDialog()
 
   // Set dialog ID when component mounts
@@ -43,16 +43,27 @@ const BookingDialog = ({
   }, [dialogId, setDialogId])
 
   const handleOpenChange = (open: boolean) => {
+    const effectiveBookingType = bookingType ?? currentBookingType
+
+    if (!effectiveBookingType) return
+
     if (open) {
       bookingEventBus.emit({
         type: "DIALOG_OPEN_REQUESTED",
         payload: {
-          bookingType,
+          bookingType: effectiveBookingType,
+          dialogId,
           source: "page",
         },
       })
     } else {
-      closeBookingDialog()
+      bookingEventBus.emit({
+        type: "DIALOG_CLOSE_REQUESTED",
+        payload: {
+          bookingType: effectiveBookingType,
+          source: "page",
+        },
+      })
     }
   }
 
@@ -62,16 +73,19 @@ const BookingDialog = ({
 
   return (
     <Dialog
-      open={isBookingDialogOpen}
+      open={isBookingDialogOpen && activeDialogId === dialogId}
       onOpenChange={handleOpenChange}
       key={dialogId}
     >
-      <BookingDialogTrigger
-        bookingType={bookingType}
-        buttonText={buttonText}
-        className={dialogOptions.buttonClassName}
-        dataId={dialogOptions.buttonDataId}
-      />
+      {!hideTrigger && (
+        <BookingDialogTrigger
+          bookingType={bookingType ?? currentBookingType ?? "villa"}
+          buttonText={buttonText}
+          className={dialogOptions.buttonClassName}
+          dataId={dialogOptions.buttonDataId}
+          dialogId={dialogId}
+        />
+      )}
       <BookingDialogContent title={dialogOptions.title} locale={locale} />
     </Dialog>
   )

@@ -2,8 +2,7 @@
 
 import React from "react"
 import { Button } from "@/components/ui/button"
-import { useDialog } from "@/app/providers/DialogProvider"
-import { BookingType, BOOKING_TYPE } from "@/types"
+import { BookingType } from "@/types"
 import { bookingEventBus } from "@/app/providers/BookingEventBus"
 
 interface BookingDialogTriggerProps {
@@ -13,6 +12,7 @@ interface BookingDialogTriggerProps {
   className?: string
   children?: React.ReactNode
   dataId?: string
+  dialogId?: string
 }
 
 export default function BookingDialogTrigger({
@@ -22,6 +22,7 @@ export default function BookingDialogTrigger({
   className,
   children,
   dataId,
+  dialogId,
 }: BookingDialogTriggerProps) {
   const handleTrigger = () => {
     bookingEventBus.emit({
@@ -29,6 +30,7 @@ export default function BookingDialogTrigger({
       payload: {
         bookingType,
         source: "page",
+        dialogId,
       },
     })
   }

@@ -192,6 +192,7 @@ const AccommodationClientPage = ({
                   buttonDataId: "booking-button-villa",
                 }}
                 locale={locale}
+                dialogId="villa-bruno"
               />
               {content?.showBookingOptions && (
                 <Dialog>

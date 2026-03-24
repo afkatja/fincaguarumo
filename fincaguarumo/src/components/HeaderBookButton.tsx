@@ -31,6 +31,7 @@ const HeaderBookButton = () => {
       bookingType={BOOKING_TYPE.villa}
       buttonText={t("reserveButton", { defaultValue: "Book Villa Bruno now" })}
       className=""
+      dialogId="global"
     />
   )
 }

@@ -22,6 +22,7 @@ import { i18n } from "../../../languages"
 import Header from "../../components/header"
 import { cn } from "../../lib/utils"
 import { jsonLd, orgSchema } from "../../lib/villa-json-ld"
+import BookingDialog from "./(pages)/BookingDialog"
 
 export { generateMetadata }
 
@@ -101,6 +102,12 @@ export default async function Layout({
                       )}
                       {children}
                     </main>
+                    <BookingDialog
+                      dialogOptions={{ title: "Book Now" }}
+                      locale={locale}
+                      dialogId="global"
+                      hideTrigger={true}
+                    />
                   </DialogProvider>
                 </ConditionalVillaBookingProvider>
               </BookingCoreProvider>
