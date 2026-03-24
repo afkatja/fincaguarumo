@@ -2,20 +2,58 @@ import { NextRequest } from "next/server"
 import Stripe from "stripe"
 import getRequestBody from "../../../lib/getRequestBody"
 import { SerializedBookingData } from "../../../types"
+import { calculateEffectivePrice } from "../../../lib/pricingEngine"
+import calculateDuration from "../../../lib/calculateDuration"
 
 const stripeInstance = new Stripe(process.env.STRIPE_API_KEY ?? "")
 
 export async function POST(request: NextRequest) {
   try {
-    const { customerDetails, bookingDetails }: SerializedBookingData =
-      await getRequestBody(request)
+    const {
+      customerDetails,
+      bookingDetails,
+      pricingRules,
+    }: SerializedBookingData = await getRequestBody(request)
 
     const customer = await stripeInstance.customers.create({
       name: customerDetails.name,
       email: customerDetails.email,
     })
 
-    const origin = request.headers.get("origin") || "//localhost:3000"
+    const origin = request.headers.get("origin") || "https://localhost:3000"
+
+    // Ensure the origin has the proper protocol
+    const baseUrl = origin.startsWith("http")
+      ? origin
+      : `https://${origin.replace("//", "")}`
+
+    // Calculate correct price based on booking type
+    let finalPrice: number
+    if (bookingDetails.type === "villa") {
+      // For villas, calculate price using pricingRules
+      const villaPricingRules = pricingRules || []
+      const checkInDate = bookingDetails.checkIn
+        ? new Date(bookingDetails.checkIn)
+        : undefined
+      const checkOutDate = bookingDetails.checkOut
+        ? new Date(bookingDetails.checkOut)
+        : undefined
+
+      // Calculate duration on server side to ensure accuracy
+      const duration = calculateDuration(checkInDate, checkOutDate)
+
+      const result = calculateEffectivePrice({
+        pricingRules: villaPricingRules,
+        guests: bookingDetails.guests,
+        duration,
+        checkInDate,
+        bookingType: "villa",
+      })
+      finalPrice = result.total
+    } else {
+      // For tours, use the totalPrice (already includes VAT)
+      finalPrice = bookingDetails.totalPrice
+    }
 
     const session = await stripeInstance.checkout.sessions.create({
       ui_mode: "custom",
@@ -28,7 +66,7 @@ export async function POST(request: NextRequest) {
               name: bookingDetails.title,
               description: bookingDetails.description,
             },
-            unit_amount: Math.round(bookingDetails.totalPrice * 100),
+            unit_amount: Math.round(finalPrice * 100),
           },
           quantity: 1,
         },
@@ -57,7 +95,7 @@ export async function POST(request: NextRequest) {
       },
       currency: bookingDetails.currency || "usd",
       mode: "payment",
-      return_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      return_url: `${baseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
     })
 
     return Response.json({
