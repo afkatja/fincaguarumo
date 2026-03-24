@@ -80,7 +80,7 @@ export const TourBookingProvider = ({
     // Single rate: set baseUnitPrice once.
     setPricing({
       baseUnitPrice: tour.price,
-      currency: "USD", // or content.currency if you have it
+      currency: "USD",
     })
 
     return tour

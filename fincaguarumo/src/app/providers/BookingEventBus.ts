@@ -3,11 +3,12 @@
 import { BookingType } from "@/types"
 
 export interface BookingEvent {
-  type: 'DIALOG_OPEN_REQUESTED' | 'DIALOG_CLOSE_REQUESTED'
+  type: "DIALOG_OPEN_REQUESTED" | "DIALOG_CLOSE_REQUESTED"
   payload: {
     bookingType: BookingType
+    dialogId?: string
     initialData?: any
-    source?: 'page' | 'external'
+    source?: "page" | "external"
   }
 }
 
