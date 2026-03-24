@@ -77,6 +77,7 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
               ...serializedData.bookingDetails,
               type: serializedData.bookingDetails.type,
             },
+            pricingRules: serializedData.pricingRules,
           }),
         })
 
