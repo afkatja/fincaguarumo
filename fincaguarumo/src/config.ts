@@ -28,4 +28,9 @@ const languages = [
   },
 ]
 
-export { locales, languages }
+const featureFlags = {
+  USE_TRAVEL_PROUD_LOGO:
+    process.env.NEXT_PUBLIC_USE_TRAVEL_PROUD_LOGO === "true",
+}
+
+export { locales, languages, featureFlags }

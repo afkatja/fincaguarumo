@@ -34,6 +34,10 @@ export const containsPlace = [
         name: "WiFi",
         value: true,
       },
+      {
+        "@type": "LocationFeatureSpecification",
+        name: "LGBTQ+ inclusive / zero-discrimination policy",
+      },
     ],
   },
 ]
@@ -95,7 +99,7 @@ export const jsonLd = {
     {
       "@type": "LocationFeatureSpecification",
       name: "Air Conditioning",
-      value: true,
+      value: false,
     },
     {
       "@type": "LocationFeatureSpecification",
@@ -111,6 +115,10 @@ export const jsonLd = {
       "@type": "LocationFeatureSpecification",
       name: "Free Parking",
       value: true,
+    },
+    {
+      "@type": "LocationFeatureSpecification",
+      name: "LGBTQ+ inclusive / zero-discrimination policy",
     },
   ],
   petsAllowed: false,

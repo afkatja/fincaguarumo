@@ -79,13 +79,15 @@ const HomePage = ({ locale, content }: { locale: string; content: any }) => {
               </div>
             ) : null}
           </FadeInObserver>
-          <LazyLoad
-            threshold={0.1}
-            rootMargin="0px 0px -50px 0px"
-            className="fade-in"
-          >
-            <HomeMap />
-          </LazyLoad>
+          {process.env.NODE_ENV === "production" && (
+            <LazyLoad
+              threshold={0.1}
+              rootMargin="0px 0px -50px 0px"
+              className="fade-in"
+            >
+              <HomeMap />
+            </LazyLoad>
+          )}
 
           <FeaturedContentLoader locale={locale} />
         </div>
