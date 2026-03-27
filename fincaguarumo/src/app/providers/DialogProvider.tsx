@@ -52,7 +52,6 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
   // Listen for booking events instead of directly calling providers
   useEffect(() => {
     const handleBookingEvent = (event: BookingEvent) => {
-      console.log("DialogProvider received event:", event.type, event.payload)
       if (event.type === "DIALOG_OPEN_REQUESTED") {
         setCurrentBookingType(event.payload.bookingType)
         setBookingType(event.payload.bookingType)

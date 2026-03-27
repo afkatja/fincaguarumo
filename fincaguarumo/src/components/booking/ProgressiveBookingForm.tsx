@@ -304,17 +304,17 @@ export default function ProgressiveBookingForm({
             {t("priceSummary", { defaultValue: "Price Summary" })}
           </h3>
           <VillaPriceCalculation
-            // Pass cached rules to avoid re-fetching
+            // Pass pricing rules from state to avoid timing issues
             guests={state.data.guests}
             locale={locale}
             duration={villaDuration}
             currency={state.data.currency}
             checkInDate={state.data.dates.checkIn || undefined}
+            pricingRules={state.data.pricingRules}
           />
         </div>
       )
     }
-    console.log({ stateData: state.data })
 
     // Tour price preview
     if (!state.data.baseUnitPrice || !state.data.guests) return null
@@ -522,6 +522,7 @@ export default function ProgressiveBookingForm({
           duration={villaDuration}
           currency={state.data.currency}
           checkInDate={state.data.dates.checkIn || undefined}
+          pricingRules={state.data.pricingRules}
         />
       ) : (
         <TourPriceCalculation

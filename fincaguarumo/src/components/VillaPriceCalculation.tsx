@@ -27,6 +27,7 @@ interface VillaPriceCalculationProps {
   duration: number
   currency?: string
   checkInDate?: Date
+  pricingRules?: PricingRule[]
   t?: Record<string, any> &
     ((key: string, values?: Record<string, any>) => string)
 }
@@ -37,6 +38,7 @@ const VillaPriceCalculation = ({
   duration,
   currency: currencyProp = "USD",
   checkInDate,
+  pricingRules: externalPricingRules,
 }: VillaPriceCalculationProps) => {
   const b = useTranslations("booking")
   const { fetchVillaPricingRules } = useVillaBooking()
@@ -44,6 +46,12 @@ const VillaPriceCalculation = ({
   const pricingRulesRef = useRef<PricingRule[] | null>(null)
 
   useEffect(() => {
+    // Use external pricing rules if provided, otherwise fetch them
+    if (externalPricingRules && externalPricingRules.length > 0) {
+      pricingRulesRef.current = externalPricingRules
+      return
+    }
+
     if (pricingRulesRef.current) return
     const getPricingRules = async () => {
       try {
@@ -57,7 +65,7 @@ const VillaPriceCalculation = ({
       }
     }
     getPricingRules()
-  }, [fetchVillaPricingRules]) // Add missing dependency
+  }, [fetchVillaPricingRules, externalPricingRules])
 
   // Memoize currency formatter to prevent recreation on every render
   const currency = useMemo(
@@ -71,7 +79,13 @@ const VillaPriceCalculation = ({
   )
   // Memoize pricing calculations
   const pricingCalculations = useMemo(() => {
-    if (!pricingRulesRef.current || pricingRulesRef.current.length === 0) {
+    // Use external pricing rules if available, otherwise use ref
+    const rulesToUse =
+      externalPricingRules && externalPricingRules.length > 0
+        ? externalPricingRules
+        : pricingRulesRef.current
+
+    if (!rulesToUse || rulesToUse.length === 0) {
       return {
         priceForPeople: 0,
         total: 0,
@@ -85,7 +99,7 @@ const VillaPriceCalculation = ({
     }
 
     const { priceForPeople, total } = calculateTotalWithRules({
-      pricingRules: pricingRulesRef.current,
+      pricingRules: rulesToUse,
       guests,
       bookingType: BOOKING_TYPE.villa,
       duration,
@@ -93,14 +107,14 @@ const VillaPriceCalculation = ({
     })
 
     // Find discount information for display (if any)
-    const discountRule = pricingRulesRef.current.find(
+    const discountRule = rulesToUse.find(
       rule =>
         rule.ruleType === "discount" &&
         rule.minimumNights &&
         duration >= rule.minimumNights,
     )
 
-    const vatRate = getVatRate(pricingRulesRef.current)
+    const vatRate = getVatRate(rulesToUse)
     const baseTotal = priceForPeople * duration // Base calculation: guests x nights
     const discountAmount = discountRule?.percentage
       ? (baseTotal * discountRule.percentage) / 100
@@ -118,7 +132,7 @@ const VillaPriceCalculation = ({
       vatRate,
       discountRule,
     }
-  }, [guests, duration, checkInDate, pricingRulesRef.current])
+  }, [guests, duration, checkInDate, externalPricingRules])
 
   // Memoize discount percentage text
   const discountPercentage = useMemo(() => {
