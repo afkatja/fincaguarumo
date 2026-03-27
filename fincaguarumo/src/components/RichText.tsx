@@ -91,7 +91,7 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
         attribution={{
           author: value.author,
           caption: value.caption,
-          sourceUrl: value.sourceUrl || value.url,
+          sourceUrl: value.sourceUrl,
         }}
       />
     ),
