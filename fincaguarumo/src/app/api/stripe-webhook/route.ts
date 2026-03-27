@@ -6,13 +6,14 @@ import { sendErrorEmail } from "../../../lib/sendErrorEmail"
 import { parsePropertyDate, formatForEmail } from "../../../lib/dateUtils"
 import { createSupabaseAdmin } from "@/lib/auth"
 import type { BookingType } from "@/types"
-import { loadCoreBookingDataFromLocalStorage } from "@/app/providers/BookingCoreProvider"
 
 export const runtime = "nodejs"
 
 export async function POST(request: NextRequest) {
-  console.log("WEBHOOK RECEIVED")
+  console.log("WEBHOOK RECEIVED - START")
+
   if (!process.env.STRIPE_API_KEY) {
+    console.error("ERROR: Stripe API key not configured")
     return NextResponse.json(
       { error: "Stripe API key not configured" },
       { status: 500 },
@@ -35,10 +36,6 @@ export async function POST(request: NextRequest) {
   }
   const stripeInstance = new Stripe(process.env.STRIPE_API_KEY)
 
-  console.error("Webhook secrets?", {
-    stripeKey: !!process.env.STRIPE_SECRET_KEY,
-    webhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
-  })
   const endpointSecret =
     process.env.NODE_ENV === "development"
       ? process.env.STRIPE_WEBHOOK_SECRET_LOCAL
@@ -68,7 +65,7 @@ export async function POST(request: NextRequest) {
       endpointSecret,
     )
   } catch (err: any) {
-    console.log(`⚠️  Webhook signature verification failed.`, err.message)
+    console.error(`⚠️  Webhook signature verification failed.`, err.message)
     return NextResponse.json(
       { error: "Webhook failed", details: err.message },
       { status: 400 },
@@ -78,29 +75,20 @@ export async function POST(request: NextRequest) {
   try {
     // Handle the event
     switch (event.type) {
-      case "checkout.session.completed": {
-        const { id, metadata } = event.data.object
-        console.log(`Checkout session completed: ${id}`)
+      case "checkout.session.completed":
+        {
+          const { id, metadata } = event.data.object
+          console.log(`Checkout session completed: ${id}`)
 
-        // Try to get booking data from new localStorage structure first
-        const coreBookingData = loadCoreBookingDataFromLocalStorage()
-
-        if (coreBookingData) {
-          // Use new structure
+          // Use metadata from Stripe session (localStorage doesn't exist in Node.js)
           const customerDetails = {
-            name:
-              metadata?.customerName || coreBookingData.customerDetails.name,
-            email:
-              metadata?.customerEmail || coreBookingData.customerDetails.email,
-            phoneNumber:
-              metadata?.customerPhone ||
-              coreBookingData.customerDetails.phoneNumber,
+            name: metadata?.customerName || "",
+            email: metadata?.customerEmail || "",
+            phoneNumber: metadata?.customerPhone || "",
           }
 
-          // TODO: use core booking data
           const bookingDetails = {
-            type: (metadata?.type ||
-              coreBookingData.bookingType) as BookingType,
+            type: (metadata?.type as BookingType) || "villa",
             title: metadata?.title || "",
             description: metadata?.description || "",
             duration: Number(metadata?.duration) || 0,
@@ -110,11 +98,10 @@ export async function POST(request: NextRequest) {
             checkIn: parsePropertyDate(metadata?.checkIn || ""),
             checkOut: parsePropertyDate(metadata?.checkOut || ""),
             price: Number(metadata?.price) || 0,
-            basePrice: Number(metadata?.price) || 0, // Use price as basePrice for webhook
-            totalPrice:
-              Number(metadata?.totalPrice) || coreBookingData.totalPrice,
-            currency: metadata?.currency || coreBookingData.currency,
-            guests: Number(metadata?.guests) || coreBookingData.guests,
+            basePrice: Number(metadata?.price) || 0,
+            totalPrice: Number(metadata?.totalPrice) || 0,
+            currency: metadata?.currency || "usd",
+            guests: Number(metadata?.guests) || 0,
             geo: metadata?.geo ? JSON.parse(metadata.geo) : {},
           }
 
@@ -183,7 +170,6 @@ export async function POST(request: NextRequest) {
             let availabilityUpdated = false
             try {
               // Save to Supabase with all required fields
-
               const supabaseAdmin = createSupabaseAdmin()
 
               const { data: bookingData, error: bookingError } =
@@ -277,15 +263,14 @@ export async function POST(request: NextRequest) {
             const errorMessage =
               error instanceof Error ? error.message : String(error)
             console.error("Failed to create booking in Sanity:", error)
-            await sendErrorEmail({
-              subject: "Failed to Create Booking in Sanity",
-              error: "Booking creation failed",
-              details: `Session ID: ${id}, Customer: ${customerDetails.email}, Error: ${errorMessage}`,
-            })
+            // await sendErrorEmail({
+            //   subject: "Failed to Create Booking in Sanity",
+            //   error: "Booking creation failed",
+            //   details: `Session ID: ${id}, Customer: ${customerDetails.email}, Error: ${errorMessage}`,
+            // })
           }
         }
         break
-      }
       case "payment_intent.succeeded": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
         console.log(
@@ -301,7 +286,7 @@ export async function POST(request: NextRequest) {
         break
       }
       case "checkout.session.expired": {
-        const session = event.data.object
+        const session = event.data.object as Stripe.Checkout.Session
         console.log(`Checkout session expired: ${session.id}`)
         // TODO: Handle expired session (e.g., release reserved resources, notify user)
         break
