@@ -41,6 +41,27 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
 
   const { resetAll, setBookingType } = useBookingCore()
 
+  // Fallback dialog data for when Sanity fetch fails
+  const getFallbackDialogData = (): IDialog => ({
+    _id: "fallback-dialog",
+    cta: [{ _key: "cta", value: "Book Now" }],
+    date: [{ _key: "date", value: "Select Date" }],
+    selectDate: [{ _key: "selectDate", value: "Select Date" }],
+    guests: [{ _key: "guests", value: "Guests" }],
+    adults: [{ _key: "adults", value: "Adults" }],
+    adult: [{ _key: "adult", value: "Adult" }],
+    child: [{ _key: "child", value: "Child" }],
+    other: [{ _key: "other", value: "Other" }],
+    paymentMethod: [{ _key: "paymentMethod", value: "Payment Method" }],
+    creditCard: [{ _key: "creditCard", value: "Credit Card" }],
+    paypal: [{ _key: "paypal", value: "PayPal" }],
+    people: [{ _key: "people", value: "People" }],
+    person: [{ _key: "person", value: "Person" }],
+    total: [{ _key: "total", value: "Total" }],
+    ok: [{ _key: "ok", value: "OK" }],
+    cancel: [{ _key: "cancel", value: "Cancel" }],
+  })
+
   const closeBookingDialog = () => {
     setIsBookingDialogOpen(false)
     setActiveDialogId(null)
@@ -76,7 +97,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
         if (data) setDialogData(data)
       } catch (error) {
         console.error("Error fetching dialog:", error)
-        setDialogData(null)
+        setDialogData(getFallbackDialogData())
       } finally {
         setIsLoading(false)
       }
