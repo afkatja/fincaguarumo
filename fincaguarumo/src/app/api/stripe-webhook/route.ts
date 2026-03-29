@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
           const { id, metadata } = event.data.object
           console.log(`Checkout session completed: ${id}`)
 
-          // Use metadata from Stripe session (localStorage doesn't exist in Node.js)
+          // Use metadata from Stripe session
           const customerDetails = {
             name: metadata?.customerName || "",
             email: metadata?.customerEmail || "",
@@ -133,20 +133,20 @@ export async function POST(request: NextRequest) {
             )
           }
 
-          if (process.env.NODE_ENV === "production") {
-            const response = await sendConfirmationEmail({
-              source: null,
-              customerDetails,
-              bookingDetails,
-              pricingRules: [], // Webhook doesn't need pricingRules, but it's required by BookingData type TODO: update whether still true
-            })
-            console.log("Confirmation email sent successfully.", response)
-          } else {
-            console.log("Skipping email in development mode", {
-              customerDetails,
-              bookingDetails,
-            })
-          }
+          // if (process.env.NODE_ENV === "production") {
+          const response = await sendConfirmationEmail({
+            source: null,
+            customerDetails,
+            bookingDetails,
+            pricingRules: [], // Webhook doesn't need pricingRules, but it's required by BookingData type TODO: update whether still true
+          })
+          console.log("Confirmation email sent successfully.", response)
+          // } else {
+          //   console.log("Skipping email in development mode", {
+          //     customerDetails,
+          //     bookingDetails,
+          //   })
+          // }
 
           // Save to Sanity with all details
           try {
@@ -173,19 +173,22 @@ export async function POST(request: NextRequest) {
               const supabaseAdmin = createSupabaseAdmin()
 
               const { data: bookingData, error: bookingError } =
-                await supabaseAdmin.from("bookings").insert({
-                  check_in: bookingDetails.checkIn.toISOString(),
-                  check_out: bookingDetails.checkOut.toISOString(),
-                  guest_name: customerDetails.name,
-                  email: customerDetails.email,
-                  phone: customerDetails.phoneNumber,
-                  source: "direct",
-                  uid: event.data.object.id,
-                  guests: bookingDetails.guests,
-                  booking_type: bookingDetails.type,
-                  total_price: bookingDetails.totalPrice,
-                  currency: bookingDetails.currency,
-                })
+                await supabaseAdmin
+                  .from("bookings")
+                  .insert({
+                    check_in: bookingDetails.checkIn.toISOString(),
+                    check_out: bookingDetails.checkOut.toISOString(),
+                    guest_name: customerDetails.name,
+                    email: customerDetails.email,
+                    phone: customerDetails.phoneNumber,
+                    source: "direct",
+                    uid: event.data.object.id,
+                    guests: bookingDetails.guests,
+                    booking_type: bookingDetails.type,
+                    total_price: bookingDetails.totalPrice,
+                    currency: bookingDetails.currency,
+                  })
+                  .select()
 
               if (bookingData) {
                 bookingSaved = true
@@ -209,6 +212,7 @@ export async function POST(request: NextRequest) {
                       booking_uid: event.data.object.id,
                       updated_at: new Date().toISOString(),
                     })
+                    .select()
 
                   if (!availabilityError) {
                     availabilityUpdated = true
@@ -239,14 +243,7 @@ export async function POST(request: NextRequest) {
             const checkInFormatted = formatForEmail(bookingDetails.checkIn)
             const checkOutFormatted = formatForEmail(bookingDetails.checkOut)
 
-            if (bookingSaved && availabilityUpdated) {
-              // Complete success
-              await sendErrorEmail({
-                subject: "New Booking Successfully Created",
-                error: "Booking successful",
-                details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${checkInFormatted}, Check-out: ${checkOutFormatted}`,
-              })
-            } else {
+            if (!bookingSaved || !availabilityUpdated) {
               // Partial or complete failure
               const failedOperations = []
               if (!bookingSaved) failedOperations.push("Supabase booking save")
@@ -262,7 +259,7 @@ export async function POST(request: NextRequest) {
           } catch (error) {
             const errorMessage =
               error instanceof Error ? error.message : String(error)
-            console.error("Failed to create booking in Sanity:", error)
+            console.error("Failed to create booking in Sanity:", errorMessage)
             // await sendErrorEmail({
             //   subject: "Failed to Create Booking in Sanity",
             //   error: "Booking creation failed",

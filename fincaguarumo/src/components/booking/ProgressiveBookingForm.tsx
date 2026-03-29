@@ -12,7 +12,7 @@ import DatePicker from "@/components/DatePicker"
 import SelectGuestsOptions from "@/app/[locale]/(pages)/(payment)/SelectGuestsOptions"
 import { getInternationalizedValue } from "@/lib/utils"
 import { useTranslations } from "next-intl"
-import calculateDuration from "@/lib/calculateDuration"
+import { calculateDuration } from "@/lib/dateUtils"
 import calculateTotal, { calculateTotalWithRules } from "@/lib/calculateTotal"
 import { getDefaultBasePrice, getLowestPrice } from "@/lib/pricingEngine"
 import { BookingType, BOOKING_TYPE, BookingData } from "@/types"
@@ -86,8 +86,8 @@ export default function ProgressiveBookingForm({
   const villaDuration = useMemo(
     () =>
       calculateDuration(
-        state.data.dates.checkIn || undefined,
-        state.data.dates.checkOut || undefined,
+        state.data.dates.checkIn || null,
+        state.data.dates.checkOut || null,
       ),
     [state.data.dates.checkIn, state.data.dates.checkOut],
   )

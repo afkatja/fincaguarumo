@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
-import { formatForEmail } from "./dateUtils"
+import { formatForEmail, calculateDuration } from "./dateUtils"
 import { BOOKING_TYPE, BookingData } from "../types"
-import { VAT_RATE } from "./pricingEngine"
-
-const TAX_RATE = 1 + VAT_RATE
+import { calculateEffectivePrice } from "./pricingEngine"
 
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_TOKEN || "",
@@ -23,22 +21,35 @@ const safeFormatForEmail = (date: Date | null): string => {
 export async function sendConfirmationEmail({
   customerDetails,
   bookingDetails,
+  pricingRules,
 }: BookingData) {
   if (!customerDetails || !bookingDetails) {
     throw new Error("Missing customer or booking details")
   }
 
-  // Compute fallback-aware total price for consistent handling
+  // Use pricing engine for consistent calculations, fallback to 0 if missing data
   const displayTotalPrice =
     bookingDetails.totalPrice ||
-    (bookingDetails.basePrice && bookingDetails.guests
-      ? Math.round(
-          bookingDetails.basePrice *
-            TAX_RATE *
-            (bookingDetails.type === BOOKING_TYPE.tour
-              ? bookingDetails.guests
-              : 1),
-        )
+    (bookingDetails.basePrice && bookingDetails.guests && pricingRules
+      ? (() => {
+          const duration =
+            bookingDetails.type === BOOKING_TYPE.tour
+              ? 1
+              : calculateDuration(
+                  bookingDetails.checkIn,
+                  bookingDetails.checkOut,
+                )
+
+          const result = calculateEffectivePrice({
+            pricingRules,
+            guests: bookingDetails.guests,
+            duration,
+            checkInDate: bookingDetails.checkIn || bookingDetails.date,
+            bookingType: bookingDetails.type,
+          })
+
+          return Math.round(result.total)
+        })()
       : 0)
 
   try {

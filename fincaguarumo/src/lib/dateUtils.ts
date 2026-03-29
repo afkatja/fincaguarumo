@@ -135,6 +135,23 @@ export function validateBookingDates(
 }
 
 /**
+ * Calculate duration in nights between check-in and check-out dates
+ * Returns minimum 1 night to avoid zero or negative durations
+ */
+export function calculateDuration(
+  checkIn: Date | null,
+  checkOut: Date | null,
+): number {
+  if (!checkIn || !checkOut) {
+    return 1
+  }
+
+  const durationMs = checkOut.getTime() - checkIn.getTime()
+  const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24))
+  return Math.max(1, durationDays)
+}
+
+/**
  * Safely parse a date with fallback
  */
 export function safeParsePropertyDate(

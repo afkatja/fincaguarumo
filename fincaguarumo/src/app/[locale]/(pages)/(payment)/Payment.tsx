@@ -6,7 +6,7 @@ import { CheckoutProvider } from "@stripe/react-stripe-js"
 import CheckoutForm from "./CheckoutForm"
 import { useVillaBooking } from "../../../providers/VillaBookingProvider"
 import { useTourBooking } from "../../../providers/TourBookingProvider"
-import { BOOKING_TYPE, BookingType, serializeBookingData } from "@/types"
+import { BOOKING_TYPE, serializeBookingData } from "@/types"
 import Loading from "../loading"
 import { useBookingCore } from "../../../providers/BookingCoreProvider"
 

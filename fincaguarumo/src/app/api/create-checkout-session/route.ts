@@ -3,7 +3,7 @@ import Stripe from "stripe"
 import getRequestBody from "../../../lib/getRequestBody"
 import { SerializedBookingData } from "../../../types"
 import { calculateEffectivePrice } from "../../../lib/pricingEngine"
-import calculateDuration from "../../../lib/calculateDuration"
+import { calculateDuration } from "../../../lib/dateUtils"
 
 const stripeInstance = new Stripe(process.env.STRIPE_API_KEY ?? "")
 
@@ -40,7 +40,10 @@ export async function POST(request: NextRequest) {
         : undefined
 
       // Calculate duration on server side to ensure accuracy
-      const duration = calculateDuration(checkInDate, checkOutDate)
+      const duration = calculateDuration(
+        checkInDate || null,
+        checkOutDate || null,
+      )
 
       const result = calculateEffectivePrice({
         pricingRules: villaPricingRules,
