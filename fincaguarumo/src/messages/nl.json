@@ -80,7 +80,10 @@
     "chatHelpPersonal": "Ik kan u helpen met uw boekingsgegevens. Geef uw naam, e-mailadres, telefoonnummer en eventuele speciale verzoeken op.",
     "chatHelpPayment": "Ik kan u helpen met uw betalingsgegevens. Geef uw betalingsgegevens op.",
     "stepDates": "Selecteer Datums",
-    "loadingCalendar": "Agenda laden..."
+    "loadingCalendar": "Agenda laden...",
+    "checkOutAfterCheckIn": "Check-out moet na check-in zijn",
+    "paymentError": "Fout bij het initialiseren van de betaalsessie. Probeer het opnieuw.",
+    "tryAgain": "Probeer opnieuw"
   },
   "page": {
     "moreFAQ": "Meer veelgestelde vragen",

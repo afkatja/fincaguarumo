@@ -74,7 +74,10 @@
     "chatHelpPersonal": "Ich kann Ihnen bei Ihren Buchungsdetails behilflich sein. Bitte geben Sie Ihren Namen, Ihre E-Mail-Adresse, Ihre Telefonnummer und etwaige Sonderwünsche an.",
     "chatHelpPayment": "Ich kann Ihnen bei Ihren Zahlungsdetails behilflich sein. Bitte geben Sie Ihre Zahlungsinformationen an.",
     "stepDates": "Wählen Sie Daten aus",
-    "loadingCalendar": "Kalender wird geladen..."
+    "loadingCalendar": "Kalender wird geladen...",
+    "checkOutAfterCheckIn": "Check-out muss nach dem Check-in liegen",
+    "paymentError": "Fehler beim Initialisieren der Zahlungssitzung. Bitte versuchen Sie es erneut.",
+    "tryAgain": "Erneut versuchen"
   },
   "page": {
     "moreFAQ": "Mehr FAQ",

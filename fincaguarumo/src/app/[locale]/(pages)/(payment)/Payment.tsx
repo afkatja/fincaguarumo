@@ -9,6 +9,7 @@ import { useTourBooking } from "../../../providers/TourBookingProvider"
 import { BOOKING_TYPE, serializeBookingData } from "@/types"
 import Loading from "../loading"
 import { useBookingCore } from "../../../providers/BookingCoreProvider"
+import { useTranslations } from "next-intl"
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 if (!publishableKey)
@@ -23,9 +24,11 @@ const stripePromise = loadStripe(publishableKey, {
 const Payment = ({ ...props }: { [prop: string]: any }) => {
   // const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { state } = useBookingCore()
   const { fetchVillaDetailed } = useVillaBooking()
   const { fetchTourDetailed } = useTourBooking()
+  const t = useTranslations("booking")
   const clientSecret = useRef(null)
 
   useEffect(() => {
@@ -35,6 +38,7 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
 
     const fetchData = async () => {
       try {
+        setError(null)
         setLoading(true)
 
         const contentData =
@@ -86,6 +90,7 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
         clientSecret.current = clientSecretData
       } catch (err) {
         console.error("Error creating payment session:", err)
+        setError(t("paymentError"))
       } finally {
         setLoading(false)
       }
@@ -120,6 +125,25 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
     return (
       <div data-testid="booking-payment">
         <Loading className="absolute top-0" />
+      </div>
+    )
+
+  if (error)
+    return (
+      <div
+        data-testid="booking-payment"
+        className="flex flex-col items-center justify-center p-8"
+      >
+        <div className="text-red-600 text-center mb-4">{error}</div>
+        <button
+          onClick={() => {
+            setError(null)
+            clientSecret.current = null
+          }}
+          className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 transition-colors"
+        >
+          {t("tryAgain")}
+        </button>
       </div>
     )
   return (

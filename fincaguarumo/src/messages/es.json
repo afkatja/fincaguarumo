@@ -80,7 +80,10 @@
     "chatHelpPersonal": "Puedo ayudarte con los detalles de tu reserva. Proporcione su nombre, correo electrónico, número de teléfono y cualquier solicitud especial.",
     "chatHelpPayment": "Puedo ayudarte con tus datos de pago. Por favor proporcione su información de pago.",
     "stepDates": "Seleccionar fechas",
-    "loadingCalendar": "Cargando calendario..."
+    "loadingCalendar": "Cargando calendario...",
+    "checkOutAfterCheckIn": "La fecha de salida debe ser posterior a la fecha de entrada",
+    "paymentError": "Error al inicializar la sesión de pago. Por favor, inténtelo de nuevo.",
+    "tryAgain": "Intentar de nuevo"
   },
   "page": {
     "moreFAQ": "Más preguntas frecuentes",
