@@ -7,6 +7,7 @@ export const clientSideClient = createClient({
   dataset,
   apiVersion,
   useCdn: true,
+  token: process.env.NEXT_PUBLIC_SANITY_API_READ_TOKEN,
   stega: {
     enabled: process.env.NEXT_PUBLIC_VERCEL_ENV === "preview",
     studioUrl: "/studio",
