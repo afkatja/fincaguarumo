@@ -470,7 +470,6 @@ export default function ProgressiveBookingForm({
           })}
           labelText={t("emailLabel", { defaultValue: "Your email *" })}
           placeholder="jane@doe.com"
-          pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
           value={state.data.customerDetails.email}
           onChangeHandler={(e: React.ChangeEvent<HTMLInputElement>) =>
             setCustomerDetails({ email: e.target.value })
