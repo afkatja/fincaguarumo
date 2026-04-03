@@ -26,8 +26,9 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { state } = useBookingCore()
-  const { detailedVillaData } = useVillaBooking()
-  const { detailedTourData } = useTourBooking()
+  const { detailedVillaData, isLoadingDetailed: villaLoading } =
+    useVillaBooking()
+  const { detailedTourData, isLoadingDetailed: tourLoading } = useTourBooking()
   const t = useTranslations("booking")
   const clientSecret = useRef(null)
 
@@ -35,6 +36,11 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
     if (!state.data.bookingType) return
     if (clientSecret.current) return
     if (loading) return // Prevent concurrent fetches
+
+    // Wait for data to be available
+    const isLoading =
+      state.data.bookingType === BOOKING_TYPE.villa ? villaLoading : tourLoading
+    if (isLoading) return
 
     const fetchData = async () => {
       try {
@@ -47,7 +53,9 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
             : detailedTourData
 
         if (!contentData) {
-          throw new Error("Content data not available")
+          // Fallback to basic data if detailed data not available
+          console.warn("Detailed data not available, using basic booking data")
+          throw new Error("Booking data not available - please try again")
         }
 
         const completeBookingData = {
@@ -101,7 +109,13 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
     }
 
     void fetchData()
-  }, [state.data.bookingType, detailedVillaData, detailedTourData])
+  }, [
+    state.data.bookingType,
+    detailedVillaData,
+    detailedTourData,
+    villaLoading,
+    tourLoading,
+  ])
 
   const appearance = {
     theme: "stripe" as const,
