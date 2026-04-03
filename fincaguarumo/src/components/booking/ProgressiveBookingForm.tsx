@@ -487,7 +487,9 @@ export default function ProgressiveBookingForm({
           })}
           labelText={t("phoneLabel", { defaultValue: "Your phone number *" })}
           placeholder="12345678"
-          pattern="^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4}$"
+          pattern="[0-9]{4,14}"
+          inputMode="numeric"
+          autoComplete="tel-national"
           value={state.data.customerDetails.phoneNumber}
           onChange={handlePhoneChange}
           forceShowError={personalSubmitAttempted && phoneFieldInvalid}
