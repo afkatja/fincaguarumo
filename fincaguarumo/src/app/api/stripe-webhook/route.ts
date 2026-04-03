@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
-import { createSupabaseAdmin } from "@/lib/auth"
-import { sendErrorEmail } from "../../../lib/sendErrorEmail"
 import {
   sendBookingConfirmationEmail,
   saveBookingToSanity,
@@ -12,6 +10,10 @@ import {
   type CustomerDetails,
   type BookingDetails,
 } from "./bookingHandlers"
+import { sendErrorEmail } from "@/lib/sendErrorEmail"
+import { createSupabaseAdmin } from "@/lib/auth"
+import { executeWithIndividualRetries } from "@/lib/monitoring"
+import { RETRY_CONFIG } from "@/lib/monitoring/config"
 
 export const runtime = "nodejs"
 
@@ -122,46 +124,68 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        // Send confirmation email
-        await sendBookingConfirmationEmail(customerDetails, bookingDetails)
+        // Execute all operations with individual retry logic
+        const operations = [
+          {
+            name: "send-confirmation-email",
+            fn: () =>
+              sendBookingConfirmationEmail(customerDetails, bookingDetails),
+            config: RETRY_CONFIG.email,
+          },
+          {
+            name: "save-booking-to-sanity",
+            fn: () => saveBookingToSanity(customerDetails, bookingDetails, id),
+            config: RETRY_CONFIG.sanity,
+          },
+          {
+            name: "save-booking-to-supabase",
+            fn: () =>
+              saveBookingToSupabase(customerDetails, bookingDetails, id),
+            config: RETRY_CONFIG.supabase,
+          },
+          {
+            name: "update-availability",
+            fn: () =>
+              updateAvailability(bookingDetails, id, customerDetails.name),
+            config: RETRY_CONFIG.availability,
+          },
+        ]
 
-        // Save to Sanity
-        await saveBookingToSanity(customerDetails, bookingDetails, id)
+        const results = await executeWithIndividualRetries(operations)
 
-        // Save to Supabase and update availability
-        const bookingResult = await saveBookingToSupabase(
-          customerDetails,
-          bookingDetails,
-          id,
-        )
-        let bookingSaved = false
-        let availabilityUpdated = false
+        // Log results and handle failures
+        const failedOperations: string[] = []
+        const successOperations: string[] = []
 
-        if (bookingResult.success) {
-          bookingSaved = true
-          const availabilityResult = await updateAvailability(
-            bookingDetails,
-            id,
-            customerDetails.name,
-          )
-          if (availabilityResult.success) {
-            availabilityUpdated = true
+        results.forEach(({ name, result }) => {
+          if (result.success) {
+            successOperations.push(name)
+            console.log(`✅ ${name} completed successfully`)
+          } else {
+            failedOperations.push(name)
+            console.error(
+              `❌ ${name} failed after ${result.attempts} attempts: ${result.error?.message}`,
+            )
           }
-        }
+        })
 
-        // Handle partial failures
-        if (!bookingSaved || !availabilityUpdated) {
-          const failedOperations = []
-          if (!bookingSaved) failedOperations.push("Supabase booking save")
-          if (!availabilityUpdated) failedOperations.push("availability update")
-
+        // If any operations failed, send admin notification
+        if (failedOperations.length > 0) {
           await notifyPartialFailure(
             id,
             customerDetails,
             bookingDetails,
-            failedOperations,
+            failedOperations.map((op: string) =>
+              op
+                .replace(/-/g, " ")
+                .replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            ),
           )
         }
+
+        console.log(
+          `🎯 Webhook processing complete: ${successOperations.length} succeeded, ${failedOperations.length} failed`,
+        )
         break
       }
       case "checkout.session.expired": {
@@ -212,6 +236,10 @@ export async function POST(request: NextRequest) {
       default:
         // Unexpected event type
         console.log(`Unhandled event type ${event.type}.`)
+        return NextResponse.json({
+          received: true,
+          eventType: "unknown",
+        })
     }
   } catch (error: any) {
     console.error("Error processing webhook event:", error.message)

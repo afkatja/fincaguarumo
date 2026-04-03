@@ -22,7 +22,7 @@ export async function sendConfirmationEmail({
   customerDetails,
   bookingDetails,
   pricingRules,
-}: BookingData) {
+}: BookingData): Promise<{ success: boolean; error?: string }> {
   if (!customerDetails || !bookingDetails) {
     throw new Error("Missing customer or booking details")
   }
@@ -237,17 +237,14 @@ export async function sendConfirmationEmail({
       throw error
     }
 
-    return NextResponse.json({ success: true })
+    return { success: true }
   } catch (error: any) {
     console.error("MAILERSEND Error:", error, {
       error: error.message,
     })
-    return NextResponse.json(
-      {
-        error: "Failed to send email",
-        details: error.response?.body || error.message,
-      },
-      { status: 500 },
-    )
+    return {
+      success: false,
+      error: error.response?.body || error.message || "Failed to send email",
+    }
   }
 }
