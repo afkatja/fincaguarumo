@@ -26,8 +26,8 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { state } = useBookingCore()
-  const { fetchVillaDetailed } = useVillaBooking()
-  const { fetchTourDetailed } = useTourBooking()
+  const { detailedVillaData } = useVillaBooking()
+  const { detailedTourData } = useTourBooking()
   const t = useTranslations("booking")
   const clientSecret = useRef(null)
 
@@ -43,8 +43,12 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
 
         const contentData =
           state.data.bookingType === BOOKING_TYPE.villa
-            ? await fetchVillaDetailed()
-            : await fetchTourDetailed()
+            ? detailedVillaData
+            : detailedTourData
+
+        if (!contentData) {
+          throw new Error("Content data not available")
+        }
 
         const completeBookingData = {
           source: state.data.source,
@@ -97,7 +101,7 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
     }
 
     void fetchData()
-  }, [state.data.bookingType])
+  }, [state.data.bookingType, detailedVillaData, detailedTourData])
 
   const appearance = {
     theme: "stripe" as const,

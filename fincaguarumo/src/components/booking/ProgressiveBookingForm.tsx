@@ -61,7 +61,7 @@ export default function ProgressiveBookingForm({
     setPricing,
     persistToStorage,
   } = useBookingCore()
-  const { fetchVillaPricingRules } = useVillaBooking()
+  const { pricingRules } = useVillaBooking()
   const { dialogData: dialog } = useDialog()
   const t = useTranslations("booking")
 
@@ -75,7 +75,6 @@ export default function ProgressiveBookingForm({
   const bookingType: BookingType | null = state.data.bookingType
 
   const pricingRulesRef = useRef<any[]>([])
-  const [pricingRulesLoading, setPricingRulesLoading] = useState(false)
 
   // Clear pricing rules when booking type changes
   useEffect(() => {
@@ -92,28 +91,13 @@ export default function ProgressiveBookingForm({
     [state.data.dates.checkIn, state.data.dates.checkOut],
   )
 
-  // Fetch pricing rules once for villa bookings
+  // Update pricing rules when they become available
   useEffect(() => {
-    if (
-      bookingType === BOOKING_TYPE.villa &&
-      pricingRulesRef.current.length === 0
-    ) {
-      setPricingRulesLoading(true)
-      fetchVillaPricingRules()
-        .then(rules => {
-          // setPricingRules(rules)
-          pricingRulesRef.current = rules
-          // Also store pricing rules in the booking core state
-          setPricing({ pricingRules: rules })
-        })
-        .catch(error => {
-          console.error("Error fetching pricing rules:", error)
-        })
-        .finally(() => {
-          setPricingRulesLoading(false)
-        })
+    if (bookingType === BOOKING_TYPE.villa && pricingRules) {
+      pricingRulesRef.current = pricingRules
+      setPricing({ pricingRules })
     }
-  }, [bookingType, fetchVillaPricingRules, setPricing])
+  }, [bookingType, pricingRules, setPricing])
 
   // Validate current step against core state
   useEffect(() => {
