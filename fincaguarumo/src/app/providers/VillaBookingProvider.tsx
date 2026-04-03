@@ -1,7 +1,8 @@
 "use client"
 
-import { createContext, useContext, useState } from "react"
+import React, { createContext, useContext } from "react"
 import { useParams } from "next/navigation"
+import useSWR from "swr"
 import { ACCOMMODATION_QUERY } from "@/sanity/lib/queries"
 import { PricingRule } from "@/lib/pricingEngine"
 import { clientSideFetch } from "../../sanity/lib/clientSide"
@@ -63,24 +64,23 @@ export interface VillaContent {
 }
 
 type VillaBookingContextValue = {
-  // purely fetch + transform: no React state here
-  fetchVillaBasic: () => Promise<VillaContent>
-  fetchVillaDetailed: () => Promise<VillaContent>
-  fetchVillaPricingRules: () => Promise<PricingRule[]>
-  // loading: boolean
+  basicVillaData: VillaContent | undefined
+  detailedVillaData: VillaContent | undefined
+  pricingRules: PricingRule[] | undefined
+  isLoadingBasic: boolean
+  isLoadingDetailed: boolean
+  isLoadingPricing: boolean
+  error: any
 }
 
 const VillaBookingContext = createContext<VillaBookingContextValue>({
-  fetchVillaBasic: async () => {
-    throw new Error("VillaBookingProvider not mounted")
-  },
-  fetchVillaDetailed: async () => {
-    throw new Error("VillaBookingProvider not mounted")
-  },
-  fetchVillaPricingRules: async () => {
-    throw new Error("VillaBookingProvider not mounted")
-  },
-  // loading: false,
+  basicVillaData: undefined,
+  detailedVillaData: undefined,
+  pricingRules: undefined,
+  isLoadingBasic: false,
+  isLoadingDetailed: false,
+  isLoadingPricing: false,
+  error: null,
 })
 
 export const useVillaBooking = () => useContext(VillaBookingContext)
@@ -92,7 +92,6 @@ export const VillaBookingProvider = ({
 }) => {
   const { locale } = useParams()
   const { setBookingType, setBasicDetails, setPricing } = useBookingCore()
-  // const [loading, setLoading] = useState(false)
 
   const mapContentToVilla = (content: AccommodationContent): VillaContent => ({
     title: content.title,
@@ -115,71 +114,69 @@ export const VillaBookingProvider = ({
     propertyType: content.propertyType,
   })
 
-  const fetchVilla = async (detailed: boolean): Promise<VillaContent> => {
-    // setLoading(true)
-    try {
-      const content = await clientSideFetch(
-        ACCOMMODATION_QUERY,
-        { slug: "villa-bruno", language: locale as string },
-        detailed ? 300 : 3600,
-      )
+  // SWR for basic villa data
+  const {
+    data: basicVillaData,
+    isLoading: isLoadingBasic,
+    error,
+  } = useSWR(
+    [
+      ACCOMMODATION_QUERY,
+      { slug: "villa-bruno", language: locale as string },
+      3600,
+    ],
+    ([query, params, revalidate]) => clientSideFetch(query, params, revalidate),
+  )
 
-      if (!content) {
-        throw new Error("Villa data not found")
-      }
+  // SWR for detailed villa data
+  const { data: detailedVillaData, isLoading: isLoadingDetailed } = useSWR(
+    [
+      ACCOMMODATION_QUERY,
+      { slug: "villa-bruno", language: locale as string },
+      300,
+    ],
+    ([query, params, revalidate]) => clientSideFetch(query, params, revalidate),
+  )
 
-      const villa = mapContentToVilla(content)
+  // SWR for pricing rules
+  const { data: pricingRules, isLoading: isLoadingPricing } = useSWR(
+    [
+      ACCOMMODATION_QUERY,
+      { slug: "villa-bruno", language: locale as string },
+      3600,
+    ],
+    ([query, params, revalidate]) => clientSideFetch(query, params, revalidate),
+  )
 
-      // Push basic info into core
+  // Update booking core when basic data is available
+  React.useEffect(() => {
+    if (basicVillaData) {
+      const villa = mapContentToVilla(basicVillaData)
       setBookingType("villa")
       setBasicDetails({
         title: villa.title,
         description: villa.description,
         location: villa.location || "",
       })
-
-      // For villa we DON’T set baseUnitPrice here because pricing depends on rules
-      // You can set a default currency
+      // For villa we DON'T set baseUnitPrice here because pricing depends on rules
       setPricing({ currency: "USD" })
-
-      return villa
-    } catch (error) {
-      console.error("Error fetching villa:", error)
-      throw error
-    } finally {
-      // setLoading(false)
     }
-  }
-
-  const fetchVillaPricingRules = async (): Promise<PricingRule[]> => {
-    try {
-      const content = await clientSideFetch(
-        ACCOMMODATION_QUERY,
-        { slug: "villa-bruno", language: locale as string },
-        3600, // Use longer cache for pricing rules
-      )
-
-      if (!content) {
-        throw new Error("Villa pricing rules not found")
-      }
-
-      return content.pricingRules || []
-    } catch (error) {
-      console.error("Error fetching villa pricing rules:", error)
-      throw error
-    }
-  }
-
-  const fetchVillaBasic = () => fetchVilla(false)
-  const fetchVillaDetailed = () => fetchVilla(true)
+  }, [basicVillaData, setBookingType, setBasicDetails, setPricing])
 
   return (
     <VillaBookingContext.Provider
       value={{
-        fetchVillaBasic,
-        fetchVillaDetailed,
-        fetchVillaPricingRules,
-        // loading,
+        basicVillaData: basicVillaData
+          ? mapContentToVilla(basicVillaData)
+          : undefined,
+        detailedVillaData: detailedVillaData
+          ? mapContentToVilla(detailedVillaData)
+          : undefined,
+        pricingRules: pricingRules?.pricingRules || [],
+        isLoadingBasic,
+        isLoadingDetailed,
+        isLoadingPricing,
+        error,
       }}
     >
       {children}

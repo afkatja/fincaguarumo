@@ -41,31 +41,24 @@ const VillaPriceCalculation = ({
   pricingRules: externalPricingRules,
 }: VillaPriceCalculationProps) => {
   const b = useTranslations("booking")
-  const { fetchVillaPricingRules } = useVillaBooking()
+  const { pricingRules: swrPricingRules, isLoadingPricing } = useVillaBooking()
   const [loading, setLoading] = useState(false)
   const pricingRulesRef = useRef<PricingRule[] | null>(null)
 
   useEffect(() => {
-    // Use external pricing rules if provided, otherwise fetch them
+    // Use external pricing rules if provided, otherwise use SWR data
     if (externalPricingRules && externalPricingRules.length > 0) {
       pricingRulesRef.current = externalPricingRules
       return
     }
 
-    if (pricingRulesRef.current) return
-    const getPricingRules = async () => {
-      try {
-        setLoading(true)
-        const pricingRules = await fetchVillaPricingRules()
-        pricingRulesRef.current = pricingRules
-      } catch (err) {
-        console.error("Error fetching villa pricing rules:", err)
-      } finally {
-        setLoading(false)
-      }
+    if (swrPricingRules) {
+      pricingRulesRef.current = swrPricingRules
     }
-    getPricingRules()
-  }, [fetchVillaPricingRules, externalPricingRules])
+  }, [swrPricingRules, externalPricingRules])
+
+  // Determine loading state
+  const isLoading = loading || (isLoadingPricing && !externalPricingRules)
 
   // Memoize currency formatter to prevent recreation on every render
   const currency = useMemo(
@@ -148,7 +141,7 @@ const VillaPriceCalculation = ({
 
   const totalDisplayed = b("totalDisplayedVilla", { nights: duration })
 
-  if (loading) return <Loading />
+  if (isLoading) return <Loading />
   return (
     <div
       className="grid gap-2 flex-none w-full"

@@ -1,6 +1,7 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect } from "react"
+import React, { createContext, useContext, useState, useEffect } from "react"
+import useSWR from "swr"
 import { clientSideFetch } from "../../sanity/lib/clientSide"
 import { DIALOG_QUERY } from "../../sanity/lib/queries"
 import { IDialog, BookingType } from "../../types"
@@ -31,15 +32,20 @@ const DialogContext = createContext<DialogContextType>({
 export const useDialog = () => useContext(DialogContext)
 
 export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
-  const [dialogData, setDialogData] = useState<IDialog | null>(null)
   const [dialogId, setDialogId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false)
   const [activeDialogId, setActiveDialogId] = useState<string | null>(null)
   const [currentBookingType, setCurrentBookingType] =
     useState<BookingType | null>(null)
 
   const { resetAll, setBookingType } = useBookingCore()
+
+  // SWR for dialog data
+  const {
+    data: dialogData,
+    error,
+    isLoading,
+  } = useSWR(DIALOG_QUERY, clientSideFetch)
 
   // Fallback dialog data for when Sanity fetch fails
   const getFallbackDialogData = (): IDialog => ({
@@ -88,28 +94,13 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
     return unsubscribe
   }, [setBookingType, setIsBookingDialogOpen, closeBookingDialog])
 
-  // Fetch generic dialog copy
-  useEffect(() => {
-    const fetchDialog = async () => {
-      setIsLoading(true)
-      try {
-        const data = await clientSideFetch(DIALOG_QUERY)
-        if (data) setDialogData(data)
-      } catch (error) {
-        console.error("Error fetching dialog:", error)
-        setDialogData(getFallbackDialogData())
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchDialog()
-  }, [dialogId])
+  // Use fallback data when there's an error
+  const finalDialogData = error ? getFallbackDialogData() : dialogData
 
   return (
     <DialogContext.Provider
       value={{
-        dialogData,
+        dialogData: finalDialogData,
         setDialogId,
         isLoading,
         closeBookingDialog,

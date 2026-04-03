@@ -1,7 +1,8 @@
 "use client"
 
-import { createContext, useContext } from "react"
+import React, { createContext, useContext } from "react"
 import { useParams } from "next/navigation"
+import useSWR from "swr"
 import { TOUR_QUERY } from "@/sanity/lib/queries"
 import { clientSideFetch } from "../../sanity/lib/clientSide"
 import { useBookingCore } from "./BookingCoreProvider"
@@ -19,17 +20,19 @@ export interface TourContent {
 }
 
 type TourBookingContextValue = {
-  fetchTourBasic: () => Promise<TourContent>
-  fetchTourDetailed: () => Promise<TourContent>
+  basicTourData: TourContent | undefined
+  detailedTourData: TourContent | undefined
+  isLoadingBasic: boolean
+  isLoadingDetailed: boolean
+  error: any
 }
 
 const TourBookingContext = createContext<TourBookingContextValue>({
-  fetchTourBasic: async () => {
-    throw new Error("TourBookingProvider not mounted")
-  },
-  fetchTourDetailed: async () => {
-    throw new Error("TourBookingProvider not mounted")
-  },
+  basicTourData: undefined,
+  detailedTourData: undefined,
+  isLoadingBasic: false,
+  isLoadingDetailed: false,
+  error: null,
 })
 
 export const useTourBooking = () => useContext(TourBookingContext)
@@ -56,44 +59,51 @@ export const TourBookingProvider = ({
     slideshow: content.slideshow,
   })
 
-  const fetchTour = async (detailed: boolean): Promise<TourContent> => {
-    const content = await clientSideFetch(
-      TOUR_QUERY,
-      { slug, language: locale as string },
-      detailed ? 300 : 3600,
-    )
+  // SWR for basic tour data
+  const {
+    data: basicTourData,
+    isLoading: isLoadingBasic,
+    error,
+  } = useSWR(
+    [TOUR_QUERY, { slug, language: locale as string }, 3600],
+    ([query, params, revalidate]) => clientSideFetch(query, params, revalidate),
+  )
 
-    if (!content) {
-      throw new Error("Tour data not found")
+  // SWR for detailed tour data
+  const { data: detailedTourData, isLoading: isLoadingDetailed } = useSWR(
+    [TOUR_QUERY, { slug, language: locale as string }, 300],
+    ([query, params, revalidate]) => clientSideFetch(query, params, revalidate),
+  )
+
+  // Update booking core when basic data is available
+  React.useEffect(() => {
+    if (basicTourData) {
+      const tour = mapContentToTour(basicTourData)
+      setBookingType("tour")
+      setBasicDetails({
+        title: tour.title,
+        description: tour.description,
+        location: tour.location || "",
+      })
+      setPricing({
+        baseUnitPrice: tour.price,
+        currency: "USD",
+      })
     }
-
-    const tour = mapContentToTour(content)
-
-    // Push basic info into core
-    setBookingType("tour")
-    setBasicDetails({
-      title: tour.title,
-      description: tour.description,
-      location: tour.location || "",
-    })
-
-    // Single rate: set baseUnitPrice once.
-    setPricing({
-      baseUnitPrice: tour.price,
-      currency: "USD",
-    })
-
-    return tour
-  }
-
-  const fetchTourBasic = () => fetchTour(false)
-  const fetchTourDetailed = () => fetchTour(true)
+  }, [basicTourData, setBookingType, setBasicDetails, setPricing])
 
   return (
     <TourBookingContext.Provider
       value={{
-        fetchTourBasic,
-        fetchTourDetailed,
+        basicTourData: basicTourData
+          ? mapContentToTour(basicTourData)
+          : undefined,
+        detailedTourData: detailedTourData
+          ? mapContentToTour(detailedTourData)
+          : undefined,
+        isLoadingBasic,
+        isLoadingDetailed,
+        error,
       }}
     >
       {children}
