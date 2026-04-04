@@ -1,11 +1,22 @@
 import { NextRequest } from "next/server"
 import Stripe from "stripe"
-import getRequestBody from "../../../lib/getRequestBody"
 import { SerializedBookingData } from "../../../types"
 import { calculateEffectivePrice } from "../../../lib/pricingEngine"
 import { calculateDuration } from "../../../lib/dateUtils"
 
 const stripeInstance = new Stripe(process.env.STRIPE_API_KEY ?? "")
+
+// Debug Stripe configuration
+console.log(
+  "🔑 Stripe API Key configured:",
+  process.env.STRIPE_API_KEY ? "✅ Present" : "❌ Missing",
+)
+console.log(
+  "🔑 Stripe API Key starts with sk_:",
+  process.env.STRIPE_API_KEY?.startsWith("sk_")
+    ? "✅ Secret key"
+    : "❌ Not a secret key",
+)
 
 export async function POST(request: NextRequest) {
   try {
