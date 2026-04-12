@@ -1,53 +1,70 @@
 "use client"
-import React, { useState } from "react"
-import { Dialog, DialogTrigger } from "@/components/ui/dialog"
+import { memo, useEffect } from "react"
+import { Dialog } from "@/components/ui/dialog"
 
-import { Button } from "@/components/ui/button"
-
-import { useBooking } from "../../providers/BookingProvider"
 import { useDialog } from "../../providers/DialogProvider"
-import { BookingType, initialBookingData } from "../../../types"
 import { getInternationalizedValue } from "../../../lib/utils"
-import BookingDialogContent from "../../providers/BookingDialogContent"
+import BookingDialogContent from "@/app/providers/BookingDialogContent"
+import BookingDialogTrigger from "../../../components/booking/BookingDialogTrigger"
+import { BookingType } from "../../../types"
+import { bookingEventBus } from "@/app/providers/BookingEventBus"
 
 const BookingDialog = ({
   bookingType,
   dialogOptions,
   dialogId,
   locale,
+  hideTrigger = false,
 }: {
-  bookingType: BookingType
+  bookingType?: BookingType
   dialogOptions: {
     title: string
     buttonText?: string
     buttonClassName?: string
+    buttonDataId?: string
   }
   locale: string
   dialogId?: string
+  hideTrigger?: boolean
 }) => {
-  const [open, setOpen] = useState(false)
-  const [paymentStep, setPaymentStep] = useState(false)
-
-  const { bookingData, setBookingData } = useBooking()
-  const { dialogData, setDialogId, isLoading } = useDialog()
+  const {
+    dialogData,
+    setDialogId,
+    currentBookingType,
+    isBookingDialogOpen,
+    activeDialogId,
+  } = useDialog()
 
   // Set dialog ID when component mounts
-  React.useEffect(() => {
-    setDialogId(dialogId || null)
+  useEffect(() => {
+    if (dialogId) {
+      setDialogId(dialogId)
+    }
   }, [dialogId, setDialogId])
 
-  const closeHandler = () => {
-    // Reset checkIn and checkOut dates when dialog is closed
-    setBookingData({
-      ...bookingData,
-      bookingDetails: {
-        ...bookingData.bookingDetails,
-        checkIn: initialBookingData.bookingDetails.checkIn,
-        checkOut: initialBookingData.bookingDetails.checkOut,
-      },
-    })
-    setOpen(!open)
-    setPaymentStep(false)
+  const handleOpenChange = (open: boolean) => {
+    const effectiveBookingType = bookingType ?? currentBookingType
+
+    if (!effectiveBookingType) return
+
+    if (open) {
+      bookingEventBus.emit({
+        type: "DIALOG_OPEN_REQUESTED",
+        payload: {
+          bookingType: effectiveBookingType,
+          dialogId,
+          source: "page",
+        },
+      })
+    } else {
+      bookingEventBus.emit({
+        type: "DIALOG_CLOSE_REQUESTED",
+        payload: {
+          bookingType: effectiveBookingType,
+          source: "page",
+        },
+      })
+    }
   }
 
   const buttonText =
@@ -55,29 +72,23 @@ const BookingDialog = ({
     getInternationalizedValue(dialogData?.cta, locale, "Reserve")
 
   return (
-    <Dialog open={open} onOpenChange={() => closeHandler()} key="order-dialog">
-      <DialogTrigger asChild>
-        <Button
-          name="booking-button"
-          size="lg"
+    <Dialog
+      open={isBookingDialogOpen && activeDialogId === dialogId}
+      onOpenChange={handleOpenChange}
+      key={dialogId}
+    >
+      {!hideTrigger && (
+        <BookingDialogTrigger
+          bookingType={bookingType ?? currentBookingType ?? "villa"}
+          buttonText={buttonText}
           className={dialogOptions.buttonClassName}
-          variant="secondary"
-          disabled={isLoading}
-        >
-          {buttonText}
-        </Button>
-      </DialogTrigger>
-      <BookingDialogContent
-        bookingData={bookingData}
-        title={dialogOptions.title}
-        paymentStep={paymentStep}
-        onBookingFormSubmit={() => setPaymentStep(true)}
-        onCancel={closeHandler}
-        bookingType={bookingType}
-        locale={locale}
-      />
+          dataId={dialogOptions.buttonDataId}
+          dialogId={dialogId}
+        />
+      )}
+      <BookingDialogContent title={dialogOptions.title} locale={locale} />
     </Dialog>
   )
 }
 
-export default BookingDialog
+export default memo(BookingDialog)

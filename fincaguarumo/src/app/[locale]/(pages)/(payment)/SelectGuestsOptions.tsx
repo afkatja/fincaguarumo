@@ -25,6 +25,7 @@ const SelectGuestsOptions = ({
 
   return (
     <SelectBox
+      selectTestId="select-guests"
       label={getInternationalizedValue(field?.guests, locale, "Guests")}
       placeholder={
         <div className="flex flex-col items-start">

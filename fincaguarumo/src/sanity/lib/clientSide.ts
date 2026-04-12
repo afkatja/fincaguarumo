@@ -7,11 +7,15 @@ export const clientSideClient = createClient({
   dataset,
   apiVersion,
   useCdn: true,
+  token: process.env.NEXT_PUBLIC_SANITY_API_READ_TOKEN,
   stega: {
     enabled: process.env.NEXT_PUBLIC_VERCEL_ENV === "preview",
     studioUrl: "/studio",
   },
 })
 
-export const clientSideFetch = async (query: string, params?: QueryParams) =>
-  await clientSideClient.fetch(query, params)
+export const clientSideFetch = async (
+  query: string,
+  params?: QueryParams,
+  revalidate: number = 0,
+) => await clientSideClient.fetch(query, params, { next: { revalidate } })

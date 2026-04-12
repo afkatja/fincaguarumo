@@ -3,7 +3,6 @@ import { PAGE_QUERY } from "../../../../sanity/lib/queries"
 import { PAGE_QUERY_RESULT } from "../../../../../sanity.types"
 
 import ContactPage from "./ContactPage"
-import Script from "next/script"
 
 const schema = {
   "@context": "https://schema.org",
@@ -63,14 +62,9 @@ const Contact = async ({ params }: { params: any }) => {
   return (
     <>
       <ContactPage locale={locale} content={content} people={people} />
-      <Script
-        id="json-ld"
-        strategy="afterInteractive"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(schema).replace(/</g, "\\u003c"),
-        }}
-      />
+      <script type="application/ld+json">
+        {JSON.stringify(schema).replace(/</g, "\\u003c")}
+      </script>
     </>
   )
 }

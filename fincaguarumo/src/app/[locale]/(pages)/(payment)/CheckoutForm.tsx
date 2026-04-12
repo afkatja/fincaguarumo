@@ -1,5 +1,5 @@
 "use client"
-import React, { FormEventHandler, useState } from "react"
+import { FormEventHandler, useState } from "react"
 import {
   PaymentElement,
   useStripe,
@@ -9,18 +9,20 @@ import {
 import { Button } from "@/components/ui/button"
 import Loading from "../loading"
 import Title from "@/components/Title"
-// import { useBooking } from "../../BookingProvider"
+import { useBookingCore } from "../../../providers/BookingCoreProvider"
 
 export default function CheckoutForm() {
   const stripe = useStripe()
   const checkout = useCheckout()
-
-  // const { bookingData } = useBooking()
+  const { state } = useBookingCore()
 
   const [message, setMessage] = useState<null | string | undefined>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isElementReady, setIsElementReady] = useState(false)
   const [isFormComplete, setIsFormComplete] = useState(false)
+
+  // Use Stripe's amount for consistency with currency selector and backend calculations
+  const displayAmount = checkout?.total?.total?.amount || 0
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async e => {
     e.preventDefault()
@@ -35,8 +37,6 @@ export default function CheckoutForm() {
 
     setMessage(null)
     setIsLoading(true)
-    // const result = await checkout.updateEmail(bookingData.customerDetails.email)
-    // if (result.type === "error") setMessage(result.error.message)
 
     try {
       const confirmResult = await checkout.confirm()
@@ -52,15 +52,15 @@ export default function CheckoutForm() {
     // layout: "accordion" as const,
   }
 
-  // const currency = bookingData.bookingDetails.currency?.toUpperCase() ?? "USD"
-  // const amount = Number(bookingData.bookingDetails.totalPrice || 0).toFixed(2)
-  // console.log(checkout.currencyOptions)
-
   return (
     <>
       <CurrencySelectorElement />
-      <Title title={`Pay ${checkout.total.total.amount} now`} />
-      <form id="payment-form" onSubmit={handleSubmit} className="flex flex-col">
+      <Title title={`Pay ${displayAmount} now`} titleClassName="my-4" />
+      <form
+        id="payment-form"
+        onSubmit={handleSubmit}
+        className="flex flex-col mt-4 min-h-[400px]"
+      >
         {message && (
           <p className="mb-4" aria-live="polite" role="status">
             {message}

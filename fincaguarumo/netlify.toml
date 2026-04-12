@@ -2,6 +2,19 @@
   command = "npm run build"
   publish = ".next"
 
+[build.environment]
+  # Production environment variables for RAG
+  # Set these in Netlify dashboard for production
+  NODE_VERSION = "20"
+
+# Production headers for SSE
+[[headers]]
+  for = "/api/semantic-rag/stream*"
+  [headers.values]
+    Cache-Control = "no-cache, no-transform"
+    Connection = "keep-alive"
+    X-Accel-Buffering = "no"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
@@ -12,17 +25,6 @@
   status = 301
   force = true
 
-[[redirects]]
-  from = "/villa-bruno"
-  to = "/stay"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/accommodation"
-  to = "/stay"
-  status = 301
-  force = true
 
 # Global headers
 [[headers]]

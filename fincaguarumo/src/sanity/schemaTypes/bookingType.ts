@@ -21,6 +21,42 @@ export const bookingType = defineType({
     },
     { name: "guestName", type: "string", title: "Guest Name" },
     {
+      name: "email",
+      type: "string",
+      title: "Email",
+      validation: (Rule: any) => Rule.optional().email(),
+    },
+    {
+      name: "phone",
+      type: "string",
+      title: "Phone Number",
+    },
+    {
+      name: "guests",
+      type: "number",
+      title: "Number of Guests",
+      validation: (Rule: any) => Rule.optional().min(1).max(20),
+    },
+    {
+      name: "totalPrice",
+      type: "number",
+      title: "Total Price",
+      description: "Total amount paid for the booking",
+    },
+    {
+      name: "currency",
+      type: "string",
+      title: "Currency",
+      options: {
+        list: [
+          { title: "USD", value: "usd" },
+          { title: "EUR", value: "eur" },
+          { title: "CRC", value: "crc" },
+        ],
+      },
+      initialValue: "usd",
+    },
+    {
       name: "source",
       type: "string",
       title: "Source",
@@ -30,6 +66,8 @@ export const bookingType = defineType({
           { title: "Airbnb", value: "airbnb" },
           { title: "Booking.com", value: "booking" },
           { title: "Expedia", value: "expedia" },
+          { title: "VRBO", value: "vrbo" },
+          { title: "Your Rentals", value: "yourrentals" },
         ],
         layout: "dropdown",
       },
@@ -41,6 +79,14 @@ export const bookingType = defineType({
       description:
         "Stable external id (e.g., Stripe object id) for idempotency.",
       validation: (Rule: any) => Rule.required(),
+    },
+    {
+      name: "syncedAt",
+      type: "datetime",
+      title: "Last Synced",
+      description:
+        "When this booking was last synchronized from external sources",
+      readOnly: true,
     },
   ],
 })

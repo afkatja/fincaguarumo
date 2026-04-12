@@ -1,5 +1,5 @@
 import { defineType, defineArrayMember } from "sanity"
-import { BookIcon, ImageIcon } from "@sanity/icons"
+import { BookIcon, ImageIcon, LinkIcon } from "@sanity/icons"
 
 /**
  * This is the schema type for block content used in the post document type
@@ -63,6 +63,7 @@ export const blockContentType = defineType({
             title: "internal link",
             name: "internalLink",
             type: "object",
+            icon: LinkIcon,
             fields: [
               {
                 name: "reference",

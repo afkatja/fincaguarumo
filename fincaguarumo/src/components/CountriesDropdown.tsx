@@ -28,7 +28,7 @@ const CountriesDropdown: React.FC<CountriesDropdownProps> =
   function CountriesDropdown({ name, onCountrySelect, countries }) {
     return (
       <DropdownInput
-        className="flex-[90px_0_0_auto] mr-2 my-1 mt-3"
+        className="flex-[90px_0_0_auto] mr-2 my-2"
         name={name}
         options={Object.values(countries).map(({ name, phone }) => {
           const code = getCountryCode(name) || name

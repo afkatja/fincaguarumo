@@ -73,6 +73,39 @@ export const faqType = defineType({
       },
       validation: Rule => Rule.required(),
     }),
+    defineField({
+      name: "priority",
+      title: "Priority",
+      type: "number",
+      description: "Higher numbers appear first in search results",
+      initialValue: 1,
+    }),
+    defineField({
+      name: "relatedQuestions",
+      title: "Related Questions",
+      type: "array",
+      of: [{ type: "reference", to: { type: "faq" } }],
+      description: "Other FAQs that might be relevant",
+    }),
+    defineField({
+      name: "intent",
+      title: "User Intent",
+      type: "string",
+      options: {
+        list: [
+          { title: "Booking", value: "booking" },
+          { title: "Pricing", value: "pricing" },
+          { title: "Payment", value: "payment" },
+          { title: "Cancellation", value: "cancellation" },
+          { title: "Amenities", value: "amenities" },
+          { title: "Logistics", value: "logistics" },
+          { title: "Property Info", value: "property_info" },
+          { title: "Local Area", value: "local_area" },
+          { title: "General", value: "general" },
+        ],
+      },
+      description: "Primary intent category for this FAQ",
+    }),
   ],
   preview: {
     select: {

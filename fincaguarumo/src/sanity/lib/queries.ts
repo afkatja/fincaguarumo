@@ -125,6 +125,16 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && (la
   body[]{
     ...,
     ${imageWithMetadata},
+    markDefs[] {
+        ...,
+        _type == "internalLink" => {
+          ...,
+          "reference": {
+            "slug": reference->slug,
+            "_type": reference->_type
+          }
+        }
+      },
     columnsBlock {
       columnCount,
       content[]{
@@ -151,7 +161,17 @@ export const PAGE_QUERY = groq`
     mainImage ${mainImageWithDimensions}, 
     body[]{
       ...,
-      ${imageWithMetadata}
+      ${imageWithMetadata},
+      markDefs[] {
+        ...,
+        _type == "internalLink" => {
+          ...,
+          "reference": {
+            "slug": reference->slug,
+            "_type": reference->_type
+          }
+        }
+      }
     }, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,
     slideshow->{ 
       "images": images[]${galleryImageProjection} 
@@ -178,7 +198,7 @@ export const PAGE_QUERY = groq`
   }
 `
 export const NAV_QUERY = groq`
-  *[_type == 'page' && language == $language && $category in categories[] -> title] {
+  *[(_type == 'page' || _type == 'accommodation') && language == $language && $category in categories[] -> title] {
     title, slug, language, isPublished,
     "translations": *[
       _type == "translation.metadata" && 
@@ -293,7 +313,20 @@ export const TOUR_QUERY = groq`
 
 export const ABOUT_QUERY = groq`
   *[_type == 'page' && slug.current == 'about' && language == $language][0] {
-    title, description, mainImage, body, language,
+    title, description, mainImage, body[] {
+      ...,
+      ${imageWithMetadata},
+      markDefs[] {
+      ...,
+      _type == "internalLink" => {
+        ...,
+        "reference": {
+          "slug": reference->slug,
+          "_type": reference->_type
+        }
+      }
+    }
+    }, language,
     "translations": *[
       _type == "translation.metadata" && 
       ^._id in translations[].value._ref
@@ -331,12 +364,15 @@ export const HOME_QUERY = groq`
       ...,
       ${imageWithMetadata},
       markDefs[] {
+      ...,
+      _type == "internalLink" => {
         ...,
-        _type == "internalLink" => {
-          ...,
-          "slug": @.reference-> slug
+        "reference": {
+          "slug": reference->slug,
+          "_type": reference->_type
         }
       }
+    }
     },
     'translations': *[
       _type == "translation.metadata" &&
@@ -403,11 +439,11 @@ export const BOOKINGS_QUERY = groq`*[
   _type == "booking" &&
   dateTime(checkOut) > dateTime(now()) &&
   !(_id in path("drafts.**"))
-]{
-  uid, checkIn, checkOut, guestName, source
+][]{
+  uid, checkIn, checkOut, guestName, source, email, phone, guests, totalPrice, currency, syncedAt
 }`
 
-export const REVIEWS_QUERY = groq`*[_type == "review"] | order(date desc){
+export const REVIEWS_QUERY = groq`*[_type == "review"][] | order(date desc){
   _id,
   platform,
   author,
@@ -416,3 +452,99 @@ export const REVIEWS_QUERY = groq`*[_type == "review"] | order(date desc){
   reviewText,
   photoUrl
 }`
+
+export const ACCOMMODATION_QUERY = groq`
+  *[_type == "accommodation" && slug.current == $slug && language == $language][0] {
+    title, subtitle, description,
+    summary,
+    mainImage ${mainImageMetadataOnly},
+    body[]{
+      ...,
+      ${imageWithMetadata}
+    }, 
+    language, 
+    slug, 
+    isPublished, 
+    showBookingOptions, 
+    showBookingDialog,
+    slideshow->{
+      "images": images[]${galleryImageProjection}
+    },
+    faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} }, 
+    capacity, 
+    bedrooms, 
+    bathrooms, 
+    propertyType, 
+    location, 
+    highlightFeatures,
+    checkInTime, 
+    checkOutTime,
+    amenities[]->{ title, description, icon },
+    'pricingRules': *[
+      _type == "accommodation" &&
+      language == "en" &&
+      slug.current == ^.slug.current
+      ][0].pricingRules[]-> { 
+        title, 
+        description, 
+        ruleType,
+        season,
+        startDate,
+        endDate,
+        basePrice,
+        percentage,
+        fixedAmount,
+        minimumNights,
+        isActive,
+        displayOrder,
+        language
+    },
+    paymentMethods[]->{ title, description, type },
+    cancellationPolicy->{ title, description, rules },
+    logistics[]->{ title, description, type },
+    "translations": coalesce(
+      *[_type == "translation.metadata" && ^._id in translations[].value._ref][0].translations[]{
+        ...(value->{
+          language,
+          title,
+          subtitle,
+          description,
+          slug,
+          body[]{
+            ...,
+            ${imageWithMetadata}
+          },
+          showBookingOptions,
+          showBookingDialog,
+          faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} },
+          capacity, 
+          bedrooms, 
+          bathrooms, 
+          propertyType, 
+          location, 
+          highlightFeatures,
+          checkInTime, 
+          checkOutTime
+        })
+      },
+      []
+    )
+  }
+`
+
+export const PRICING_RULES_QUERY = groq`*[_type == 'pricingRules' && _id in $rulesIds][] { 
+      title, 
+      description, 
+      ruleType,
+      season,
+      startDate,
+      endDate,
+      basePrice,
+      percentage,
+      fixedAmount,
+      minimumNights,
+      isActive,
+      displayOrder,
+      language
+    }
+    `

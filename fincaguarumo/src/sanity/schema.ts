@@ -18,10 +18,19 @@ import { reviewType } from "./schemaTypes/reviewType"
 import { imageType } from "./schemaTypes/imageType"
 import { artDirectedImageType } from "./schemaTypes/artDirectedImageType"
 import { columnsBlockType } from "./schemaTypes/columnsBlockType"
+import { amenitiesType } from "./schemaTypes/amenitiesType"
+import { pricingRulesType } from "./schemaTypes/pricingRulesType"
+import { paymentMethodsType } from "./schemaTypes/paymentMethodsType"
+import { cancellationPoliciesType } from "./schemaTypes/cancellationPoliciesType"
+import { logisticsType } from "./schemaTypes/logisticsType"
+import { propertyType } from "./schemaTypes/propertyType"
+import { accommodationType } from "./schemaTypes/accommodationType"
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     homeType,
+    propertyType,
+    accommodationType,
     blockContentType,
     categoryType,
     postType,
@@ -39,5 +48,10 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     imageType,
     artDirectedImageType,
     columnsBlockType,
+    amenitiesType,
+    pricingRulesType,
+    paymentMethodsType,
+    cancellationPoliciesType,
+    logisticsType,
   ],
 }

@@ -78,6 +78,11 @@ export const structure: StructureResolver = S => {
         .title("Pages")
         .child(getTranslationItems(S, "page", "Pages", "metadata")),
       S.listItem()
+        .title("Accommodations")
+        .child(
+          getTranslationItems(S, "accommodation", "Accommodations", "metadata"),
+        ),
+      S.listItem()
         .title("Tours")
         .child(getTranslationItems(S, "tour", "Tours", "metadata")),
       S.listItem()
@@ -95,6 +100,91 @@ export const structure: StructureResolver = S => {
       S.listItem()
         .title("FAQ")
         .child(getTranslationItems(S, "faq", "FAQ", "metadata")),
+
+      S.divider(),
+      // Booking and Property Management
+      S.listItem()
+        .title("Bookings")
+        .schemaType("booking")
+        .child(
+          S.documentList()
+            .title("Bookings")
+            .schemaType("booking")
+            .filter('_type == "booking"')
+            .apiVersion("v2025-02-19")
+            .defaultOrdering([{ field: "checkIn", direction: "desc" }]),
+        ),
+      S.listItem()
+        .title("Amenities")
+        .schemaType("amenities")
+        .child(
+          S.documentList()
+            .title("Amenities")
+            .schemaType("amenities")
+            .filter('_type == "amenities"')
+            .apiVersion("v2025-02-19"),
+        ),
+      S.listItem()
+        .title("Pricing Rules")
+        .schemaType("pricingRules")
+        .child(
+          S.documentList()
+            .title("Pricing Rules")
+            .schemaType("pricingRules")
+            .filter('_type == "pricingRules"')
+            .apiVersion("v2025-02-19"),
+        ),
+      S.listItem()
+        .title("Payment Methods")
+        .schemaType("paymentMethods")
+        .child(
+          S.documentList()
+            .title("Payment Methods")
+            .schemaType("paymentMethods")
+            .filter('_type == "paymentMethods"')
+            .apiVersion("v2025-02-19"),
+        ),
+      S.listItem()
+        .title("Cancellation Policies")
+        .schemaType("cancellationPolicies")
+        .child(
+          S.documentList()
+            .title("Cancellation Policies")
+            .schemaType("cancellationPolicies")
+            .filter('_type == "cancellationPolicies"')
+            .apiVersion("v2025-02-19"),
+        ),
+      S.listItem()
+        .title("Logistics")
+        .schemaType("logistics")
+        .child(
+          S.documentList()
+            .title("Logistics")
+            .schemaType("logistics")
+            .filter('_type == "logistics"')
+            .apiVersion("v2025-02-19"),
+        ),
+      S.listItem()
+        .title("Reviews")
+        .schemaType("review")
+        .child(
+          S.documentList()
+            .title("Reviews")
+            .schemaType("review")
+            .filter('_type == "review"')
+            .apiVersion("v2025-02-19")
+            .defaultOrdering([{ field: "date", direction: "desc" }]),
+        ),
+      S.listItem()
+        .title("Property types")
+        .schemaType("property")
+        .child(
+          S.documentList()
+            .title("Property types")
+            .schemaType("property")
+            .filter('_type == "property"')
+            .apiVersion("v2025-02-19"),
+        ),
 
       S.divider(),
       S.listItem()
@@ -119,6 +209,7 @@ export const structure: StructureResolver = S => {
         ),
       S.listItem()
         .title("FAQ Categories")
+        .schemaType("faqCategory")
         .child(
           getTranslationItems(S, "faqCategory", "FAQ categories", "metadata"),
         ),
@@ -158,6 +249,7 @@ export const defaultDocumentNode: DefaultDocumentNodeResolver = (
 ) => {
   switch (schemaType) {
     case "page":
+    case "accommodation":
     case "tour":
     case "post":
     case "faq":
@@ -165,6 +257,14 @@ export const defaultDocumentNode: DefaultDocumentNodeResolver = (
     case "category":
     case "author":
     case "dialog":
+    case "amenities":
+    case "pricingRules":
+    case "paymentMethods":
+    case "cancellationPolicies":
+    case "logistics":
+    case "booking":
+    case "review":
+    case "property":
       return S.document().views([
         S.view.form(),
         // preview(S, client)

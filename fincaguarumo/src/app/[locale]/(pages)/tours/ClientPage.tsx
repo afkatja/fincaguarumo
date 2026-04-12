@@ -22,7 +22,10 @@ const ClientPage = ({
   const part3 = tours.slice((tours.length / 3) * 2, tours.length)
 
   return (
-    <div className="overflow-y-hidden columns grid gap-5 grid-cols-1 md:grid-cols-3 items-start w-11/12 mx-auto relative">
+    <div
+      className="overflow-y-hidden columns grid gap-5 grid-cols-1 md:grid-cols-3 items-start w-11/12 mx-auto relative"
+      data-testid="tours-page"
+    >
       {!!part1.length && (
         <div className="column column-reverse flex flex-col md:py-2">
           {part1.map((tour: TourType) => {

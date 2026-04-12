@@ -4,6 +4,7 @@ import {
   parsePropertyDate,
   toUTCISOString,
 } from "./lib/dateUtils"
+import type { PricingRule } from "./lib/pricingEngine"
 
 export const BOOKING_TYPE = {
   tour: "tour",
@@ -40,33 +41,58 @@ const later = new Date(+today + 259200000)
 
 export const initialBookingData = {
   // type: "tour",
+  source: null as "page" | "external" | null,
   customerDetails: { name: "", email: "", phoneNumber: "" },
   bookingDetails: {
-    type: "tour",
+    type: "tour" as BookingType,
     title: "",
     description: "",
     duration: 0,
     location: "",
     body: "",
     date: tomorrow,
-    checkIn: tomorrow,
-    checkOut: later,
+    checkIn: null as Date | null,
+    checkOut: null as Date | null,
     guests: 1,
-    price: 0,
+    price: 0, // Legacy field for backward compatibility
+    basePrice: 0, // Base price for calculation (per-night for villa, per-person for tour)
     totalPrice: 0,
     currency: "usd",
     geo: { lat: 0, lng: 0 },
   },
+  pricingRules: [] as PricingRule[], // Dynamic pricing rules from Sanity CMS
 }
 
 type Serialize<T> = {
   [K in keyof T]: T[K] extends Date
-    ? string
+    ? string | null
     : T[K] extends object
       ? Serialize<T[K]>
       : T[K]
 }
-export type SerializedBookingData = Serialize<BookingData>
+
+export type SerializedBookingData = {
+  source: "global" | "page" | null
+  customerDetails: { name: string; email: string; phoneNumber: string }
+  bookingDetails: {
+    type: BookingType
+    title: string
+    description: string
+    duration: number
+    location: string
+    body: string
+    date: string | null
+    checkIn: string | null
+    checkOut: string | null
+    guests: number
+    price: number
+    basePrice: number
+    totalPrice: number
+    currency: string
+    geo: { lat: number; lng: number }
+  }
+  pricingRules: PricingRule[]
+}
 export type BookingData = typeof initialBookingData
 
 export function serializeBookingData(data: BookingData): SerializedBookingData {
@@ -75,10 +101,14 @@ export function serializeBookingData(data: BookingData): SerializedBookingData {
     bookingDetails: {
       ...data.bookingDetails,
       date: toUTCISOString(normalizeToNoon(data.bookingDetails.date)),
-      checkIn: toUTCISOString(normalizeToNoon(data.bookingDetails.checkIn)),
-      checkOut: toUTCISOString(normalizeToNoon(data.bookingDetails.checkOut)),
+      checkIn: data.bookingDetails.checkIn
+        ? toUTCISOString(normalizeToNoon(data.bookingDetails.checkIn))
+        : null,
+      checkOut: data.bookingDetails.checkOut
+        ? toUTCISOString(normalizeToNoon(data.bookingDetails.checkOut))
+        : null,
     },
-  }
+  } as SerializedBookingData
 }
 
 export function deserializeBookingData(
@@ -88,21 +118,28 @@ export function deserializeBookingData(
     ...data,
     bookingDetails: {
       ...data.bookingDetails,
-      date: parsePropertyDate(data.bookingDetails.date),
-      checkIn: parsePropertyDate(data.bookingDetails.checkIn),
-      checkOut: parsePropertyDate(data.bookingDetails.checkOut),
+      date: data.bookingDetails.date
+        ? parsePropertyDate(data.bookingDetails.date!)
+        : null,
+      checkIn: data.bookingDetails.checkIn
+        ? parsePropertyDate(data.bookingDetails.checkIn)
+        : null,
+      checkOut: data.bookingDetails.checkOut
+        ? parsePropertyDate(data.bookingDetails.checkOut)
+        : null,
       price: Number(data.bookingDetails.price),
       totalPrice: Number(data.bookingDetails.totalPrice),
       duration: Number(data.bookingDetails.duration),
       guests: Number(data.bookingDetails.guests),
     },
-  }
+  } as BookingData
 }
 
 // LocalStorage utilities that handle date conversion
 export function saveBookingDataToLocalStorage(data: BookingData): void {
   if (typeof window !== "undefined") {
     const serialized = serializeBookingData(data)
+
     localStorage.setItem("bookingData", JSON.stringify(serialized))
   }
 }

@@ -26,7 +26,10 @@
     "bookVilla": "Book your stay",
     "checkIn": "Check in",
     "checkOut": "Check out",
+    "checkinDate": "Check-in date",
     "checkoutDate": "Check-out date",
+    "selectDates": "Select dates to check availability",
+    "selectCheckInFirst": "Please select a check-in date first",
     "emailError": "Please enter a valid email address",
     "emailLabel": "Your email *",
     "guests": "Guests",
@@ -39,17 +42,57 @@
     "phoneError": "Please enter a valid phone number",
     "phoneLabel": "Your phone number *",
     "priceLabel": "Price (excl. VAT) for",
+    "priceSummary": "Price summary",
     "rateLabel": "Price (excl. VAT)",
+    "priceFrom": "Price starting from {price} for {guests} {guestsLabel}",
+    "priceFromShort": "for {guests} {guestsLabel}",
     "rateVATlabel": "Price (incl. 13% VAT)",
-    "discount10": "Discount (10% for stays 7+ nights)",
-    "discount20": "Discount (20% for stays 28+ nights)",
+    "vatLabel": "VAT 13%",
+    "totalWithoutVat": "Price (excl VAT) x {guests} {guestsLabel} x {nights}",
+    "totalVat": "VAT x {guests} {guestsLabel} x {nights}",
+    "totalWithVat": "Price (incl VAT) x {guests} {guestsLabel} x {nights}",
+    "discount10": "Discount ({discount}% for stays of 7+ nights)",
+    "discount20": "Discount ({discount}% for stays of 28+ nights)",
+    "totalDisplayedVilla": "Total for {nights} nights",
+    "totalDisplayedTour": "Total for {guests} {guestsLabel}",
     "reserveButton": "Book Villa Bruno now",
     "reserveButtonTour": "Book now",
-    "selectDate": "Select date"
+    "selectDate": "Select date",
+    "back": "Back",
+    "next": "Next",
+    "submitButton": "Submit Booking",
+    "available": "Available",
+    "notAvailable": "Not Available",
+    "availabilityError": "Error checking availability. Please try again.",
+    "checkingAvailability": "Checking availability...",
+    "stepPersonal": "Personal Info",
+    "paymentStepInfo": "You'll be redirected to a secure payment page to complete your booking",
+    "stepPayment": "Payment",
+    "chatHelpDates": "I can help you check availability and book your stay at Villa Bruno. Ask me about available dates, pricing, and any special requests you may have.",
+    "chatHelpPersonal": "I can help you with your booking details. Please provide your name, email, phone number, and any special requests.",
+    "chatHelpPayment": "I can help you with your payment details. Please provide your payment information.",
+    "stepDates": "Select Dates",
+    "loadingCalendar": "Loading calendar...",
+    "checkOutAfterCheckIn": "Check-out must be after check-in",
+    "paymentError": "Failed to initialize payment session. Please try again.",
+    "tryAgain": "Try Again"
   },
   "page": {
     "moreFAQ": "More FAQ",
-    "FAQ": "FAQ"
+    "FAQ": "FAQ",
+    "quickInfo": "Quick Info",
+    "reviews": "Reviews",
+    "about": "About",
+    "details": "Details",
+    "allReviews": "All Reviews",
+    "moreReviews": "More Reviews",
+    "more": "More",
+    "less": "Less",
+    "greetings": {
+      "homepage": "Welcome to Villa Bruno! How can I help you today?",
+      "stay": "Hi! I'm here to help you book {propertyTitle}. What would you like to know?",
+      "other": "Hello! How can I assist you today?"
+    }
   },
   "map": {
     "location": "Location"
@@ -70,5 +113,52 @@
     "messagePlaceholder": "message",
     "sending": "Sending...",
     "sendMessage": "Send Message"
+  },
+  "bookingChat": {
+    "title": "Villa Bruno Booking Assistant",
+    "initialMessage": "Hello! How can I help you book Villa Bruno today?",
+    "errorMessage": "Sorry, I encountered an error. Please try again.",
+    "inputPlaceholder": "Ask about booking...",
+    "sendButton": "Send"
+  },
+  "greetings": {
+    "homepage": "Welcome to Villa Bruno! How can I help you today?",
+    "stay": "Hi! I'm here to help you book {propertyTitle}. What would you like to know?",
+    "other": "Hello! How can I assist you today?"
+  },
+  "accommodation": {
+    "from": "From",
+    "person": "person",
+    "people": "people",
+    "type": "Type",
+    "bed": "bed",
+    "bath": "bath",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "capacity": "Capacity",
+    "guests": "guests",
+    "location": "Location",
+    "whatGuestsLoveMost": "What guests love most",
+    "aboutThisAccommodation": "About this accommodation",
+    "continueReading": "Continue reading to learn more about this unique eco-villa experience...",
+    "readMore": "Read more"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions"
+  },
+  "reviews": {
+    "title": "Guest Reviews",
+    "wildlifeNature": "Wildlife & Nature",
+    "ecoFriendly": "Eco-Friendly",
+    "peacefulSetting": "Peaceful Setting",
+    "beautifulClean": "Beautiful & Clean",
+    "greatLocation": "Great Location",
+    "excellentService": "Excellent Service",
+    "comfortable": "Comfortable",
+    "basedOnReviews": "Based on {count}+ reviews",
+    "whatGuestsLoveMost": "What guests love most",
+    "recentGuestComments": "Recent guest comments",
+    "guest": "Guest",
+    "readMoreReviews": "Read more reviews"
   }
 }

@@ -13,7 +13,7 @@ const ClientPage = () => {
       // onLoad={() => console.log("Maps API has loaded.")}
     >
       <PlaceProvider placeId={placeId}>
-        <PlaceReviews />
+        <PlaceReviews showMoreLink={false} />
       </PlaceProvider>
     </APIProvider>
   )

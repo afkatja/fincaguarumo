@@ -1,5 +1,4 @@
 "use client"
-import React, { Suspense } from "react"
 
 import BookingDialog from "./BookingDialog"
 
@@ -32,6 +31,7 @@ const DetailsPageLayout = ({
   dialogId?: string
 }) => {
   const { title, description, duration, location, price, body } = bookingDetails
+
   const t = useTranslations("booking")
   return (
     <>
@@ -88,7 +88,8 @@ const DetailsPageLayout = ({
                         ? t("reserveButtonTour")
                         : t("reserveButton", { defaultValue: "Book now" }),
                     buttonClassName: "ml-auto",
-                    title: t("reserveButton", { defaultValue: "Book now" }),
+                    title,
+                    buttonDataId: `booking-button-${bookingType}`,
                   }}
                   dialogId={dialogId}
                   locale={locale}

@@ -163,7 +163,7 @@ Incorrect responses:
 
 ## Important Pages
 - Homepage: https://fincaguarumo.com
-- Villa Bruno (Stay): https://fincaguarumo.com/stay
+- Villa Bruno (Accommodation): https://fincaguarumo.com/villa-bruno
 - About Us: https://fincaguarumo.com/about
 - FAQ: https://fincaguarumo.com/faq
 - Guest Reviews: https://fincaguarumo.com/reviews
@@ -194,4 +194,4 @@ Key differentiators: TRUE off-grid operation (not greenwashing), resident owners
 eco-lodge, sustainable tourism, off-grid living, vacation rental, Costa Rica, Osa Peninsula, Puerto Jiménez, Corcovado National Park, wildlife viewing, scarlet macaws, rainforest, solar power, eco-tourism, nature photography, birdwatching, remote work, digital nomad, farm stay, reforestation, conservation, authentic travel, sustainable travel, responsible tourism, jungle lodge, wildlife lodge, eco-villa
 
 ## Last Updated
-11/16/2025
+02/25/2026

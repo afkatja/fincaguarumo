@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import DatePicker from "./DatePicker"
 
 const BookingCalendar = ({
@@ -9,37 +10,70 @@ const BookingCalendar = ({
   },
   selectedDates,
   error,
+  onLoadingChange,
+  onBlockedDatesChange,
 }: {
   onSelectDate: (date: Date, type: string) => void
   labels: { checkinDate: string; checkoutDate: string }
-  selectedDates: { checkIn: Date; checkOut: Date }
+  selectedDates: { checkIn?: Date; checkOut?: Date }
   error?: string
+  onLoadingChange?: (loading: boolean) => void
+  onBlockedDatesChange?: (blockedDates: Date[]) => void
 }) => {
+  const t = useTranslations("booking")
   const [loading, setLoading] = useState(false)
   const [activePopover, setActivePopover] = useState<string | null>(null)
   const [blockedDates, setBlockedDates] = useState<Date[]>([])
 
+  // Update parent component when loading state changes
   useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(loading)
+    }
+  }, [loading, onLoadingChange])
+
+  // Update parent component when blocked dates change
+  useEffect(() => {
+    if (onBlockedDatesChange) {
+      onBlockedDatesChange(blockedDates)
+    }
+  }, [blockedDates, onBlockedDatesChange])
+
+  useEffect(() => {
+    if (blockedDates.length) return
     setLoading(true)
 
     const fetchData = async () => {
-      const data = await fetch("/api/ical/merged")
-      const json = await data.json()
+      try {
+        // Use the unified availability endpoint that matches the availability checking data
+        const data = await fetch("/api/availability/calendar")
+        const json = await data.json()
 
-      if (!json?.merged) return
+        if (!data.ok) {
+          console.error("Error fetching calendar availability:", json.error)
+          setBlockedDates([])
+          setLoading(false)
+          return
+        }
 
-      setBlockedDates(
-        json.merged.flatMap((d: Record<string, any>) =>
-          d.blocked.map((date: string) => new Date(date))
+        // Convert blocked dates from ISO strings to Date objects
+        const blockedDatesArray = (json.blockedDates || []).map(
+          (date: string) => new Date(date),
         )
-      )
-      setLoading(false)
+        setBlockedDates(blockedDatesArray)
+      } catch (error) {
+        console.error("Error fetching calendar availability:", error)
+        setBlockedDates([])
+      } finally {
+        setLoading(false)
+      }
     }
+
     fetchData()
-  }, [])
+  }, [blockedDates])
 
   return (
-    <>
+    <div data-testid="booking-calendar">
       <div className="space-y-2">
         {error && <div className="text-red-500 text-sm">{error}</div>}
       </div>
@@ -53,15 +87,17 @@ const BookingCalendar = ({
             setActivePopover(null)
           }}
           label={checkinDate}
-          selectedDate={selectedDates.checkIn}
+          selectedDate={selectedDates.checkIn || undefined}
           disabledDates={blockedDates}
           loading={loading}
+          defaultMonth={selectedDates.checkIn || new Date()}
+          triggerTestId="select-check-in"
         />
 
         <div className="md:ml-4 mt-4 md:mt-0">
           <DatePicker
             label={checkoutDate}
-            selectedDate={selectedDates.checkOut}
+            selectedDate={selectedDates.checkOut || undefined}
             isOpen={activePopover === "check-out"}
             onClose={() => setActivePopover(null)}
             onOpen={() => setActivePopover("check-out")}
@@ -72,10 +108,12 @@ const BookingCalendar = ({
             disabledDates={blockedDates}
             loading={loading}
             minDate={selectedDates.checkIn}
+            defaultMonth={selectedDates.checkIn || new Date()}
+            triggerTestId="select-check-out"
           />
         </div>
       </div>
-    </>
+    </div>
   )
 }
 

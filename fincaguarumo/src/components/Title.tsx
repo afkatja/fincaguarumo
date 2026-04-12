@@ -1,6 +1,7 @@
 import React, { useMemo } from "react"
 import Icon from "./Icon"
 import { headerIcons } from "./icons"
+import { cn } from "../lib/utils"
 
 interface ITitle {
   Heading?: React.ElementType<{
@@ -39,7 +40,7 @@ const Title = React.memo(
     }, [])
 
     return (
-      <Heading className={titleClassName} id={id}>
+      <Heading className={cn("text-guarumo-primary", titleClassName)} id={id}>
         {!!Object.keys(iconProp).length && (
           <Icon
             icon={iconTitle || icon}

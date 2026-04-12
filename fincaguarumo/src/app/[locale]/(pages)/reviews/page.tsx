@@ -1,8 +1,6 @@
-import React from "react"
 import Layout from "../pagesLayout"
 import { getTranslations } from "next-intl/server"
 import ClientPage from "./ClientPage"
-import Script from "next/script"
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
@@ -13,7 +11,7 @@ const jsonLd = {
 
   about: {
     "@type": "LodgingBusiness", // Use the type that fixed your main page error
-    "@id": "https://fincaguarumo.com/stay#unit", // Use the same @id as the main page
+    "@id": "https://fincaguarumo.com/villa-bruno#unit", // Use the same @id as the main page
     name: "Villa Bruno - Finca Guarumo",
   },
 
@@ -28,23 +26,14 @@ const jsonLd = {
 
 const page = async ({ params }: { params: any }) => {
   const { locale } = await params
-  const messages = await getTranslations()
+  const t = await getTranslations("reviews")
 
   return (
-    <Layout
-      locale={locale}
-      pageName="Reviews"
-      title={messages("reviews.title") ?? "Reviews"}
-    >
+    <Layout locale={locale} pageName="Reviews" title={t("title")}>
       <ClientPage />
-      <Script
-        id="json-ld-reviews-page"
-        strategy="afterInteractive"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
+      <script type="application/ld+json">
+        {JSON.stringify(jsonLd).replace(/</g, "\\u003c")}
+      </script>
     </Layout>
   )
 }
