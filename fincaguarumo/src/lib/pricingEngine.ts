@@ -21,6 +21,70 @@ export const EXTRA_GUEST_FEE = 20
 export const MAX_EXTRA_GUESTS = 4
 export const VAT_RATE = 0.13
 
+export function getVatRate(pricingRules: PricingRule[]): number {
+  return (
+    (pricingRules.find(rule => rule.ruleType === "tax")?.percentage || 0) / 100
+  )
+}
+
+export function getVatAmount({
+  pricingRules,
+  priceForPeople,
+  bookingType = BOOKING_TYPE.villa,
+  duration = 1,
+}: {
+  pricingRules: PricingRule[]
+  priceForPeople: number
+  bookingType?: BookingType
+  duration?: number
+}): number {
+  const vatRate = getVatRate(pricingRules)
+
+  if (bookingType === BOOKING_TYPE.tour) {
+    // Tour pricing: VAT on total price for all people
+    return priceForPeople * vatRate
+  } else {
+    // Villa pricing: VAT on price for people per night, multiplied by duration
+    return priceForPeople * duration * vatRate
+  }
+}
+
+export function getLowestPrice(pricingRules: PricingRule[]): number {
+  if (!pricingRules || pricingRules.length === 0) {
+    return 0
+  }
+
+  // Get all possible rates including base rates and seasonal rates
+  const allRates: number[] = []
+
+  // Add base rates
+  const baseRates = pricingRules
+    .filter(rule => rule.ruleType === "base_rate" && rule.basePrice)
+    .map(rule => rule.basePrice!)
+
+  allRates.push(...baseRates)
+
+  // Add seasonal rates
+  const seasonalRates = pricingRules
+    .filter(rule => rule.ruleType === "seasonal" && rule.basePrice)
+    .map(rule => rule.basePrice!)
+
+  allRates.push(...seasonalRates)
+
+  if (allRates.length === 0) {
+    return 0
+  }
+
+  const lowestRate = Math.min(...allRates)
+  const vatRate = getVatRate(pricingRules)
+
+  // Calculate for 1 guest, 1 night with VAT
+  const priceForPerson = lowestRate // No extra guest fees for 1 person
+  const priceWithVat = priceForPerson * (1 + vatRate)
+
+  return Math.floor(priceWithVat)
+}
+
 export function calculateEffectivePrice({
   pricingRules,
   guests,
@@ -69,16 +133,19 @@ export function calculateEffectivePrice({
   let priceForPeople: number
   let priceWithVat: number
 
+  // Ensure guests is a non-negative number
+  const safeGuests = Math.max(0, guests || 0)
+
   if (bookingType === BOOKING_TYPE.tour) {
     // Tour pricing: basePrice * guests + VAT (no extra guest fees)
-    priceForPeople = basePrice
-    priceWithVat = basePrice * (1 + VAT_RATE)
-    total = priceWithVat * guests
+    priceForPeople = basePrice * safeGuests
+    priceWithVat = priceForPeople * (1 + getVatRate(pricingRules))
+    total = priceWithVat
   } else {
     // Villa pricing: basePrice + extra guest fees + VAT
-    priceForPeople =
-      basePrice + Math.min(guests - 1, MAX_EXTRA_GUESTS) * EXTRA_GUEST_FEE
-    priceWithVat = priceForPeople * (1 + VAT_RATE)
+    const extraGuests = Math.max(0, Math.min(safeGuests - 1, MAX_EXTRA_GUESTS))
+    priceForPeople = basePrice + extraGuests * EXTRA_GUEST_FEE
+    priceWithVat = priceForPeople * (1 + getVatRate(pricingRules))
     total = priceWithVat * duration
   }
 
@@ -91,9 +158,9 @@ export function calculateEffectivePrice({
   }
 }
 
-function getDefaultBasePrice(pricingRules: PricingRule[]): number {
+export function getDefaultBasePrice(pricingRules: PricingRule[]): number {
   const baseRateRule = pricingRules.find(
-    rule => rule.ruleType === "base_rate" && rule.isActive && rule.basePrice,
+    rule => rule.ruleType === "base_rate" && rule.basePrice,
   )
 
   if (baseRateRule) {
@@ -112,14 +179,18 @@ function getSeasonalAdjustment(
   const seasonalRules = pricingRules.filter(
     rule =>
       rule.ruleType === "seasonal" &&
-      rule.isActive &&
       rule.basePrice && // Seasonal rules use basePrice, not percentage
       isDateInRange(checkInDate, rule.startDate, rule.endDate),
   )
 
   if (seasonalRules.length > 0) {
-    // Use the first matching seasonal rule (ordered by displayOrder)
-    const rule = seasonalRules[0]
+    // Use the first matching seasonal rule (sorted by displayOrder)
+    const sortedSeasonalRules = seasonalRules
+      .slice()
+      .sort(
+        (a, b) => (a.displayOrder ?? Infinity) - (b.displayOrder ?? Infinity),
+      )
+    const rule = sortedSeasonalRules[0]
     // Return the seasonal base price - this will override the default base price
     return rule.basePrice!
   }
@@ -135,7 +206,6 @@ function getDurationDiscount(
   const discountRules = pricingRules.filter(
     rule =>
       rule.ruleType === "discount" &&
-      rule.isActive &&
       rule.percentage &&
       (!rule.minimumNights || duration >= rule.minimumNights),
   )
@@ -162,7 +232,38 @@ function isDateInRange(
   const checkDate = new Date(date)
   const start = new Date(startDate)
   const end = new Date(endDate)
-  return checkDate >= start && checkDate <= end
+
+  // For recurring seasons, ignore year and only compare month and day
+  const checkMonth = checkDate.getMonth()
+  const checkDay = checkDate.getDate()
+  const startMonth = start.getMonth()
+  const startDay = start.getDate()
+  const endMonth = end.getMonth()
+  const endDay = end.getDate()
+
+  // If start and end are in the same month
+  if (startMonth === endMonth) {
+    return (
+      checkMonth === startMonth && checkDay >= startDay && checkDay <= endDay
+    )
+  }
+
+  // If season spans across year boundary (e.g., Dec 15 - Mar 15)
+  if (startMonth > endMonth) {
+    return (
+      (checkMonth === startMonth && checkDay >= startDay) ||
+      (checkMonth === endMonth && checkDay <= endDay) ||
+      checkMonth > startMonth ||
+      checkMonth < endMonth
+    )
+  }
+
+  // Normal case: season within same year (e.g., Mar 15 - Jun 15)
+  return (
+    (checkMonth === startMonth && checkDay >= startDay) ||
+    (checkMonth === endMonth && checkDay <= endDay) ||
+    (checkMonth > startMonth && checkMonth < endMonth)
+  )
 }
 
 // Backward compatibility function for existing calculateTotal

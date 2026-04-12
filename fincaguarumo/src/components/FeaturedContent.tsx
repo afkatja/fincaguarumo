@@ -3,6 +3,7 @@ import Title from "./Title"
 import Icon from "./Icon"
 import { createNavigation } from "next-intl/navigation"
 import FadeInObserver from "./FadeInObserver"
+import { useTranslations } from "next-intl"
 
 const FeaturedContent = ({
   featuredContentTitle,
@@ -14,6 +15,7 @@ const FeaturedContent = ({
   href: string
 }) => {
   const { Link } = createNavigation()
+  const t = useTranslations("cards")
   return (
     <article className="relative z-10">
       <div className="w-11/12 mx-auto py-5 lg:px-40">
@@ -34,6 +36,7 @@ const FeaturedContent = ({
                 href={href}
                 className="flex flex-wrap items-center justify-center h-full group no-underline"
               >
+                <span className="mr-2">{t("readMore")}</span>
                 <Icon
                   icon="ArrowRight"
                   className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"

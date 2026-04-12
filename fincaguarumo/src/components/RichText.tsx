@@ -91,7 +91,7 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
         attribution={{
           author: value.author,
           caption: value.caption,
-          sourceUrl: value.sourceUrl || value.url,
+          sourceUrl: value.sourceUrl,
         }}
       />
     ),
@@ -100,11 +100,21 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
 
   marks: {
     internalLink: ({ value, children }) => {
-      if (!value?.slug?.current) return <>{children}</>
+      if (!value?.reference?.slug?.current) return <>{children}</>
+
+      // Build path based on content type
+      // For 'page' type, use the slug directly (already the default)
+      let href = value.reference.slug.current
+      if (value.reference._type === "post") {
+        href = `/blog/${value.reference.slug.current}`
+      } else if (value.reference._type === "tour") {
+        href = `/tours/${value.reference.slug.current}`
+      }
+
       return (
         <IntlLink
-          href={value.slug.current}
-          className="fancy-underline dark:text-zinc-100"
+          href={href}
+          className="fancy-underline text-guarumo-primary hover:text-guarumo-secondary dark:text-zinc-100"
         >
           {children}
         </IntlLink>

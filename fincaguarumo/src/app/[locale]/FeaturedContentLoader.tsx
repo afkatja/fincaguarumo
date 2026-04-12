@@ -9,18 +9,15 @@ import {
   FEATURED_TOURS_QUERY,
 } from "../../sanity/lib/queries"
 
-const sanityFetcher = (query: string, params?: any) =>
-  clientSideFetch(query, params)
-
 export default function FeaturedContentLoader({ locale }: { locale: string }) {
   const { data: tours } = useSWR(
     [FEATURED_TOURS_QUERY, { language: locale }],
-    ([query, params]) => sanityFetcher(query, params)
+    ([query, params]) => clientSideFetch(query, params),
   )
 
   const { data: posts } = useSWR(
     [FEATURED_POSTS_QUERY, { category: "featured", language: locale }],
-    ([query, params]) => sanityFetcher(query, params)
+    ([query, params]) => clientSideFetch(query, params),
   )
 
   if (!tours && !posts) return null

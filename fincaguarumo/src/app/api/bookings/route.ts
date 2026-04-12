@@ -1,17 +1,47 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { verifyAdminAuth, verifyUserAuth } from "@/lib/auth"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+// Helper function to create authenticated Supabase client
+function createAuthenticatedSupabaseClient(request: Request) {
+  const authHeader = request.headers.get("authorization")
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error("Missing or invalid authorization header")
+  }
+  const token = authHeader.substring(7)
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  })
+}
 
 /**
  * POST: Create a new booking
  * Also updates the availability table to mark dates as unavailable
+ * Requires authentication and authorization
  */
 export async function POST(request: Request) {
   try {
+    // Verify user authentication
+    const authUser = await verifyUserAuth(request)
+
+    // Create authenticated Supabase client
+    const supabase = createAuthenticatedSupabaseClient(request)
+
     const bookingData = await request.json()
+
+    // Authorization: Users can only create bookings for themselves, admins can create for anyone
+    if (!authUser.is_admin && bookingData.uid !== authUser.id) {
+      const error = new Error("You can only create bookings for yourself")
+      ;(error as any).status = 403
+      throw error
+    }
 
     // Insert booking data into Supabase with all required fields
     // Note: Using snake_case column names as they exist in the database
@@ -81,8 +111,17 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(data)
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in POST /api/bookings:", error)
+
+    // Handle authentication errors with proper status codes
+    if (error.status) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      )
+    }
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },
@@ -93,16 +132,37 @@ export async function POST(request: Request) {
 /**
  * GET: Fetch all bookings
  * Supports filtering by date range and source
+ * Requires admin authentication to prevent PII exposure
  */
 export async function GET(request: Request) {
   try {
+    // Verify admin authentication before accessing booking data
+    await verifyAdminAuth(request)
+
+    // Create authenticated Supabase client
+    const supabase = createAuthenticatedSupabaseClient(request)
+
     const { searchParams } = new URL(request.url)
     const from = searchParams.get("from")
     const to = searchParams.get("to")
     const source = searchParams.get("source")
     const limit = searchParams.get("limit")
 
-    let query = supabase.from("bookings").select("*")
+    // Only select non-sensitive fields to prevent PII exposure
+    let query = supabase.from("bookings").select(`
+      id,
+      uid,
+      check_in,
+      check_out,
+      guests,
+      booking_type,
+      total_price,
+      currency,
+      source,
+      status,
+      created_at,
+      updated_at
+    `)
 
     // Filter by date range if provided
     if (from) {
@@ -119,7 +179,19 @@ export async function GET(request: Request) {
 
     // Apply limit if provided
     if (limit) {
-      query = query.limit(parseInt(limit, 10))
+      const parsedLimit = parseInt(limit, 10)
+      if (
+        !Number.isNaN(parsedLimit) &&
+        Number.isInteger(parsedLimit) &&
+        parsedLimit > 0
+      ) {
+        query = query.limit(parsedLimit)
+      } else {
+        return NextResponse.json(
+          { error: "Invalid 'limit' parameter. Must be a positive integer." },
+          { status: 400 },
+        )
+      }
     }
 
     // Order by check_in date
@@ -133,8 +205,17 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(data)
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in GET /api/bookings:", error)
+
+    // Handle authentication errors with proper status codes
+    if (error.status) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      )
+    }
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },
@@ -144,9 +225,16 @@ export async function GET(request: Request) {
 
 /**
  * PUT: Update an existing booking
+ * Requires authentication and authorization
  */
 export async function PUT(request: Request) {
   try {
+    // Verify user authentication
+    const authUser = await verifyUserAuth(request)
+
+    // Create authenticated Supabase client
+    const supabase = createAuthenticatedSupabaseClient(request)
+
     const { id, ...updateData } = await request.json()
 
     if (!id) {
@@ -154,6 +242,24 @@ export async function PUT(request: Request) {
         { error: "Booking id is required" },
         { status: 400 },
       )
+    }
+
+    // Get the existing booking to check ownership
+    const { data: existingBooking, error: fetchError } = await supabase
+      .from("bookings")
+      .select("uid")
+      .eq("id", id)
+      .single()
+
+    if (fetchError || !existingBooking) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 })
+    }
+
+    // Authorization: Users can only update their own bookings, admins can update any
+    if (!authUser.is_admin && existingBooking.uid !== authUser.id) {
+      const error = new Error("You can only update your own bookings")
+      ;(error as any).status = 403
+      throw error
     }
 
     const updateRecord: any = {}
@@ -186,8 +292,17 @@ export async function PUT(request: Request) {
     }
 
     return NextResponse.json(data)
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in PUT /api/bookings:", error)
+
+    // Handle authentication errors with proper status codes
+    if (error.status) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      )
+    }
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },
@@ -198,9 +313,16 @@ export async function PUT(request: Request) {
 /**
  * DELETE: Delete a booking
  * Also removes the corresponding availability entry
+ * Requires authentication and authorization
  */
 export async function DELETE(request: Request) {
   try {
+    // Verify user authentication
+    const authUser = await verifyUserAuth(request)
+
+    // Create authenticated Supabase client
+    const supabase = createAuthenticatedSupabaseClient(request)
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
     const uid = searchParams.get("uid")
@@ -212,18 +334,31 @@ export async function DELETE(request: Request) {
       )
     }
 
-    // First get the booking to find the uid
+    // First get the booking to find the uid and check ownership
     let bookingUid = uid
-    if (id && !uid) {
-      const { data: booking } = await supabase
+    if (id) {
+      // Always fetch from database when id is provided, never trust incoming uid
+      const { data: booking, error: fetchError } = await supabase
         .from("bookings")
         .select("uid")
         .eq("id", id)
         .single()
 
-      if (booking) {
-        bookingUid = booking.uid
+      if (fetchError || !booking) {
+        return NextResponse.json(
+          { error: "Booking not found" },
+          { status: 404 },
+        )
       }
+
+      bookingUid = booking.uid
+    }
+
+    // Authorization: Users can only delete their own bookings, admins can delete any
+    if (!authUser.is_admin && bookingUid !== authUser.id) {
+      const error = new Error("You can only delete your own bookings")
+      ;(error as any).status = 403
+      throw error
     }
 
     // Delete the booking
@@ -254,8 +389,17 @@ export async function DELETE(request: Request) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in DELETE /api/bookings:", error)
+
+    // Handle authentication errors with proper status codes
+    if (error.status) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      )
+    }
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },

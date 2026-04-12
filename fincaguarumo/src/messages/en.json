@@ -28,6 +28,8 @@
     "checkOut": "Check out",
     "checkinDate": "Check-in date",
     "checkoutDate": "Check-out date",
+    "selectDates": "Select dates to check availability",
+    "selectCheckInFirst": "Please select a check-in date first",
     "emailError": "Please enter a valid email address",
     "emailLabel": "Your email *",
     "guests": "Guests",
@@ -43,9 +45,16 @@
     "priceSummary": "Price summary",
     "rateLabel": "Price (excl. VAT)",
     "priceFrom": "Price starting from {price} for {guests} {guestsLabel}",
+    "priceFromShort": "for {guests} {guestsLabel}",
     "rateVATlabel": "Price (incl. 13% VAT)",
+    "vatLabel": "VAT 13%",
+    "totalWithoutVat": "Price (excl VAT) x {guests} {guestsLabel} x {nights}",
+    "totalVat": "VAT x {guests} {guestsLabel} x {nights}",
+    "totalWithVat": "Price (incl VAT) x {guests} {guestsLabel} x {nights}",
     "discount10": "Discount ({discount}% for stays of 7+ nights)",
     "discount20": "Discount ({discount}% for stays of 28+ nights)",
+    "totalDisplayedVilla": "Total for {nights} nights",
+    "totalDisplayedTour": "Total for {guests} {guestsLabel}",
     "reserveButton": "Book Villa Bruno now",
     "reserveButtonTour": "Book now",
     "selectDate": "Select date",
@@ -63,7 +72,10 @@
     "chatHelpPersonal": "I can help you with your booking details. Please provide your name, email, phone number, and any special requests.",
     "chatHelpPayment": "I can help you with your payment details. Please provide your payment information.",
     "stepDates": "Select Dates",
-    "loadingCalendar": "Loading calendar..."
+    "loadingCalendar": "Loading calendar...",
+    "checkOutAfterCheckIn": "Check-out must be after check-in",
+    "paymentError": "Failed to initialize payment session. Please try again.",
+    "tryAgain": "Try Again"
   },
   "page": {
     "moreFAQ": "More FAQ",
@@ -131,7 +143,11 @@
     "continueReading": "Continue reading to learn more about this unique eco-villa experience...",
     "readMore": "Read more"
   },
+  "faq": {
+    "title": "Frequently Asked Questions"
+  },
   "reviews": {
+    "title": "Guest Reviews",
     "wildlifeNature": "Wildlife & Nature",
     "ecoFriendly": "Eco-Friendly",
     "peacefulSetting": "Peaceful Setting",
@@ -139,7 +155,7 @@
     "greatLocation": "Great Location",
     "excellentService": "Excellent Service",
     "comfortable": "Comfortable",
-    "basedOnReviews": "Based on {count} reviews",
+    "basedOnReviews": "Based on {count}+ reviews",
     "whatGuestsLoveMost": "What guests love most",
     "recentGuestComments": "Recent guest comments",
     "guest": "Guest",

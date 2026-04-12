@@ -1,16 +1,13 @@
 "use client"
 import { useTranslations } from "next-intl"
-import { Button } from "./ui/button"
 import { usePathname } from "next/navigation"
-import { useDialog } from "@/app/providers/DialogProvider"
-import { useBooking } from "@/app/providers/BookingProvider"
+import BookingDialogTrigger from "./booking/BookingDialogTrigger"
 import { BOOKING_TYPE } from "@/types"
+import { Link } from "../navigation"
 
 const HeaderBookButton = () => {
   const t = useTranslations("booking")
   const pathname = usePathname()
-  const { openBookingDialog } = useDialog()
-  const { setBookingData } = useBooking()
 
   if (
     pathname.includes("/villa-bruno") ||
@@ -19,32 +16,23 @@ const HeaderBookButton = () => {
   )
     return null
 
-  const handleBookNow = () => {
-    // Set default booking data for villa booking
-    setBookingData(prev => ({
-      ...prev,
-      bookingDetails: {
-        ...prev.bookingDetails,
-        type: BOOKING_TYPE.villa,
-        title: "Villa Bruno",
-        description: "Book your stay at Villa Bruno",
-        price: 150, // Default price per night
-      },
-    }))
-    // Open the booking dialog
-    openBookingDialog()
-  }
+  if (pathname.includes("/tours"))
+    return (
+      <Link
+        href="/villa-bruno"
+        className="h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:translate-y-[-2px] hover:shadow-md cursor-pointer bg-secondary text-primary-foreground hover:bg-secondary/80"
+      >
+        {t("reserveButton", { defaultValue: "Book Villa Bruno now" })}
+      </Link>
+    )
 
   return (
-    <Button
-      name="booking-button"
-      size="lg"
+    <BookingDialogTrigger
+      bookingType={BOOKING_TYPE.villa}
+      buttonText={t("reserveButton", { defaultValue: "Book Villa Bruno now" })}
       className=""
-      variant="secondary"
-      onClick={handleBookNow}
-    >
-      {t("reserveButton", { defaultValue: "Book Villa Bruno now" })}
-    </Button>
+      dialogId="global"
+    />
   )
 }
 

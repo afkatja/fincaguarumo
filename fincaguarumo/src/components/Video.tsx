@@ -43,7 +43,7 @@ const Video = ({
   critical?: boolean
   [prop: string]: any
 }) => {
-  const ref = useRef(null)
+  const ref = useRef<HTMLVideoElement>(null)
   const [showVideo, setShowVideo] = useState(false)
   const [videoVisible, setVideoVisible] = useState(false)
   const rIC = (cb: FrameRequestCallback) =>
@@ -73,6 +73,9 @@ const Video = ({
     if (vid && autoPlay && showVideo) {
       const observer = playPauseVideo(vid)
       return () => observer.disconnect()
+    } else if (vid && !autoPlay) {
+      // Explicitly pause the video when autoPlay becomes false
+      vid.pause()
     }
   }, [autoPlay, showVideo])
 

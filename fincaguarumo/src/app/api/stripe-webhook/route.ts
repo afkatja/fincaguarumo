@@ -1,15 +1,27 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
-import { sendConfirmationEmail } from "@/lib/sendConfirmationEmail"
-import { setBookings } from "../../../lib/setBookings"
-import { sendErrorEmail } from "../../../lib/sendErrorEmail"
-import { parsePropertyDate, formatForEmail } from "../../../lib/dateUtils"
+import {
+  sendBookingConfirmationEmail,
+  saveBookingToSanity,
+  saveBookingToSupabase,
+  updateAvailability,
+  notifyPartialFailure,
+  extractBookingDetails,
+  type CustomerDetails,
+  type BookingDetails,
+} from "./bookingHandlers"
+import { sendErrorEmail } from "@/lib/sendErrorEmail"
+import { createSupabaseAdmin } from "@/lib/auth"
+import { executeWithIndividualRetries } from "@/lib/monitoring"
+import { RETRY_CONFIG } from "@/lib/monitoring/config"
 
 export const runtime = "nodejs"
 
 export async function POST(request: NextRequest) {
-  console.log("WEBHOOK RECEIVED")
+  console.log("WEBHOOK RECEIVED - START")
+
   if (!process.env.STRIPE_API_KEY) {
+    console.error("ERROR: Stripe API key not configured")
     return NextResponse.json(
       { error: "Stripe API key not configured" },
       { status: 500 },
@@ -32,10 +44,6 @@ export async function POST(request: NextRequest) {
   }
   const stripeInstance = new Stripe(process.env.STRIPE_API_KEY)
 
-  console.error("Webhook secrets?", {
-    stripeKey: !!process.env.STRIPE_SECRET_KEY,
-    webhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
-  })
   const endpointSecret =
     process.env.NODE_ENV === "development"
       ? process.env.STRIPE_WEBHOOK_SECRET_LOCAL
@@ -65,7 +73,7 @@ export async function POST(request: NextRequest) {
       endpointSecret,
     )
   } catch (err: any) {
-    console.log(`⚠️  Webhook signature verification failed.`, err.message)
+    console.error(`⚠️  Webhook signature verification failed.`, err.message)
     return NextResponse.json(
       { error: "Webhook failed", details: err.message },
       { status: 400 },
@@ -78,188 +86,160 @@ export async function POST(request: NextRequest) {
       case "checkout.session.completed": {
         const { id, metadata } = event.data.object
         console.log(`Checkout session completed: ${id}`)
-        const customerDetails = {
+
+        // Extract booking details from metadata
+        const customerDetails: CustomerDetails = {
           name: metadata?.customerName || "",
           email: metadata?.customerEmail || "",
           phoneNumber: metadata?.customerPhone || "",
         }
-        const bookingDetails = {
-          type: metadata?.type || "",
-          title: metadata?.title || "",
-          description: metadata?.description || "",
-          duration: Number(metadata?.duration) || 0,
-          location: metadata?.location || "",
-          body: metadata?.body || "",
-          date: parsePropertyDate(metadata?.date || ""),
-          checkIn: parsePropertyDate(metadata?.checkIn || ""),
-          checkOut: parsePropertyDate(metadata?.checkOut || ""),
-          price: Number(metadata?.price) || 0,
-          basePrice: Number(metadata?.price) || 0, // Use price as basePrice for webhook
-          totalPrice: (metadata?.totalPrice as unknown as number) || 0,
-          currency: metadata?.currency || "USD",
-          guests: Number(metadata?.guests) || 0,
-          geo: metadata?.geo ? JSON.parse(metadata.geo) : {},
-        }
 
-        // Send confirmation email - continue even if fails
-        try {
-          if (process.env.NODE_ENV === "production") {
-            const response = await sendConfirmationEmail({
-              customerDetails,
-              bookingDetails,
-              pricingRules: [], // Webhook doesn't need pricingRules, but it's required by BookingData type
-            })
-            console.log("Confirmation email sent successfully.", response)
-          } else {
-            console.log("Skipping email in development mode", {
-              customerDetails,
-              bookingDetails,
-            })
-          }
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error)
-          console.error("Failed to send confirmation email:", error)
-          await sendErrorEmail({
-            subject: "Failed to Send Booking Confirmation Email",
-            error: "Email sending failed",
-            details: `Session ID: ${id}, Customer: ${customerDetails.email}, Error: ${errorMessage}`,
-          })
-        }
+        const bookingDetails = extractBookingDetails(metadata)
 
-        // Create booking - continue even if fails
-        try {
-          // Save to Sanity with all details
-          const bookingResponse = await setBookings({
+        // Validate dates before proceeding
+        const checkInValid =
+          bookingDetails.checkIn && !isNaN(bookingDetails.checkIn.getTime())
+        const checkOutValid =
+          bookingDetails.checkOut && !isNaN(bookingDetails.checkOut.getTime())
+
+        if (!checkInValid || !checkOutValid) {
+          console.error("Invalid dates in booking details:", {
             checkIn: bookingDetails.checkIn,
             checkOut: bookingDetails.checkOut,
-            guestName: customerDetails.name,
-            source: "direct",
-            uid: event.data.object.id,
-            email: customerDetails.email,
-            phone: customerDetails.phoneNumber,
-            guests: bookingDetails.guests,
-            totalPrice: bookingDetails.totalPrice,
-            currency: bookingDetails.currency,
+            checkInValid,
+            checkOutValid,
+            metadata: {
+              checkIn: metadata?.checkIn,
+              checkOut: metadata?.checkOut,
+            },
           })
-          console.log(
-            "Booking created in Sanity successfully.",
-            bookingResponse,
+          await sendErrorEmail({
+            subject: "Invalid Dates in Booking Webhook",
+            error: "Date parsing failed",
+            details: `Session ID: ${id}, Customer: ${customerDetails.email}, Invalid dates - Check-in: ${metadata?.checkIn}, Check-out: ${metadata?.checkOut}`,
+          })
+          return NextResponse.json(
+            { error: "Invalid booking dates" },
+            { status: 400 },
           )
-
-          // Save to Supabase with all required fields
-          try {
-            const siteUrl =
-              process.env.NEXT_PUBLIC_SITE_URL ||
-              (process.env.VERCEL_URL
-                ? `https://${process.env.VERCEL_URL}`
-                : "http://localhost:3000")
-
-            const supabaseResponse = await fetch(`${siteUrl}/api/bookings`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                checkIn: bookingDetails.checkIn.toISOString(),
-                checkOut: bookingDetails.checkOut.toISOString(),
-                guestName: customerDetails.name,
-                email: customerDetails.email,
-                phone: customerDetails.phoneNumber,
-                source: "direct",
-                uid: event.data.object.id,
-                guests: bookingDetails.guests,
-                bookingType: bookingDetails.type,
-                totalPrice: bookingDetails.totalPrice,
-                currency: bookingDetails.currency,
-              }),
-            })
-
-            if (supabaseResponse.ok) {
-              console.log("Booking saved to Supabase successfully")
-
-              // Also update availability table to mark dates as unavailable
-              try {
-                const availabilityResponse = await fetch(
-                  `${siteUrl}/api/availability`,
-                  {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      startDate: bookingDetails.checkIn.toISOString(),
-                      endDate: bookingDetails.checkOut.toISOString(),
-                      isAvailable: false,
-                      reason: `Booked via Direct - ${customerDetails.name}`,
-                      bookingUid: event.data.object.id,
-                    }),
-                  },
-                )
-
-                if (availabilityResponse.ok) {
-                  console.log("Availability updated successfully")
-                } else {
-                  console.error("Failed to update availability")
-                }
-              } catch (availabilityError) {
-                console.error("Error updating availability:", availabilityError)
-              }
-            } else {
-              const errorData = await supabaseResponse.json().catch(() => ({}))
-              console.error("Failed to save booking to Supabase:", errorData)
-            }
-          } catch (supabaseError) {
-            console.error("Error saving booking to Supabase:", supabaseError)
-          }
-
-          // Send success notification
-          const checkInFormatted = isNaN(bookingDetails.checkIn.getTime())
-            ? "TBD"
-            : formatForEmail(bookingDetails.checkIn)
-          const checkOutFormatted = isNaN(bookingDetails.checkOut.getTime())
-            ? "TBD"
-            : formatForEmail(bookingDetails.checkOut)
-          await sendErrorEmail({
-            subject: "New Booking Successfully Created",
-            error: "Booking successful",
-            details: `Session ID: ${id}, Customer: ${customerDetails.name} (${customerDetails.email}), Check-in: ${checkInFormatted}, Check-out: ${checkOutFormatted}`,
-          })
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error)
-          console.error("Failed to create booking in Sanity:", error)
-          await sendErrorEmail({
-            subject: "Failed to Create Booking in Sanity",
-            error: "Booking creation failed",
-            details: `Session ID: ${id}, Customer: ${customerDetails.email}, Error: ${errorMessage}`,
-          })
         }
-        break
-      }
-      case "payment_intent.succeeded": {
-        const paymentIntent = event.data.object
-        console.log(`PaymentIntent for ${paymentIntent.amount} was successful!`)
-        // TODO: Handle successful payment intent (e.g., update booking/payment status)
-        break
-      }
-      case "payment_intent.payment_failed": {
-        const paymentIntent = event.data.object
-        console.log(`PaymentIntent for ${paymentIntent.amount} failed.`)
-        // TODO: Handle failed payment (e.g., notify user, update booking/payment status)
+
+        // Execute all operations with individual retry logic
+        const operations = [
+          {
+            name: "send-confirmation-email",
+            fn: () =>
+              sendBookingConfirmationEmail(customerDetails, bookingDetails),
+            config: RETRY_CONFIG.email,
+          },
+          {
+            name: "save-booking-to-sanity",
+            fn: () => saveBookingToSanity(customerDetails, bookingDetails, id),
+            config: RETRY_CONFIG.sanity,
+          },
+          {
+            name: "save-booking-to-supabase",
+            fn: () =>
+              saveBookingToSupabase(customerDetails, bookingDetails, id),
+            config: RETRY_CONFIG.supabase,
+          },
+          {
+            name: "update-availability",
+            fn: () =>
+              updateAvailability(bookingDetails, id, customerDetails.name),
+            config: RETRY_CONFIG.availability,
+          },
+        ]
+
+        const results = await executeWithIndividualRetries(operations)
+
+        // Log results and handle failures
+        const failedOperations: string[] = []
+        const successOperations: string[] = []
+
+        results.forEach(({ name, result }) => {
+          if (result.success) {
+            successOperations.push(name)
+            console.log(`✅ ${name} completed successfully`)
+          } else {
+            failedOperations.push(name)
+            console.error(
+              `❌ ${name} failed after ${result.attempts} attempts: ${result.error?.message}`,
+            )
+          }
+        })
+
+        // If any operations failed, send admin notification
+        if (failedOperations.length > 0) {
+          await notifyPartialFailure(
+            id,
+            customerDetails,
+            bookingDetails,
+            failedOperations.map((op: string) =>
+              op
+                .replace(/-/g, " ")
+                .replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            ),
+          )
+        }
+
+        console.log(
+          `🎯 Webhook processing complete: ${successOperations.length} succeeded, ${failedOperations.length} failed`,
+        )
         break
       }
       case "checkout.session.expired": {
-        const session = event.data.object
+        const session = event.data.object as Stripe.Checkout.Session
         console.log(`Checkout session expired: ${session.id}`)
-        // TODO: Handle expired session (e.g., release reserved resources, notify user)
-        break
-      }
-      case "payment_method.attached": {
-        // const paymentMethod = event.data.object
-        // Then define and call a method to handle the successful attachment of a PaymentMethod.
-        // handlePaymentMethodAttached(paymentMethod);
-        break
+
+        // Extract booking metadata from expired session
+        const { metadata } = session
+        if (metadata?.checkIn && metadata?.checkOut) {
+          try {
+            const supabaseAdmin = createSupabaseAdmin()
+
+            // Release any reserved availability for the expired session
+            const { error } = await supabaseAdmin
+              .from("availability")
+              .delete()
+              .eq("booking_uid", session.id)
+
+            if (error) {
+              console.error(
+                "Failed to release availability for expired session:",
+                {
+                  sessionId: session.id,
+                  error: error.message,
+                },
+              )
+            } else {
+              console.log("Released availability for expired session:", {
+                sessionId: session.id,
+                checkIn: metadata.checkIn,
+                checkOut: metadata.checkOut,
+              })
+            }
+          } catch (error) {
+            // Log error but don't throw to prevent webhook retries
+            console.error("Error processing expired session:", {
+              sessionId: session.id,
+              error: error instanceof Error ? error.message : String(error),
+            })
+          }
+        }
+        // Always return success for this event to prevent webhook retries
+        return NextResponse.json({
+          received: true,
+          eventType: "checkout.session.expired",
+        })
       }
       default:
         // Unexpected event type
         console.log(`Unhandled event type ${event.type}.`)
+        return NextResponse.json({
+          received: true,
+          eventType: "unknown",
+        })
     }
   } catch (error: any) {
     console.error("Error processing webhook event:", error.message)

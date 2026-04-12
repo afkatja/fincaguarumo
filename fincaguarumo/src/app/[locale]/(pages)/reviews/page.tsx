@@ -1,4 +1,3 @@
-import React from "react"
 import Layout from "../pagesLayout"
 import { getTranslations } from "next-intl/server"
 import ClientPage from "./ClientPage"
@@ -27,14 +26,10 @@ const jsonLd = {
 
 const page = async ({ params }: { params: any }) => {
   const { locale } = await params
-  const messages = await getTranslations()
+  const t = await getTranslations("reviews")
 
   return (
-    <Layout
-      locale={locale}
-      pageName="Reviews"
-      title={messages("reviews.title") ?? "Reviews"}
-    >
+    <Layout locale={locale} pageName="Reviews" title={t("title")}>
       <ClientPage />
       <script type="application/ld+json">
         {JSON.stringify(jsonLd).replace(/</g, "\\u003c")}

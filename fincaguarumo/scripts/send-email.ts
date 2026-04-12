@@ -1,4 +1,5 @@
 import { sendConfirmationEmail } from "../src/lib/sendConfirmationEmail.js"
+import type { BookingType } from "../src/types.js"
 
 async function main() {
   const metadata = {
@@ -28,7 +29,7 @@ async function main() {
   }
 
   const bookingDetails = {
-    type: metadata.type || "",
+    type: (metadata.type || "") as BookingType,
     title: metadata.title || "",
     description: metadata.description || "",
     duration: Number(metadata.duration) || 0,
@@ -39,13 +40,14 @@ async function main() {
     checkOut: new Date(metadata.checkOut || ""),
     price: Number(metadata.price) || 0,
     basePrice: Number(metadata.price) || 0, // Use price as basePrice for email script
-    totalPrice: (metadata.totalPrice as unknown as number) || 0,
+    totalPrice: Number(metadata.totalPrice) || 0,
     currency: metadata.currency || "USD",
     guests: Number(metadata.guests) || 0,
     geo: metadata.geo ? JSON.parse(metadata.geo) : {},
   }
 
   const res = await sendConfirmationEmail({
+    source: null,
     customerDetails,
     bookingDetails,
     pricingRules: [], // Email script doesn't need pricingRules, but it's required by BookingData type

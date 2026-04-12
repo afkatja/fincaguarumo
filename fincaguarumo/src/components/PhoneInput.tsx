@@ -14,11 +14,10 @@ interface DropdownOption {
   [key: string]: any
 }
 
-interface PhoneInputProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    "onChange" | "value"
-  > {
+interface PhoneInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "onChange" | "value"
+> {
   onChange: (val: string) => void
   defaultCountry: string
   id: string
@@ -28,6 +27,7 @@ interface PhoneInputProps
   labelText: string
   placeholder: string
   required?: boolean
+  forceShowError?: boolean
 }
 
 const PhoneInput: React.FC<PhoneInputProps> = function PhoneInput({
@@ -38,20 +38,27 @@ const PhoneInput: React.FC<PhoneInputProps> = function PhoneInput({
   placeholder,
   onChange,
   required = false,
+  value,
+  pattern,
+  forceShowError,
 }) {
   const defaultCountry = countries.CR
   const [country, setCountry] = useState("")
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(country + e.target.value)
+    onChange(e.target.value)
   }
 
   const handleCountrySelect = (val: string) => {
     setCountry(val)
+    // Prepend the new country code to the existing phone number
+    if (value && !value.startsWith(val)) {
+      onChange(val + value.replace(/^\+\d+/, ""))
+    }
   }
 
   return (
-    <>
+    <div className="my-2">
       <Label htmlFor={id} className="block input-required:outline-destructive">
         {labelText}
       </Label>
@@ -69,12 +76,17 @@ const PhoneInput: React.FC<PhoneInputProps> = function PhoneInput({
           type="tel"
           inputMode="tel"
           errorMessage={errorMessage}
+          errorTestId="phone-error"
+          forceShowError={forceShowError}
           placeholder={placeholder}
+          pattern={pattern}
           required={required || false}
-          className="flex-1"
+          className="flex-1 mt-0"
+          data-testid="phone"
+          value={value}
         />
       </div>
-    </>
+    </div>
   )
 }
 

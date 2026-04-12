@@ -1,26 +1,57 @@
 import { NextResponse } from "next/server"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
-import { formatForEmail } from "./dateUtils"
+import { formatForEmail, calculateDuration } from "./dateUtils"
 import { BOOKING_TYPE, BookingData } from "../types"
+import { calculateEffectivePrice } from "./pricingEngine"
 
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_TOKEN || "",
 })
 
 /**
- * Safely format a date for email display, returning "TBD" for invalid dates
+ * Safely format a date for email display, returning "TBD" for invalid or null dates
  */
-const safeFormatForEmail = (date: Date): string => {
-  return isNaN(date.getTime()) ? "TBD" : formatForEmail(date)
+const safeFormatForEmail = (date: Date | null): string => {
+  if (!date || isNaN(date.getTime())) {
+    return "TBD"
+  }
+  return formatForEmail(date)
 }
 
 export async function sendConfirmationEmail({
   customerDetails,
   bookingDetails,
-}: BookingData) {
+  pricingRules,
+}: BookingData): Promise<{ success: boolean; error?: string }> {
   if (!customerDetails || !bookingDetails) {
     throw new Error("Missing customer or booking details")
   }
+
+  // Use pricing engine for consistent calculations, fallback to 0 if missing data
+  const displayTotalPrice =
+    bookingDetails.totalPrice ||
+    (bookingDetails.basePrice && bookingDetails.guests && pricingRules
+      ? (() => {
+          const duration =
+            bookingDetails.type === BOOKING_TYPE.tour
+              ? 1
+              : calculateDuration(
+                  bookingDetails.checkIn,
+                  bookingDetails.checkOut,
+                )
+
+          const result = calculateEffectivePrice({
+            pricingRules,
+            guests: bookingDetails.guests,
+            duration,
+            checkInDate: bookingDetails.checkIn || bookingDetails.date,
+            bookingType: bookingDetails.type,
+          })
+
+          return Math.round(result.total)
+        })()
+      : 0)
+
   try {
     const getBookingType = () => {
       return bookingDetails.type === BOOKING_TYPE.villa ? "Villa" : "Tour"
@@ -30,7 +61,7 @@ export async function sendConfirmationEmail({
       const commonDetails = `
         <li>Date: ${safeFormatForEmail(bookingDetails.date)}</li>
         <li>Number of Guests: ${bookingDetails.guests}</li>
-        <li>Total Amount: $${bookingDetails.totalPrice || (bookingDetails.basePrice && bookingDetails.guests ? Math.round(bookingDetails.basePrice * 1.13 * (bookingDetails.type === BOOKING_TYPE.tour ? bookingDetails.guests : 1)) : 0)}</li>      `
+        <li>Total Amount: $${displayTotalPrice}</li>      `
 
       if (bookingDetails.type === BOOKING_TYPE.villa) {
         return `
@@ -71,7 +102,7 @@ export async function sendConfirmationEmail({
             }
             - Date: ${safeFormatForEmail(bookingDetails.date)}
             - Number of Guests: ${bookingDetails.guests}
-            - Total Amount: $${bookingDetails.totalPrice}
+            - Total Amount: $${displayTotalPrice}
 
             We look forward to welcoming you!
 
@@ -114,7 +145,7 @@ export async function sendConfirmationEmail({
               - Date: ${safeFormatForEmail(bookingDetails.date)}`
             }
               - Number of Guests: ${bookingDetails.guests}
-              - Total Amount: $${bookingDetails.totalPrice}`,
+              - Total Amount: $${displayTotalPrice}`,
       html: `
               <h1>New ${getBookingType()} Booking Received</h1>
               <h2>Customer Details:</h2>
@@ -152,7 +183,7 @@ export async function sendConfirmationEmail({
             account_logo: "https://fincaguarumo.com/logo.jpg",
             account_logo_single: "https://fincaguarumo.com/logo-single.png",
             name: customerDetails.name,
-            total_price: `$${bookingDetails.totalPrice}`,
+            total_price: `$${displayTotalPrice}`,
             guests_number: bookingDetails.guests,
             support_email: process.env.CONTACT_EMAIL!,
             ...(bookingDetails.type === BOOKING_TYPE.villa
@@ -206,17 +237,14 @@ export async function sendConfirmationEmail({
       throw error
     }
 
-    return NextResponse.json({ success: true })
+    return { success: true }
   } catch (error: any) {
     console.error("MAILERSEND Error:", error, {
       error: error.message,
     })
-    return NextResponse.json(
-      {
-        error: "Failed to send email",
-        details: error.response?.body || error.message,
-      },
-      { status: 500 },
-    )
+    return {
+      success: false,
+      error: error.response?.body || error.message || "Failed to send email",
+    }
   }
 }

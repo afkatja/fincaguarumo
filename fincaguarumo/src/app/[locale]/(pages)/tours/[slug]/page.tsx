@@ -6,8 +6,13 @@ import { generateTourMetadata } from "./metadata"
 
 export { generateTourMetadata as generateMetadata }
 
-const Page = async ({ params }: { params: any }) => {
+const Page = async ({
+  params,
+}: {
+  params: Promise<{ slug: string; locale: string }>
+}) => {
   const { slug, locale } = await params
+
   const tour = await sanityFetch<TTour>({
     query: TOUR_QUERY,
     params: { slug, language: locale },

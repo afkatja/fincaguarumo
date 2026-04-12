@@ -37,6 +37,7 @@ export type Content = {
   title: string
   subtitle?: string
   description: string
+  locale?: string
   mainImage: SanityImageObject
   body: any
   slug: { current: string }
@@ -151,7 +152,7 @@ const Page = async ({ params }: { params: any }) => {
       mainImage={content?.mainImage}
       images={content?.slideshow?.images}
     >
-      <ClientPage content={content} locale={locale} />
+      <ClientPage content={content} />
       <script type="application/ld+json">
         {JSON.stringify(
           jsonLd({

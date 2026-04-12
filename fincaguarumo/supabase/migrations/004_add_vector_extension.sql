@@ -29,6 +29,22 @@ USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 ALTER TABLE content_embeddings ADD CONSTRAINT content_embeddings_unique 
 UNIQUE (content_id, content_type, language);
 
+-- Enable Row Level Security for content_embeddings table
+ALTER TABLE content_embeddings ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies for content_embeddings
+-- Allow authenticated users to read embeddings for search functionality
+CREATE POLICY "Allow authenticated users to read content embeddings" 
+ON content_embeddings FOR SELECT 
+TO authenticated 
+USING (true);
+
+-- Allow service role to manage embeddings (server-side operations)
+CREATE POLICY "Allow service role to manage content embeddings" 
+ON content_embeddings FOR ALL 
+USING (current_setting('request.jwt.claims', true)::jsonb->>'role' = 'service_role')
+WITH CHECK (current_setting('request.jwt.claims', true)::jsonb->>'role' = 'service_role');
+
 -- Create updated_at trigger
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -68,26 +84,39 @@ RETURNS TABLE (
   content TEXT,
   metadata JSONB,
   similarity DOUBLE PRECISION
-) AS $
+) AS $$
 BEGIN
   RETURN QUERY
+  WITH nearest_candidates AS (
+    SELECT 
+      ce.id,
+      ce.content_id,
+      ce.content_type,
+      ce.language,
+      ce.content,
+      ce.metadata,
+      (ce.embedding <=> query_embedding) as distance
+    FROM content_embeddings ce
+    WHERE 
+      (content_type_filter IS NULL OR ce.content_type = content_type_filter)
+      AND (language_filter IS NULL OR ce.language = language_filter)
+    ORDER BY ce.embedding <=> query_embedding
+    LIMIT max_results * 2  -- Get more candidates to account for filtering
+  )
   SELECT 
-    ce.id,
-    ce.content_id,
-    ce.content_type,
-    ce.language,
-    ce.content,
-    ce.metadata,
-    (1 - (ce.embedding <=> query_embedding))::DOUBLE PRECISION as similarity
-  FROM content_embeddings ce
-  WHERE 
-    (content_type_filter IS NULL OR ce.content_type = content_type_filter)
-    AND (language_filter IS NULL OR ce.language = language_filter)
-    AND (1 - (ce.embedding <=> query_embedding)) >= match_threshold
+    nc.id,
+    nc.content_id,
+    nc.content_type,
+    nc.language,
+    nc.content,
+    nc.metadata,
+    (1 - nc.distance)::DOUBLE PRECISION as similarity
+  FROM nearest_candidates nc
+  WHERE (1 - nc.distance) >= match_threshold
   ORDER BY similarity DESC
   LIMIT max_results;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Create a function for hybrid search (semantic + keyword)
 CREATE OR REPLACE FUNCTION hybrid_search(
@@ -110,25 +139,38 @@ RETURNS TABLE (
   similarity DOUBLE PRECISION,
   keyword_score DOUBLE PRECISION,
   combined_score DOUBLE PRECISION
-) AS $
+) AS $$
 BEGIN
   RETURN QUERY
   WITH 
   semantic_results AS (
+    WITH nearest_candidates AS (
+      SELECT 
+        ce.id,
+        ce.content_id,
+        ce.content_type,
+        ce.language,
+        ce.content,
+        ce.metadata,
+        (ce.embedding <=> query_embedding) as distance
+      FROM content_embeddings ce
+      WHERE 
+        (content_type_filter IS NULL OR ce.content_type = content_type_filter)
+        AND (language_filter IS NULL OR ce.language = language_filter)
+      ORDER BY ce.embedding <=> query_embedding
+      LIMIT max_results * 2  -- Get more candidates to account for filtering
+    )
     SELECT 
-      ce.id,
-      ce.content_id,
-      ce.content_type,
-      ce.language,
-      ce.content,
-      ce.metadata,
-      (1 - (ce.embedding <=> query_embedding))::DOUBLE PRECISION as semantic_similarity,
+      nc.id,
+      nc.content_id,
+      nc.content_type,
+      nc.language,
+      nc.content,
+      nc.metadata,
+      (1 - nc.distance)::DOUBLE PRECISION as semantic_similarity,
       0.0::DOUBLE PRECISION as keyword_score
-    FROM content_embeddings ce
-    WHERE 
-      (content_type_filter IS NULL OR ce.content_type = content_type_filter)
-      AND (language_filter IS NULL OR ce.language = language_filter)
-      AND (1 - (ce.embedding <=> query_embedding)) >= match_threshold
+    FROM nearest_candidates nc
+    WHERE (1 - nc.distance) >= match_threshold
   ),
   keyword_results AS (
     SELECT 
@@ -140,9 +182,9 @@ BEGIN
       ce.metadata,
       0.0::DOUBLE PRECISION as semantic_similarity,
       CASE 
-        WHEN ce.content ILIKE '%' || query_text || '%' THEN 1.0::DOUBLE PRECISION
         WHEN ce.content ILIKE '%' || query_text THEN 0.8::DOUBLE PRECISION
         WHEN ce.content ILIKE query_text || '%' THEN 0.8::DOUBLE PRECISION
+        WHEN ce.content ILIKE '%' || query_text || '%' THEN 1.0::DOUBLE PRECISION
         ELSE 0.0::DOUBLE PRECISION
       END as keyword_score
     FROM content_embeddings ce
@@ -167,4 +209,4 @@ BEGIN
   ORDER BY combined_score DESC
   LIMIT max_results;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;

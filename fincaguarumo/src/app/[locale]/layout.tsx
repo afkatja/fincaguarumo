@@ -11,17 +11,18 @@ import "react-day-picker/style.css"
 import { locales } from "../../config"
 
 import Footer from "../../components/Footer"
-import TransitionProvider from "./providers"
+import TransitionProvider, { GlobalLoader } from "./providers"
 
-import { BookingProvider } from "../providers/BookingProvider"
+import { BookingCoreProvider } from "../providers/BookingCoreProvider"
+import { ConditionalVillaBookingProvider } from "../providers/ConditionalVillaBookingProvider"
 import { DialogProvider } from "../providers/DialogProvider"
 
 import { generateMetadata } from "./meta"
 import { i18n } from "../../../languages"
 import Header from "../../components/header"
 import { cn } from "../../lib/utils"
-import GlobalBookingDialog from "../../components/booking/GlobalBookingDialog"
 import { jsonLd, orgSchema } from "../../lib/villa-json-ld"
+import BookingDialog from "./(pages)/BookingDialog"
 
 export { generateMetadata }
 
@@ -84,24 +85,32 @@ export default async function Layout({
       >
         <NextIntlClientProvider locale={locale}>
           <TransitionProvider>
+            <GlobalLoader />
             <div className="flex flex-col min-h-[calc(100dvh-var(--header-height))] animation-container transition-opacity ">
-              <BookingProvider>
-                <DialogProvider locale={locale}>
-                  <Header locale={locale} />
-                  <main className="flex-1 flex flex-col relative">
-                    {draft?.isEnabled && (
-                      <a
-                        className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
-                        href="/api/draft-mode/disable"
-                      >
-                        Disable preview mode
-                      </a>
-                    )}
-                    {children}
-                  </main>
-                  <GlobalBookingDialog />
-                </DialogProvider>
-              </BookingProvider>
+              <BookingCoreProvider>
+                <ConditionalVillaBookingProvider>
+                  <DialogProvider>
+                    <Header locale={locale} />
+                    <main className="flex-1 flex flex-col relative">
+                      {draft?.isEnabled && (
+                        <a
+                          className="fixed right-0 bottom-0 bg-blue-500 text-zinc-50 p-4 m-4"
+                          href="/api/draft-mode/disable"
+                        >
+                          Disable preview mode
+                        </a>
+                      )}
+                      {children}
+                    </main>
+                    <BookingDialog
+                      dialogOptions={{ title: "Book Now" }}
+                      locale={locale}
+                      dialogId="global"
+                      hideTrigger={true}
+                    />
+                  </DialogProvider>
+                </ConditionalVillaBookingProvider>
+              </BookingCoreProvider>
             </div>
           </TransitionProvider>
           <Footer />

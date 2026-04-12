@@ -1,5 +1,6 @@
 import React, { ChangeEventHandler } from "react"
 import { Label } from "./ui/label"
+import { cn } from "@/lib/utils"
 
 export interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string
@@ -11,6 +12,10 @@ export interface TextInputProps extends React.InputHTMLAttributes<HTMLInputEleme
   required: boolean
   value?: string
   className?: string
+  /** Set on the validation message element for e2e */
+  errorTestId?: string
+  /** Show error message after an explicit submit attempt (e.g. Next while invalid) */
+  forceShowError?: boolean
   [prop: string]: any
 }
 
@@ -24,10 +29,12 @@ const Input = ({
   required,
   value,
   className = "",
+  errorTestId,
+  forceShowError,
   ...props
 }: TextInputProps) => {
   return (
-    <div className={`my-1 ${className}`}>
+    <div className={`my-2 ${className}`}>
       {!!labelText && (
         <Label
           htmlFor={id}
@@ -47,7 +54,15 @@ const Input = ({
         className="w-full mt-2 p-1 pl-4 rounded-sm outline-1 outline-zinc-300 invalid:[&:not(:placeholder-shown):not(:focus)]:outline-destructive peer text-zinc-900 bg-zinc-50"
         {...props}
       />
-      <span className="mt-2 hidden text-sm text-destructive peer-[&:not(:placeholder-shown):not(:focus):invalid]:block">
+      <span
+        className={cn(
+          "mt-2 text-sm text-destructive",
+          forceShowError
+            ? "block"
+            : "hidden peer-[&:not(:placeholder-shown):not(:focus):invalid]:block",
+        )}
+        data-testid={errorTestId}
+      >
         {errorMessage}
       </span>
     </div>

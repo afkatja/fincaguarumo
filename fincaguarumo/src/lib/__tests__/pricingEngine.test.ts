@@ -13,6 +13,15 @@ describe("Pricing Engine", () => {
       isActive: true,
     },
     {
+      _id: "vat-rule",
+      title: "VAT Tax",
+      ruleType: "tax",
+      percentage: 13,
+      description: "13% VAT",
+      language: "en",
+      isActive: true,
+    },
+    {
       _id: "discount-7-days",
       title: "Weekly Discount",
       ruleType: "discount",
@@ -45,8 +54,8 @@ describe("Pricing Engine", () => {
 
     expect(result.basePrice).toBe(115)
     expect(result.priceForPeople).toBe(115) // No extra guest fee
-    expect(result.priceWithVat).toBeCloseTo(130.05, 2) // 115 * 1.13
-    expect(result.total).toBeCloseTo(130.05, 2) // 130.05 * 1 night
+    expect(result.priceWithVat).toBeCloseTo(129.95, 2) // 115 * 1.13
+    expect(result.total).toBeCloseTo(129.95, 2) // 129.95 * 1 night
   })
 
   test("calculates price for multiple guests with extra guest fees", () => {
@@ -58,10 +67,10 @@ describe("Pricing Engine", () => {
       bookingType: BOOKING_TYPE.villa,
     })
 
-    expect(result.basePrice).toBe(89)
-    expect(result.priceForPeople).toBe(129) // 89 + 2 * 20 (extra guest fees)
-    expect(result.priceWithVat).toBeCloseTo(145.77, 2) // 129 * 1.13
-    expect(result.total).toBeCloseTo(145.77, 2)
+    expect(result.basePrice).toBe(115)
+    expect(result.priceForPeople).toBe(155) // 115 + 2 * 20 (extra guest fees)
+    expect(result.priceWithVat).toBeCloseTo(175.15, 2) // 155 * 1.13
+    expect(result.total).toBeCloseTo(175.15, 2)
   })
 
   test("applies weekly discount for 7+ nights", () => {
@@ -73,10 +82,10 @@ describe("Pricing Engine", () => {
       bookingType: BOOKING_TYPE.villa,
     })
 
-    expect(result.basePrice).toBeCloseTo(77.43, 2) // 89 * 0.87 (13% discount)
-    expect(result.priceForPeople).toBeCloseTo(97.43, 2) // 77.43 + 20 (1 extra guest)
-    expect(result.priceWithVat).toBeCloseTo(110.1, 2) // 97.43 * 1.13
-    expect(result.total).toBeCloseTo(770.7, 2) // 110.10 * 7 nights
+    expect(result.basePrice).toBeCloseTo(100.05, 2) // 115 * 0.87 (13% discount)
+    expect(result.priceForPeople).toBeCloseTo(120.05, 2) // 100.05 + 20 (1 extra guest)
+    expect(result.priceWithVat).toBeCloseTo(135.66, 2) // 120.05 * 1.13
+    expect(result.total).toBeCloseTo(949.6, 1) // 135.66 * 7 nights
   })
 
   test("applies monthly discount for 28+ nights", () => {
@@ -88,10 +97,10 @@ describe("Pricing Engine", () => {
       bookingType: BOOKING_TYPE.villa,
     })
 
-    expect(result.basePrice).toBeCloseTo(59.63, 2) // 89 * 0.67 (33% discount)
-    expect(result.priceForPeople).toBeCloseTo(59.63, 2) // No extra guest fee
-    expect(result.priceWithVat).toBeCloseTo(67.38, 2) // 59.63 * 1.13
-    expect(result.total).toBeCloseTo(1886.64, 2) // 67.38 * 28 nights
+    expect(result.basePrice).toBeCloseTo(77.05, 2) // 115 * 0.67 (33% discount)
+    expect(result.priceForPeople).toBeCloseTo(77.05, 2) // No extra guest fee
+    expect(result.priceWithVat).toBeCloseTo(87.07, 2) // 77.05 * 1.13
+    expect(result.total).toBeCloseTo(2437.86, 2) // 87.07 * 28 nights
   })
 
   test("handles tour booking type correctly", () => {
@@ -103,14 +112,23 @@ describe("Pricing Engine", () => {
       bookingType: BOOKING_TYPE.tour,
     })
 
-    expect(result.basePrice).toBe(89)
-    expect(result.priceForPeople).toBeCloseTo(149, 2) // 89 + 3 * 20 (max 3 extra guests)
-    expect(result.priceWithVat).toBeCloseTo(168.37, 2) // 149 * 1.13
-    expect(result.total).toBeCloseTo(673.48, 2) // 168.37 * 4 guests (tours charge per guest)
+    expect(result.basePrice).toBe(115)
+    expect(result.priceForPeople).toBe(460) // 115 * 4 guests (tours charge per guest)
+    expect(result.priceWithVat).toBeCloseTo(519.8, 2) // 460 * 1.13
+    expect(result.total).toBeCloseTo(519.8, 2) // Tours don't multiply by duration
   })
 
   test("falls back to default price when no base rate rule exists", () => {
     const noBaseRateRules: PricingRule[] = [
+      {
+        _id: "vat-rule",
+        title: "VAT Tax",
+        ruleType: "tax",
+        percentage: 13,
+        description: "13% VAT",
+        language: "en",
+        isActive: true,
+      },
       {
         _id: "discount-only",
         title: "Discount Only",
@@ -131,7 +149,7 @@ describe("Pricing Engine", () => {
       bookingType: BOOKING_TYPE.villa,
     })
 
-    expect(result.basePrice).toBe(89) // Fallback price
+    expect(result.basePrice).toBe(115) // Fallback price
     expect(result.appliedRules).toContain("Base rate")
   })
 
@@ -144,7 +162,7 @@ describe("Pricing Engine", () => {
       bookingType: BOOKING_TYPE.villa,
     })
 
-    expect(result.basePrice).toBe(89) // Fallback price
+    expect(result.basePrice).toBe(115) // Fallback price
     expect(result.appliedRules).toContain("Base rate")
   })
 })

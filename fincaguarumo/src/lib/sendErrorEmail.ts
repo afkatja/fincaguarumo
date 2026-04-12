@@ -1,4 +1,7 @@
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
+import { withRetries } from "./monitoring/retry"
+import { RETRY_CONFIG } from "./monitoring/config"
+import { queueFailedEmail } from "./monitoring/emailQueue"
 
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_TOKEN || "",
@@ -12,7 +15,7 @@ export async function sendErrorEmail({
   subject: string
   error: string
   details?: string
-}) {
+}): Promise<{ success: boolean; error?: string }> {
   try {
     const adminMsg = {
       to: process.env.CONTACT_EMAIL!,
@@ -46,9 +49,41 @@ export async function sendErrorEmail({
       .setText(adminMsg.text)
       .setHtml(adminMsg.html)
 
-    await mailerSend.email.send(adminEmailConfig)
-    console.log("Error email sent to admin")
+    const result = await withRetries(
+      () => mailerSend.email.send(adminEmailConfig),
+      RETRY_CONFIG.email,
+      "send-error-email",
+    )
+
+    if (result.success) {
+      console.log("Email sent to admin")
+      return { success: true }
+    } else {
+      // Queue failed error email for retry
+      await queueFailedEmail({
+        emailType: "error",
+        recipientEmail: process.env.CONTACT_EMAIL || "admin@fincaguarumo.com",
+        subject,
+        content: { error, details, timestamp: new Date().toISOString() },
+        errorMessage: result.error?.message || "Failed to send error email",
+      })
+
+      return { success: false, error: result.error?.message }
+    }
   } catch (emailError) {
-    console.error("Failed to send error email:", emailError)
+    const errorMessage =
+      emailError instanceof Error ? emailError.message : String(emailError)
+    console.error("Failed to send error email:", errorMessage)
+
+    // Queue for retry
+    await queueFailedEmail({
+      emailType: "error",
+      recipientEmail: process.env.CONTACT_EMAIL || "admin@fincaguarumo.com",
+      subject,
+      content: { error, details, timestamp: new Date().toISOString() },
+      errorMessage,
+    })
+
+    return { success: false, error: errorMessage }
   }
 }

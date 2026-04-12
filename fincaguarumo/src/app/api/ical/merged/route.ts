@@ -6,6 +6,38 @@ import { Booking, getSanityBookings } from "@/lib/setBookings"
 import bookingToNights from "@/lib/bookingToNights"
 import { createClient } from "@supabase/supabase-js"
 
+/**
+ * Internal sync DTO containing full guest metadata from iCal parsing
+ * Used for persistence and internal deduplication logic
+ */
+interface IcsSyncRow {
+  uid?: string
+  start: string
+  end: string
+  summary?: string
+  source: string
+  guestInfo: {
+    name?: string
+    email?: string
+    phone?: string
+    guests?: number
+  }
+  rawDescription?: string
+}
+
+/**
+ * Sanitized response DTO for client consumption
+ * Only includes non-sensitive booking information
+ */
+interface BookingResponse {
+  uid?: string
+  start: string
+  end: string
+  summary?: string
+  source?: string
+  guestName?: string
+}
+
 const FEEDS: Record<string, string | undefined> = {
   airbnb: process.env.AIRBNB_ICAL,
   booking: process.env.BOOKING_ICAL,
@@ -16,8 +48,8 @@ const FEEDS: Record<string, string | undefined> = {
 
 // Initialize Supabase client for saving bookings and updating availability
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 const memoryCache: {
   hash: string
@@ -54,14 +86,14 @@ function parseIcsToBookings(
   sourceName: string,
   lookBackYears = 2,
   lookAheadYears = 1,
-): Booking[] {
+): IcsSyncRow[] {
   const expander = new IcalExpander({ ics: icsText, maxIterations: 1000 })
   const from = subDays(new Date(), 365 * lookBackYears)
   const to = addDays(new Date(), 365 * lookAheadYears)
 
   const { events, occurrences } = expander.between(from, to)
 
-  const out: Booking[] = []
+  const out: IcsSyncRow[] = []
 
   // Single (non-recurring) EVENTs
   for (const e of events) {
@@ -83,8 +115,8 @@ function parseIcsToBookings(
       end,
       summary,
       source: sourceName,
-      guestName: guestInfo.name,
-      description: description || summary,
+      guestInfo,
+      rawDescription: description,
     })
   }
 
@@ -106,8 +138,8 @@ function parseIcsToBookings(
       end,
       summary,
       source: sourceName,
-      guestName: guestInfo.name,
-      description: description || summary,
+      guestInfo,
+      rawDescription: description,
     })
   }
 
@@ -173,6 +205,37 @@ function extractGuestInfo(
   return info
 }
 
+/**
+ * Convert internal IcsSyncRow to sanitized BookingResponse for client consumption
+ */
+function mapToBookingResponse(syncRow: IcsSyncRow): BookingResponse {
+  return {
+    uid: syncRow.uid,
+    start: syncRow.start,
+    end: syncRow.end,
+    summary: syncRow.summary,
+    source: syncRow.source,
+    guestName: syncRow.guestInfo.name,
+  }
+}
+
+/**
+ * Convert internal IcsSyncRow to legacy Booking format for Supabase compatibility
+ */
+function mapToBookingForSupabase(syncRow: IcsSyncRow): Booking {
+  return {
+    uid: syncRow.uid,
+    start: syncRow.start,
+    end: syncRow.end,
+    summary: syncRow.summary,
+    source: syncRow.source,
+    guestName: syncRow.guestInfo.name,
+    email: syncRow.guestInfo.email,
+    phone: syncRow.guestInfo.phone,
+    guests: syncRow.guestInfo.guests,
+  }
+}
+
 function mergeBookings(bookings: Booking[]) {
   if (!bookings.length) return []
 
@@ -204,81 +267,82 @@ function mergeBookings(bookings: Booking[]) {
 }
 
 /**
- * Save or update booking in Supabase
+ * Create a redacted copy of booking data for safe logging
+ * Removes PII while preserving useful debugging information
  */
-async function saveBookingToSupabase(booking: Booking & { source: string }) {
+function createRedactedBooking(bookingData: any) {
+  return {
+    uid: bookingData.uid,
+    source: bookingData.source,
+    booking_type: bookingData.booking_type,
+    // Include only non-sensitive fields for debugging
+    has_guest_name: !!bookingData.guest_name,
+    has_total_price: !!bookingData.total_price,
+    guest_count: bookingData.guests,
+    // Redate dates to only show month/year for debugging
+    check_in_month: bookingData.check_in
+      ? new Date(bookingData.check_in).toISOString().slice(0, 7)
+      : null,
+    check_out_month: bookingData.check_out
+      ? new Date(bookingData.check_out).toISOString().slice(0, 7)
+      : null,
+  }
+}
+
+/**
+ * Save or update booking in Supabase using atomic upsert
+ */
+async function saveBookingToSupabase(syncRow: IcsSyncRow) {
   try {
-    // Log what we're trying to save
-    // console.log(
-    //   `Saving booking: ${booking.guestName || "Unknown"} from ${booking.source}, UID: ${booking.uid}`,
-    // )
+    const booking = mapToBookingForSupabase(syncRow)
 
-    // Check if booking already exists by UID
-    const { data: existing, error: checkError } = await supabase
-      .from("bookings")
-      .select("id")
-      .eq("uid", booking.uid)
-      .maybeSingle()
-
-    if (checkError) {
-      console.error("Error checking existing booking:", checkError)
+    // Ensure UID is present for upsert constraint
+    if (!booking.uid) {
+      console.error("Cannot save booking: UID is required for upsert operation")
+      return null
     }
 
+    // Log what we're trying to save
+    // console.log(
+    //   `Upserting booking: ${booking.guestName || "Unknown"} from ${booking.source}, UID: ${booking.uid}`,
+    // )
+
     // Build booking data with only required columns
-    // Exclude optional columns until schema cache updates
     const bookingData: any = {
       uid: booking.uid,
       check_in: booking.start,
       check_out: booking.end,
       guest_name: booking.guestName || "Unknown",
       source: booking.source || "Unknown",
+      booking_type: "villa",
+      currency: booking.currency || "usd",
+      guests: booking.guests || 1,
     }
 
-    // Only add fields that definitely exist in the original schema
-    // Add guests if the column exists in your database
-    // Comment out optional fields until 004_force_schema_refresh.sql is run
-
-    // booking_type: "villa",
-    // total_price: null,
-    // currency: "usd",
-    // guests: 1,
-
-    // After running migration 004, uncomment these lines:
-    // bookingData.booking_type = "villa"
-    // bookingData.total_price = null
-    // bookingData.currency = "usd"
-    // bookingData.guests = (booking as any).guests || 1
-
-    // console.log("Inserting booking data:", JSON.stringify(bookingData, null, 2))
-
-    if (existing) {
-      // Update existing booking
-      // console.log(`Updating existing booking with ID: ${existing.id}`)
-      const { error } = await supabase
-        .from("bookings")
-        .update(bookingData)
-        .eq("id", existing.id)
-
-      if (error) {
-        console.error("Error updating booking in Supabase:", error)
-        return null
-      }
-      // console.log(`Successfully updated booking: ${existing.id}`)
-      return existing.id
-    } else {
-      // Insert new booking
-      const { data, error } = await supabase
-        .from("bookings")
-        .insert([bookingData])
-        .select()
-
-      if (error) {
-        console.error("Error inserting booking to Supabase:", error)
-        return null
-      }
-      // console.log(`Successfully inserted new booking: ${data?.[0]?.id}`)
-      return data?.[0]?.id
+    // Add optional price fields if present
+    if (booking.totalPrice) {
+      bookingData.total_price = booking.totalPrice
     }
+
+    console.log(
+      "Upserting booking data:",
+      JSON.stringify(createRedactedBooking(bookingData), null, 2),
+    )
+
+    // Atomic upsert with conflict resolution on uid
+    const { data, error } = await supabase
+      .from("bookings")
+      .upsert([bookingData], { onConflict: "uid" })
+      .select()
+
+    if (error) {
+      console.error("Error upserting booking to Supabase:", error)
+      return null
+    }
+
+    const recordId = data?.[0]?.id
+    // console.log(`Successfully upserted booking: ${recordId}`)
+    return recordId
   } catch (error) {
     console.error("Error saving booking to Supabase:", error)
     return null
@@ -435,12 +499,24 @@ export async function GET() {
       string,
     ][]
 
-    const allBookings: Booking[] = []
+    const allSyncRows: IcsSyncRow[] = []
+    const allBookingResponses: BookingResponse[] = []
 
-    // Fetch Sanity bookings
+    // Fetch Sanity bookings and convert to response format
+    let sanityBookingsCached: any[] = []
     try {
-      const sanityBookings = await getSanityBookings()
-      allBookings.push(...sanityBookings)
+      sanityBookingsCached = await getSanityBookings()
+      const sanityResponses: BookingResponse[] = sanityBookingsCached.map(
+        booking => ({
+          uid: booking.uid,
+          start: booking.start,
+          end: booking.end,
+          summary: booking.summary,
+          source: booking.source,
+          guestName: booking.guestName,
+        }),
+      )
+      allBookingResponses.push(...sanityResponses)
     } catch (err) {
       console.error("Error fetching Sanity bookings:", err)
     }
@@ -451,31 +527,32 @@ export async function GET() {
         const key = `ical_${name}`
         const { ics } = await fetchIcsWithConditional(url!, key)
         if (!ics) continue
-        const bookings = parseIcsToBookings(ics!, name)
+        const syncRows = parseIcsToBookings(ics!, name)
 
-        allBookings.push(...bookings)
+        allSyncRows.push(...syncRows)
+
+        // Convert to sanitized responses for client
+        const bookingResponses = syncRows.map(mapToBookingResponse)
+        allBookingResponses.push(...bookingResponses)
 
         // Save each parsed booking to Supabase
-        // console.log(`Processing ${bookings.length} bookings from ${name}`)
+        // console.log(`Processing ${syncRows.length} bookings from ${name}`)
         let savedCount = 0
         let skippedCount = 0
         let errorCount = 0
 
-        for (const booking of bookings) {
+        for (const syncRow of syncRows) {
           try {
             // Generate a UID if missing (using hash of source + dates)
-            let uid = booking.uid
+            let uid = syncRow.uid
             if (!uid) {
-              const hashInput = `${name}-${booking.start}-${booking.end}`
+              const hashInput = `${name}-${syncRow.start}-${syncRow.end}`
               uid = hashIcs(hashInput).substring(0, 32)
+              syncRow.uid = uid
               // console.log(`Generated UID for booking: ${uid}`)
             }
 
-            const result = await saveBookingToSupabase({
-              ...booking,
-              source: name,
-              uid,
-            })
+            const result = await saveBookingToSupabase(syncRow)
 
             if (result) {
               savedCount++
@@ -496,6 +573,12 @@ export async function GET() {
         // continue — don't fail the whole response if one feed fails
       }
     }
+
+    // Convert all sync rows to Booking format for merge logic
+    const allBookings = [
+      ...allSyncRows.map(mapToBookingForSupabase),
+      ...sanityBookingsCached,
+    ]
 
     // Optional: deduplicate by UID or by identical ranges (simple)
     const uniqueByUid: Record<string, Booking> = {}
@@ -520,7 +603,7 @@ export async function GET() {
       // but log the error for monitoring
     }
 
-    return NextResponse.json({ bookings: deduped, merged })
+    return NextResponse.json({ bookings: allBookingResponses, merged })
   } catch (err) {
     console.error("API error merging bookings:", err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
