@@ -39,6 +39,8 @@ import LetterN from "./LetterN"
 import LetterW from "./LetterW"
 import LetterYa from "./LetterYa"
 import LetterEszet from "./LetterEszet"
+import ChatCloseIcon from "./ChatCloseIcon"
+import ChatIcon from "./ChatIcon"
 
 const icons = {
   Aracari,
@@ -82,6 +84,8 @@ const icons = {
   LetterW,
   LetterYa,
   LetterEszet,
+  ChatCloseIcon,
+  ChatIcon,
 }
 
 const headerIcons = {
