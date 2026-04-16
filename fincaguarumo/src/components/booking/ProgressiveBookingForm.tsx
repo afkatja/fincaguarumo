@@ -25,6 +25,7 @@ import AvailabilityPreview from "./AvailabilityPreview"
 import { useBookingCore } from "@/app/providers/BookingCoreProvider"
 import Loading from "../../app/[locale]/loading"
 import { formatCurrency } from "../../lib/currency"
+import { EmbeddedChat } from "../better-chatbot"
 
 interface ProgressiveBookingFormProps {
   onSubmit: (bookingData: BookingData) => void
@@ -542,64 +543,88 @@ export default function ProgressiveBookingForm({
   }
 
   return (
-    <form
-      noValidate
-      className={`grid gap-4 group ${className}`}
-      data-testid="booking-form"
-      data-active-step={currentStep}
-      onSubmit={e => {
-        e.preventDefault()
-        void handleNext()
-      }}
-    >
-      <BookingProgressIndicator
-        steps={steps}
-        currentStep={currentStep}
-        onStepClick={handleStepClick}
-        // isStepValid={isStepValid}
-      />
+    <>
+      <form
+        noValidate
+        className={`grid gap-4 group ${className}`}
+        data-testid="booking-form"
+        data-active-step={currentStep}
+        onSubmit={e => {
+          e.preventDefault()
+          void handleNext()
+        }}
+      >
+        <BookingProgressIndicator
+          steps={steps}
+          currentStep={currentStep}
+          onStepClick={handleStepClick}
+          // isStepValid={isStepValid}
+        />
 
-      <div className="min-h-45 mt-6">{renderStepContent()}</div>
+        <div className="min-h-45 mt-6">{renderStepContent()}</div>
 
-      {currentStep !== "payment" && renderPricePreview()}
+        {currentStep !== "payment" && renderPricePreview()}
 
-      <DialogFooter className="mt-auto flex justify-between flex-wrap">
-        <div className="pt-5 flex justify-between w-full flex-none gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            data-testid="booking-cancel"
-          >
-            {getInternationalizedValue(dialog?.cancel, locale, "Cancel")}
-          </Button>
-
-          <div className="space-x-2">
-            {currentStep !== "dates" && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleBack}
-                data-testid="booking-back"
-              >
-                {t("back", { defaultValue: "Back" })}
-              </Button>
-            )}
-
+        <DialogFooter className="mt-auto flex justify-between flex-wrap">
+          <div className="pt-5 flex justify-between w-full flex-none gap-2">
             <Button
-              type="submit"
-              disabled={
-                currentStep === "personal" ? false : !isStepValid[currentStep]
-              }
-              data-testid="submit"
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              data-testid="booking-cancel"
             >
-              {currentStep === "payment"
-                ? getInternationalizedValue(dialog?.ok, locale, "Reserve")
-                : t("next", { defaultValue: "Next" })}
+              {getInternationalizedValue(dialog?.cancel, locale, "Cancel")}
             </Button>
+
+            <div className="space-x-2">
+              {currentStep !== "dates" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleBack}
+                  data-testid="booking-back"
+                >
+                  {t("back", { defaultValue: "Back" })}
+                </Button>
+              )}
+
+              <Button
+                type="submit"
+                disabled={
+                  currentStep === "personal" ? false : !isStepValid[currentStep]
+                }
+                data-testid="submit"
+              >
+                {currentStep === "payment"
+                  ? getInternationalizedValue(dialog?.ok, locale, "Reserve")
+                  : t("next", { defaultValue: "Next" })}
+              </Button>
+            </div>
           </div>
-        </div>
-      </DialogFooter>
-    </form>
+        </DialogFooter>
+      </form>
+      <div className="mt-4 pt-4 border-t">
+        <EmbeddedChat
+          key={`chat-${currentStep}`}
+          className="max-h-104"
+          initialMessage={
+            currentStep === "dates"
+              ? t("chatHelpDates", {
+                  defaultValue:
+                    "Need help selecting dates? I'm here to assist you!",
+                })
+              : currentStep === "personal"
+                ? t("chatHelpPersonal", {
+                    defaultValue:
+                      "Need help with your personal details? I'm here to assist you!",
+                  })
+                : t("chatHelpPayment", {
+                    defaultValue:
+                      "Need help with payment? I'm here to assist you!",
+                  })
+          }
+        />
+      </div>
+    </>
   )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { MessageCircle, X, Send, Loader2 } from "lucide-react"
@@ -11,10 +11,9 @@ import {
   getPersonalizedGreeting,
   detectUserIntent,
 } from "@/lib/better-chatbot/context-aware"
-import Input from "../Input"
-import Textarea from "../Textarea"
+import OptimizedChatInput from "./OptimizedChatInput"
 import { Button } from "../ui/button"
-import { useBooking } from "../../app/providers/BookingProvider"
+import { useBookingCore } from "../../app/providers/BookingCoreProvider"
 
 // Extract relevant context from previous user messages
 function extractUserContext(previousMessages: Message[]) {
@@ -112,7 +111,9 @@ export default function ChatInterface({
   const { locale } = useParams()
   const t = useTranslations("bookingChat")
   const tGreetings = useTranslations("greetings")
-  const { bookingData } = useBooking()
+  const {
+    state: { data: bookingData },
+  } = useBookingCore()
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
@@ -125,14 +126,40 @@ export default function ChatInterface({
     controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen
   const toggleOpen = onToggle || (() => setInternalIsOpen(!internalIsOpen))
 
-  // Build chat context
-  const chatContext: ChatContext = {
-    page: context?.page || "other",
-    locale: locale as string,
-    bookingData: bookingData,
-    propertyTitle: context?.propertyTitle,
-    userIntent: context?.userIntent,
-  }
+  // Build chat context - memoized to prevent unnecessary recalculations
+  const chatContext: ChatContext = useMemo(
+    () => ({
+      page: context?.page || "other",
+      locale: locale as string,
+      bookingData: bookingData
+        ? {
+            source: bookingData.source,
+            customerDetails: bookingData.customerDetails,
+            bookingDetails: {
+              type: bookingData.bookingType || "tour",
+              title: bookingData.bookingDetails.title,
+              description: bookingData.bookingDetails.description,
+              duration: 0, // Default value, can be calculated if needed
+              location: bookingData.bookingDetails.location,
+              body: "", // Default value
+              date: bookingData.dates.date || new Date(),
+              checkIn: bookingData.dates.checkIn,
+              checkOut: bookingData.dates.checkOut,
+              guests: bookingData.guests,
+              price: 0, // Legacy field
+              basePrice: bookingData.baseUnitPrice,
+              totalPrice: bookingData.totalPrice,
+              currency: bookingData.currency,
+              geo: { lat: 0, lng: 0 }, // Default value
+            },
+            pricingRules: bookingData.pricingRules,
+          }
+        : undefined,
+      propertyTitle: context?.propertyTitle,
+      userIntent: context?.userIntent,
+    }),
+    [context, locale, bookingData],
+  )
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -157,207 +184,233 @@ export default function ChatInterface({
     }
   }, [locale, initialMessage, messages.length, chatContext, tGreetings])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
 
-    if (!input.trim() || isLoading) return
+      if (!input.trim() || isLoading) return
 
-    const userMessage = input.trim()
-    setInput("")
-    setIsLoading(true)
+      const userMessage = input.trim()
+      setInput("")
+      setIsLoading(true)
 
-    // Add user message to state
-    setMessages(prev => [...prev, { role: "user", content: userMessage }])
+      // Add user message to state
+      setMessages(prev => [...prev, { role: "user", content: userMessage }])
 
-    // Build messages array for API call - only send current user message for response
-    // but extract context from previous messages for better understanding
-    const previousUserMessages = messages
-      .filter(msg => msg.role === "user")
-      .slice(-3) // Keep last 3 user messages for context
+      // Build messages array for API call - only send current user message for response
+      // but extract context from previous messages for better understanding
+      const previousUserMessages = messages
+        .filter(msg => msg.role === "user")
+        .slice(-3) // Keep last 3 user messages for context
 
-    const messagesForAPI = [{ role: "user", content: userMessage }]
+      const messagesForAPI = [{ role: "user", content: userMessage }]
 
-    // Build enhanced context with previous user preferences
-    const enhancedContext = {
-      ...chatContext,
-      previousQueries: previousUserMessages.map(msg => msg.content),
-      extractedContext: extractUserContext(previousUserMessages),
-    }
-
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: messagesForAPI,
-          locale,
-          context: enhancedContext,
-        }),
-      })
-
-      if (!response.ok) {
-        console.error("Failed to parse chat response", response)
-        throw new Error(
-          `Failed to get response: ${response.status} ${response.statusText}`,
-        )
+      // Build enhanced context with previous user preferences
+      const enhancedContext = {
+        ...chatContext,
+        previousQueries: previousUserMessages.map(msg => msg.content),
+        extractedContext: extractUserContext(previousUserMessages),
       }
 
-      // Read the stream with proper error handling and cleanup
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-      let assistantMessage = ""
-      let buffer = ""
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: messagesForAPI,
+            locale,
+            context: enhancedContext,
+          }),
+        })
 
-      // Reset progress message when starting new request
-      setProgressMessage("")
-      setHasAssistantResponse(false)
+        if (!response.ok) {
+          console.error("Failed to parse chat response", response)
+          throw new Error(
+            `Failed to get response: ${response.status} ${response.statusText}`,
+          )
+        }
 
-      if (reader) {
-        try {
-          while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
+        // Read the stream with proper error handling and cleanup
+        const reader = response.body?.getReader()
+        const decoder = new TextDecoder()
+        let assistantMessage = ""
+        let buffer = ""
 
-            const chunk = decoder.decode(value, { stream: true })
-            buffer += chunk
+        // Reset progress message when starting new request
+        setProgressMessage("")
+        setHasAssistantResponse(false)
 
-            // split by newlines because you send `...\n`
-            const lines = buffer.split("\n")
-            buffer = lines.pop() || "" // keep incomplete line
+        if (reader) {
+          try {
+            while (true) {
+              const { done, value } = await reader.read()
+              if (done) break
 
-            for (const line of lines) {
-              if (!line.trim()) continue
+              const chunk = decoder.decode(value, { stream: true })
+              buffer += chunk
 
-              // line looks like: 0:"Checking availability..."
+              // split by newlines because you send `...\n`
+              const lines = buffer.split("\n")
+              buffer = lines.pop() || "" // keep incomplete line
 
-              const match = line.match(/^(\d+):(.*)$/)
-              const id = match?.[1]
-              const payload = match?.[2]
-              if (match && payload) {
-                if (id === "0") {
-                  try {
-                    const parsed = JSON.parse(payload)
-                    if (
-                      parsed.type === "progress" &&
-                      typeof parsed.message === "string"
-                    ) {
-                      setProgressMessage(parsed.message)
-                    }
-                  } catch {
-                    // ignore
-                  }
-                  continue
+              for (const line of lines) {
+                if (!line.trim()) continue
 
-                  // non-zero IDs → treat as normal AI chunks or ignore
-                } else {
-                  // normal assistant text; append to the answer
-                  assistantMessage += payload
+                // line looks like: 0:"Checking availability..."
 
-                  // Mark that we've received assistant response
-                  if (!hasAssistantResponse) {
-                    setHasAssistantResponse(true)
-                  }
-
-                  setMessages(prev => {
-                    const newMessages = [...prev]
-                    const lastMessage = newMessages[newMessages.length - 1]
-                    if (lastMessage?.role === "assistant") {
-                      lastMessage.content = assistantMessage
-                    } else {
-                      newMessages.push({
-                        role: "assistant",
-                        content: assistantMessage,
-                      })
-                    }
-                    return newMessages
-                  })
-                }
-              } else {
-                // Handle SSE format or other content as fallback
-                const trimmedLine = line.trim()
-                if (trimmedLine.startsWith("data: ")) {
-                  const data = trimmedLine.slice(6)
-                  if (data === "[DONE]" || data === "") continue
-
-                  try {
-                    const parsed = JSON.parse(data)
-                    if (parsed.content && typeof parsed.content === "string") {
-                      assistantMessage += parsed.content
-
-                      // Mark that we've received assistant response
-                      if (!hasAssistantResponse) {
-                        setHasAssistantResponse(true)
+                const match = line.match(/^(\d+):(.*)$/)
+                const id = match?.[1]
+                const payload = match?.[2]
+                if (match && payload) {
+                  if (id === "0") {
+                    try {
+                      const parsed = JSON.parse(payload)
+                      if (
+                        parsed.type === "progress" &&
+                        typeof parsed.message === "string"
+                      ) {
+                        setProgressMessage(parsed.message)
                       }
+                    } catch {
+                      // ignore
+                    }
+                    continue
 
-                      setMessages(prev => {
-                        const newMessages = [...prev]
-                        const lastMessage = newMessages[newMessages.length - 1]
-                        if (lastMessage?.role === "assistant") {
-                          lastMessage.content = assistantMessage
-                        } else {
-                          newMessages.push({
-                            role: "assistant",
-                            content: assistantMessage,
-                          })
+                    // non-zero IDs → treat as normal AI chunks or ignore
+                  } else {
+                    // normal assistant text; append to the answer
+                    assistantMessage += payload
+
+                    // Mark that we've received assistant response
+                    if (!hasAssistantResponse) {
+                      setHasAssistantResponse(true)
+                    }
+
+                    setMessages(prev => {
+                      const newMessages = [...prev]
+                      const lastMessage = newMessages[newMessages.length - 1]
+                      if (lastMessage?.role === "assistant") {
+                        lastMessage.content = assistantMessage
+                      } else {
+                        newMessages.push({
+                          role: "assistant",
+                          content: assistantMessage,
+                        })
+                      }
+                      return newMessages
+                    })
+                  }
+                } else {
+                  // Handle SSE format or other content as fallback
+                  const trimmedLine = line.trim()
+                  if (trimmedLine.startsWith("data: ")) {
+                    const data = trimmedLine.slice(6)
+                    if (data === "[DONE]" || data === "") continue
+
+                    try {
+                      const parsed = JSON.parse(data)
+                      if (
+                        parsed.content &&
+                        typeof parsed.content === "string"
+                      ) {
+                        assistantMessage += parsed.content
+
+                        // Mark that we've received assistant response
+                        if (!hasAssistantResponse) {
+                          setHasAssistantResponse(true)
                         }
-                        return newMessages
-                      })
-                    }
-                  } catch (parseError) {
-                    console.warn("Failed to parse SSE data:", data, parseError)
-                  }
-                } else if (
-                  trimmedLine &&
-                  !trimmedLine.startsWith("event:") &&
-                  !trimmedLine.startsWith("id:")
-                ) {
-                  // Treat as plain text content
-                  assistantMessage += trimmedLine + "\n"
 
-                  // Mark that we've received assistant response
-                  if (!hasAssistantResponse) {
-                    setHasAssistantResponse(true)
-                  }
-
-                  setMessages(prev => {
-                    const newMessages = [...prev]
-                    const lastMessage = newMessages[newMessages.length - 1]
-                    if (lastMessage?.role === "assistant") {
-                      lastMessage.content = assistantMessage
-                    } else {
-                      newMessages.push({
-                        role: "assistant",
-                        content: assistantMessage,
-                      })
+                        setMessages(prev => {
+                          const newMessages = [...prev]
+                          const lastMessage =
+                            newMessages[newMessages.length - 1]
+                          if (lastMessage?.role === "assistant") {
+                            lastMessage.content = assistantMessage
+                          } else {
+                            newMessages.push({
+                              role: "assistant",
+                              content: assistantMessage,
+                            })
+                          }
+                          return newMessages
+                        })
+                      }
+                    } catch (parseError) {
+                      console.warn(
+                        "Failed to parse SSE data:",
+                        data,
+                        parseError,
+                      )
                     }
-                    return newMessages
-                  })
+                  } else if (
+                    trimmedLine &&
+                    !trimmedLine.startsWith("event:") &&
+                    !trimmedLine.startsWith("id:")
+                  ) {
+                    // Treat as plain text content
+                    assistantMessage += trimmedLine + "\n"
+
+                    // Mark that we've received assistant response
+                    if (!hasAssistantResponse) {
+                      setHasAssistantResponse(true)
+                    }
+
+                    setMessages(prev => {
+                      const newMessages = [...prev]
+                      const lastMessage = newMessages[newMessages.length - 1]
+                      if (lastMessage?.role === "assistant") {
+                        lastMessage.content = assistantMessage
+                      } else {
+                        newMessages.push({
+                          role: "assistant",
+                          content: assistantMessage,
+                        })
+                      }
+                      return newMessages
+                    })
+                  }
                 }
               }
             }
+          } finally {
+            reader.releaseLock()
+            // Clear progress message when done
+            setProgressMessage("")
           }
-        } finally {
-          reader.releaseLock()
-          // Clear progress message when done
-          setProgressMessage("")
         }
+      } catch (error) {
+        console.error("Error:", error)
+        setMessages(prev => [
+          ...prev,
+          {
+            role: "assistant",
+            content: t("errorMessage", {
+              defaultValue:
+                "Sorry, the assistant encountered an error. Please try again.",
+            }),
+          },
+        ])
+      } finally {
+        setIsLoading(false)
       }
-    } catch (error) {
-      console.error("Error:", error)
-      setMessages(prev => [
-        ...prev,
-        {
-          role: "assistant",
-          content: t("errorMessage", {
-            defaultValue:
-              "Sorry, the assistant encountered an error. Please try again.",
-          }),
-        },
-      ])
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    },
+    [input, isLoading, messages, chatContext, t],
+  )
+
+  // Wrapper function for OptimizedChatInput
+  const handleOptimizedSubmit = useCallback(
+    (message: string) => {
+      if (message.trim() && !isLoading) {
+        setInput(message)
+        // Trigger handleSubmit with the message
+        const syntheticEvent = {
+          preventDefault: () => {},
+        } as React.FormEvent
+        handleSubmit(syntheticEvent)
+      }
+    },
+    [handleSubmit, isLoading],
+  )
 
   // Render different variants
   if (variant === "floating") {
@@ -385,10 +438,8 @@ export default function ChatInterface({
               progressMessage={progressMessage}
               hasAssistantResponse={hasAssistantResponse}
             />
-            <ChatFooter
-              input={input}
-              setInput={setInput}
-              onSubmit={handleSubmit}
+            <OptimizedChatInput
+              onSubmit={handleOptimizedSubmit}
               isLoading={isLoading}
             />
           </div>
@@ -410,10 +461,8 @@ export default function ChatInterface({
           progressMessage={progressMessage}
           hasAssistantResponse={hasAssistantResponse}
         />
-        <ChatFooter
-          input={input}
-          setInput={setInput}
-          onSubmit={handleSubmit}
+        <OptimizedChatInput
+          onSubmit={handleOptimizedSubmit}
           isLoading={isLoading}
         />
       </div>
@@ -434,10 +483,8 @@ export default function ChatInterface({
         progressMessage={progressMessage}
         hasAssistantResponse={hasAssistantResponse}
       />
-      <ChatFooter
-        input={input}
-        setInput={setInput}
-        onSubmit={handleSubmit}
+      <OptimizedChatInput
+        onSubmit={handleOptimizedSubmit}
         isLoading={isLoading}
       />
     </div>
@@ -530,65 +577,5 @@ function ChatBody({
       )}
       <div ref={messagesEndRef} />
     </div>
-  )
-}
-
-function ChatFooter({
-  input,
-  setInput,
-  onSubmit,
-  isLoading,
-}: {
-  input: string
-  setInput: (value: string) => void
-  onSubmit: (e: React.FormEvent) => void
-  isLoading: boolean
-}) {
-  const t = useTranslations("bookingChat")
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-      e.preventDefault()
-      if (input.trim() && !isLoading) {
-        onSubmit(e as any)
-      }
-    }
-  }
-
-  return (
-    <form onSubmit={onSubmit} className="p-4">
-      <div className="flex gap-2 w-full items-end">
-        <Textarea
-          id="chat-user-input"
-          required={false}
-          errorMessage=""
-          value={input}
-          onChangeHandler={e => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={t("inputPlaceholder", {
-            defaultValue: "Ask about booking...",
-          })}
-          disabled={isLoading}
-          className="flex-1"
-        />
-        <Button
-          type="submit"
-          variant="secondary"
-          disabled={isLoading || !input.trim()}
-          className="mb-2 flex items-center gap-1"
-        >
-          {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <>
-              <Send className="w-5 h-5" />
-              <span className="text-xs opacity-60 hidden sm:inline">
-                {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"}+Enter
-              </span>
-            </>
-          )}
-        </Button>
-      </div>
-    </form>
   )
 }

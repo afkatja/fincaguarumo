@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useBooking } from "@/app/providers/BookingProvider"
+import { loadBookingDataFromLocalStorage } from "@/types"
 import { usePageContext } from "@/hooks/usePageContext"
 import ChatInterface from "./ChatInterface"
 import { Button } from "../ui/button"
@@ -19,7 +19,7 @@ export default function SidebarChat({
   propertyTitle,
 }: SidebarChatProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const { bookingData } = useBooking()
+  const bookingData = loadBookingDataFromLocalStorage()
   const { page } = usePageContext()
 
   return (
@@ -39,7 +39,7 @@ export default function SidebarChat({
               initialMessage={initialMessage}
               context={{
                 page,
-                bookingData,
+                bookingData: bookingData || undefined,
                 propertyTitle,
               }}
             />

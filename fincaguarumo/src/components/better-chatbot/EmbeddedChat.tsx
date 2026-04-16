@@ -1,6 +1,6 @@
 "use client"
 
-import { useBooking } from "@/app/providers/BookingProvider"
+import { loadBookingDataFromLocalStorage } from "@/types"
 import { usePageContext } from "@/hooks/usePageContext"
 import ChatInterface from "./ChatInterface"
 
@@ -19,7 +19,7 @@ export default function EmbeddedChat({
   initialMessage,
   context,
 }: EmbeddedChatProps) {
-  const { bookingData } = useBooking()
+  const bookingData = loadBookingDataFromLocalStorage()
   const { page } = usePageContext()
 
   return (
