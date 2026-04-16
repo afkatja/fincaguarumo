@@ -30,7 +30,11 @@
     "migrate:to-qdrant:dry-run": "DRY_RUN=true npm run migrate:to-qdrant",
     "migrate:to-qdrant:validate": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config src/lib/semantic-rag/migrate-to-qdrant.ts validate",
     "migrate:to-qdrant:rollback": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config src/lib/semantic-rag/migrate-to-qdrant.ts rollback",
-    "semantic-rag:init-qdrant": "npm run migrate:to-qdrant && npm run semantic-rag:validate"
+    "semantic-rag:init-qdrant": "npm run migrate:to-qdrant && npm run semantic-rag:validate",
+    "migrate:to-cloud": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config src/lib/semantic-rag/migrate-to-cloud.ts migrate",
+    "migrate:to-cloud:dry-run": "DRY_RUN=true npm run migrate:to-cloud",
+    "migrate:to-cloud:validate": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config src/lib/semantic-rag/migrate-to-cloud.ts validate",
+    "migrate:to-cloud:clear": "CLEAR_EXISTING=true npm run migrate:to-cloud"
   },
   "lint-staged": {
     "src/messages/en.json": [
