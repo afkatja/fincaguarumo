@@ -9,9 +9,10 @@ import {
 const qdrantUrl = process.env.QDRANT_URL || "http://localhost:6333"
 const qdrantApiKey = process.env.QDRANT_API_KEY
 
+// Configure client differently for cloud vs local
 const qdrantClient = new QdrantClient({
   url: qdrantUrl,
-  apiKey: qdrantApiKey,
+  ...(qdrantApiKey && { apiKey: qdrantApiKey }),
 })
 
 export interface VectorSearchResult {
@@ -65,8 +66,17 @@ const VECTOR_SIZE = 768 // e5-base-instruct dimensions
  */
 export async function initializeQdrantCollection(): Promise<void> {
   try {
+    console.log(`Initializing Qdrant collection: ${COLLECTION_NAME}`)
+    console.log(
+      `Qdrant URL: ${qdrantUrl}, API Key configured: ${!!qdrantApiKey}`,
+    )
+
     // Check if collection exists
     const collections = await qdrantClient.getCollections()
+    console.log(
+      `Available collections: ${collections.collections.map(c => c.name).join(", ")}`,
+    )
+
     const exists = collections.collections.some(c => c.name === COLLECTION_NAME)
 
     if (!exists) {
@@ -89,9 +99,22 @@ export async function initializeQdrantCollection(): Promise<void> {
       )
     } else {
       console.log(`Collection ${COLLECTION_NAME} already exists`)
+
+      // Get collection info to verify configuration
+      const collectionInfo = await qdrantClient.getCollection(COLLECTION_NAME)
+      console.log(`Collection config:`, {
+        vectors: collectionInfo.config?.params?.vectors,
+        quantization: collectionInfo.config?.quantization_config,
+      })
     }
   } catch (error) {
     console.error("Error initializing Qdrant collection:", error)
+    console.error("Initialization error details:", {
+      qdrantUrl,
+      hasApiKey: !!qdrantApiKey,
+      errorMessage: error instanceof Error ? error.message : "Unknown error",
+      errorStack: error instanceof Error ? error.stack : undefined,
+    })
     throw new Error(
       `Failed to initialize Qdrant collection: ${error instanceof Error ? error.message : "Unknown error"}`,
     )
@@ -238,8 +261,14 @@ export async function semanticSearch(
   const { contentType, language, threshold = 0.7, maxResults = 10 } = options
 
   try {
+    console.log(`Qdrant semantic search - Query: "${query}", Options:`, options)
+    console.log(
+      `Qdrant URL: ${qdrantUrl}, API Key configured: ${!!qdrantApiKey}`,
+    )
+
     // Generate embedding for the query
     const { embedding } = await generateEmbedding(query)
+    console.log(`Generated embedding dimension: ${embedding.length}`)
 
     // Build filter conditions
     const filter: any = {
@@ -260,13 +289,19 @@ export async function semanticSearch(
       })
     }
 
-    // Search with binary quantization
-    const searchResult = await qdrantClient.search(COLLECTION_NAME, {
+    const searchParams = {
       vector: embedding,
       limit: maxResults,
       score_threshold: threshold,
       filter: filter.must.length > 0 ? filter : undefined,
-    })
+    }
+
+    // Search with binary quantization
+    const searchResult = await qdrantClient.search(
+      COLLECTION_NAME,
+      searchParams,
+    )
+    console.log(`Qdrant search returned ${searchResult.length} results`)
 
     return searchResult.map(point => ({
       id: point.id as string,
@@ -279,6 +314,14 @@ export async function semanticSearch(
     }))
   } catch (error) {
     console.error("Error in Qdrant semantic search:", error)
+    console.error("Error details:", {
+      query,
+      options,
+      qdrantUrl,
+      hasApiKey: !!qdrantApiKey,
+      errorMessage: error instanceof Error ? error.message : "Unknown error",
+      errorStack: error instanceof Error ? error.stack : undefined,
+    })
     throw new Error(
       `Semantic search error: ${error instanceof Error ? error.message : "Unknown error"}`,
     )

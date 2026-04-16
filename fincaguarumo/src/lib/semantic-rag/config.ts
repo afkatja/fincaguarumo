@@ -43,6 +43,7 @@ export function isQdrantConfigured(): boolean {
   return (
     config.vectorStore === "qdrant" &&
     !!config.qdrantUrl &&
+    !!config.qdrantApiKey &&
     config.enableBinaryQuantization
   )
 }
