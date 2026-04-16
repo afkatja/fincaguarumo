@@ -45,8 +45,13 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
+// Helper function to create error responses
+function createErrorResponse(error: string, status: number): NextResponse {
+  return NextResponse.json({ error }, { status })
+}
+
+// Helper function to sanitize input (basic XSS prevention)
 function sanitizeInput(input: string): string {
-  // Basic XSS prevention
   return input
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -55,45 +60,53 @@ function sanitizeInput(input: string): string {
     .replace(/\//g, "&#x2F;")
 }
 
+// Helper function to validate chat request
+function validateChatRequest(body: ChatRequest): {
+  isValid: boolean
+  error?: string
+  sanitizedQuery?: string
+} {
+  const { messages } = body
+
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    return { isValid: false, error: "Messages array is required" }
+  }
+
+  const lastMessage = messages[messages.length - 1]
+  const userQuery = lastMessage?.content || ""
+
+  if (
+    !userQuery ||
+    typeof userQuery !== "string" ||
+    userQuery.trim().length === 0
+  ) {
+    return { isValid: false, error: "Valid message content is required" }
+  }
+
+  return { isValid: true, sanitizedQuery: sanitizeInput(userQuery.trim()) }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
     const clientIP = getClientIP(request)
     if (!checkRateLimit(clientIP)) {
-      return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
-        { status: 429 },
+      return createErrorResponse(
+        "Too many requests. Please try again later.",
+        429,
       )
     }
 
     const body: ChatRequest = await request.json()
     const { messages, threadId, locale = "en", context } = body
 
-    // Input validation
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json(
-        { error: "Messages array is required" },
-        { status: 400 },
-      )
+    // Validate request
+    const validation = validateChatRequest(body)
+    if (!validation.isValid) {
+      return createErrorResponse(validation.error!, 400)
     }
 
-    // Get the last user message for processing
-    const lastMessage = messages[messages.length - 1]
-    const userQuery = lastMessage?.content || ""
-
-    if (
-      !userQuery ||
-      typeof userQuery !== "string" ||
-      userQuery.trim().length === 0
-    ) {
-      return NextResponse.json(
-        { error: "Valid message content is required" },
-        { status: 400 },
-      )
-    }
-
-    // Sanitize input
-    const sanitizedQuery = sanitizeInput(userQuery.trim())
+    const sanitizedQuery = validation.sanitizedQuery!
 
     // Detect intent
     const userIntent: UserIntent = detectUserIntent(sanitizedQuery)
@@ -116,14 +129,15 @@ export async function POST(request: NextRequest) {
       console.error("Progress send error:", error)
     })
 
-    // Return streaming response immediately
-    const streamResponse = new Response(readable, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    })
+    // Create streaming response
+    const createStreamResponse = () =>
+      new Response(readable, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      })
 
     // Process chat in background
     streamResponseWithData({
@@ -146,7 +160,7 @@ export async function POST(request: NextRequest) {
         .finally(() => writer.close().catch(() => {}))
     })
 
-    return streamResponse
+    return createStreamResponse()
   } catch (error) {
     console.error("Chat API error:", error)
     return NextResponse.json(

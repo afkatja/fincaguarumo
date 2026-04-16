@@ -597,7 +597,7 @@ export function preprocessText(
     preprocessingSteps.push(`Using specified language: ${language}`)
   }
 
-  // Validate text length
+  // Validate and adjust text length
   if (processedText.length < minLength) {
     throw new Error(`Text too short: minimum ${minLength} characters required`)
   }
@@ -611,31 +611,30 @@ export function preprocessText(
   if (detectedLanguage !== "unknown" && LANGUAGE_PATTERNS[detectedLanguage]) {
     const patterns = LANGUAGE_PATTERNS[detectedLanguage]
 
-    // Apply contraction patterns first
-    for (const [regex, replacement] of patterns) {
-      if (
-        regex.toString().includes("can't") ||
-        regex.toString().includes("won't") ||
-        regex.toString().includes("don't") ||
-        regex.toString().includes("n't")
-      ) {
-        processedText = processedText.replace(regex, replacement)
-      }
+    // Helper function to check if pattern is a contraction
+    const isContractionPattern = (regex: RegExp): boolean => {
+      const regexStr = regex.toString()
+      return (
+        regexStr.includes("can't") ||
+        regexStr.includes("won't") ||
+        regexStr.includes("don't") ||
+        regexStr.includes("n't")
+      )
     }
 
-    // Apply remaining patterns (including punctuation removal)
-    for (const [regex, replacement] of patterns) {
-      if (
-        !(
-          regex.toString().includes("can't") ||
-          regex.toString().includes("won't") ||
-          regex.toString().includes("don't") ||
-          regex.toString().includes("n't")
-        )
-      ) {
+    // Apply contraction patterns first
+    patterns
+      .filter(([regex]) => isContractionPattern(regex))
+      .forEach(([regex, replacement]) => {
         processedText = processedText.replace(regex, replacement)
-      }
-    }
+      })
+
+    // Apply remaining patterns (including punctuation removal)
+    patterns
+      .filter(([regex]) => !isContractionPattern(regex))
+      .forEach(([regex, replacement]) => {
+        processedText = processedText.replace(regex, replacement)
+      })
 
     preprocessingSteps.push(`Applied ${detectedLanguage}-specific patterns`)
   }
@@ -684,44 +683,45 @@ export function isSupportedLanguage(
   return ["en", "nl", "es", "ru", "de"].includes(language)
 }
 
+// Fallback language mapping for unsupported languages
+const FALLBACK_MAP: Record<string, SupportedLanguage> = {
+  unknown: "en", // Default to English
+  fr: "en", // French -> English
+  it: "en", // Italian -> English
+  pt: "es", // Portuguese -> Spanish
+  ro: "en", // Romanian -> English
+  cs: "de", // Czech -> German
+  pl: "de", // Polish -> German
+  sv: "en", // Swedish -> English
+  no: "en", // Norwegian -> English
+  da: "de", // Danish -> German
+  fi: "en", // Finnish -> English
+  hu: "de", // Hungarian -> German
+  bg: "ru", // Bulgarian -> Russian
+  uk: "ru", // Ukrainian -> Russian
+  be: "ru", // Belarusian -> Russian
+  hr: "de", // Croatian -> German
+  sr: "de", // Serbian -> German
+  sl: "de", // Slovenian -> German
+  sk: "de", // Slovak -> German
+  et: "en", // Estonian -> English
+  lv: "de", // Latvian -> German
+  lt: "de", // Lithuanian -> German
+  mt: "en", // Maltese -> English
+  ga: "en", // Irish -> English
+  cy: "en", // Welsh -> English
+  is: "en", // Icelandic -> English
+  mk: "de", // Macedonian -> German
+  sq: "en", // Albanian -> English
+}
+
 /**
  * Get fallback language for unsupported languages
  */
 export function getFallbackLanguage(
   detectedLanguage: string,
 ): SupportedLanguage {
-  const fallbackMap: Record<string, SupportedLanguage> = {
-    unknown: "en", // Default to English
-    fr: "en", // French -> English
-    it: "en", // Italian -> English
-    pt: "es", // Portuguese -> Spanish
-    ro: "en", // Romanian -> English
-    cs: "de", // Czech -> German
-    pl: "de", // Polish -> German
-    sv: "en", // Swedish -> English
-    no: "en", // Norwegian -> English
-    da: "de", // Danish -> German
-    fi: "en", // Finnish -> English
-    hu: "de", // Hungarian -> German
-    bg: "ru", // Bulgarian -> Russian
-    uk: "ru", // Ukrainian -> Russian
-    be: "ru", // Belarusian -> Russian
-    hr: "de", // Croatian -> German
-    sr: "de", // Serbian -> German
-    sl: "de", // Slovenian -> German
-    sk: "de", // Slovak -> German
-    et: "en", // Estonian -> English
-    lv: "de", // Latvian -> German
-    lt: "de", // Lithuanian -> German
-    mt: "en", // Maltese -> English
-    ga: "en", // Irish -> English
-    cy: "en", // Welsh -> English
-    is: "en", // Icelandic -> English
-    mk: "de", // Macedonian -> German
-    sq: "en", // Albanian -> English
-  }
-
-  return fallbackMap[detectedLanguage.toLowerCase()] || "en"
+  return FALLBACK_MAP[detectedLanguage.toLowerCase()] || "en"
 }
 
 /**

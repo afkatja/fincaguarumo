@@ -12,6 +12,8 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 // TogetherAI configuration
 const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY!
 const TOGETHER_EMBEDDING_MODEL = "intfloat/e5-base-instruct"
+const TOGETHER_API_URL = "https://api.together.xyz/v1/embeddings"
+const BATCH_SIZE = 100 // TogetherAI limit
 
 export interface EmbeddingResult {
   embedding: number[]
@@ -21,6 +23,27 @@ export interface EmbeddingResult {
 /**
  * Generate embeddings using TogetherAI e5-base-instruct model with multilingual preprocessing
  */
+// Helper function to make TogetherAI API requests
+async function makeTogetherAIRequest(input: string | string[]): Promise<any> {
+  const response = await fetch(TOGETHER_API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${TOGETHER_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: TOGETHER_EMBEDDING_MODEL,
+      input,
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`TogetherAI API error: ${response.statusText}`)
+  }
+
+  return response.json()
+}
+
 export async function generateEmbedding(
   text: string,
   language?: SupportedLanguage | "auto",
@@ -41,23 +64,7 @@ export async function generateEmbedding(
       `📝 Preprocessing steps: ${preprocessingResult.preprocessingSteps.join(", ")}`,
     )
 
-    const response = await fetch("https://api.together.xyz/v1/embeddings", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${TOGETHER_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: TOGETHER_EMBEDDING_MODEL,
-        input: preprocessingResult.processedText,
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`TogetherAI API error: ${response.statusText}`)
-    }
-
-    const data = await response.json()
+    const data = await makeTogetherAIRequest(preprocessingResult.processedText)
 
     if (!data.data || !data.data[0] || !data.data[0].embedding) {
       throw new Error("Invalid embedding response from TogetherAI")
@@ -82,7 +89,6 @@ export async function generateBatchEmbeddings(
   texts: string[],
   language?: SupportedLanguage | "auto",
 ): Promise<EmbeddingResult[]> {
-  const batchSize = 100 // TogetherAI limit
   const results: EmbeddingResult[] = []
 
   console.log(
@@ -100,27 +106,12 @@ export async function generateBatchEmbeddings(
     return result.processedText
   })
 
-  for (let i = 0; i < preprocessedTexts.length; i += batchSize) {
-    const batch = preprocessedTexts.slice(i, i + batchSize)
+  for (let i = 0; i < preprocessedTexts.length; i += BATCH_SIZE) {
+    const batch = preprocessedTexts.slice(i, i + BATCH_SIZE)
+    const batchNumber = Math.floor(i / BATCH_SIZE) + 1
 
     try {
-      const response = await fetch("https://api.together.xyz/v1/embeddings", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${TOGETHER_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: TOGETHER_EMBEDDING_MODEL,
-          input: batch,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`TogetherAI API error: ${response.statusText}`)
-      }
-
-      const data = await response.json()
+      const data = await makeTogetherAIRequest(batch)
 
       if (!data.data || !Array.isArray(data.data)) {
         throw new Error("Invalid batch embedding response from TogetherAI")
@@ -132,12 +123,10 @@ export async function generateBatchEmbeddings(
       }))
 
       results.push(...batchResults)
-      console.log(
-        `✅ Batch ${Math.floor(i / batchSize) + 1} processed successfully`,
-      )
+      console.log(`✅ Batch ${batchNumber} processed successfully`)
     } catch (error) {
       console.error(
-        `Error generating batch embeddings for batch ${i / batchSize}:`,
+        `Error generating batch embeddings for batch ${batchNumber}:`,
         error,
       )
       throw error

@@ -61,6 +61,60 @@ export interface QdrantCollectionConfig {
 const COLLECTION_NAME = "content_embeddings"
 const VECTOR_SIZE = 768 // e5-base-instruct dimensions
 
+// Helper function to handle errors consistently
+function handleError(error: unknown, context: string): never {
+  const errorMessage = error instanceof Error ? error.message : "Unknown error"
+  console.error(`${context}:`, error)
+  throw new Error(`${context}: ${errorMessage}`)
+}
+
+// Helper function to validate and parse embedding
+function validateAndParseEmbedding(
+  embedding: number[] | string,
+  contentId: string,
+): number[] {
+  let parsedEmbedding: number[]
+
+  if (typeof embedding === "string") {
+    try {
+      parsedEmbedding = JSON.parse(embedding)
+    } catch (parseError) {
+      handleError(parseError, `Failed to parse embedding for ${contentId}`)
+    }
+  } else {
+    parsedEmbedding = embedding
+  }
+
+  if (
+    !Array.isArray(parsedEmbedding) ||
+    parsedEmbedding.length !== VECTOR_SIZE
+  ) {
+    throw new Error(
+      `Invalid embedding dimensions for ${contentId}: expected ${VECTOR_SIZE}, got ${parsedEmbedding?.length}`,
+    )
+  }
+
+  return parsedEmbedding
+}
+
+// Helper function to create point payload
+function createPointPayload(
+  contentId: string,
+  contentType: string,
+  language: string,
+  content: string,
+  metadata: Record<string, any> = {},
+) {
+  return {
+    content_id: contentId,
+    content_type: contentType,
+    language,
+    content,
+    metadata,
+    updated_at: new Date().toISOString(),
+  }
+}
+
 /**
  * Initialize Qdrant collection with binary quantization
  */
@@ -115,9 +169,7 @@ export async function initializeQdrantCollection(): Promise<void> {
       errorMessage: error instanceof Error ? error.message : "Unknown error",
       errorStack: error instanceof Error ? error.stack : undefined,
     })
-    throw new Error(
-      `Failed to initialize Qdrant collection: ${error instanceof Error ? error.message : "Unknown error"}`,
-    )
+    handleError(error, "Failed to initialize Qdrant collection")
   }
 }
 
@@ -133,40 +185,19 @@ export async function storeEmbedding(
   metadata: Record<string, any> = {},
 ): Promise<void> {
   try {
-    // Parse string embedding to number array if needed
-    let parsedEmbedding: number[]
-
-    if (typeof embedding === "string") {
-      try {
-        parsedEmbedding = JSON.parse(embedding)
-      } catch (parseError) {
-        console.error(`Failed to parse embedding for ${contentId}:`, parseError)
-        throw new Error(`Invalid embedding format for ${contentId}`)
-      }
-    } else {
-      parsedEmbedding = embedding
-    }
-
-    // Validate embedding format
-    if (!Array.isArray(parsedEmbedding) || parsedEmbedding.length !== 768) {
-      throw new Error(
-        `Invalid embedding dimensions for ${contentId}: expected 768, got ${parsedEmbedding?.length}`,
-      )
-    }
-
-    // Generate UUID for point ID, store original content_id in payload
+    const parsedEmbedding = validateAndParseEmbedding(embedding, contentId)
     const pointId = crypto.randomUUID()
+
     const point = {
-      id: pointId, // Use UUID as point ID
-      vector: parsedEmbedding, // Use parsed number array
-      payload: {
-        content_id: contentId, // Store original content_id here
-        content_type: contentType,
+      id: pointId,
+      vector: parsedEmbedding,
+      payload: createPointPayload(
+        contentId,
+        contentType,
         language,
         content,
         metadata,
-        updated_at: new Date().toISOString(),
-      },
+      ),
     }
 
     await qdrantClient.upsert(COLLECTION_NAME, {
@@ -177,10 +208,7 @@ export async function storeEmbedding(
       `Stored embedding for ${contentType}:${contentId} in ${language}`,
     )
   } catch (error) {
-    console.error("Error storing embedding in Qdrant:", error)
-    throw new Error(
-      `Failed to store embedding: ${error instanceof Error ? error.message : "Unknown error"}`,
-    )
+    handleError(error, "Error storing embedding in Qdrant")
   }
 }
 
