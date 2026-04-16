@@ -73,26 +73,17 @@ export async function initializeQdrantCollection(): Promise<void> {
       console.log(`Creating Qdrant collection: ${COLLECTION_NAME}`)
 
       // Create collection with binary quantization
-      const config: QdrantCollectionConfig = {
+      await qdrantClient.createCollection(COLLECTION_NAME, {
         vectors: {
           size: VECTOR_SIZE,
           distance: "Cosine",
         },
-        optimizers_config: {
-          default_segment_number: 2,
-        },
         quantization_config: {
-          quantization_config: {
-            type: "Binary",
-            binary: {
-              binary: true,
-              threshold: 0.0,
-            },
+          binary: {
+            binary: true,
           },
         },
-      }
-
-      await qdrantClient.createCollection(COLLECTION_NAME, config)
+      })
       console.log(
         `Collection ${COLLECTION_NAME} created with binary quantization`,
       )
@@ -115,15 +106,38 @@ export async function storeEmbedding(
   contentType: string,
   language: string,
   content: string,
-  embedding: number[],
+  embedding: number[] | string,
   metadata: Record<string, any> = {},
 ): Promise<void> {
   try {
+    // Parse string embedding to number array if needed
+    let parsedEmbedding: number[]
+
+    if (typeof embedding === "string") {
+      try {
+        parsedEmbedding = JSON.parse(embedding)
+      } catch (parseError) {
+        console.error(`Failed to parse embedding for ${contentId}:`, parseError)
+        throw new Error(`Invalid embedding format for ${contentId}`)
+      }
+    } else {
+      parsedEmbedding = embedding
+    }
+
+    // Validate embedding format
+    if (!Array.isArray(parsedEmbedding) || parsedEmbedding.length !== 768) {
+      throw new Error(
+        `Invalid embedding dimensions for ${contentId}: expected 768, got ${parsedEmbedding?.length}`,
+      )
+    }
+
+    // Generate UUID for point ID, store original content_id in payload
+    const pointId = crypto.randomUUID()
     const point = {
-      id: contentId,
-      vector: embedding,
+      id: pointId, // Use UUID as point ID
+      vector: parsedEmbedding, // Use parsed number array
       payload: {
-        content_id: contentId,
+        content_id: contentId, // Store original content_id here
         content_type: contentType,
         language,
         content,
@@ -161,19 +175,46 @@ export async function storeBatchEmbeddings(
   }>,
 ): Promise<void> {
   try {
-    const points = embeddings.map(emb => ({
-      id: emb.contentId,
-      vector: emb.embedding,
-      payload: {
-        content_id: emb.contentId,
-        content_type: emb.contentType,
-        language: emb.language,
-        content: emb.content,
-        metadata: emb.metadata || {},
-        updated_at: new Date().toISOString(),
-      },
-    }))
+    const points = embeddings.map((embedding, index) => {
+      // Parse string embedding to number array
+      let parsedEmbedding: number[]
 
+      if (typeof embedding.embedding === "string") {
+        try {
+          parsedEmbedding = JSON.parse(embedding.embedding)
+        } catch (parseError) {
+          console.error(
+            `Failed to parse embedding for ${embedding.contentId}:`,
+            parseError,
+          )
+          throw new Error(`Invalid embedding format for ${embedding.contentId}`)
+        }
+      } else {
+        parsedEmbedding = embedding.embedding
+      }
+
+      // Validate embedding format
+      if (!Array.isArray(parsedEmbedding) || parsedEmbedding.length !== 768) {
+        throw new Error(
+          `Invalid embedding dimensions for ${embedding.contentId}: expected 768, got ${parsedEmbedding?.length}`,
+        )
+      }
+
+      return {
+        id: crypto.randomUUID(), // Generate UUID for each point
+        vector: parsedEmbedding, // Use parsed number array
+        payload: {
+          content_id: embedding.contentId, // Store original content_id in payload
+          content_type: embedding.contentType,
+          language: embedding.language,
+          content: embedding.content,
+          metadata: embedding.metadata || {},
+          updated_at: new Date().toISOString(),
+        },
+      }
+    })
+
+    console.log(`Attempting to store ${points.length} points...`)
     await qdrantClient.upsert(COLLECTION_NAME, {
       points,
     })
@@ -445,13 +486,19 @@ export async function embeddingExists(
   contentType: string,
 ): Promise<boolean> {
   try {
-    const searchResult = await qdrantClient.retrieve(COLLECTION_NAME, {
-      ids: [contentId],
-      with_payload: false,
-      with_vector: false,
+    // Search by content_id in payload since we use UUIDs as point IDs
+    const result = await qdrantClient.scroll(COLLECTION_NAME, {
+      filter: {
+        must: [
+          { key: "content_id", match: { value: contentId } },
+          { key: "content_type", match: { value: contentType } },
+        ],
+      },
+      limit: 1,
+      with_payload: true,
     })
 
-    return searchResult.length > 0
+    return result.points.length > 0
   } catch (error) {
     console.error("Error checking embedding existence:", error)
     return false

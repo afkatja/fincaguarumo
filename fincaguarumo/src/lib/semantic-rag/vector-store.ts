@@ -4,6 +4,7 @@ import {
   generateBatchEmbeddings,
   EmbeddingResult,
 } from "./embeddings-hybrid"
+import { SupportedLanguage } from "./multilingual-preprocessing"
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -347,7 +348,7 @@ export async function rebuildEmbeddings(
         batch.map((item, index) => ({
           contentId: item.contentId || `${contentType}_${language}_${index}`,
           contentType,
-          language,
+          language: language as SupportedLanguage | "unknown",
           content: item.content,
           embedding: embeddings[index].embedding,
           metadata: item.metadata,
