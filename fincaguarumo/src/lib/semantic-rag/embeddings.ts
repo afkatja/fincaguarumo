@@ -6,7 +6,7 @@ import {
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
+const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 // TogetherAI configuration
