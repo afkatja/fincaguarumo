@@ -4,6 +4,11 @@
  * This provides embedding generation using locally running Ollama with nomic-embed-text model
  */
 
+import {
+  preprocessTextWithFallback,
+  SupportedLanguage,
+} from "./multilingual-preprocessing"
+
 export interface EmbeddingResult {
   embedding: number[]
   dimensions: number
@@ -14,8 +19,21 @@ export interface EmbeddingResult {
  */
 export async function generateEmbedding(
   text: string,
+  language?: SupportedLanguage | "auto",
 ): Promise<EmbeddingResult> {
   try {
+    // Apply multilingual preprocessing
+    const preprocessingResult = preprocessTextWithFallback(text, language, {
+      normalizeWhitespace: true,
+      removeSpecialChars: true,
+      lowercase: true,
+      removeStopWords: false, // Keep stop words for better semantic understanding
+    })
+
+    console.log(
+      `🏠 Generating local embedding for language: ${preprocessingResult.detectedLanguage || "unknown"}`,
+    )
+
     const response = await fetch("http://localhost:11434/api/embed", {
       method: "POST",
       headers: {
@@ -23,7 +41,7 @@ export async function generateEmbedding(
       },
       body: JSON.stringify({
         model: "nomic-embed-text",
-        input: text,
+        input: preprocessingResult.processedText,
       }),
     })
 
@@ -58,13 +76,18 @@ export async function generateEmbedding(
  */
 export async function generateBatchEmbeddings(
   texts: string[],
+  language?: SupportedLanguage | "auto",
 ): Promise<EmbeddingResult[]> {
   const results: EmbeddingResult[] = []
+
+  console.log(
+    `🏠 Processing local batch of ${texts.length} texts with language: ${language || "auto"}`,
+  )
 
   // Ollama doesn't have batch embedding, so process sequentially
   for (const text of texts) {
     try {
-      const result = await generateEmbedding(text)
+      const result = await generateEmbedding(text, language)
       results.push(result)
     } catch (error) {
       console.error(`Error generating embedding for text: ${text}`, error)
@@ -76,6 +99,7 @@ export async function generateBatchEmbeddings(
     }
   }
 
+  console.log(`✅ Generated ${results.length} local embeddings successfully`)
   return results
 }
 

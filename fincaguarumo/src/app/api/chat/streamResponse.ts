@@ -23,7 +23,7 @@ export const streamResponseWithData = async ({
   context?: any
   locale: string
   messages: any[]
-  threadId: string
+  threadId?: string
   writer: WritableStreamDefaultWriter<Uint8Array>
   userIntent?: UserIntent
 }) => {
@@ -155,7 +155,7 @@ Use this preloaded data instead of calling tools for basic property information.
     }
 
     // Perform evaluation in background only for critical flows
-    if (isCriticalFlow(userQuery, fullResponse)) {
+    if (isCriticalFlow(userQuery)) {
       console.log("Critical flow detected - performing background evaluation")
       performBackgroundEvaluation(
         fullResponse,
@@ -165,6 +165,7 @@ Use this preloaded data instead of calling tools for basic property information.
         context,
         systemPrompt,
         threadId,
+        userQuery,
       )
     } else {
       console.log("General Q&A detected - skipping evaluation for speed")

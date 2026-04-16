@@ -6,6 +6,13 @@ import {
 import { processAllDocuments } from "./document-loaders"
 import { rebuildEmbeddings } from "./vector-store"
 import { getEmbeddingStatus, testEmbeddingMethods } from "./embeddings-hybrid"
+import {
+  semanticSearch,
+  hybridSearch,
+  getContentStats,
+  getPerformanceInfo,
+  initializeVectorStore,
+} from "./vector-store-adapter"
 
 export interface SemanticRAGContext {
   query: string

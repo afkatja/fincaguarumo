@@ -3,7 +3,7 @@ import {
   semanticSearch,
   HybridSearchResult,
   SearchOptions,
-} from "./vector-store"
+} from "./vector-store-adapter"
 // import { processAllDocuments } from "./document-loaders"
 
 export interface RetrievalChainOptions extends SearchOptions {

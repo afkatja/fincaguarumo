@@ -1,4 +1,8 @@
 import { createClient } from "@supabase/supabase-js"
+import {
+  preprocessTextWithFallback,
+  SupportedLanguage,
+} from "./multilingual-preprocessing"
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -15,12 +19,28 @@ export interface EmbeddingResult {
 }
 
 /**
- * Generate embeddings using TogetherAI e5-base-instruct model
+ * Generate embeddings using TogetherAI e5-base-instruct model with multilingual preprocessing
  */
 export async function generateEmbedding(
   text: string,
+  language?: SupportedLanguage | "auto",
 ): Promise<EmbeddingResult> {
   try {
+    // Apply multilingual preprocessing
+    const preprocessingResult = preprocessTextWithFallback(text, language, {
+      normalizeWhitespace: true,
+      removeSpecialChars: true,
+      lowercase: true,
+      removeStopWords: false, // Keep stop words for better semantic understanding
+    })
+
+    console.log(
+      `🌐 Generating embedding for language: ${preprocessingResult.detectedLanguage || "unknown"}`,
+    )
+    console.log(
+      `📝 Preprocessing steps: ${preprocessingResult.preprocessingSteps.join(", ")}`,
+    )
+
     const response = await fetch("https://api.together.xyz/v1/embeddings", {
       method: "POST",
       headers: {
@@ -29,7 +49,7 @@ export async function generateEmbedding(
       },
       body: JSON.stringify({
         model: TOGETHER_EMBEDDING_MODEL,
-        input: text,
+        input: preprocessingResult.processedText,
       }),
     })
 
@@ -56,16 +76,32 @@ export async function generateEmbedding(
 }
 
 /**
- * Generate embeddings for multiple texts in batch
+ * Generate embeddings for multiple texts in batch with multilingual preprocessing
  */
 export async function generateBatchEmbeddings(
   texts: string[],
+  language?: SupportedLanguage | "auto",
 ): Promise<EmbeddingResult[]> {
   const batchSize = 100 // TogetherAI limit
   const results: EmbeddingResult[] = []
 
-  for (let i = 0; i < texts.length; i += batchSize) {
-    const batch = texts.slice(i, i + batchSize)
+  console.log(
+    `🌐 Processing batch of ${texts.length} texts with language: ${language || "auto"}`,
+  )
+
+  // Preprocess all texts first
+  const preprocessedTexts = texts.map(text => {
+    const result = preprocessTextWithFallback(text, language, {
+      normalizeWhitespace: true,
+      removeSpecialChars: true,
+      lowercase: true,
+      removeStopWords: false,
+    })
+    return result.processedText
+  })
+
+  for (let i = 0; i < preprocessedTexts.length; i += batchSize) {
+    const batch = preprocessedTexts.slice(i, i + batchSize)
 
     try {
       const response = await fetch("https://api.together.xyz/v1/embeddings", {
@@ -96,6 +132,9 @@ export async function generateBatchEmbeddings(
       }))
 
       results.push(...batchResults)
+      console.log(
+        `✅ Batch ${Math.floor(i / batchSize) + 1} processed successfully`,
+      )
     } catch (error) {
       console.error(
         `Error generating batch embeddings for batch ${i / batchSize}:`,
@@ -105,6 +144,7 @@ export async function generateBatchEmbeddings(
     }
   }
 
+  console.log(`✅ Generated ${results.length} embeddings successfully`)
   return results
 }
 
@@ -114,7 +154,7 @@ export async function generateBatchEmbeddings(
 export async function storeEmbedding(
   contentId: string,
   contentType: string,
-  language: string,
+  language: SupportedLanguage | "unknown",
   content: string,
   embedding: number[],
   metadata: Record<string, any> = {},
@@ -146,7 +186,7 @@ export async function storeBatchEmbeddings(
   embeddings: Array<{
     contentId: string
     contentType: string
-    language: string
+    language: SupportedLanguage | "unknown"
     content: string
     embedding: number[]
     metadata?: Record<string, any>

@@ -9,6 +9,7 @@ import {
   generateBatchEmbeddings as generateRemoteBatchEmbeddings,
   EmbeddingResult as RemoteEmbeddingResult,
 } from "./embeddings"
+import { SupportedLanguage } from "./multilingual-preprocessing"
 import {
   generateEmbedding as generateLocalEmbedding,
   generateBatchEmbeddings as generateLocalBatchEmbeddings,
@@ -51,6 +52,7 @@ function getEmbeddingConfig(): EmbeddingConfig {
 export async function generateEmbedding(
   text: string,
   config?: Partial<EmbeddingConfig>,
+  language?: SupportedLanguage | "auto",
 ): Promise<EmbeddingResult> {
   const finalConfig = { ...defaultConfig, ...config }
 
@@ -66,7 +68,7 @@ export async function generateEmbedding(
       ])
 
       if (isLocalAvailable) {
-        const result = await generateLocalEmbedding(text)
+        const result = await generateLocalEmbedding(text, language)
         console.log("✅ Local embedding generation successful")
         return result
       } else {
@@ -84,7 +86,7 @@ export async function generateEmbedding(
   if (finalConfig.fallbackToRemote) {
     try {
       console.log("🌐 Attempting remote embedding generation...")
-      const result = await generateRemoteEmbedding(text)
+      const result = await generateRemoteEmbedding(text, language)
       console.log("✅ Remote embedding generation successful")
       return result
     } catch (error) {
@@ -107,6 +109,7 @@ export async function generateEmbedding(
 export async function generateBatchEmbeddings(
   texts: string[],
   config?: Partial<EmbeddingConfig>,
+  language?: SupportedLanguage | "auto",
 ): Promise<EmbeddingResult[]> {
   const finalConfig = { ...defaultConfig, ...config }
 
@@ -124,7 +127,7 @@ export async function generateBatchEmbeddings(
       ])
 
       if (isLocalAvailable) {
-        const result = await generateLocalBatchEmbeddings(texts)
+        const result = await generateLocalBatchEmbeddings(texts, language)
         console.log(
           `✅ Local batch embedding generation successful (${result.length} embeddings)`,
         )
@@ -146,7 +149,7 @@ export async function generateBatchEmbeddings(
       console.log(
         `🌐 Attempting remote batch embedding generation for ${texts.length} texts...`,
       )
-      const result = await generateRemoteBatchEmbeddings(texts)
+      const result = await generateRemoteBatchEmbeddings(texts, language)
       console.log(
         `✅ Remote batch embedding generation successful (${result.length} embeddings)`,
       )
@@ -208,7 +211,7 @@ export async function testEmbeddingMethods(): Promise<{
   // Test local
   try {
     const start = Date.now()
-    await generateLocalEmbedding("test query")
+    await generateLocalEmbedding("test query", "en")
     const time = Date.now() - start
     results.local = {
       success: true,
@@ -234,7 +237,7 @@ export async function testEmbeddingMethods(): Promise<{
   } else {
     try {
       const start = Date.now()
-      await generateRemoteEmbedding("test query")
+      await generateRemoteEmbedding("test query", "en")
       const time = Date.now() - start
       results.remote = {
         success: true,

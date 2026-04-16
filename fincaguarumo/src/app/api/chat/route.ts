@@ -1,73 +1,157 @@
-import { streamResponseWithData } from "./streamResponse"
+import { NextRequest, NextResponse } from "next/server"
 import {
   detectUserIntent,
   getProgressMessage,
   UserIntent,
 } from "../../../lib/intent-detection"
+import { streamResponseWithData } from "./streamResponse"
 
-export async function POST(request: Request) {
-  const { messages, threadId, locale = "en", context } = await request.json()
+interface ChatRequest {
+  messages: Array<{ role: string; content: string }>
+  threadId?: string
+  locale?: string
+  context?: {
+    page?: string
+    propertySlug?: string
+    bookingState?: any
+  }
+}
 
-  // Get the last user message for RAG
-  const lastMessage = messages[messages.length - 1]
-  const userQuery = lastMessage?.content || ""
+// Rate limiting (simple in-memory for demo)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
+const RATE_LIMIT_WINDOW = 60000 // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 20
 
-  // Send immediate progress indicators based on user query
-  const queryForProgress = userQuery.toLowerCase()
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for")
+  const real = request.headers.get("x-real-ip")
+  return forwarded?.split(",")[0] || real || "unknown"
+}
 
-  // Create TransformStream and send progress immediately
-  const { readable, writable } = new TransformStream()
-  const writer = writable.getWriter()
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const record = rateLimitMap.get(ip)
 
-  // Helper function to send progress
-  const sendProgress = async (message: string) => {
-    const payload = JSON.stringify({ type: "progress", message })
-    const progressChunk = `0:${payload}\n`
-    await writer.write(new TextEncoder().encode(progressChunk))
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
+    return true
   }
 
-  // Detect intent once for both progress and tool filtering
-  const userIntent: UserIntent = detectUserIntent(userQuery)
-  console.log("Detected intent in route:", userIntent)
-
-  // Send immediate progress based on detected intent
-  const sendImmediateProgress = async () => {
-    const progressMessage = getProgressMessage(userIntent)
-    await sendProgress(progressMessage)
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false
   }
 
-  // Send progress immediately before expensive LLM call
-  sendImmediateProgress().catch(error => {
-    console.error("Progress send error:", error)
-  })
+  record.count++
+  return true
+}
 
-  // Return the streaming response immediately (don't wait for evaluation)
-  const streamResponse = new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    },
-  })
+function sanitizeInput(input: string): string {
+  // Basic XSS prevention
+  return input
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;")
+}
 
-  streamResponseWithData({
-    userQuery,
-    context,
-    locale,
-    messages,
-    threadId,
-    writer,
-    userIntent,
-  }).catch(error => {
-    console.error("🔥 Background LLM failed:", error)
-    // Graceful error handling
-    writer
-      .write(
-        new TextEncoder().encode(
-          '0:{"type":"progress","message":"Sorry, try again"}\n',
-        ),
+export async function POST(request: NextRequest) {
+  try {
+    // Rate limiting
+    const clientIP = getClientIP(request)
+    if (!checkRateLimit(clientIP)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 },
       )
-      .finally(() => writer.close().catch(() => {}))
-  })
-  return streamResponse
+    }
+
+    const body: ChatRequest = await request.json()
+    const { messages, threadId, locale = "en", context } = body
+
+    // Input validation
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json(
+        { error: "Messages array is required" },
+        { status: 400 },
+      )
+    }
+
+    // Get the last user message for processing
+    const lastMessage = messages[messages.length - 1]
+    const userQuery = lastMessage?.content || ""
+
+    if (
+      !userQuery ||
+      typeof userQuery !== "string" ||
+      userQuery.trim().length === 0
+    ) {
+      return NextResponse.json(
+        { error: "Valid message content is required" },
+        { status: 400 },
+      )
+    }
+
+    // Sanitize input
+    const sanitizedQuery = sanitizeInput(userQuery.trim())
+
+    // Detect intent
+    const userIntent: UserIntent = detectUserIntent(sanitizedQuery)
+    console.log("Detected intent:", userIntent)
+
+    // Create TransformStream and send progress immediately
+    const { readable, writable } = new TransformStream()
+    const writer = writable.getWriter()
+
+    // Helper function to send progress
+    const sendProgress = async (message: string) => {
+      const payload = JSON.stringify({ type: "progress", message })
+      const progressChunk = `0:${payload}\n`
+      await writer.write(new TextEncoder().encode(progressChunk))
+    }
+
+    // Send immediate progress based on detected intent
+    const progressMessage = getProgressMessage(userIntent)
+    sendProgress(progressMessage).catch(error => {
+      console.error("Progress send error:", error)
+    })
+
+    // Return streaming response immediately
+    const streamResponse = new Response(readable, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    })
+
+    // Process chat in background
+    streamResponseWithData({
+      userQuery: sanitizedQuery,
+      context,
+      locale,
+      messages,
+      threadId,
+      writer,
+      userIntent,
+    }).catch(error => {
+      console.error(" Chat processing failed:", error)
+      // Graceful error handling
+      writer
+        .write(
+          new TextEncoder().encode(
+            '0:{"type":"progress","message":"Sorry, something went wrong. Please try again."}\n',
+          ),
+        )
+        .finally(() => writer.close().catch(() => {}))
+    })
+
+    return streamResponse
+  } catch (error) {
+    console.error("Chat API error:", error)
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    )
+  }
 }
