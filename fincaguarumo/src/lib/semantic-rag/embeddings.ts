@@ -15,6 +15,30 @@ const TOGETHER_EMBEDDING_MODEL = "intfloat/e5-base-instruct"
 const TOGETHER_API_URL = "https://api.together.xyz/v1/embeddings"
 const BATCH_SIZE = 100 // TogetherAI limit
 
+// Timeout configuration
+const API_TIMEOUT = 30000 // 30 seconds
+const RETRY_ATTEMPTS = 3
+const RETRY_DELAY = 1000 // 1 second
+
+// Helper function to create timeout promise
+function createTimeoutPromise(timeoutMs: number): Promise<never> {
+  return new Promise((_, reject) => {
+    setTimeout(
+      () => reject(new Error(`Request timeout after ${timeoutMs}ms`)),
+      timeoutMs,
+    )
+  })
+}
+
+// Helper function to add timeout to fetch requests
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs: number = API_TIMEOUT,
+): Promise<Response> {
+  return Promise.race([fetch(url, options), createTimeoutPromise(timeoutMs)])
+}
+
 export interface EmbeddingResult {
   embedding: number[]
   dimensions: number
@@ -23,25 +47,77 @@ export interface EmbeddingResult {
 /**
  * Generate embeddings using TogetherAI e5-base-instruct model with multilingual preprocessing
  */
-// Helper function to make TogetherAI API requests
+// Helper function to make TogetherAI API requests with timeout and retry
 async function makeTogetherAIRequest(input: string | string[]): Promise<any> {
-  const response = await fetch(TOGETHER_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${TOGETHER_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: TOGETHER_EMBEDDING_MODEL,
-      input,
-    }),
-  })
+  let lastError: Error
 
-  if (!response.ok) {
-    throw new Error(`TogetherAI API error: ${response.statusText}`)
+  for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
+    try {
+      const response = await fetchWithTimeout(TOGETHER_API_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${TOGETHER_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: TOGETHER_EMBEDDING_MODEL,
+          input,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        const error = new Error(
+          `TogetherAI API error: ${response.statusText} - ${errorText}`,
+        )
+
+        // Don't retry on client errors (4xx)
+        if (response.status >= 400 && response.status < 500) {
+          throw error
+        }
+
+        throw error
+      }
+
+      return response.json()
+    } catch (error) {
+      lastError = error as Error
+
+      // Don't retry on timeout or network errors that are clearly non-retryable
+      if (
+        error instanceof Error &&
+        (error.message.includes("timeout") ||
+          error.message.includes("401") || // Unauthorized
+          error.message.includes("403") || // Forbidden
+          error.message.includes("404") || // Not found
+          error.message.includes("422") || // Unprocessable entity
+          error.message.includes("validation") ||
+          error.message.includes("invalid"))
+      ) {
+        console.error(
+          `TogetherAI request failed with non-retryable error:`,
+          error,
+        )
+        throw error
+      }
+
+      if (attempt === RETRY_ATTEMPTS) {
+        console.error(
+          `TogetherAI request failed after ${RETRY_ATTEMPTS} attempts:`,
+          error,
+        )
+        throw lastError
+      }
+
+      console.warn(
+        `TogetherAI request failed (attempt ${attempt}/${RETRY_ATTEMPTS}), retrying in ${RETRY_DELAY}ms:`,
+        error,
+      )
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+    }
   }
 
-  return response.json()
+  throw lastError!
 }
 
 export async function generateEmbedding(

@@ -47,7 +47,36 @@ function checkRateLimit(ip: string): boolean {
 
 // Helper function to create error responses
 function createErrorResponse(error: string, status: number): NextResponse {
-  return NextResponse.json({ error }, { status })
+  const response = NextResponse.json({ error }, { status })
+
+  // Add Content Security Policy headers for XSS protection
+  response.headers.set(
+    "Content-Security-Policy",
+    "default-src 'none'; script-src 'none'; style-src 'none'; img-src 'none'; font-src 'none'; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  )
+  response.headers.set("X-Content-Type-Options", "nosniff")
+  response.headers.set("X-Frame-Options", "DENY")
+  response.headers.set("X-XSS-Protection", "1; mode=block")
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+
+  return response
+}
+
+// Helper function to create successful responses with security headers
+function createSuccessResponse(data: any, status: number = 200): NextResponse {
+  const response = NextResponse.json(data, { status })
+
+  // Add Content Security Policy headers for XSS protection
+  response.headers.set(
+    "Content-Security-Policy",
+    "default-src 'none'; script-src 'none'; style-src 'none'; img-src 'none'; font-src 'none'; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  )
+  response.headers.set("X-Content-Type-Options", "nosniff")
+  response.headers.set("X-Frame-Options", "DENY")
+  response.headers.set("X-XSS-Protection", "1; mode=block")
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+
+  return response
 }
 
 // Helper function to sanitize input (basic XSS prevention)
@@ -130,14 +159,27 @@ export async function POST(request: NextRequest) {
     })
 
     // Create streaming response
-    const createStreamResponse = () =>
-      new Response(readable, {
+    const createStreamResponse = () => {
+      const response = new Response(readable, {
         headers: {
           "Content-Type": "text/plain; charset=utf-8",
           "Cache-Control": "no-cache",
           Connection: "keep-alive",
         },
       })
+
+      // Add security headers to streaming response
+      response.headers.set(
+        "Content-Security-Policy",
+        "default-src 'none'; script-src 'none'; style-src 'none'; img-src 'none'; font-src 'none'; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+      )
+      response.headers.set("X-Content-Type-Options", "nosniff")
+      response.headers.set("X-Frame-Options", "DENY")
+      response.headers.set("X-XSS-Protection", "1; mode=block")
+      response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+
+      return response
+    }
 
     // Process chat in background
     streamResponseWithData({

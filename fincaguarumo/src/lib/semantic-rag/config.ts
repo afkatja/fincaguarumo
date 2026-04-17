@@ -19,15 +19,8 @@ export function getSemanticRAGConfig(): SemanticRAGConfig {
     | "qdrant"
   const enableBinaryQuantization =
     process.env.ENABLE_BINARY_QUANTIZATION === "true"
-  const nodeEnv = process.env.NODE_ENV || "development"
 
-  // Support environment-specific API keys
-  let qdrantApiKey = process.env.QDRANT_API_KEY
-  if (nodeEnv === "production" && process.env.QDRANT_PROD_API_KEY) {
-    qdrantApiKey = process.env.QDRANT_PROD_API_KEY
-  } else if (nodeEnv === "development" && process.env.QDRANT_DEV_API_KEY) {
-    qdrantApiKey = process.env.QDRANT_DEV_API_KEY
-  }
+  const qdrantApiKey = process.env.QDRANT_API_KEY
 
   return {
     vectorStore,

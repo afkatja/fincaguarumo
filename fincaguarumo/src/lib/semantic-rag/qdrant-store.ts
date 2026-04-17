@@ -9,11 +9,121 @@ import {
 const qdrantUrl = process.env.QDRANT_URL || "http://localhost:6333"
 const qdrantApiKey = process.env.QDRANT_API_KEY
 
+// Retry configuration
+const MAX_RETRIES = 3
+const BASE_DELAY = 1000 // 1 second
+const MAX_DELAY = 10000 // 10 seconds
+
 // Configure client differently for cloud vs local
 const qdrantClient = new QdrantClient({
   url: qdrantUrl,
   ...(qdrantApiKey && { apiKey: qdrantApiKey }),
 })
+
+// Retry helper with exponential backoff
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  operationName: string,
+  maxRetries: number = MAX_RETRIES,
+): Promise<T> {
+  let lastError: Error
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error as Error
+
+      // Don't retry on certain error types
+      if (
+        error instanceof Error &&
+        (error.message.includes("401") || // Unauthorized
+          error.message.includes("403") || // Forbidden
+          error.message.includes("404") || // Not found
+          error.message.includes("422") || // Unprocessable entity
+          error.message.includes("validation") ||
+          error.message.includes("invalid"))
+      ) {
+        console.error(
+          `Operation ${operationName} failed with non-retryable error:`,
+          error,
+        )
+        throw error
+      }
+
+      if (attempt === maxRetries) {
+        console.error(
+          `Operation ${operationName} failed after ${maxRetries} attempts:`,
+          error,
+        )
+        throw lastError
+      }
+
+      // Calculate delay with exponential backoff and jitter
+      const delay = Math.min(
+        BASE_DELAY * Math.pow(2, attempt - 1) + Math.random() * 1000,
+        MAX_DELAY,
+      )
+
+      console.warn(
+        `Operation ${operationName} failed (attempt ${attempt}/${maxRetries}), retrying in ${delay}ms:`,
+        error,
+      )
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+
+  throw lastError!
+}
+
+// Circuit breaker for Qdrant operations
+class CircuitBreaker {
+  private failures = 0
+  private lastFailureTime = 0
+  private state: "CLOSED" | "OPEN" | "HALF_OPEN" = "CLOSED"
+
+  constructor(
+    private threshold = 5,
+    private timeout = 60000, // 1 minute
+  ) {}
+
+  async execute<T>(operation: () => Promise<T>): Promise<T> {
+    if (this.state === "OPEN") {
+      if (Date.now() - this.lastFailureTime > this.timeout) {
+        this.state = "HALF_OPEN"
+        console.log("Circuit breaker transitioning to HALF_OPEN")
+      } else {
+        throw new Error("Circuit breaker is OPEN")
+      }
+    }
+
+    try {
+      const result = await operation()
+
+      if (this.state === "HALF_OPEN") {
+        this.state = "CLOSED"
+        this.failures = 0
+        console.log("Circuit breaker transitioning to CLOSED")
+      }
+
+      return result
+    } catch (error) {
+      this.failures++
+      this.lastFailureTime = Date.now()
+
+      if (this.failures >= this.threshold) {
+        this.state = "OPEN"
+        console.error(
+          "Circuit breaker transitioning to OPEN due to too many failures",
+        )
+      }
+
+      throw error
+    }
+  }
+}
+
+const qdrantCircuitBreaker = new CircuitBreaker()
 
 export interface VectorSearchResult {
   id: string
@@ -119,58 +229,53 @@ function createPointPayload(
  * Initialize Qdrant collection with binary quantization
  */
 export async function initializeQdrantCollection(): Promise<void> {
-  try {
-    console.log(`Initializing Qdrant collection: ${COLLECTION_NAME}`)
-    console.log(
-      `Qdrant URL: ${qdrantUrl}, API Key configured: ${!!qdrantApiKey}`,
-    )
-
-    // Check if collection exists
-    const collections = await qdrantClient.getCollections()
-    console.log(
-      `Available collections: ${collections.collections.map(c => c.name).join(", ")}`,
-    )
-
-    const exists = collections.collections.some(c => c.name === COLLECTION_NAME)
-
-    if (!exists) {
-      console.log(`Creating Qdrant collection: ${COLLECTION_NAME}`)
-
-      // Create collection with binary quantization
-      await qdrantClient.createCollection(COLLECTION_NAME, {
-        vectors: {
-          size: VECTOR_SIZE,
-          distance: "Cosine",
-        },
-        quantization_config: {
-          binary: {
-            binary: true,
-          },
-        },
-      })
+  return await qdrantCircuitBreaker.execute(async () => {
+    return await retryWithBackoff(async () => {
+      console.log(`Initializing Qdrant collection: ${COLLECTION_NAME}`)
       console.log(
-        `Collection ${COLLECTION_NAME} created with binary quantization`,
+        `Qdrant URL: ${qdrantUrl}, API Key configured: ${!!qdrantApiKey}`,
       )
-    } else {
-      console.log(`Collection ${COLLECTION_NAME} already exists`)
 
-      // Get collection info to verify configuration
-      const collectionInfo = await qdrantClient.getCollection(COLLECTION_NAME)
-      console.log(`Collection config:`, {
-        vectors: collectionInfo.config?.params?.vectors,
-        quantization: collectionInfo.config?.quantization_config,
-      })
-    }
-  } catch (error) {
-    console.error("Error initializing Qdrant collection:", error)
-    console.error("Initialization error details:", {
-      qdrantUrl,
-      hasApiKey: !!qdrantApiKey,
-      errorMessage: error instanceof Error ? error.message : "Unknown error",
-      errorStack: error instanceof Error ? error.stack : undefined,
+      // Check if collection exists
+      const collections = await qdrantClient.getCollections()
+      console.log(
+        `Available collections: ${collections.collections.map(c => c.name).join(", ")}`,
+      )
+
+      const exists = collections.collections.some(
+        c => c.name === COLLECTION_NAME,
+      )
+
+      if (!exists) {
+        console.log(`Creating Qdrant collection: ${COLLECTION_NAME}`)
+
+        // Create collection with binary quantization
+        await qdrantClient.createCollection(COLLECTION_NAME, {
+          vectors: {
+            size: VECTOR_SIZE,
+            distance: "Cosine",
+          },
+          quantization_config: {
+            binary: {
+              binary: true,
+            },
+          },
+        })
+        console.log(
+          `Collection ${COLLECTION_NAME} created with binary quantization`,
+        )
+      } else {
+        console.log(`Collection ${COLLECTION_NAME} already exists`)
+
+        // Get collection info to verify configuration
+        const collectionInfo = await qdrantClient.getCollection(COLLECTION_NAME)
+        console.log(`Collection config:`, {
+          vectors: collectionInfo.config?.params?.vectors,
+          quantization: collectionInfo.config?.quantization_config,
+        })
+      }
     })
-    handleError(error, "Failed to initialize Qdrant collection")
-  }
+  })
 }
 
 /**
