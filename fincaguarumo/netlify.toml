@@ -59,3 +59,9 @@
   for = "/*"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
+
+# Netlify cron jobs for background tasks
+[[scheduled_functions]]
+  name = "calendar-sync"
+  schedule = "*/15 * * * *"  # Every 15 minutes
+  function = "calendar-sync"
