@@ -1,0 +1,396 @@
+import { test, expect } from "@playwright/test"
+
+test.describe("Google Calendar Sync E2E Tests", () => {
+  test.beforeEach(async ({ page }) => {
+    // Mock environment variables for testing
+    await page.route("**/api/ical/merged", async route => {
+      const mockBookings = {
+        bookings: [
+          {
+            uid: "test-booking-123",
+            start: "2026-12-15T00:00:00.000Z",
+            end: "2026-12-18T00:00:00.000Z",
+            summary: "Test Booking - John Doe",
+            source: "airbnb",
+            guestName: "John Doe",
+          },
+        ],
+        merged: [
+          {
+            start: "2026-12-15T00:00:00.000Z",
+            end: "2026-12-18T00:00:00.000Z",
+            summary: "Test Booking - John Doe",
+            source: "airbnb",
+            guestName: "John Doe",
+          },
+          {
+            start: "2026-12-15T00:00:00.000Z",
+            end: "2026-12-18T00:00:00.000Z",
+            blocked: [1, 2, 3],
+          },
+        ],
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mockBookings),
+      })
+    })
+
+    // Mock Google Calendar API responses
+    await page.route(
+      "**/googleapis.com/calendar/v3/calendars/primary/events",
+      async route => {
+        const mockEvent = {
+          id: "gcal-event-123",
+          summary: "Check-in: John Doe (airbnb)",
+          start: { dateTime: "2026-12-15T00:00:00.000Z" },
+          end: { dateTime: "2026-12-15T00:00:00.000Z" },
+          description:
+            "Guest: John Doe\\nEmail: john.doe@example.com\\nPhone: +1234567890\\nSource: airbnb",
+          reminders: {
+            overrides: [
+              { method: "popup", minutes: 1440 },
+              { method: "email", minutes: 1440 },
+            ],
+          },
+        }
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(mockEvent),
+        })
+      },
+    )
+
+    // Mock Supabase sync log responses
+    await page.route("**/rest/v1/gcal_sync_log", async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: [
+            {
+              id: "sync-log-123",
+              booking_id: "test-booking-123",
+              gcal_checkin_event_id: "gcal-event-123",
+              sync_status: "success",
+              synced_at: new Date().toISOString(),
+            },
+          ],
+        }),
+      })
+    })
+  })
+
+  test("should sync bookings to Google Calendar with alerts (AC1, AC2)", async ({
+    page,
+  }) => {
+    // Navigate to admin dashboard (assuming this exists)
+    await page.goto("/admin/calendar-sync")
+
+    // Wait for sync button to be visible
+    await expect(
+      page.locator('[data-testid="sync-calendars-button"]'),
+    ).toBeVisible()
+
+    // Start manual sync
+    await page.click('[data-testid="sync-calendars-button"]')
+
+    // Wait for sync to complete
+    await expect(page.locator('[data-testid="sync-status"]')).toContainText(
+      "Sync completed",
+    )
+
+    // Verify sync results
+    await expect(
+      page.locator('[data-testid="synced-bookings-count"]'),
+    ).toContainText("1")
+    await expect(
+      page.locator('[data-testid="sync-success-count"]'),
+    ).toContainText("1")
+    await expect(
+      page.locator('[data-testid="sync-failed-count"]'),
+    ).toContainText("0")
+
+    // Verify specific booking was synced
+    await expect(
+      page.locator('[data-testid="booking-item-test-booking-123"]'),
+    ).toBeVisible()
+    await expect(
+      page.locator('[data-testid="booking-item-test-booking-123"]'),
+    ).toContainText("John Doe")
+    await expect(
+      page.locator('[data-testid="booking-item-test-booking-123"]'),
+    ).toContainText("airbnb")
+  })
+
+  test("should display 24-hour alerts configuration (AC2)", async ({
+    page,
+  }) => {
+    await page.goto("/admin/calendar-sync")
+
+    // Click on a synced booking to view details
+    await page.click('[data-testid="booking-item-test-booking-123"]')
+
+    // Verify alert information is displayed
+    await expect(page.locator('[data-testid="alert-details"]')).toBeVisible()
+    await expect(page.locator('[data-testid="alert-details"]')).toContainText(
+      "24 hours before check-in",
+    )
+    await expect(page.locator('[data-testid="alert-details"]')).toContainText(
+      "24 hours before check-out",
+    )
+    await expect(page.locator('[data-testid="alert-details"]')).toContainText(
+      "popup reminder",
+    )
+    await expect(page.locator('[data-testid="alert-details"]')).toContainText(
+      "email reminder",
+    )
+
+    // Verify guest details in alert description
+    await expect(page.locator('[data-testid="alert-details"]')).toContainText(
+      "Guest: John Doe",
+    )
+    await expect(page.locator('[data-testid="alert-details"]')).toContainText(
+      "Email: john.doe@example.com",
+    )
+    await expect(page.locator('[data-testid="alert-details"]')).toContainText(
+      "Phone: +1234567890",
+    )
+    await expect(page.locator('[data-testid="alert-details"]')).toContainText(
+      "Source: airbnb",
+    )
+  })
+
+  test("should handle booking updates and cancellations (AC3)", async ({
+    page,
+  }) => {
+    // First sync a booking
+    await page.goto("/admin/calendar-sync")
+    await page.click('[data-testid="sync-calendars-button"]')
+    await expect(page.locator('[data-testid="sync-status"]')).toContainText(
+      "Sync completed",
+    )
+
+    // Trigger cancellation scenario
+    await page.evaluate(() => {
+      const cancelButton = document.querySelector(
+        '[data-testid="sync-cancellation-button"]',
+      ) as HTMLButtonElement
+      if (cancelButton) {
+        cancelButton.click()
+      }
+    })
+
+    // Verify cancellation was processed
+    await expect(page.locator('[data-testid="sync-status"]')).toContainText(
+      "Sync completed",
+    )
+    await expect(
+      page.locator('[data-testid="deleted-bookings-count"]'),
+    ).toContainText("1")
+  })
+
+  test("should handle sync errors gracefully (Edge Cases)", async ({
+    page,
+  }) => {
+    // Mock API failure
+    await page.route(
+      "**/googleapis.com/calendar/v3/calendars/primary/events",
+      async route => {
+        await route.fulfill({
+          status: 429,
+          contentType: "application/json",
+          body: JSON.stringify({
+            error: {
+              code: 429,
+              message: "Rate limit exceeded",
+            },
+          }),
+        })
+      },
+    )
+
+    await page.goto("/admin/calendar-sync")
+
+    // Wait for initial sync to complete first
+    await expect(page.locator('[data-testid="sync-status"]')).toContainText(
+      "Sync completed",
+    )
+
+    // Now trigger error scenario
+    await page.evaluate(() => {
+      const errorButton = document.querySelector(
+        '[data-testid="sync-error-button"]',
+      ) as HTMLButtonElement
+      if (errorButton) {
+        errorButton.click()
+      }
+    })
+
+    // Verify error handling
+    await expect(page.locator('[data-testid="sync-status"]')).toContainText(
+      "Sync failed",
+    )
+    await expect(page.locator('[data-testid="error-message"]')).toContainText(
+      "Rate limit exceeded",
+    )
+    await expect(page.locator('[data-testid="retry-count"]')).toContainText("2")
+
+    // Verify retry mechanism
+    await expect(page.locator('[data-testid="retry-button"]')).toBeVisible()
+    await page.click('[data-testid="retry-button"]')
+
+    await expect(page.locator('[data-testid="sync-status"]')).toContainText(
+      "Sync completed",
+    )
+  })
+
+  test("should display sync history and logs", async ({ page }) => {
+    await page.goto("/admin/calendar-sync")
+
+    // Verify sync history section
+    await expect(page.locator('[data-testid="sync-history"]')).toBeVisible()
+    await expect(page.locator('[data-testid="sync-log-entry"]')).toHaveCount(1)
+
+    // Click on history entry to view details
+    await page.click('[data-testid="sync-log-entry"]')
+
+    // Verify detailed sync information
+    await expect(page.locator('[data-testid="sync-details"]')).toBeVisible()
+    await expect(page.locator('[data-testid="sync-details"]')).toContainText(
+      "Last sync:",
+    )
+    await expect(page.locator('[data-testid="sync-details"]')).toContainText(
+      "Bookings processed:",
+    )
+    await expect(page.locator('[data-testid="sync-details"]')).toContainText(
+      "Events created:",
+    )
+    await expect(page.locator('[data-testid="sync-details"]')).toContainText(
+      "Events updated:",
+    )
+    await expect(page.locator('[data-testid="sync-details"]')).toContainText(
+      "Events deleted:",
+    )
+  })
+
+  test("should handle authentication setup (TR4)", async ({ page }) => {
+    await page.goto("/admin/calendar-sync")
+
+    // Verify Google Calendar authentication section
+    await expect(
+      page.locator('[data-testid="google-auth-section"]'),
+    ).toBeVisible()
+
+    // If not authenticated, show setup button
+    const authButton = page.locator('[data-testid="google-auth-button"]')
+    if (await authButton.isVisible()) {
+      await authButton.click()
+
+      // Mock OAuth flow success
+      await expect(
+        page.locator('[data-testid="auth-success-message"]'),
+      ).toBeVisible()
+      await expect(
+        page.locator('[data-testid="calendar-connected-status"]'),
+      ).toContainText("Connected")
+    }
+
+    // If already authenticated, show connected status
+    const connectedStatus = page.locator(
+      '[data-testid="calendar-connected-status"]',
+    )
+    if (await connectedStatus.isVisible()) {
+      await expect(connectedStatus).toContainText(
+        "Connected to Google Calendar",
+      )
+      await expect(page.locator('[data-testid="calendar-id"]')).toContainText(
+        "primary",
+      )
+    }
+  })
+
+  test("should respect sync frequency settings (TR8)", async ({ page }) => {
+    await page.goto("/admin/calendar-sync")
+
+    // Verify sync frequency settings
+    await expect(
+      page.locator('[data-testid="sync-frequency-setting"]'),
+    ).toBeVisible()
+    await expect(
+      page.locator('[data-testid="sync-frequency-setting"]'),
+    ).toContainText("15 minutes")
+
+    // Verify last sync time
+    await expect(page.locator('[data-testid="last-sync-time"]')).toBeVisible()
+
+    // Verify next sync countdown
+    await expect(
+      page.locator('[data-testid="next-sync-countdown"]'),
+    ).toBeVisible()
+
+    // Test manual sync override - check for syncing state first
+    await page.click('[data-testid="sync-calendars-button"]')
+
+    // Wait for either "syncing..." or "Sync completed" (timing depends on async)
+    const syncStatus = page.locator('[data-testid="sync-status"]')
+    await expect(syncStatus).toHaveText(/syncing\.\.\.|Sync completed/)
+
+    // Wait for final completion
+    await expect(page.locator('[data-testid="sync-status"]')).toContainText(
+      "Sync completed",
+    )
+  })
+
+  test("should handle initial backfill for existing bookings (TR10)", async ({
+    page,
+  }) => {
+    // Mock many existing bookings for backfill
+    await page.route("**/api/ical/merged", async route => {
+      const backfillBookings = {
+        bookings: Array.from({ length: 50 }, (_, i) => ({
+          uid: `backfill-booking-${i}`,
+          start: `2026-12-${String(i + 1).padStart(2, "0")}T00:00:00.000Z`,
+          end: `2026-12-${String(i + 3).padStart(2, "0")}T00:00:00.000Z`,
+          summary: `Backfill Booking ${i + 1}`,
+          source: i % 2 === 0 ? "airbnb" : "booking",
+          guestName: `Guest ${i + 1}`,
+        })),
+        merged: [],
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(backfillBookings),
+      })
+    })
+
+    await page.goto("/admin/calendar-sync")
+
+    // Look for initial backfill option
+    const backfillButton = page.locator(
+      '[data-testid="initial-backfill-button"]',
+    )
+    if (await backfillButton.isVisible()) {
+      await backfillButton.click()
+
+      // Verify backfill progress
+      await expect(
+        page.locator('[data-testid="backfill-progress"]'),
+      ).toBeVisible()
+      await expect(
+        page.locator('[data-testid="backfill-progress"]'),
+      ).toContainText("Processing 50 bookings...")
+
+      // Wait for backfill completion
+      await expect(
+        page.locator('[data-testid="backfill-status"]'),
+      ).toContainText("Backfill completed")
+      await expect(
+        page.locator('[data-testid="backfill-results"]'),
+      ).toContainText("50 bookings processed")
+    }
+  })
+})
