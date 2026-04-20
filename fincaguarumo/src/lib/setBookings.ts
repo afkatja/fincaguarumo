@@ -1,5 +1,6 @@
 import { writeClient, client } from "../sanity/lib/client"
 import { BOOKINGS_QUERY } from "../sanity/lib/queries"
+import { isTestBooking } from "./testBookingDetection"
 
 export type Booking = {
   uid?: string
@@ -27,6 +28,7 @@ export async function setBookings({
   guests,
   totalPrice,
   currency,
+  isTest,
 }: {
   checkIn: Date
   checkOut: Date
@@ -38,8 +40,12 @@ export async function setBookings({
   guests?: number
   totalPrice?: number
   currency?: string
+  isTest?: boolean
 }) {
   try {
+    // Auto-detect test bookings if not explicitly provided
+    const detectedTestBooking = isTest ?? isTestBooking(uid, guestName, email)
+
     const bookingDoc: any = {
       _type: "booking",
       _id: `booking-${uid}`,
@@ -48,6 +54,7 @@ export async function setBookings({
       guestName,
       source,
       uid,
+      isTest: detectedTestBooking,
     }
 
     // Add optional fields if provided
@@ -82,5 +89,6 @@ export async function getSanityBookings(): Promise<Booking[]> {
     guests: booking.guests,
     totalPrice: booking.totalPrice,
     currency: booking.currency,
+    isTest: booking.isTest || false,
   }))
 }

@@ -16,6 +16,7 @@ type Booking = {
   status?: string
   email?: string
   phone?: string
+  isTest?: boolean
 }
 
 export interface SyncResult {
@@ -221,6 +222,12 @@ export class CalendarSyncService {
     if (!booking.uid) {
       console.warn("Skipping booking without UID:", booking)
       return "error"
+    }
+
+    // Skip test bookings
+    if (booking.isTest) {
+      console.log(`Skipping test booking ${booking.uid} from calendar sync`)
+      return "deleted" // Treat as deleted to avoid creating calendar events
     }
 
     // Check if booking is cancelled (look for cancellation indicators)
@@ -517,6 +524,13 @@ export async function syncBookingsToCalendar(
     result.processed++
 
     try {
+      // Skip test bookings
+      if (booking.isTest) {
+        console.log(`Skipping test booking ${booking.uid} from calendar sync`)
+        result.skipped = (result.skipped || 0) + 1
+        continue
+      }
+
       // Get existing sync state
       const existingSync = await calendarSyncService.getSyncLog(
         booking.uid || "unknown",
