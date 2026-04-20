@@ -11,7 +11,7 @@ const customJestConfig = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
-  testEnvironment: "jest-environment-jsdom",
+  testEnvironment: "jest-environment-node",
   testPathIgnorePatterns: ["<rootDir>/.next/", "<rootDir>/node_modules/"],
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",
