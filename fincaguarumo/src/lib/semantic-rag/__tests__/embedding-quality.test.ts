@@ -8,7 +8,7 @@ import { SupportedLanguage } from "../multilingual-preprocessing"
 // Set up environment variables before importing
 process.env.TOGETHER_API_KEY = "test-key"
 process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co"
-process.env.NEXT_PUBLIC_SUPABASE_API_KEY = "test-key"
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-key"
 
 // Mock the TogetherAI API for testing
 const mockEmbeddingResponse = (text: string) => {
@@ -34,7 +34,7 @@ describe("Embedding Quality Consistency", () => {
     // Set up environment variables
     process.env.TOGETHER_API_KEY = "test-key"
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co"
-    process.env.NEXT_PUBLIC_SUPABASE_API_KEY = "test-key"
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-key"
   })
 
   describe("Semantic Consistency Across Languages", () => {

@@ -6,10 +6,25 @@ import {
 } from "./embeddings-hybrid"
 import { SupportedLanguage } from "./multilingual-preprocessing"
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+/**
+ * Get Supabase client with proper server-side environment variable validation
+ */
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL environment variable is required")
+  }
+
+  if (!supabaseAnonKey) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is required",
+    )
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey)
+}
 
 export interface VectorSearchResult {
   id: string
@@ -49,6 +64,7 @@ export async function semanticSearch(
     const { embedding } = await generateEmbedding(query)
 
     // Call the semantic search function
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase.rpc("semantic_search", {
       query_embedding: embedding,
       content_type_filter: contentType || null,
@@ -102,6 +118,7 @@ export async function hybridSearch(
     console.log("[hybridSearch] Query:", query)
 
     // Call the hybrid search function
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase.rpc("hybrid_search", {
       query_embedding: embedding,
       query_text: query,
@@ -149,6 +166,7 @@ export async function findSimilarContent(
 
   try {
     // First get the embedding for the reference content
+    const supabase = getSupabaseClient()
     const { data: referenceData, error: referenceError } = await supabase
       .from("content_embeddings")
       .select("embedding")
@@ -209,6 +227,7 @@ export async function getContentByType(
   limit: number = 100,
 ): Promise<VectorSearchResult[]> {
   try {
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from("content_embeddings")
       .select("*")
@@ -246,6 +265,7 @@ export async function getContentStats(): Promise<{
   languageStats: Record<string, number>
 }> {
   try {
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from("content_embeddings")
       .select("content_type, language")
@@ -285,6 +305,7 @@ export async function deleteEmbeddings(
   language?: string,
 ): Promise<number> {
   try {
+    const supabase = getSupabaseClient()
     let query = supabase.from("content_embeddings").delete()
 
     if (language) {
