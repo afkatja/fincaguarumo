@@ -198,17 +198,18 @@ export class GoogleCalendarService {
         timeZone: "America/Costa_Rica",
       },
       reminders: {
+        useDefault: false,
         overrides: [
           {
             method: "popup",
-            minutes: 24 * 60, // 24 hours before
+            minutes: 24 * 60, // 24 hours before check-in
           },
           {
             method: "email",
-            minutes: 24 * 60, // 24 hours before
+            minutes: 24 * 60, // 24 hours before check-in
           },
         ],
-      },
+      } as any,
     }
   }
 
@@ -274,7 +275,11 @@ export class GoogleCalendarService {
    */
   async testAccess(): Promise<boolean> {
     try {
-      await this.calendar.calendarList.get({ calendarId: this.calendarId })
+      // Test direct calendar access instead of calendarList
+      await this.calendar.events.list({
+        calendarId: this.calendarId,
+        maxResults: 1,
+      })
       return true
     } catch (error) {
       console.error("Google Calendar access test failed:", error)

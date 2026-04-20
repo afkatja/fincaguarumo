@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server'
-import { calendarSyncService } from '@/lib/calendar-sync'
-import { googleCalendarService } from '@/lib/google-calendar'
+import { NextResponse } from "next/server"
+import { calendarSyncService } from "@/lib/calendar-sync"
+import { googleCalendarService } from "@/lib/google-calendar"
 
 // Security: Simple API key validation for cron jobs
 const CRON_SECRET = process.env.CALENDAR_SYNC_SECRET
@@ -8,7 +8,7 @@ const CRON_SECRET = process.env.CALENDAR_SYNC_SECRET
 /**
  * Calendar sync API endpoint
  * Can be called by Netlify cron jobs or manually
- * 
+ *
  * Methods:
  * - GET: Get sync status and statistics
  * - POST: Trigger calendar sync
@@ -17,40 +17,37 @@ export async function GET(request: Request) {
   try {
     // Validate request (optional for GET)
     const url = new URL(request.url)
-    const providedSecret = url.searchParams.get('secret')
-    
+    const providedSecret = url.searchParams.get("secret")
+
     if (CRON_SECRET && providedSecret !== CRON_SECRET) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Get sync statistics
     const stats = await calendarSyncService.getSyncStats()
-    
+
     // Test Google Calendar access
     const calendarAccess = await googleCalendarService.testAccess()
 
     return NextResponse.json({
-      status: 'success',
+      status: "success",
       data: {
         sync: stats,
         calendar: {
           accessible: calendarAccess,
-          calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary',
+          calendarId: process.env.GOOGLE_CALENDAR_ID,
         },
         lastChecked: new Date().toISOString(),
       },
     })
   } catch (error) {
-    console.error('Calendar sync GET error:', error)
+    console.error("Calendar sync GET error:", error)
     return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+      {
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
@@ -59,13 +56,10 @@ export async function POST(request: Request) {
   try {
     // Validate cron secret
     const url = new URL(request.url)
-    const providedSecret = url.searchParams.get('secret')
-    
+    const providedSecret = url.searchParams.get("secret")
+
     if (CRON_SECRET && providedSecret !== CRON_SECRET) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Parse request body for options
@@ -75,17 +69,18 @@ export async function POST(request: Request) {
       dryRun: body.dryRun || false, // Test mode without actual changes
     }
 
-    console.log('Starting calendar sync with options:', options)
+    console.log("Starting calendar sync with options:", options)
 
     // Test calendar access before proceeding
     const calendarAccess = await googleCalendarService.testAccess()
     if (!calendarAccess) {
       return NextResponse.json(
-        { 
-          error: 'Calendar access failed',
-          message: 'Cannot access Google Calendar. Check credentials and permissions.',
+        {
+          error: "Calendar access failed",
+          message:
+            "Cannot access Google Calendar. Check credentials and permissions.",
         },
-        { status: 503 }
+        { status: 503 },
       )
     }
 
@@ -98,8 +93,8 @@ export async function POST(request: Request) {
     }
 
     const response = {
-      status: 'success',
-      message: 'Calendar sync completed',
+      status: "success",
+      message: "Calendar sync completed",
       data: {
         sync: stats,
         options,
@@ -107,39 +102,30 @@ export async function POST(request: Request) {
       },
     }
 
-    console.log('Calendar sync completed:', response.data)
-    
+    console.log("Calendar sync completed:", response.data)
+
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Calendar sync POST error:', error)
+    console.error("Calendar sync POST error:", error)
     return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+      {
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
 
 // Handle unsupported methods
 export async function PUT() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  )
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 })
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  )
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 })
 }
 
 export async function PATCH() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  )
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 })
 }
