@@ -67,42 +67,72 @@ export async function POST(request: Request) {
     const options = {
       cleanup: body.cleanup || false, // Whether to run cleanup
       dryRun: body.dryRun || false, // Test mode without actual changes
+      force: body.force || false, // Force sync even if not scheduled
     }
 
     console.log("Starting calendar sync with options:", options)
 
-    // Test calendar access before proceeding
-    const calendarAccess = await googleCalendarService.testAccess()
-    if (!calendarAccess) {
-      return NextResponse.json(
-        {
-          error: "Calendar access failed",
-          message:
-            "Cannot access Google Calendar. Check credentials and permissions.",
-        },
-        { status: 503 },
-      )
+    // Check if sync should run (unless forced)
+    if (!options.force && !options.dryRun) {
+      const shouldRun = await calendarSyncService.shouldRunSync()
+      if (!shouldRun) {
+        return NextResponse.json({
+          status: "skipped",
+          message: "Sync skipped - not time to run yet (15-minute frequency)",
+          data: {
+            nextRunIn: "15 minutes",
+            lastSyncTime: await getLastSyncTime(),
+          },
+        })
+      }
     }
 
-    // Perform sync
-    const stats = await calendarSyncService.syncAllBookings()
+    // Test calendar access before proceeding (skip in dry run)
+    if (!options.dryRun) {
+      const calendarAccess = await googleCalendarService.testAccess()
+      if (!calendarAccess) {
+        return NextResponse.json(
+          {
+            error: "Calendar access failed",
+            message:
+              "Cannot access Google Calendar. Check credentials and permissions.",
+          },
+          { status: 503 },
+        )
+      }
+    }
+
+    // Perform sync or dry run
+    let stats
+    if (options.dryRun) {
+      stats = await performDryRun()
+    } else {
+      stats = await calendarSyncService.syncAllBookings()
+    }
 
     // Optional cleanup of old logs
-    if (options.cleanup) {
+    if (options.cleanup && !options.dryRun) {
       await calendarSyncService.cleanupOldLogs(90) // Clean up logs older than 90 days
     }
 
     const response = {
       status: "success",
-      message: "Calendar sync completed",
+      message: options.dryRun ? "Dry run completed" : "Calendar sync completed",
       data: {
         sync: stats,
         options,
         completedAt: new Date().toISOString(),
+        cronJob: {
+          frequency: "15 minutes",
+          nextRun: getNextRunTime(),
+        },
       },
     }
 
-    console.log("Calendar sync completed:", response.data)
+    console.log(
+      `Calendar sync ${options.dryRun ? "dry run" : "completed"}:`,
+      response.data,
+    )
 
     return NextResponse.json(response)
   } catch (error) {
@@ -114,6 +144,78 @@ export async function POST(request: Request) {
       },
       { status: 500 },
     )
+  }
+}
+
+// Helper functions for cron job scheduling
+async function getLastSyncTime(): Promise<string | null> {
+  try {
+    const stats = await calendarSyncService.getSyncStats()
+    return stats.lastSyncTime
+  } catch {
+    return null
+  }
+}
+
+function getNextRunTime(): string {
+  const now = new Date()
+  const nextRun = new Date(now.getTime() + 15 * 60 * 1000) // 15 minutes from now
+  return nextRun.toISOString()
+}
+
+// Dry run function to simulate sync without making changes
+async function performDryRun(): Promise<{
+  total: number
+  created: number
+  updated: number
+  deleted: number
+  errors: number
+  dryRun: boolean
+}> {
+  try {
+    // Fetch bookings to see what would be processed
+    const bookings = await calendarSyncService.fetchBookingsFromAPI()
+    const stats = {
+      total: bookings.length,
+      created: 0,
+      updated: 0,
+      deleted: 0,
+      errors: 0,
+      dryRun: true,
+    }
+
+    // Simulate processing without actual calendar operations
+    for (const booking of bookings) {
+      try {
+        if (!booking.uid) {
+          stats.errors++
+          continue
+        }
+
+        if (booking.isTest) {
+          continue // Skip test bookings
+        }
+
+        if (booking.status === "cancelled" || booking.status === "canceled") {
+          stats.deleted++
+        } else {
+          // Check if would be created or updated
+          const syncLog = await calendarSyncService.getSyncLog(booking.uid)
+          if (!syncLog || !syncLog.gcal_event_id) {
+            stats.created++
+          } else {
+            stats.updated++
+          }
+        }
+      } catch (error) {
+        stats.errors++
+      }
+    }
+
+    return stats
+  } catch (error) {
+    console.error("Dry run failed:", error)
+    throw error
   }
 }
 

@@ -101,15 +101,22 @@ export class CalendarSyncService {
 
         // Sync to calendar
         const calendarData = mapBookingToCalendarData(booking)
-        const syncResult = await googleCalendarService.createEvent(calendarData)
+        const eventId = await googleCalendarService.createEvent(calendarData)
 
-        if (syncResult) {
-          await this.recordSyncState(booking.uid || "unknown", {
-            status: "created",
-            checkinEventId: syncResult,
-          })
+        if (eventId) {
+          await this.recordSyncState(
+            booking.uid || "unknown",
+            eventId,
+            "success",
+          )
           result.success++
         } else {
+          await this.recordSyncState(
+            booking.uid || "unknown",
+            null,
+            "failed",
+            "Failed to create calendar event",
+          )
           result.failed++
           result.errors?.push({
             bookingId: booking.uid || "unknown",
@@ -260,7 +267,18 @@ export class CalendarSyncService {
         if (!syncLog || !syncLog.gcal_event_id) {
           // Create new event
           const eventId = await googleCalendarService.createEvent(bookingData)
-          return eventId ? "created" : "error"
+          if (eventId) {
+            await this.recordSyncState(booking.uid, eventId, "success")
+            return "created"
+          } else {
+            await this.recordSyncState(
+              booking.uid,
+              null,
+              "failed",
+              "Failed to create calendar event",
+            )
+            return "error"
+          }
         } else {
           // Check if event still exists in Google Calendar
           const eventExists = await googleCalendarService.eventExists(
@@ -270,14 +288,40 @@ export class CalendarSyncService {
           if (!eventExists) {
             // Event was deleted externally, create new one
             const eventId = await googleCalendarService.createEvent(bookingData)
-            return eventId ? "created" : "error"
+            if (eventId) {
+              await this.recordSyncState(booking.uid, eventId, "success")
+              return "created"
+            } else {
+              await this.recordSyncState(
+                booking.uid,
+                null,
+                "failed",
+                "Failed to create calendar event",
+              )
+              return "error"
+            }
           } else {
             // Update existing event
             const success = await googleCalendarService.updateEvent(
               syncLog.gcal_event_id,
               bookingData,
             )
-            return success ? "updated" : "error"
+            if (success) {
+              await this.recordSyncState(
+                booking.uid,
+                syncLog.gcal_event_id,
+                "success",
+              )
+              return "updated"
+            } else {
+              await this.recordSyncState(
+                booking.uid,
+                syncLog.gcal_event_id,
+                "failed",
+                "Failed to update calendar event",
+              )
+              return "error"
+            }
           }
         }
       } catch (error: any) {
@@ -372,14 +416,16 @@ export class CalendarSyncService {
    */
   async recordSyncState(
     bookingId: string,
-    syncResult: CalendarSyncResponse,
+    eventId: string | null,
+    status: "success" | "failed" | "pending" = "success",
+    errorMessage?: string,
   ): Promise<void> {
     try {
       const logEntry = {
         booking_id: bookingId,
-        gcal_checkin_event_id: syncResult.checkinEventId || null,
-        gcal_checkout_event_id: syncResult.checkoutEventId || null,
-        sync_status: syncResult.status === "deleted" ? "deleted" : "success",
+        gcal_event_id: eventId,
+        status,
+        error_message: errorMessage,
         synced_at: new Date().toISOString(),
       }
 
@@ -394,24 +440,65 @@ export class CalendarSyncService {
   private async handleCancelledBooking(
     booking: any,
   ): Promise<"deleted" | "error"> {
-    const syncLog = await googleCalendarService.getSyncLog(booking.uid)
+    try {
+      const syncLog = await googleCalendarService.getSyncLog(booking.uid)
 
-    if (syncLog?.gcal_event_id) {
-      const success = await googleCalendarService.deleteEvent(
-        syncLog.gcal_event_id,
+      if (syncLog?.gcal_event_id) {
+        // Check if event exists in Google Calendar before deleting
+        const eventExists = await googleCalendarService.eventExists(
+          syncLog.gcal_event_id,
+        )
+
+        if (eventExists) {
+          const success = await googleCalendarService.deleteEvent(
+            syncLog.gcal_event_id,
+            booking.uid,
+          )
+
+          if (success) {
+            // Update sync log to reflect deletion
+            await this.recordSyncState(booking.uid, null, "success")
+            return "deleted"
+          } else {
+            await this.recordSyncState(
+              booking.uid,
+              syncLog.gcal_event_id,
+              "failed",
+              "Failed to delete calendar event",
+            )
+            return "error"
+          }
+        } else {
+          // Event doesn't exist in calendar, mark as deleted locally
+          await this.recordSyncState(booking.uid, null, "success")
+          return "deleted"
+        }
+      }
+
+      // No event to delete, mark as successful cleanup
+      await this.recordSyncState(booking.uid, null, "success")
+      return "deleted"
+    } catch (error) {
+      console.error(`Error handling cancelled booking ${booking.uid}:`, error)
+      await this.recordSyncState(
         booking.uid,
+        null,
+        "failed",
+        error instanceof Error ? error.message : String(error),
       )
-      return success ? "deleted" : "error"
+      return "error"
     }
-
-    // No event to delete
-    return "deleted"
   }
 
   /**
    * Check if a booking is cancelled
    */
   private isBookingCancelled(booking: any): boolean {
+    // Check explicit status field first
+    if (booking.status === "cancelled" || booking.status === "canceled") {
+      return true
+    }
+
     // Check for cancellation indicators in summary or description
     const summary = (booking.summary || "").toLowerCase()
     const description = (booking.description || "").toLowerCase()
@@ -422,6 +509,7 @@ export class CalendarSyncService {
       "deleted",
       "removed",
       "refund",
+      "cancellation",
     ]
 
     return cancellationKeywords.some(
@@ -574,7 +662,8 @@ export async function syncBookingsToCalendar(
       // Record sync state
       await calendarSyncService.recordSyncState(
         booking.uid || "unknown",
-        syncResult!,
+        syncResult!.checkinEventId || null,
+        syncResult!.status === "deleted" ? "success" : "success",
       )
 
       // Update counters based on sync result

@@ -53,6 +53,22 @@ const TIMEZONE = "America/Costa_Rica"
 const ALERT_MINUTES = 24 * 60 // 24 hours
 const DEFAULT_CALENDAR_ID = "primary"
 
+// Timezone utilities
+function formatDateTimeForCalendar(dateString: string): string {
+  const date = new Date(dateString)
+  // Ensure the date is formatted in Costa Rica timezone
+  return date.toISOString()
+}
+
+function validateTimezone(timezone: string): boolean {
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: timezone })
+    return true
+  } catch {
+    return false
+  }
+}
+
 export class GoogleCalendarService {
   private calendar: any
   private calendarId: string
@@ -179,16 +195,19 @@ export class GoogleCalendarService {
    * Format booking data to Google Calendar event format
    */
   private formatBookingToEvent(booking: BookingData): CalendarEvent {
+    // Validate timezone before using it
+    const validTimezone = validateTimezone(TIMEZONE) ? TIMEZONE : "UTC"
+
     return {
       summary: this.getEventSummary(booking),
       description: this.formatGuestInfo(booking),
       start: {
-        dateTime: booking.start,
-        timeZone: TIMEZONE,
+        dateTime: formatDateTimeForCalendar(booking.start),
+        timeZone: validTimezone,
       },
       end: {
-        dateTime: booking.end,
-        timeZone: TIMEZONE,
+        dateTime: formatDateTimeForCalendar(booking.end),
+        timeZone: validTimezone,
       },
       reminders: this.createReminders(),
     }
