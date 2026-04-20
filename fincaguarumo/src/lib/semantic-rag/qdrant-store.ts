@@ -257,7 +257,7 @@ export async function initializeQdrantCollection(): Promise<void> {
           },
           quantization_config: {
             binary: {
-              binary: true,
+              always_ram: true,
             },
           },
         })
@@ -274,7 +274,7 @@ export async function initializeQdrantCollection(): Promise<void> {
           quantization: collectionInfo.config?.quantization_config,
         })
       }
-    })
+    }, "initQdrantCollection")
   })
 }
 
@@ -550,18 +550,26 @@ export async function findSimilarContent(
   const { language, threshold = 0.8, maxResults = 5 } = options
 
   try {
-    // First get the embedding for the reference content
-    const searchResult = await qdrantClient.retrieve(COLLECTION_NAME, {
-      ids: [contentId],
+    // First find the point by content_id and content_type using scroll
+    const scrollResult = await qdrantClient.scroll(COLLECTION_NAME, {
+      filter: {
+        must: [
+          { key: "content_id", match: { value: contentId } },
+          { key: "content_type", match: { value: contentType } },
+        ],
+      },
+      limit: 1,
       with_payload: true,
       with_vector: true,
     })
 
-    if (searchResult.length === 0 || !searchResult[0].vector) {
+    if (scrollResult.points.length === 0 || !scrollResult.points[0].vector) {
       throw new Error("Reference content not found or has no embedding")
     }
 
-    const referenceVector = searchResult[0].vector as number[]
+    const referencePoint = scrollResult.points[0]
+    const referenceVector = referencePoint.vector as number[]
+    const referencePointId = referencePoint.id as string
 
     // Find similar content
     const similarResults = await qdrantClient.search(COLLECTION_NAME, {
@@ -578,9 +586,9 @@ export async function findSimilarContent(
       },
     })
 
-    // Filter out the reference content itself
+    // Filter out the reference content itself using the actual point ID
     return similarResults
-      .filter(point => point.id !== contentId)
+      .filter(point => point.id !== referencePointId)
       .slice(0, maxResults)
       .map(point => ({
         id: point.id as string,

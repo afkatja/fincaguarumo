@@ -145,7 +145,7 @@ async function benchmarkIndexing(
       ...(useBinaryQuantization && {
         quantization_config: {
           binary: {
-            binary: true,
+            always_ram: true,
           },
         },
       }),
@@ -244,7 +244,7 @@ async function benchmarkSearch(
       ...(useBinaryQuantization && {
         quantization_config: {
           binary: {
-            binary: true,
+            always_ram: true,
           },
         },
       }),
