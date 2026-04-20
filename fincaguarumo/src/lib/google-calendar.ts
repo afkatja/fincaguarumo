@@ -46,23 +46,25 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+// Constants
+const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar"
+const CALENDAR_VERSION = "v3"
+const TIMEZONE = "America/Costa_Rica"
+const ALERT_MINUTES = 24 * 60 // 24 hours
+const DEFAULT_CALENDAR_ID = "primary"
+
 export class GoogleCalendarService {
   private calendar: any
   private calendarId: string
 
   constructor() {
-    // Initialize Google Calendar API with OAuth2 or service account
     const auth = new google.auth.GoogleAuth({
-      scopes: ["https://www.googleapis.com/auth/calendar"],
+      scopes: [CALENDAR_SCOPE],
       keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE,
-      // Alternative: Use OAuth2 client for user authentication
-      // clientId: process.env.GOOGLE_CLIENT_ID,
-      // clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      // redirectUri: process.env.GOOGLE_REDIRECT_URI,
     })
 
-    this.calendar = google.calendar({ version: "v3", auth })
-    this.calendarId = process.env.GOOGLE_CALENDAR_ID || "primary"
+    this.calendar = google.calendar({ version: CALENDAR_VERSION, auth })
+    this.calendarId = process.env.GOOGLE_CALENDAR_ID || DEFAULT_CALENDAR_ID
   }
 
   /**
@@ -177,40 +179,44 @@ export class GoogleCalendarService {
    * Format booking data to Google Calendar event format
    */
   private formatBookingToEvent(booking: BookingData): CalendarEvent {
-    const guestInfo = [
-      booking.guestName ? `Guest: ${booking.guestName}` : "",
-      booking.email ? `Email: ${booking.email}` : "",
-      booking.phone ? `Phone: ${booking.phone}` : "",
-      `Source: ${booking.source}`,
-    ]
-      .filter(Boolean)
-      .join("\n")
-
     return {
-      summary: booking.summary || `Booking: ${booking.guestName || "Guest"}`,
-      description: guestInfo,
+      summary: this.getEventSummary(booking),
+      description: this.formatGuestInfo(booking),
       start: {
         dateTime: booking.start,
-        timeZone: "America/Costa_Rica", // Property timezone
+        timeZone: TIMEZONE,
       },
       end: {
         dateTime: booking.end,
-        timeZone: "America/Costa_Rica",
+        timeZone: TIMEZONE,
       },
-      reminders: {
-        useDefault: false,
-        overrides: [
-          {
-            method: "popup",
-            minutes: 24 * 60, // 24 hours before check-in
-          },
-          {
-            method: "email",
-            minutes: 24 * 60, // 24 hours before check-in
-          },
-        ],
-      } as any,
+      reminders: this.createReminders(),
     }
+  }
+
+  private getEventSummary(booking: BookingData): string {
+    return booking.summary || `Booking: ${booking.guestName || "Guest"}`
+  }
+
+  private formatGuestInfo(booking: BookingData): string {
+    const guestInfo = [
+      booking.guestName && `Guest: ${booking.guestName}`,
+      booking.email && `Email: ${booking.email}`,
+      booking.phone && `Phone: ${booking.phone}`,
+      `Source: ${booking.source}`,
+    ].filter(Boolean)
+
+    return guestInfo.join("\n")
+  }
+
+  private createReminders() {
+    return {
+      useDefault: false,
+      overrides: [
+        { method: "popup" as const, minutes: ALERT_MINUTES },
+        { method: "email" as const, minutes: ALERT_MINUTES },
+      ],
+    } as any
   }
 
   /**
@@ -288,41 +294,38 @@ export class GoogleCalendarService {
   }
 }
 
-// Standalone functions for backward compatibility and easier testing
-export async function createCalendarEvent(
+// Helper functions
+function createEventBooking(
   booking: BookingData,
   eventType: "checkin" | "checkout",
-): Promise<string | null> {
-  const service = new GoogleCalendarService()
+): BookingData {
+  const eventDate = eventType === "checkin" ? booking.start : booking.end
+  const guestName = booking.guestName || "Unknown Guest"
+  const eventLabel = eventType === "checkin" ? "Check-in" : "Check-out"
 
-  // Validate booking data
+  return {
+    ...booking,
+    summary: `${eventLabel}: ${guestName} (${booking.source})`,
+    start: eventDate,
+    end: eventDate,
+  }
+}
+
+function validateBookingData(booking: BookingData): void {
   if (!booking.uid || !booking.start || !booking.end) {
     throw new Error("Invalid booking data: missing required fields")
   }
+}
 
-  // Adjust booking data based on event type
-  const eventStartDate = eventType === "checkin" ? booking.start : booking.end
-  const eventEndDate = eventType === "checkin" ? booking.start : booking.end // Same day for check-in/out events
-
-  const guestName = booking.guestName || "Unknown Guest"
-  const eventBooking = {
-    ...booking,
-    summary:
-      eventType === "checkin"
-        ? `Check-in: ${guestName} (${booking.source})`
-        : `Check-out: ${guestName} (${booking.source})`,
-    start: eventStartDate,
-    end: eventEndDate,
-  }
-
-  // Add retry logic with exponential backoff
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+): Promise<T> {
   let lastError: Error | null = null
-  const maxRetries = 3
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const result = await service.createEvent(eventBooking)
-      if (result) return result
+      return await operation()
     } catch (error: any) {
       lastError = error
 
@@ -347,7 +350,26 @@ export async function createCalendarEvent(
     }
   }
 
-  throw lastError || new Error("Failed to create calendar event after retries")
+  throw lastError || new Error("Operation failed after retries")
+}
+
+// Standalone functions for backward compatibility and easier testing
+export async function createCalendarEvent(
+  booking: BookingData,
+  eventType: "checkin" | "checkout",
+): Promise<string | null> {
+  const service = new GoogleCalendarService()
+  validateBookingData(booking)
+
+  const eventBooking = createEventBooking(booking, eventType)
+
+  return await retryWithBackoff(async () => {
+    const result = await service.createEvent(eventBooking)
+    if (!result) {
+      throw new Error("Failed to create calendar event")
+    }
+    return result
+  })
 }
 
 export async function updateCalendarEvent(
@@ -356,17 +378,7 @@ export async function updateCalendarEvent(
   eventType: "checkin" | "checkout",
 ): Promise<string> {
   const service = new GoogleCalendarService()
-
-  const guestName = booking.guestName || "Unknown Guest"
-  const eventBooking = {
-    ...booking,
-    summary:
-      eventType === "checkin"
-        ? `Check-in: ${guestName} (${booking.source})`
-        : `Check-out: ${guestName} (${booking.source})`,
-    start: eventType === "checkin" ? booking.start : booking.end,
-    end: eventType === "checkin" ? booking.start : booking.end,
-  }
+  const eventBooking = createEventBooking(booking, eventType)
 
   const success = await service.updateEvent(eventId, eventBooking)
   if (!success) {
@@ -384,12 +396,7 @@ export async function deleteCalendarEvent(eventId: string): Promise<boolean> {
   return success
 }
 
-export async function syncBookingToCalendar(booking: BookingData): Promise<{
-  checkinEventId?: string
-  checkoutEventId?: string
-  status: "created" | "updated"
-}> {
-  // Validate booking data
+function validateBookingDates(booking: BookingData): void {
   if (!booking.uid || !booking.start || !booking.end) {
     throw new Error("Invalid booking dates")
   }
@@ -401,14 +408,24 @@ export async function syncBookingToCalendar(booking: BookingData): Promise<{
   } catch {
     throw new Error("Invalid booking dates")
   }
+}
+
+export async function syncBookingToCalendar(booking: BookingData): Promise<{
+  checkinEventId?: string
+  checkoutEventId?: string
+  status: "created" | "updated"
+}> {
+  validateBookingDates(booking)
 
   const service = new GoogleCalendarService()
   const syncLog = await service.getSyncLog(booking.uid)
 
   if (!syncLog || !syncLog.gcal_event_id) {
     // Create new events
-    const checkinEventId = await createCalendarEvent(booking, "checkin")
-    const checkoutEventId = await createCalendarEvent(booking, "checkout")
+    const [checkinEventId, checkoutEventId] = await Promise.all([
+      createCalendarEvent(booking, "checkin"),
+      createCalendarEvent(booking, "checkout"),
+    ])
 
     return {
       checkinEventId: checkinEventId || undefined,
@@ -417,20 +434,18 @@ export async function syncBookingToCalendar(booking: BookingData): Promise<{
     }
   } else {
     // Update existing events (simplified for testing)
-    const checkinEventId = await updateCalendarEvent(
-      syncLog.gcal_event_id,
-      booking,
-      "checkin",
-    )
-    const checkoutEventId = await updateCalendarEvent(
-      syncLog.gcal_event_id + "_checkout",
-      booking,
-      "checkout",
-    )
+    const [checkinEventId, checkoutEventId] = await Promise.all([
+      updateCalendarEvent(syncLog.gcal_event_id, booking, "checkin"),
+      updateCalendarEvent(
+        syncLog.gcal_event_id + "_checkout",
+        booking,
+        "checkout",
+      ),
+    ])
 
     return {
-      checkinEventId: checkinEventId || undefined,
-      checkoutEventId: checkoutEventId || undefined,
+      checkinEventId,
+      checkoutEventId,
       status: "updated",
     }
   }

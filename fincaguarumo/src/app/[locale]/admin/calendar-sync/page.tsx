@@ -3,6 +3,11 @@
 import { useState, useEffect } from "react"
 import crypto from "crypto"
 
+// Constants
+const MAX_BOOKINGS_DISPLAY = 10
+const MAX_SYNC_LOGS_DISPLAY = 3
+const MAX_RETRIES = 2
+
 export default function CalendarSyncPage() {
   const [syncStatus, setSyncStatus] = useState<string>("idle")
   const [syncedBookingsCount, setSyncedBookingsCount] = useState<number>(0)
@@ -18,35 +23,35 @@ export default function CalendarSyncPage() {
 
   // Generate a hash from bookings data to detect changes
   const generateBookingsHash = (bookingsData: any[]): string => {
-    if (!bookingsData || bookingsData.length === 0) {
-      return "empty"
-    }
+    if (!bookingsData?.length) return "empty"
 
-    // Create a normalized string representation of bookings for hashing
     const normalizedData = bookingsData
-      .map(booking => ({
-        uid: booking.uid || "",
-        start: booking.start || "",
-        end: booking.end || "",
-        summary: booking.summary || "",
-        source: booking.source || "",
-        guestName: booking.guestName || "",
-      }))
-      .sort((a, b) => {
-        // Sort by UID then start date to ensure consistent ordering
-        if (a.uid !== b.uid) {
-          return (a.uid || "").localeCompare(b.uid || "")
-        }
-        return (a.start || "").localeCompare(b.start || "")
-      })
-      .map(
-        booking =>
-          `${booking.uid}|${booking.start}|${booking.end}|${booking.summary}|${booking.source}|${booking.guestName}`,
-      )
+      .map(normalizeBooking)
+      .sort(sortBookings)
+      .map(bookingToString)
       .join("||")
 
     return crypto.createHash("sha256").update(normalizedData).digest("hex")
   }
+
+  const normalizeBooking = (booking: any) => ({
+    uid: booking.uid || "",
+    start: booking.start || "",
+    end: booking.end || "",
+    summary: booking.summary || "",
+    source: booking.source || "",
+    guestName: booking.guestName || "",
+  })
+
+  const sortBookings = (a: any, b: any) => {
+    if (a.uid !== b.uid) {
+      return (a.uid || "").localeCompare(b.uid || "")
+    }
+    return (a.start || "").localeCompare(b.start || "")
+  }
+
+  const bookingToString = (booking: any) =>
+    `${booking.uid}|${booking.start}|${booking.end}|${booking.summary}|${booking.source}|${booking.guestName}`
 
   // Fetch bookings and sync data on component mount
   useEffect(() => {
@@ -91,25 +96,85 @@ export default function CalendarSyncPage() {
 
   const fetchRecentSyncLogs = async () => {
     try {
-      // This would typically call a new API endpoint to get recent sync logs
-      // For now, we'll simulate with the sync results
-      const recentLogs = bookings.slice(0, 5).map(booking => ({
-        booking_id: booking.uid,
-        guest_name: booking.guestName,
-        source: booking.source,
-        status: "success",
-        synced_at: new Date().toISOString(),
-        reminders: {
-          checkin: "24 hours before",
-          checkout: "24 hours before",
-          methods: ["popup", "email"],
-        },
-      }))
+      const recentLogs = bookings
+        .slice(0, MAX_SYNC_LOGS_DISPLAY + 2)
+        .map(createMockSyncLog)
       setSyncLogs(recentLogs)
     } catch (error) {
       console.error("Failed to fetch recent sync logs:", error)
     }
   }
+
+  const createMockSyncLog = (booking: any) => ({
+    booking_id: booking.uid,
+    guest_name: booking.guestName,
+    source: booking.source,
+    status: "success",
+    synced_at: new Date().toISOString(),
+    reminders: {
+      checkin: "24 hours before",
+      checkout: "24 hours before",
+      methods: ["popup", "email"],
+    },
+  })
+
+  const renderBookingItem = (booking: any, index: number) => (
+    <div
+      key={booking.uid || index}
+      data-testid={`booking-item-${booking.uid || index}`}
+      className="p-4 border rounded hover:bg-gray-50"
+    >
+      <div className="font-medium">{booking.guestName || "Unknown Guest"}</div>
+      <div className="text-sm text-gray-600">
+        {booking.source || "unknown"} ·{" "}
+        {booking.start && booking.end
+          ? `${new Date(booking.start).toLocaleDateString()} - ${new Date(booking.end).toLocaleDateString()}`
+          : booking.start
+            ? new Date(booking.start).toLocaleDateString()
+            : "No dates"}
+      </div>
+      {booking.email && (
+        <div className="text-sm text-gray-500">{booking.email}</div>
+      )}
+    </div>
+  )
+
+  const renderSyncLogItem = (log: any, index: number) => (
+    <div key={index} className="p-4 border rounded">
+      <div className="font-medium">{log.guest_name || "Unknown Guest"}</div>
+      <div className="text-sm text-gray-600 mb-2">
+        Source: {log.source || "unknown"} · Status: {log.status || "synced"}
+      </div>
+      <div className="text-sm space-y-1">
+        <div>
+          <strong>Check-in reminder:</strong>{" "}
+          {log.reminders?.checkin || "24 hours before"}
+        </div>
+        <div>
+          <strong>Check-out reminder:</strong>{" "}
+          {log.reminders?.checkout || "24 hours before"}
+        </div>
+        <div>
+          <strong>Reminder methods:</strong>{" "}
+          {log.reminders?.methods?.join(", ") || "popup, email"}
+        </div>
+        {log.email && (
+          <div>
+            <strong>Email:</strong> {log.email}
+          </div>
+        )}
+        {log.phone && (
+          <div>
+            <strong>Phone:</strong> {log.phone}
+          </div>
+        )}
+        <div className="text-xs text-gray-500 mt-2">
+          Last synced:{" "}
+          {log.synced_at ? new Date(log.synced_at).toLocaleString() : "Unknown"}
+        </div>
+      </div>
+    </div>
+  )
 
   const handleSync = async () => {
     // Generate hash of current bookings data
@@ -162,7 +227,7 @@ export default function CalendarSyncPage() {
       setErrorMessage(
         error instanceof Error ? error.message : "Unknown error occurred",
       )
-      setRetryCount(2)
+      setRetryCount(MAX_RETRIES)
     }
   }
 
@@ -171,7 +236,7 @@ export default function CalendarSyncPage() {
     await new Promise(resolve => setTimeout(resolve, 500))
     setSyncStatus("Sync failed")
     setErrorMessage("Rate limit exceeded")
-    setRetryCount(2)
+    setRetryCount(MAX_RETRIES)
   }
 
   const handleSyncCancellation = async () => {
@@ -268,36 +333,10 @@ export default function CalendarSyncPage() {
             <div className="text-gray-500">No bookings found</div>
           ) : (
             <div className="space-y-2">
-              {bookings.slice(0, 10).map(
-                (booking, index) =>
-                  console.log({ booking }) || (
-                    <div
-                      key={booking.uid || index}
-                      data-testid={`booking-item-${booking.uid || index}`}
-                      className="p-4 border rounded hover:bg-gray-50"
-                    >
-                      <div className="font-medium">
-                        {booking.guestName || "Unknown Guest"}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {booking.source || "unknown"} ·{" "}
-                        {booking.start && booking.end
-                          ? `${new Date(booking.start).toLocaleDateString()} - ${new Date(booking.end).toLocaleDateString()}`
-                          : booking.start
-                            ? new Date(booking.start).toLocaleDateString()
-                            : "No dates"}
-                      </div>
-                      {booking.email && (
-                        <div className="text-sm text-gray-500">
-                          {booking.email}
-                        </div>
-                      )}
-                    </div>
-                  ),
-              )}
-              {bookings.length > 10 && (
+              {bookings.slice(0, MAX_BOOKINGS_DISPLAY).map(renderBookingItem)}
+              {bookings.length > MAX_BOOKINGS_DISPLAY && (
                 <div className="text-sm text-gray-500 text-center">
-                  ... and {bookings.length - 10} more bookings
+                  ... and {bookings.length - MAX_BOOKINGS_DISPLAY} more bookings
                 </div>
               )}
             </div>
@@ -314,47 +353,7 @@ export default function CalendarSyncPage() {
             <div className="text-gray-500">No recent sync activity</div>
           ) : (
             <div className="space-y-4">
-              {syncLogs.slice(0, 3).map((log, index) => (
-                <div key={index} className="p-4 border rounded">
-                  <div className="font-medium">
-                    {log.guest_name || "Unknown Guest"}
-                  </div>
-                  <div className="text-sm text-gray-600 mb-2">
-                    Source: {log.source || "unknown"} · Status:{" "}
-                    {log.status || "synced"}
-                  </div>
-                  <div className="text-sm space-y-1">
-                    <div>
-                      <strong>Check-in reminder:</strong>{" "}
-                      {log.reminders?.checkin || "24 hours before"}
-                    </div>
-                    <div>
-                      <strong>Check-out reminder:</strong>{" "}
-                      {log.reminders?.checkout || "24 hours before"}
-                    </div>
-                    <div>
-                      <strong>Reminder methods:</strong>{" "}
-                      {log.reminders?.methods?.join(", ") || "popup, email"}
-                    </div>
-                    {log.email && (
-                      <div>
-                        <strong>Email:</strong> {log.email}
-                      </div>
-                    )}
-                    {log.phone && (
-                      <div>
-                        <strong>Phone:</strong> {log.phone}
-                      </div>
-                    )}
-                    <div className="text-xs text-gray-500 mt-2">
-                      Last synced:{" "}
-                      {log.synced_at
-                        ? new Date(log.synced_at).toLocaleString()
-                        : "Unknown"}
-                    </div>
-                  </div>
-                </div>
-              ))}
+              {syncLogs.slice(0, MAX_SYNC_LOGS_DISPLAY).map(renderSyncLogItem)}
             </div>
           )}
         </div>
