@@ -14,7 +14,7 @@ import {
 import Input from "../Input"
 import Textarea from "../Textarea"
 import { Button } from "../ui/button"
-import { useBooking } from "../../app/providers/BookingProvider"
+import { useBookingCore } from "../../app/providers/BookingCoreProvider"
 
 // Extract relevant context from previous user messages
 function extractUserContext(previousMessages: Message[]) {
@@ -112,7 +112,31 @@ export default function ChatInterface({
   const { locale } = useParams()
   const t = useTranslations("bookingChat")
   const tGreetings = useTranslations("greetings")
-  const { bookingData } = useBooking()
+  const { state } = useBookingCore()
+
+  // Transform CoreBookingData to match BookingData structure expected by chat interface
+  const bookingData = {
+    source: state.data.source,
+    customerDetails: state.data.customerDetails,
+    bookingDetails: {
+      type: state.data.bookingType || "tour",
+      title: state.data.bookingDetails.title,
+      description: state.data.bookingDetails.description,
+      duration: 0, // Not available in CoreBookingData
+      location: state.data.bookingDetails.location,
+      body: "", // Not available in CoreBookingData
+      date: state.data.dates.date || new Date(),
+      checkIn: state.data.dates.checkIn,
+      checkOut: state.data.dates.checkOut,
+      guests: state.data.guests,
+      price: 0, // Legacy field
+      basePrice: state.data.baseUnitPrice,
+      totalPrice: state.data.totalPrice,
+      currency: state.data.currency,
+      geo: { lat: 0, lng: 0 }, // Not available in CoreBookingData
+    },
+    pricingRules: state.data.pricingRules,
+  }
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
