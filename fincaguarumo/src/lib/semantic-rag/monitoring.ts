@@ -53,10 +53,10 @@ export async function logEmbeddingFailure(
   retryAttempts: number = 0,
   processingTimeMs: number = 0,
   userAgent?: string,
-  ipAddress?: string
+  ipAddress?: string,
 ): Promise<void> {
   try {
-    const failure: Omit<EmbeddingFailure, 'id'> = {
+    const failure: Omit<EmbeddingFailure, "id"> = {
       timestamp: new Date().toISOString(),
       error_type: error.constructor.name,
       error_message: error.message,
@@ -75,15 +75,15 @@ export async function logEmbeddingFailure(
       .insert(failure)
 
     if (insertError) {
-      console.error('Failed to log embedding failure:', insertError)
+      console.error("Failed to log embedding failure:", insertError)
     } else {
-      console.log('Embedding failure logged successfully')
-      
+      console.log("Embedding failure logged successfully")
+
       // Check if we should trigger an alert
       await checkAndTriggerAlert()
     }
   } catch (loggingError) {
-    console.error('Error in logEmbeddingFailure:', loggingError)
+    console.error("Error in logEmbeddingFailure:", loggingError)
   }
 }
 
@@ -91,17 +91,17 @@ export async function logEmbeddingFailure(
  * Get monitoring metrics for embedding failures
  */
 export async function getMonitoringMetrics(
-  timeWindow: number = 3600000 // 1 hour default
+  timeWindow: number = 3600000, // 1 hour default
 ): Promise<MonitoringMetrics> {
   try {
     const timeWindowStart = new Date(Date.now() - timeWindow).toISOString()
-    
+
     // Get recent failures
     const { data: failures, error } = await supabase
       .from(MONITORING_TABLE)
-      .select('*')
-      .gte('timestamp', timeWindowStart)
-      .order('timestamp', { ascending: false })
+      .select("*")
+      .gte("timestamp", timeWindowStart)
+      .order("timestamp", { ascending: false })
 
     if (error) {
       throw error
@@ -129,15 +129,16 @@ export async function getMonitoringMetrics(
 
     failures.forEach(failure => {
       // Count by error type
-      failuresByType[failure.error_type] = (failuresByType[failure.error_type] || 0) + 1
-      
+      failuresByType[failure.error_type] =
+        (failuresByType[failure.error_type] || 0) + 1
+
       // Count by language
-      const lang = failure.language || 'unknown'
+      const lang = failure.language || "unknown"
       failuresByLanguage[lang] = (failuresByLanguage[lang] || 0) + 1
-      
+
       // Count by model
       failuresByModel[failure.model] = (failuresByModel[failure.model] || 0) + 1
-      
+
       // Sum processing times
       if (failure.processing_time_ms > 0) {
         totalProcessingTime += failure.processing_time_ms
@@ -145,20 +146,18 @@ export async function getMonitoringMetrics(
       }
     })
 
-    const averageProcessingTime = processingTimeCount > 0 
-      ? totalProcessingTime / processingTimeCount 
-      : 0
+    const averageProcessingTime =
+      processingTimeCount > 0 ? totalProcessingTime / processingTimeCount : 0
 
     // Get total requests in the same window to calculate failure rate
-    const { data: totalRequests } = await supabase
-      .from('embedding_requests')
-      .select('count')
-      .gte('timestamp', timeWindowStart)
+    const { count } = await supabase
+      .from("embedding_requests")
+      .select("*", { count: "exact" })
+      .gte("timestamp", timeWindowStart)
 
-    const totalRequestsCount = totalRequests?.[0]?.count || totalFailures
-    const failureRate = totalRequestsCount > 0 
-      ? (totalFailures / totalRequestsCount) * 100 
-      : 0
+    const totalRequestsCount = count ?? totalFailures
+    const failureRate =
+      totalRequestsCount > 0 ? (totalFailures / totalRequestsCount) * 100 : 0
 
     return {
       total_failures: totalFailures,
@@ -170,7 +169,7 @@ export async function getMonitoringMetrics(
       recent_failures: failures.slice(0, 10), // Last 10 failures
     }
   } catch (error) {
-    console.error('Error getting monitoring metrics:', error)
+    console.error("Error getting monitoring metrics:", error)
     throw error
   }
 }
@@ -181,26 +180,28 @@ export async function getMonitoringMetrics(
 async function checkAndTriggerAlert(): Promise<void> {
   try {
     const recentFailures = await getRecentFailures(ALERT_WINDOW)
-    
+
     if (recentFailures.length >= ALERT_THRESHOLD) {
       await triggerAlert(recentFailures)
     }
   } catch (error) {
-    console.error('Error checking alert conditions:', error)
+    console.error("Error checking alert conditions:", error)
   }
 }
 
 /**
  * Get recent failures within the specified time window
  */
-async function getRecentFailures(timeWindow: number): Promise<EmbeddingFailure[]> {
+async function getRecentFailures(
+  timeWindow: number,
+): Promise<EmbeddingFailure[]> {
   const timeWindowStart = new Date(Date.now() - timeWindow).toISOString()
-  
+
   const { data, error } = await supabase
     .from(MONITORING_TABLE)
-    .select('*')
-    .gte('timestamp', timeWindowStart)
-    .order('timestamp', { ascending: false })
+    .select("*")
+    .gte("timestamp", timeWindowStart)
+    .order("timestamp", { ascending: false })
 
   if (error) {
     throw error
@@ -219,7 +220,9 @@ async function triggerAlert(failures: EmbeddingFailure[]): Promise<void> {
       failure_count: failures.length,
       time_window: ALERT_WINDOW,
       error_types: [...new Set(failures.map(f => f.error_type))],
-      languages_affected: [...new Set(failures.map(f => f.language).filter(Boolean))],
+      languages_affected: [
+        ...new Set(failures.map(f => f.language).filter(Boolean)),
+      ],
       sample_errors: failures.slice(0, 3).map(f => ({
         error_type: f.error_type,
         error_message: f.error_message,
@@ -227,7 +230,7 @@ async function triggerAlert(failures: EmbeddingFailure[]): Promise<void> {
       })),
     }
 
-    console.error('ALERT: High embedding failure rate detected', alertData)
+    console.error("ALERT: High embedding failure rate detected", alertData)
 
     // Here you could integrate with various alerting systems:
     // - Send webhook to monitoring service
@@ -240,24 +243,21 @@ async function triggerAlert(failures: EmbeddingFailure[]): Promise<void> {
     if (webhookUrl) {
       try {
         await fetch(webhookUrl, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(alertData),
         })
       } catch (webhookError) {
-        console.error('Failed to send alert webhook:', webhookError)
+        console.error("Failed to send alert webhook:", webhookError)
       }
     }
 
     // Log the alert to Supabase for audit trail
-    await supabase
-      .from('embedding_alerts')
-      .insert(alertData)
-
+    await supabase.from("embedding_alerts").insert(alertData)
   } catch (error) {
-    console.error('Error triggering alert:', error)
+    console.error("Error triggering alert:", error)
   }
 }
 
@@ -269,7 +269,7 @@ export async function resolveFailures(failureIds: string[]): Promise<void> {
     const { error } = await supabase
       .from(MONITORING_TABLE)
       .update({ resolved: true })
-      .in('id', failureIds)
+      .in("id", failureIds)
 
     if (error) {
       throw error
@@ -277,7 +277,7 @@ export async function resolveFailures(failureIds: string[]): Promise<void> {
 
     console.log(`Marked ${failureIds.length} failures as resolved`)
   } catch (error) {
-    console.error('Error resolving failures:', error)
+    console.error("Error resolving failures:", error)
     throw error
   }
 }
@@ -286,17 +286,17 @@ export async function resolveFailures(failureIds: string[]): Promise<void> {
  * Get failure trends over time
  */
 export async function getFailureTrends(
-  timeWindow: number = 86400000 // 24 hours default
+  timeWindow: number = 86400000, // 24 hours default
 ): Promise<Array<{ timestamp: string; count: number }>> {
   try {
     const timeWindowStart = new Date(Date.now() - timeWindow).toISOString()
-    
+
     // Group failures by hour
     const { data, error } = await supabase
       .from(MONITORING_TABLE)
-      .select('timestamp')
-      .gte('timestamp', timeWindowStart)
-      .order('timestamp', { ascending: true })
+      .select("timestamp")
+      .gte("timestamp", timeWindowStart)
+      .order("timestamp", { ascending: true })
 
     if (error) {
       throw error
@@ -308,9 +308,10 @@ export async function getFailureTrends(
 
     // Group by hour
     const hourlyCounts: Record<string, number> = {}
-    
+
     data.forEach(failure => {
-      const hour = new Date(failure.timestamp).toISOString().substring(0, 13) + ':00:00Z'
+      const hour =
+        new Date(failure.timestamp).toISOString().substring(0, 13) + ":00:00Z"
       hourlyCounts[hour] = (hourlyCounts[hour] || 0) + 1
     })
 
@@ -319,7 +320,7 @@ export async function getFailureTrends(
       count,
     }))
   } catch (error) {
-    console.error('Error getting failure trends:', error)
+    console.error("Error getting failure trends:", error)
     throw error
   }
 }
@@ -337,22 +338,26 @@ export async function healthCheck(): Promise<{
     const issues: string[] = []
 
     // Check failure rate
-    if (metrics.failure_rate > 10) { // More than 10% failure rate
+    if (metrics.failure_rate > 10) {
+      // More than 10% failure rate
       issues.push(`High failure rate: ${metrics.failure_rate.toFixed(2)}%`)
     }
 
     // Check average processing time
-    if (metrics.average_processing_time > 10000) { // More than 10 seconds
-      issues.push(`High average processing time: ${metrics.average_processing_time}ms`)
+    if (metrics.average_processing_time > 10000) {
+      // More than 10 seconds
+      issues.push(
+        `High average processing time: ${metrics.average_processing_time}ms`,
+      )
     }
 
     // Check for specific error patterns
-    const timeoutErrors = metrics.failures_by_type['TimeoutError'] || 0
+    const timeoutErrors = metrics.failures_by_type["TimeoutError"] || 0
     if (timeoutErrors > 3) {
       issues.push(`High timeout errors: ${timeoutErrors}`)
     }
 
-    const authErrors = metrics.failures_by_type['AuthenticationError'] || 0
+    const authErrors = metrics.failures_by_type["AuthenticationError"] || 0
     if (authErrors > 0) {
       issues.push(`Authentication errors detected: ${authErrors}`)
     }
@@ -363,7 +368,7 @@ export async function healthCheck(): Promise<{
       issues,
     }
   } catch (error) {
-    console.error('Error in health check:', error)
+    console.error("Error in health check:", error)
     return {
       healthy: false,
       metrics: {
@@ -375,7 +380,7 @@ export async function healthCheck(): Promise<{
         failure_rate: 0,
         recent_failures: [],
       },
-      issues: ['Health check failed'],
+      issues: ["Health check failed"],
     }
   }
 }
