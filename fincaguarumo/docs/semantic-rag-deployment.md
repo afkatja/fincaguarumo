@@ -14,56 +14,44 @@ The Semantic RAG system provides semantic search capabilities for the Villa Brun
 ### Base URL
 
 ```
-https://your-domain.netlify.app/api/semantic-rag
+https://your-domain.netlify.app/api/embeddings
 ```
 
 ### Endpoints
 
-#### 1. Get RAG Status
+#### 1. Get API Information
 
 ```bash
-GET /api/semantic-rag
+GET /api/embeddings
 ```
 
 **Response:**
 
 ```json
 {
-  "status": "ok",
-  "stats": {
-    "totalEmbeddings": 119,
-    "contentTypes": { "faq": 20, "page": 15, ... },
-    "languages": { "en": 25, "es": 24, ... },
-    "lastUpdated": "2024-01-15T10:30:00Z"
-  },
-  "validation": {
-    "isValid": true,
-    "errors": [],
-    "warnings": []
-  },
-  "activeJobs": []
+  "model": "intfloat/e5-base-instruct",
+  "dimensions": 768,
+  "endpoint": "/api/embeddings",
+  "actions": [
+    "generate - Generate embedding for single text",
+    "generateBatch - Generate embeddings for multiple texts",
+    "store - Store single embedding",
+    "storeBatch - Store multiple embeddings",
+    "exists - Check if embedding exists",
+    "validate - Validate embedding format"
+  ]
 }
 ```
 
-#### 2. Validate RAG Setup
+#### 2. Validate Embedding Format
 
 ```bash
-POST /api/semantic-rag
+POST /api/embeddings
 Content-Type: application/json
 
 {
-  "action": "validate"
-}
-```
-
-#### 3. Initialize All Embeddings
-
-```bash
-POST /api/semantic-rag
-Content-Type: application/json
-
-{
-  "action": "init"
+  "action": "validate",
+  "embedding": [0.1, 0.2, 0.3, ...]
 }
 ```
 
@@ -71,35 +59,134 @@ Content-Type: application/json
 
 ```json
 {
-  "success": true,
-  "jobId": "rag-1705312200000-abc123",
-  "message": "Initialization started...",
-  "sseUrl": "/api/semantic-rag/stream?jobId=rag-1705312200000-abc123"
+  "valid": true,
+  "expectedDimensions": 768,
+  "actualDimensions": 768
 }
 ```
 
-#### 4. Rebuild Specific Languages
+#### 3. Generate Single Embedding
 
 ```bash
-POST /api/semantic-rag
+POST /api/embeddings
 Content-Type: application/json
 
 {
-  "action": "rebuild",
-  "languages": ["en", "es"]
+  "action": "generate",
+  "text": "Your text here"
 }
 ```
 
-#### 5. Get Job Status
+**Response:**
 
-```bash
-GET /api/semantic-rag?jobId=<jobId>
+```json
+{
+  "embedding": [0.1, 0.2, 0.3, ...],
+  "dimensions": 768
+}
 ```
 
-#### 6. Subscribe to Progress (SSE)
+#### 4. Generate Batch Embeddings
 
 ```bash
-GET /api/semantic-rag/stream?jobId=<jobId>
+POST /api/embeddings
+Content-Type: application/json
+
+{
+  "action": "generateBatch",
+  "texts": ["Text 1", "Text 2", "Text 3"]
+}
+```
+
+**Response:**
+
+```json
+{
+  "embeddings": [[0.1, 0.2, ...], [0.3, 0.4, ...], [0.5, 0.6, ...]]
+}
+```
+
+#### 5. Store Single Embedding
+
+```bash
+POST /api/embeddings
+Content-Type: application/json
+
+{
+  "action": "store",
+  "contentId": "unique-id",
+  "contentType": "faq",
+  "language": "en",
+  "content": "Your content here",
+  "embedding": [0.1, 0.2, 0.3, ...],
+  "metadata": {"source": "manual"}
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true
+}
+```
+
+#### 6. Store Batch Embeddings
+
+```bash
+POST /api/embeddings
+Content-Type: application/json
+
+{
+  "action": "storeBatch",
+  "embeddings": [
+    {
+      "contentId": "id-1",
+      "contentType": "faq",
+      "language": "en",
+      "content": "Content 1",
+      "embedding": [0.1, 0.2, ...],
+      "metadata": {"source": "manual"}
+    },
+    {
+      "contentId": "id-2",
+      "contentType": "page",
+      "language": "es",
+      "content": "Contenido 2",
+      "embedding": [0.3, 0.4, ...],
+      "metadata": {"source": "manual"}
+    }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true
+}
+```
+
+#### 7. Check if Embedding Exists
+
+```bash
+POST /api/embeddings
+Content-Type: application/json
+
+{
+  "action": "exists",
+  "contentId": "unique-id",
+  "contentType": "faq"
+}
+```
+
+**Response:**
+
+```json
+{
+  "exists": true
+}
 ```
 
 ## Production Setup
@@ -121,31 +208,28 @@ The following is already configured in `netlify.toml`:
 ```toml
 [build.environment]
   NODE_VERSION = "20"
-
-# SSE headers for progress streaming
-[[headers]]
-  for = "/api/semantic-rag/stream*"
-  [headers.values]
-    Cache-Control = "no-cache, no-transform"
-    Connection = "keep-alive"
-    X-Accel-Buffering = "no"
 ```
 
-## Manual Initialization
+## Manual Testing
 
-After deploying to Netlify for the first time, you need to initialize the embeddings:
+After deploying to Netlify, you can test the embeddings API:
 
 ```bash
 # Replace with your actual Netlify URL
 NETLIFY_URL="https://your-site.netlify.app"
 
-# Initialize all embeddings
-curl -X POST "$NETLIFY_URL/api/semantic-rag" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "init"}'
+# Test API info
+curl "$NETLIFY_URL/api/embeddings"
 
-# Check status
-curl "$NETLIFY_URL/api/semantic-rag"
+# Test embedding generation
+curl -X POST "$NETLIFY_URL/api/embeddings" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "generate", "text": "Hello world"}'
+
+# Test embedding validation
+curl -X POST "$NETLIFY_URL/api/embeddings" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "validate", "embedding": [0.1, 0.2, 0.3]}'
 ```
 
 ## Deployment Pipeline Integration
@@ -153,14 +237,12 @@ curl "$NETLIFY_URL/api/semantic-rag"
 ### Option 1: Netlify Build Hook
 
 1. Go to **Site Settings → Build & deploy → Build hooks**
-2. Create a new hook (e.g., `rag-init`)
+2. Create a new hook (e.g., `embeddings-test`)
 3. Add to your deployment script:
 
 ```bash
 # In your CI/CD pipeline or build script
-curl -X POST "$NETLIFY_URL/api/semantic-rag" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "init"}'
+curl "$NETLIFY_URL/api/embeddings"
 ```
 
 ### Option 2: Post-Build Script
@@ -171,7 +253,7 @@ Add to your `package.json`:
 {
   "scripts": {
     "deploy": "npm run build && netlify deploy --prod",
-    "deploy:init": "netlify deploy --prod && curl -X POST \"$NETLIFY_URL/api/semantic-rag\" -H \"Content-Type: application/json\" -d '{\"action\":\"init\"}'"
+    "deploy:test": "netlify deploy --prod && curl \"$NETLIFY_URL/api/embeddings\""
   }
 }
 ```
@@ -180,7 +262,7 @@ Add to your `package.json`:
 
 ```yaml
 # .github/workflows/deploy.yml
-name: Deploy and Initialize RAG
+name: Deploy and Test Embeddings
 
 on:
   push:
@@ -217,49 +299,51 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
 
-      - name: Initialize RAG
+      - name: Test Embeddings API
         run: |
           sleep 10  # Wait for deployment to complete
-          curl -X POST "${{ secrets.NETLIFY_URL }}/api/semantic-rag" \
-            -H "Content-Type: application/json" \
-            -d '{"action":"init"}'
+          curl "${{ secrets.NETLIFY_URL }}/api/embeddings"
         env:
           NETLIFY_URL: ${{ secrets.NETLIFY_URL }}
 ```
 
 ## Monitoring
 
-### Check System Status
+### Check API Status
 
 ```bash
-curl "https://your-site.netlify.app/api/semantic-rag"
+curl "https://your-site.netlify.app/api/embeddings"
 ```
 
 Expected output shows:
 
-- `isValid: true` - System is working
-- `totalEmbeddings > 0` - Embeddings are loaded
-- `activeJobs: []` - No running operations
+- API endpoint information
+- Available actions
+- Model details and dimensions
 
 ### Common Issues
 
-1. **No embeddings found**: Run initialization (`action: init`)
+1. **API not responding**: Check deployment completed successfully
 2. **Embedding errors**: Check `TOGETHER_API_KEY` is set correctly
-3. **Validation warnings**: Usually about local Ollama not available (expected in production)
+3. **Invalid embedding format**: Ensure embeddings have correct dimensions (768 for intfloat/e5-base-instruct)
 
 ## Supported Languages
 
 The system supports these languages: `en`, `es`, `de`, `nl`, `ru`
 
-## Timeout Considerations
+## Performance Considerations
 
-Netlify Functions have a **10 second sync limit**. The RAG API handles this by:
+Netlify Functions have a **10 second sync limit**. The embeddings API handles this by:
 
-- Running long operations (init, rebuild) as background jobs
-- Providing SSE for real-time progress updates
-- Storing job state for status queries
+- Processing individual requests quickly
+- Supporting batch operations for efficiency
+- No streaming/SSE to avoid timeout issues
 
-**Note**: For production use with high traffic, consider using Redis/KV for job storage to persist across function invocations.
+**Note**: For production use with high traffic, consider:
+
+- Implementing caching for frequently accessed embeddings
+- Using batch operations for multiple embeddings
+- Monitoring API usage and response times
 
 ## Security
 
@@ -274,8 +358,8 @@ Example rate limiting with Netlify:
 ```toml
 # Add to netlify.toml
 [[redirects]]
-  from = "/api/semantic-rag"
-  to = "/api/semantic-rag"
+  from = "/api/embeddings"
+  to = "/api/embeddings"
   status = 200
   force = true
   conditions = { Role = ["admin"] }
