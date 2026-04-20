@@ -2,13 +2,7 @@
  * Unit tests for embedding generation with multilingual support
  */
 
-import {
-  generateEmbedding,
-  generateBatchEmbeddings,
-  storeEmbedding,
-  storeBatchEmbeddings,
-  embeddingExists,
-} from "../embeddings"
+import { generateEmbedding, generateBatchEmbeddings } from "../embeddings"
 import { SupportedLanguage } from "../multilingual-preprocessing"
 
 // Mock the TogetherAI API
@@ -154,10 +148,10 @@ describe("Embedding Generation", () => {
         ok: true,
         json: jest.fn().mockResolvedValue({
           data: Array(150)
-            .fill()
+            .fill(undefined)
             .map((_, i) => ({
               embedding: Array(8)
-                .fill()
+                .fill(undefined)
                 .map((_, j) => (i + j) * 0.1),
             })),
         }),
@@ -165,7 +159,7 @@ describe("Embedding Generation", () => {
       mockFetch.mockResolvedValue(mockResponse as any)
 
       const texts = Array(150)
-        .fill()
+        .fill(undefined)
         .map((_, i) => `Text ${i}`)
       const result = await generateBatchEmbeddings(texts, "en")
 

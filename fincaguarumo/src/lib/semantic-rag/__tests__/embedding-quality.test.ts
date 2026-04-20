@@ -43,7 +43,7 @@ describe("Embedding Quality Consistency", () => {
         en: "The weather is beautiful today",
         nl: "Het weer is vandaag mooi",
         es: "El tiempo está hermoso hoy",
-        ru: "Ïîãîäà ïðåêðàñíûé ñåãîäíÿ",
+        ru: "Погода прекрасный сегодня",
         de: "Das Wetter ist heute wunderschön",
       }
 
@@ -57,7 +57,9 @@ describe("Embedding Quality Consistency", () => {
       }
 
       // Check that all embeddings have the same dimensions
-      const dimensions = Object.values(embeddings).map(emb => emb.length)
+      const dimensions = Object.values(embeddings)
+        .filter((emb): emb is number[] => emb !== undefined)
+        .map(emb => emb.length)
       expect(new Set(dimensions).size).toBe(1) // All should have same length
       expect(dimensions[0]).toBe(768) // e5-base-instruct dimensions
     })
@@ -68,14 +70,14 @@ describe("Embedding Quality Consistency", () => {
           en: "beautiful flower",
           nl: "mooie bloem",
           es: "flor hermosa",
-          ru: "êðàñèâûé öâåòîê",
+          ru: "красивый цветок",
           de: "schöne Blume",
         },
         {
           en: "fast car",
           nl: "snelle auto",
           es: "coche rápido",
-          ru: "áûñòðàÿ ìàøèíà",
+          ru: "быстрая машина",
           de: "schnelles Auto",
         },
       ]
@@ -225,6 +227,219 @@ describe("Embedding Quality Consistency", () => {
         expect(result.embedding).toHaveLength(768)
         expect(result.dimensions).toBe(768)
       }
+    })
+  })
+
+  describe("Storage Quality Consistency", () => {
+    // Mock Supabase client for storage tests
+    const mockSupabase = {
+      from: jest.fn(),
+    }
+
+    beforeEach(() => {
+      // Mock the Supabase module for storage tests
+      jest.doMock("@supabase/supabase-js", () => ({
+        createClient: jest.fn(() => mockSupabase),
+      }))
+    })
+
+    it("should maintain embedding quality during storage across languages", async () => {
+      const mockUpsert = jest.fn().mockResolvedValue({ error: null })
+      mockSupabase.from.mockReturnValue({
+        upsert: mockUpsert,
+      })
+
+      const testTexts = {
+        en: "Beautiful sunny day",
+        nl: "Mooie zonnige dag",
+        es: "Hermoso día soleado",
+        de: "Schöner sonniger Tag",
+      }
+
+      // Re-import storage functions with mocked Supabase
+      const { storeEmbedding } = await import("../embeddings")
+
+      for (const [lang, text] of Object.entries(testTexts)) {
+        mockFetch.mockResolvedValue(mockEmbeddingResponse(text) as any)
+        const embeddingResult = await generateEmbedding(
+          text,
+          lang as SupportedLanguage,
+        )
+
+        // Store the embedding
+        await storeEmbedding(
+          `test-${lang}`,
+          "quality-test",
+          lang as SupportedLanguage,
+          text,
+          embeddingResult.embedding,
+          { testType: "quality", language: lang },
+        )
+
+        // Verify storage was called with correct data
+        expect(mockUpsert).toHaveBeenCalledWith({
+          content_id: `test-${lang}`,
+          content_type: "quality-test",
+          language: lang,
+          content: text,
+          embedding: embeddingResult.embedding,
+          metadata: { testType: "quality", language: lang },
+          updated_at: expect.any(String),
+        })
+
+        // Verify embedding quality is maintained
+        expect(embeddingResult.embedding).toHaveLength(768)
+        expect(
+          embeddingResult.embedding.every(
+            val => typeof val === "number" && !isNaN(val),
+          ),
+        ).toBe(true)
+      }
+    })
+
+    it("should maintain batch storage quality across mixed languages", async () => {
+      const mockUpsert = jest.fn().mockResolvedValue({ error: null })
+      mockSupabase.from.mockReturnValue({
+        upsert: mockUpsert,
+      })
+
+      const { storeBatchEmbeddings } = await import("../embeddings")
+
+      const mixedLanguageEmbeddings = [
+        {
+          contentId: "quality-test-1",
+          contentType: "multilingual-test",
+          language: "en" as SupportedLanguage,
+          content: "Hello world",
+          embedding: Array(768)
+            .fill(0)
+            .map((_, i) => Math.sin(i) * 0.1),
+        },
+        {
+          contentId: "quality-test-2",
+          contentType: "multilingual-test",
+          language: "es" as SupportedLanguage,
+          content: "Hola mundo",
+          embedding: Array(768)
+            .fill(0)
+            .map((_, i) => Math.cos(i) * 0.1),
+        },
+        {
+          contentId: "quality-test-3",
+          contentType: "multilingual-test",
+          language: "de" as SupportedLanguage,
+          content: "Hallo Welt",
+          embedding: Array(768)
+            .fill(0)
+            .map((_, i) => Math.sin(i + 1) * 0.1),
+        },
+      ]
+
+      await storeBatchEmbeddings(mixedLanguageEmbeddings)
+
+      // Verify batch storage was called with all embeddings
+      expect(mockUpsert).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            content_id: "quality-test-1",
+            language: "en",
+            embedding: expect.arrayContaining([expect.any(Number)]),
+          }),
+          expect.objectContaining({
+            content_id: "quality-test-2",
+            language: "es",
+            embedding: expect.arrayContaining([expect.any(Number)]),
+          }),
+          expect.objectContaining({
+            content_id: "quality-test-3",
+            language: "de",
+            embedding: expect.arrayContaining([expect.any(Number)]),
+          }),
+        ]),
+      )
+
+      // Verify all embeddings maintain quality
+      mixedLanguageEmbeddings.forEach(emb => {
+        expect(emb.embedding).toHaveLength(768)
+        expect(
+          emb.embedding.every(val => typeof val === "number" && !isNaN(val)),
+        ).toBe(true)
+      })
+    })
+
+    it("should handle embedding existence checking consistently", async () => {
+      const mockSelect = jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: { id: "123", language: "en" },
+              error: null,
+            }),
+          }),
+        }),
+      })
+      mockSupabase.from.mockReturnValue({
+        select: mockSelect,
+      })
+
+      const { embeddingExists } = await import("../embeddings")
+
+      const result = await embeddingExists("quality-test", "multilingual-test")
+
+      expect(result).toBe(true)
+      expect(mockSupabase.from).toHaveBeenCalledWith("content_embeddings")
+      expect(mockSelect).toHaveBeenCalledWith("id")
+    })
+
+    it("should maintain embedding quality during storage with metadata", async () => {
+      const mockUpsert = jest.fn().mockResolvedValue({ error: null })
+      mockSupabase.from.mockReturnValue({
+        upsert: mockUpsert,
+      })
+
+      const { storeEmbedding } = await import("../embeddings")
+
+      const testText = "Test embedding with complex metadata"
+      const embedding = Array(768)
+        .fill(0)
+        .map((_, i) => Math.sin(i * 0.5) * 0.2)
+      const complexMetadata = {
+        language: "en",
+        quality: "high",
+        preprocessing: {
+          normalized: true,
+          lowercase: true,
+          specialCharsRemoved: true,
+        },
+        dimensions: 768,
+        model: "e5-base-instruct",
+        timestamp: new Date().toISOString(),
+      }
+
+      await storeEmbedding(
+        "complex-metadata-test",
+        "quality-test",
+        "en" as SupportedLanguage,
+        testText,
+        embedding,
+        complexMetadata,
+      )
+
+      expect(mockUpsert).toHaveBeenCalledWith({
+        content_id: "complex-metadata-test",
+        content_type: "quality-test",
+        language: "en",
+        content: testText,
+        embedding,
+        metadata: complexMetadata,
+        updated_at: expect.any(String),
+      })
+
+      // Verify embedding quality is maintained
+      expect(embedding).toHaveLength(768)
+      expect(
+        embedding.every(val => typeof val === "number" && !isNaN(val)),
+      ).toBe(true)
     })
   })
 

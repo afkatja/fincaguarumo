@@ -118,10 +118,10 @@ describe("Multilingual Preprocessing", () => {
     })
 
     it("should preprocess Russian text correctly", () => {
-      const text = "Ïðèâåò! Êàê äåëà?"
+      const text = "Привет! Как дела?"
       const result = preprocessText(text, "ru")
 
-      expect(result.processedText).toBe("")
+      expect(result.processedText).toBe("privet kak dela")
       expect(result.detectedLanguage).toBe("ru")
       expect(result.preprocessingSteps).toContain(
         "Applied ru-specific patterns",
