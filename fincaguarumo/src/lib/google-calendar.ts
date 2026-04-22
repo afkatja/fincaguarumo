@@ -375,15 +375,12 @@ async function retryWithBackoff<T>(
 // Standalone functions for backward compatibility and easier testing
 export async function createCalendarEvent(
   booking: BookingData,
-  eventType: "checkin" | "checkout",
 ): Promise<string | null> {
   const service = new GoogleCalendarService()
   validateBookingData(booking)
 
-  const eventBooking = createEventBooking(booking, eventType)
-
   return await retryWithBackoff(async () => {
-    const result = await service.createEvent(eventBooking)
+    const result = await service.createEvent(booking)
     if (!result) {
       throw new Error("Failed to create calendar event")
     }
@@ -394,12 +391,10 @@ export async function createCalendarEvent(
 export async function updateCalendarEvent(
   eventId: string,
   booking: BookingData,
-  eventType: "checkin" | "checkout",
 ): Promise<string> {
   const service = new GoogleCalendarService()
-  const eventBooking = createEventBooking(booking, eventType)
 
-  const success = await service.updateEvent(eventId, eventBooking)
+  const success = await service.updateEvent(eventId, booking)
   if (!success) {
     throw new Error("Event not found")
   }
@@ -430,8 +425,7 @@ function validateBookingDates(booking: BookingData): void {
 }
 
 export async function syncBookingToCalendar(booking: BookingData): Promise<{
-  checkinEventId?: string
-  checkoutEventId?: string
+  eventId?: string
   status: "created" | "updated"
 }> {
   validateBookingDates(booking)
@@ -440,31 +434,26 @@ export async function syncBookingToCalendar(booking: BookingData): Promise<{
   const syncLog = await service.getSyncLog(booking.uid)
 
   if (!syncLog || !syncLog.gcal_event_id) {
-    // Create new events
-    const [checkinEventId, checkoutEventId] = await Promise.all([
-      createCalendarEvent(booking, "checkin"),
-      createCalendarEvent(booking, "checkout"),
-    ])
+    // Create new event
+    const eventId = await createCalendarEvent(booking)
 
     return {
-      checkinEventId: checkinEventId || undefined,
-      checkoutEventId: checkoutEventId || undefined,
+      eventId: eventId || undefined,
       status: "created",
     }
   } else {
-    // Update existing events (simplified for testing)
-    const [checkinEventId, checkoutEventId] = await Promise.all([
-      updateCalendarEvent(syncLog.gcal_event_id, booking, "checkin"),
-      updateCalendarEvent(
-        syncLog.gcal_event_id + "_checkout",
-        booking,
-        "checkout",
-      ),
-    ])
+    // Update existing event using real ID
+    const eventId = syncLog.gcal_event_id
+
+    if (!eventId) {
+      throw new Error("Missing event ID for update")
+    }
+
+    // Update existing event
+    const updatedEventId = await updateCalendarEvent(eventId, booking)
 
     return {
-      checkinEventId,
-      checkoutEventId,
+      eventId: updatedEventId,
       status: "updated",
     }
   }

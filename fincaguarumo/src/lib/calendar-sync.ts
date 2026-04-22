@@ -33,8 +33,7 @@ export interface SyncResult {
 }
 
 export interface CalendarSyncResponse {
-  checkinEventId?: string
-  checkoutEventId?: string
+  eventId?: string
   status: "created" | "updated" | "deleted"
 }
 
@@ -437,6 +436,7 @@ export class CalendarSyncService {
       throw error
     }
   }
+
   private async handleCancelledBooking(
     booking: any,
   ): Promise<"deleted" | "error"> {
@@ -456,8 +456,11 @@ export class CalendarSyncService {
           )
 
           if (success) {
-            // Update sync log to reflect deletion
-            await this.recordSyncState(booking.uid, null, "success")
+            await this.recordSyncState(
+              booking.uid,
+              syncLog.gcal_event_id,
+              "success",
+            )
             return "deleted"
           } else {
             await this.recordSyncState(
@@ -469,15 +472,17 @@ export class CalendarSyncService {
             return "error"
           }
         } else {
-          // Event doesn't exist in calendar, mark as deleted locally
-          await this.recordSyncState(booking.uid, null, "success")
-          return "deleted"
+          await this.recordSyncState(
+            booking.uid,
+            syncLog.gcal_event_id,
+            "failed",
+            "Event not found in Google Calendar",
+          )
+          return "error"
         }
+      } else {
+        return "deleted" // No event to delete, treat as success
       }
-
-      // No event to delete, mark as successful cleanup
-      await this.recordSyncState(booking.uid, null, "success")
-      return "deleted"
     } catch (error) {
       console.error(`Error handling cancelled booking ${booking.uid}:`, error)
       await this.recordSyncState(
@@ -628,41 +633,134 @@ export async function syncBookingsToCalendar(
       let retryCount = 0
       const maxRetries = 3
 
-      // Retry logic with exponential backoff
-      while (retryCount <= maxRetries) {
-        try {
-          const calendarData = mapBookingToCalendarData(booking)
-          const eventId = await googleCalendarService.createEvent(calendarData)
-          if (!eventId) {
-            throw new Error("Failed to create calendar event")
-          }
-          syncResult = {
-            status: "created",
-            checkinEventId: eventId,
-          }
-          break // Success, exit retry loop
-        } catch (error: any) {
-          retryCount++
+      // Check if booking is cancelled first
+      if (booking.status === "cancelled") {
+        // Handle cancelled booking with retry logic
+        while (retryCount <= maxRetries) {
+          try {
+            if (existingSync?.gcal_event_id) {
+              // Check if event exists before deleting
+              const eventExists = await googleCalendarService.eventExists(
+                existingSync.gcal_event_id,
+              )
 
-          if (retryCount > maxRetries) {
-            throw error
-          }
+              if (eventExists) {
+                const success = await googleCalendarService.deleteEvent(
+                  existingSync.gcal_event_id,
+                  booking.uid || "unknown",
+                )
 
-          // Only retry on rate limit errors (429) or network timeouts
-          if (error.code !== 429 && error.code !== "ETIMEDOUT") {
-            throw error
-          }
+                if (success) {
+                  syncResult = {
+                    status: "deleted",
+                  }
+                  break // Success, exit retry loop
+                } else {
+                  throw new Error("Failed to delete calendar event")
+                }
+              } else {
+                // Event doesn't exist, treat as deleted
+                syncResult = {
+                  status: "deleted",
+                }
+                break
+              }
+            } else {
+              // No existing event, treat as deleted
+              syncResult = {
+                status: "deleted",
+              }
+              break
+            }
+          } catch (error: any) {
+            retryCount++
 
-          result.retries = (result.retries || 0) + 1
-          const delay = Math.pow(2, retryCount) * 1000 // Exponential backoff
-          await new Promise(resolve => setTimeout(resolve, delay))
+            if (retryCount > maxRetries) {
+              throw error
+            }
+
+            // Only retry on rate limit errors (429) or network timeouts
+            if (error.code !== 429 && error.code !== "ETIMEDOUT") {
+              throw error
+            }
+
+            result.retries = (result.retries || 0) + 1
+            const delay = Math.pow(2, retryCount) * 1000 // Exponential backoff
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+        }
+      } else {
+        // Handle active booking with retry logic
+        while (retryCount <= maxRetries) {
+          try {
+            const calendarData = mapBookingToCalendarData(booking)
+
+            if (!existingSync || !existingSync.gcal_event_id) {
+              // Create new event
+              const eventId =
+                await googleCalendarService.createEvent(calendarData)
+              if (!eventId) {
+                throw new Error("Failed to create calendar event")
+              }
+              syncResult = {
+                status: "created",
+                eventId,
+              }
+            } else {
+              // Check if event still exists in Google Calendar
+              const eventExists = await googleCalendarService.eventExists(
+                existingSync.gcal_event_id,
+              )
+
+              if (!eventExists) {
+                // Event was deleted externally, create new one
+                const eventId =
+                  await googleCalendarService.createEvent(calendarData)
+                if (!eventId) {
+                  throw new Error("Failed to create calendar event")
+                }
+                syncResult = {
+                  status: "created",
+                  eventId,
+                }
+              } else {
+                // Update existing event
+                const success = await googleCalendarService.updateEvent(
+                  existingSync.gcal_event_id,
+                  calendarData,
+                )
+                if (success) {
+                  syncResult = {
+                    status: "updated",
+                    eventId: existingSync.gcal_event_id,
+                  }
+                }
+              }
+            }
+            break // Success, exit retry loop
+          } catch (error: any) {
+            retryCount++
+
+            if (retryCount > maxRetries) {
+              throw error
+            }
+
+            // Only retry on rate limit errors (429) or network timeouts
+            if (error.code !== 429 && error.code !== "ETIMEDOUT") {
+              throw error
+            }
+
+            result.retries = (result.retries || 0) + 1
+            const delay = Math.pow(2, retryCount) * 1000 // Exponential backoff
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
         }
       }
 
       // Record sync state
       await calendarSyncService.recordSyncState(
         booking.uid || "unknown",
-        syncResult!.checkinEventId || null,
+        syncResult!.eventId || null,
         syncResult!.status === "deleted" ? "success" : "success",
       )
 
@@ -676,17 +774,6 @@ export async function syncBookingsToCalendar(
       }
 
       result.success++
-
-      // Handle cancelled bookings - if booking is cancelled, count as deleted regardless of sync result
-      if (booking.status === "cancelled") {
-        result.deleted = (result.deleted || 0) + 1
-        // Don't count cancelled bookings as created/updated
-        if (syncResult!.status === "created") {
-          result.created = (result.created || 0) - 1
-        } else if (syncResult!.status === "updated") {
-          result.updated = (result.updated || 0) - 1
-        }
-      }
     } catch (error) {
       result.failed++
       result.errors?.push({
