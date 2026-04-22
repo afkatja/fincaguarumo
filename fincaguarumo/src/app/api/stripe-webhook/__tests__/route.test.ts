@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import { POST } from "../route"
 import { NextRequest } from "next/server"
 import * as bookingHandlers from "../bookingHandlers"
@@ -35,33 +39,46 @@ jest.mock("../bookingHandlers", () => ({
   })),
 }))
 
+// Helper function to access the shared mock
+const getMockConstructEvent = () => {
+  const stripe = require("stripe")
+  return (stripe as any).mockConstructEvent
+}
+
 jest.mock("stripe", () => {
+  // Create shared mock functions that can be overridden in tests
+  const mockConstructEvent = jest.fn().mockReturnValue({
+    type: "checkout.session.completed",
+    data: {
+      object: {
+        id: "cs_test_123",
+        metadata: {
+          bookingId: "booking-123",
+          customerName: "John Doe",
+          customerEmail: "test@example.com",
+          customerPhone: "+1234567890",
+          checkIn: "2024-01-01",
+          checkOut: "2024-01-08",
+          type: "villa",
+          title: "Test Villa",
+          totalPrice: "1000",
+          currency: "usd",
+          guests: "2",
+        },
+        payment_status: "paid",
+      },
+    },
+  })
+
   const mockStripe = jest.fn(() => ({
     webhooks: {
-      constructEvent: jest.fn(() => ({
-        type: "checkout.session.completed",
-        data: {
-          object: {
-            id: "cs_test_123",
-            metadata: {
-              bookingId: "booking-123",
-              customerName: "John Doe",
-              customerEmail: "test@example.com",
-              customerPhone: "+1234567890",
-              checkIn: "2024-01-01",
-              checkOut: "2024-01-08",
-              type: "villa",
-              title: "Test Villa",
-              totalPrice: "1000",
-              currency: "usd",
-              guests: "2",
-            },
-            payment_status: "paid",
-          },
-        },
-      })),
+      constructEvent: mockConstructEvent,
     },
   }))
+
+  // Export the mock so tests can access it
+  ;(mockStripe as any).mockConstructEvent = mockConstructEvent
+
   return mockStripe
 })
 
@@ -108,14 +125,8 @@ describe("/api/stripe-webhook endpoint", () => {
 
       const mockStripeSignature = "whsec_test_signature"
 
-      // Mock Stripe webhook construction
-      const stripe = require("stripe")
-      const mockStripeInstance = {
-        webhooks: {
-          constructEvent: jest.fn().mockReturnValue(mockEvent),
-        },
-      }
-      stripe.mockReturnValue(mockStripeInstance)
+      // Mock Stripe webhook construction using shared mock
+      getMockConstructEvent().mockReturnValue(mockEvent)
 
       // Mock successful execution
       ;(executeWithIndividualRetries as jest.Mock).mockResolvedValue([
@@ -208,13 +219,8 @@ describe("/api/stripe-webhook endpoint", () => {
         },
       }
 
-      const stripe = require("stripe")
-      const mockStripeInstance = {
-        webhooks: {
-          constructEvent: jest.fn().mockReturnValue(mockEvent),
-        },
-      }
-      stripe.mockReturnValue(mockStripeInstance)
+      // Mock Stripe webhook construction using shared mock
+      getMockConstructEvent().mockReturnValue(mockEvent)
 
       // Mock successful execution
       ;(executeWithIndividualRetries as jest.Mock).mockResolvedValue([
@@ -271,15 +277,10 @@ describe("/api/stripe-webhook endpoint", () => {
     })
 
     test("should handle webhook signature verification failure", async () => {
-      const stripe = require("stripe")
-      const mockStripeInstance = {
-        webhooks: {
-          constructEvent: jest.fn().mockImplementation(() => {
-            throw new Error("Invalid signature")
-          }),
-        },
-      }
-      stripe.mockReturnValue(mockStripeInstance)
+      // Mock Stripe webhook construction to throw error
+      getMockConstructEvent().mockImplementation(() => {
+        throw new Error("Invalid signature")
+      })
 
       const request = new NextRequest(
         "http://localhost:3000/api/stripe-webhook",
@@ -312,13 +313,8 @@ describe("/api/stripe-webhook endpoint", () => {
         },
       }
 
-      const stripe = require("stripe")
-      const mockStripeInstance = {
-        webhooks: {
-          constructEvent: jest.fn().mockReturnValue(mockEvent),
-        },
-      }
-      stripe.mockReturnValue(mockStripeInstance)
+      // Mock Stripe webhook construction using shared mock
+      getMockConstructEvent().mockReturnValue(mockEvent)
 
       const request = new NextRequest(
         "http://localhost:3000/api/stripe-webhook",
@@ -379,13 +375,8 @@ describe("/api/stripe-webhook endpoint", () => {
         },
       }
 
-      const stripe = require("stripe")
-      const mockStripeInstance = {
-        webhooks: {
-          constructEvent: jest.fn().mockReturnValue(mockEvent),
-        },
-      }
-      stripe.mockReturnValue(mockStripeInstance)
+      // Mock Stripe webhook construction using shared mock
+      getMockConstructEvent().mockReturnValue(mockEvent)
 
       const request = new NextRequest(
         "http://localhost:3000/api/stripe-webhook",
@@ -420,15 +411,10 @@ describe("/api/stripe-webhook endpoint", () => {
 
   describe("Security and Validation", () => {
     test("should verify Stripe signature before processing", async () => {
-      const stripe = require("stripe")
-      const mockStripeInstance = {
-        webhooks: {
-          constructEvent: jest.fn().mockImplementation(() => {
-            throw new Error("No signature provided")
-          }),
-        },
-      }
-      stripe.mockReturnValue(mockStripeInstance)
+      // Mock Stripe webhook construction to throw error
+      getMockConstructEvent().mockImplementation(() => {
+        throw new Error("No signature provided")
+      })
 
       const request = new NextRequest(
         "http://localhost:3000/api/stripe-webhook",
@@ -446,16 +432,29 @@ describe("/api/stripe-webhook endpoint", () => {
     })
 
     test("should handle malformed webhook events", async () => {
-      const stripe = require("stripe")
-      const mockStripeInstance = {
-        webhooks: {
-          constructEvent: jest.fn().mockReturnValue({
-            type: "unknown.event",
-            data: {},
-          }),
+      // Mock Stripe webhook construction for unknown event
+      getMockConstructEvent().mockReturnValue({
+        type: "unknown.event",
+        data: {
+          object: {
+            id: "cs_test_unknown",
+            metadata: {
+              bookingId: "booking-unknown",
+              customerName: "Unknown",
+              customerEmail: "unknown@example.com",
+              customerPhone: "+1234567890",
+              checkIn: "2024-01-01",
+              checkOut: "2024-01-08",
+              type: "villa",
+              title: "Unknown",
+              totalPrice: "1000",
+              currency: "usd",
+              guests: "2",
+            },
+            payment_status: "paid",
+          },
         },
-      }
-      stripe.mockReturnValue(mockStripeInstance)
+      })
 
       const request = new NextRequest(
         "http://localhost:3000/api/stripe-webhook",
