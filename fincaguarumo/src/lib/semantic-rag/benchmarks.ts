@@ -32,6 +32,7 @@ export interface BenchmarkResult {
   configuration: string
   indexingTimeMs: number
   indexSizeMB: number
+  isEstimated: boolean
   searchTimeMs: number
   searchAccuracy: number
   compressionRatio: number
@@ -55,19 +56,34 @@ async function generateTestEmbeddings(count: number): Promise<
   Array<{
     id: string
     content: string
+    label: string
     embedding: number[]
   }>
 > {
   const embeddings = []
+  const categories = [
+    "technology",
+    "science",
+    "business",
+    "health",
+    "education",
+    "entertainment",
+    "sports",
+    "politics",
+    "travel",
+    "food",
+  ]
 
   for (let i = 0; i < count; i++) {
-    const content = `Test content for benchmarking item ${i}. This is sample text to generate embeddings for performance testing.`
+    const category = categories[i % categories.length]
+    const content = `${category} content for benchmarking item ${i}. This is sample text about ${category} for performance testing and evaluation.`
 
     try {
       const result = await generateEmbedding(content, "en")
       embeddings.push({
         id: `test_${i}`,
         content,
+        label: category,
         embedding: result.embedding,
       })
     } catch (error) {
@@ -76,6 +92,7 @@ async function generateTestEmbeddings(count: number): Promise<
       embeddings.push({
         id: `test_${i}`,
         content,
+        label: category,
         embedding: Array.from(
           { length: BENCHMARK_CONFIG.vectorDimensions },
           () => Math.random() - 0.5,
@@ -109,33 +126,37 @@ function getMemoryUsage(): number {
  * Benchmark indexing performance with and without binary quantization
  */
 async function benchmarkIndexing(
-  testSize: number,
+  embeddings: Array<{
+    id: string
+    content: string
+    label: string
+    embedding: number[]
+  }>,
   useBinaryQuantization: boolean,
 ): Promise<{
   indexingTimeMs: number
   indexSizeMB: number
+  isEstimated: boolean
   memoryUsageMB: number
 }> {
+  const testSize = embeddings.length
   const startTime = Date.now()
   const startMemory = getMemoryUsage()
 
-  // Generate test embeddings
-  console.log(`Generating ${testSize} test embeddings...`)
-  const embeddings = await generateTestEmbeddings(testSize)
-
+  const uniqueSuffix = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
   const collectionName = useBinaryQuantization
-    ? `benchmark_binary_${testSize}`
-    : `benchmark_standard_${testSize}`
+    ? `benchmark_binary_${testSize}_${uniqueSuffix}`
+    : `benchmark_standard_${testSize}_${uniqueSuffix}`
+
+  // Initialize collection
+  const qdrantUrl = process.env.QDRANT_URL || "http://localhost:6333"
+  const qdrantApiKey = process.env.QDRANT_API_KEY
+  const qdrantClient = new QdrantClient({
+    url: qdrantUrl,
+    ...(qdrantApiKey && { apiKey: qdrantApiKey }),
+  })
 
   try {
-    // Initialize collection
-    const qdrantUrl = process.env.QDRANT_URL || "http://localhost:6333"
-    const qdrantApiKey = process.env.QDRANT_API_KEY
-    const qdrantClient = new QdrantClient({
-      url: qdrantUrl,
-      ...(qdrantApiKey && { apiKey: qdrantApiKey }),
-    })
-
     // Create collection with or without binary quantization
     await qdrantClient.createCollection(collectionName, {
       vectors: {
@@ -161,6 +182,7 @@ async function benchmarkIndexing(
       vector: embedding.embedding,
       payload: {
         content: embedding.content,
+        label: embedding.label,
         content_type: "benchmark",
         language: "en",
         content_id: embedding.id,
@@ -181,61 +203,97 @@ async function benchmarkIndexing(
 
     // Get collection info to estimate size
     const collectionInfo = await qdrantClient.getCollection(collectionName)
-    const indexSizeMB = estimateIndexSize(collectionInfo, testSize)
-
-    // Clean up
-    await qdrantClient.deleteCollection(collectionName)
+    const indexSizeResult = estimateIndexSize(collectionInfo, testSize)
 
     return {
       indexingTimeMs: endTime - startTime,
-      indexSizeMB,
+      indexSizeMB: indexSizeResult.sizeMB,
+      isEstimated: indexSizeResult.isEstimated,
       memoryUsageMB: endMemory - startMemory,
     }
   } catch (error) {
     console.error(`Indexing benchmark failed for size ${testSize}:`, error)
     throw error
+  } finally {
+    // Clean up - always run regardless of errors
+    try {
+      await qdrantClient.deleteCollection(collectionName)
+    } catch (cleanupError) {
+      console.warn(
+        `Failed to clean up collection ${collectionName}:`,
+        cleanupError,
+      )
+    }
   }
 }
 
 /**
  * Estimate collection size based on Qdrant metadata
+ * Returns real size if available, otherwise returns estimated size with isEstimated flag
  */
-function estimateIndexSize(collectionInfo: any, vectorCount: number): number {
-  // This is a rough estimation - actual size would require more detailed analysis
-  const vectorSizeBytes = BENCHMARK_CONFIG.vectorDimensions * 4 // 4 bytes per float
-  const compressionRatio = collectionInfo.config?.quantization_config
-    ? 0.5
-    : 1.0
-  const estimatedSize = vectorCount * vectorSizeBytes * compressionRatio
+function estimateIndexSize(
+  collectionInfo: any,
+  vectorCount: number,
+): {
+  sizeMB: number
+  isEstimated: boolean
+} {
+  // Try to get real storage size from collection metadata
+  // Qdrant may provide storage info in different fields depending on version
+  const realStorageBytes =
+    collectionInfo.storage_bytes ||
+    collectionInfo.disk_usage_bytes ||
+    collectionInfo.payload_storage_bytes ||
+    collectionInfo.vectors_storage_bytes
 
-  return estimatedSize / 1024 / 1024 // Convert to MB
+  if (realStorageBytes && typeof realStorageBytes === "number") {
+    return {
+      sizeMB: realStorageBytes / 1024 / 1024, // Convert to MB
+      isEstimated: false,
+    }
+  }
+
+  // Fallback to estimation when real storage data is not available
+  console.warn("Real storage size not available, using estimation")
+  const vectorSizeBytes = BENCHMARK_CONFIG.vectorDimensions * 4 // 4 bytes per float
+  const estimatedSize = vectorCount * vectorSizeBytes
+
+  return {
+    sizeMB: estimatedSize / 1024 / 1024, // Convert to MB
+    isEstimated: true,
+  }
 }
 
 /**
  * Benchmark search performance
  */
 async function benchmarkSearch(
-  testSize: number,
+  embeddings: Array<{
+    id: string
+    content: string
+    label: string
+    embedding: number[]
+  }>,
   useBinaryQuantization: boolean,
 ): Promise<{
   searchTimeMs: number
   searchAccuracy: number
 }> {
+  const testSize = embeddings.length
+  const uniqueSuffix = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
   const collectionName = useBinaryQuantization
-    ? `search_benchmark_binary_${testSize}`
-    : `search_benchmark_standard_${testSize}`
+    ? `search_benchmark_binary_${testSize}_${uniqueSuffix}`
+    : `search_benchmark_standard_${testSize}_${uniqueSuffix}`
+
+  // Setup collection and data
+  const qdrantUrl = process.env.QDRANT_URL || "http://localhost:6333"
+  const qdrantApiKey = process.env.QDRANT_API_KEY
+  const qdrantClient = new QdrantClient({
+    url: qdrantUrl,
+    ...(qdrantApiKey && { apiKey: qdrantApiKey }),
+  })
 
   try {
-    // Setup collection and data
-    const embeddings = await generateTestEmbeddings(testSize)
-
-    const qdrantUrl = process.env.QDRANT_URL || "http://localhost:6333"
-    const qdrantApiKey = process.env.QDRANT_API_KEY
-    const qdrantClient = new QdrantClient({
-      url: qdrantUrl,
-      ...(qdrantApiKey && { apiKey: qdrantApiKey }),
-    })
-
     await qdrantClient.createCollection(collectionName, {
       vectors: {
         size: BENCHMARK_CONFIG.vectorDimensions,
@@ -256,6 +314,7 @@ async function benchmarkSearch(
       vector: embedding.embedding,
       payload: {
         content: embedding.content,
+        label: embedding.label,
         content_type: "benchmark",
         language: "en",
         content_id: embedding.id,
@@ -296,9 +355,6 @@ async function benchmarkSearch(
       searchTimes.reduce((a, b) => a + b, 0) / searchTimes.length
     const averageAccuracy = totalAccuracy / searchQueries.length
 
-    // Clean up
-    await qdrantClient.deleteCollection(collectionName)
-
     return {
       searchTimeMs: averageSearchTime,
       searchAccuracy: averageAccuracy,
@@ -306,6 +362,16 @@ async function benchmarkSearch(
   } catch (error) {
     console.error(`Search benchmark failed for size ${testSize}:`, error)
     throw error
+  } finally {
+    // Clean up - always run regardless of errors
+    try {
+      await qdrantClient.deleteCollection(collectionName)
+    } catch (cleanupError) {
+      console.warn(
+        `Failed to clean up collection ${collectionName}:`,
+        cleanupError,
+      )
+    }
   }
 }
 
@@ -315,6 +381,7 @@ async function benchmarkSearch(
 interface QueryEmbedding {
   id: string
   content: string
+  label: string
   embedding: number[]
 }
 
@@ -325,6 +392,7 @@ interface SearchResultPoint {
     | Record<string, unknown>
     | {
         content?: string
+        label?: string
         content_type?: string
         language?: string
         content_id?: string
@@ -339,31 +407,24 @@ function calculateSearchAccuracy(
 ): number {
   if (results.length === 0) return 0
 
-  let relevantResults = 0
-  const queryWords = query.content.toLowerCase().split(/\s+/)
-
-  for (const result of results) {
-    // Type-safe access to payload content
-    const resultContent =
+  // Count results with matching labels (recall@k calculation)
+  const relevantResults = results.filter(result => {
+    const resultLabel =
       result.payload &&
       typeof result.payload === "object" &&
-      "content" in result.payload &&
-      typeof result.payload.content === "string"
-        ? result.payload.content.toLowerCase()
+      "label" in result.payload &&
+      typeof result.payload.label === "string"
+        ? result.payload.label
         : ""
-    const resultWords = resultContent.split(/\s+/)
 
-    // Simple relevance check: count common words
-    const commonWords = queryWords.filter(
-      word => word.length > 3 && resultWords.includes(word),
-    )
+    return resultLabel === query.label
+  })
 
-    if (commonWords.length > 2) {
-      relevantResults++
-    }
-  }
+  // Calculate recall@k: relevant results / min(k, total possible relevant)
+  const k = results.length
+  const recallAtK = relevantResults.length / k
 
-  return relevantResults / results.length
+  return recallAtK
 }
 
 /**
@@ -377,13 +438,17 @@ export async function runBinaryQuantizationBenchmarks(): Promise<BenchmarkSummar
   for (const testSize of BENCHMARK_CONFIG.testSizes) {
     console.log(`\nBenchmarking test size: ${testSize}`)
 
+    // Generate embeddings once for this test size
+    console.log(`Generating ${testSize} test embeddings...`)
+    const embeddings = await generateTestEmbeddings(testSize)
+
     // Test without binary quantization
-    const standardIndexing = await benchmarkIndexing(testSize, false)
-    const standardSearch = await benchmarkSearch(testSize, false)
+    const standardIndexing = await benchmarkIndexing(embeddings, false)
+    const standardSearch = await benchmarkSearch(embeddings, false)
 
     // Test with binary quantization
-    const binaryIndexing = await benchmarkIndexing(testSize, true)
-    const binarySearch = await benchmarkSearch(testSize, true)
+    const binaryIndexing = await benchmarkIndexing(embeddings, true)
+    const binarySearch = await benchmarkSearch(embeddings, true)
 
     // Calculate metrics
     const compressionRatio =
@@ -398,6 +463,7 @@ export async function runBinaryQuantizationBenchmarks(): Promise<BenchmarkSummar
       configuration: "standard",
       indexingTimeMs: standardIndexing.indexingTimeMs,
       indexSizeMB: standardIndexing.indexSizeMB,
+      isEstimated: standardIndexing.isEstimated,
       searchTimeMs: standardSearch.searchTimeMs,
       searchAccuracy: standardSearch.searchAccuracy,
       compressionRatio: 0,
@@ -411,6 +477,7 @@ export async function runBinaryQuantizationBenchmarks(): Promise<BenchmarkSummar
       configuration: "binary",
       indexingTimeMs: binaryIndexing.indexingTimeMs,
       indexSizeMB: binaryIndexing.indexSizeMB,
+      isEstimated: binaryIndexing.isEstimated,
       searchTimeMs: binarySearch.searchTimeMs,
       searchAccuracy: binarySearch.searchAccuracy,
       compressionRatio,
@@ -478,14 +545,24 @@ function generateRecommendations(results: BenchmarkResult[]): string[] {
   const avgCompression =
     binaryResults.reduce((sum, r) => sum + r.compressionRatio, 0) /
     binaryResults.length
-  if (avgCompression < BENCHMARK_CONFIG.minCompressionRatio) {
+
+  // Check if any binary results use estimated sizes
+  const hasEstimatedSizes = binaryResults.some(r => r.isEstimated)
+
+  if (hasEstimatedSizes) {
     recommendations.push(
-      `Binary quantization compression ratio (${(avgCompression * 100).toFixed(1)}%) is below threshold (${(BENCHMARK_CONFIG.minCompressionRatio * 100).toFixed(1)}%)`,
+      `Compression ratio (${(avgCompression * 100).toFixed(1)}%) is based on estimated storage sizes - threshold recommendations skipped`,
     )
   } else {
-    recommendations.push(
-      `Binary quantization provides good compression (${(avgCompression * 100).toFixed(1)}%)`,
-    )
+    if (avgCompression < BENCHMARK_CONFIG.minCompressionRatio) {
+      recommendations.push(
+        `Binary quantization compression ratio (${(avgCompression * 100).toFixed(1)}%) is below threshold (${(BENCHMARK_CONFIG.minCompressionRatio * 100).toFixed(1)}%)`,
+      )
+    } else {
+      recommendations.push(
+        `Binary quantization provides good compression (${(avgCompression * 100).toFixed(1)}%)`,
+      )
+    }
   }
 
   // Analyze search performance

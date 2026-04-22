@@ -149,25 +149,6 @@ export interface SearchOptions {
   keywordWeight?: number
 }
 
-export interface QdrantCollectionConfig {
-  vectors: {
-    size: number
-    distance: "Cosine" | "Euclid" | "Dot"
-  }
-  optimizers_config: {
-    default_segment_number: number
-  }
-  quantization_config?: {
-    quantization_config: {
-      type: "Binary"
-      binary?: {
-        binary: boolean
-        threshold?: number
-      }
-    }
-  }
-}
-
 const COLLECTION_NAME = "content_embeddings"
 const VECTOR_SIZE = 768 // e5-base-instruct dimensions
 
@@ -427,6 +408,12 @@ export async function semanticSearch(
       limit: maxResults,
       score_threshold: threshold,
       filter: filter.must.length > 0 ? filter : undefined,
+      params: {
+        quantization: {
+          rescore: true,
+          oversampling: 10,
+        },
+      },
     }
 
     // Search with binary quantization
@@ -583,6 +570,12 @@ export async function findSimilarContent(
             ? [{ key: "language", match: { value: language } }]
             : []),
         ],
+      },
+      params: {
+        quantization: {
+          rescore: true,
+          oversampling: 10,
+        },
       },
     })
 
