@@ -11,25 +11,67 @@ import {
 import { verifyAdminAuth } from "@/lib/auth"
 
 // Rate limiting (simple in-memory for demo)
+// TODO: For production/global limits, consider using shared bounded store:
+// - Redis with TTL for distributed rate limiting
+// - Upstash Redis for serverless environments
+// - Netlify KV for edge deployments
+// - Cloudflare KV for edge-first applications
 export const rateLimitMap = new Map<
   string,
-  { count: number; resetTime: number }
+  { count: number; resetTime: number; lastAccess: number }
 >()
 const RATE_LIMIT_WINDOW = 60000 // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 50 // More restrictive for embeddings API
+const RATE_LIMIT_MAX_ENTRIES = 10000 // Hard cap on rate limit entries
+const MAX_BATCH_SIZE = 100 // Maximum batch size to match TogetherAI internal BATCH_SIZE
 
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for")
   const real = request.headers.get("x-real-ip")
-  return forwarded?.split(",")[0] || real || "unknown"
+
+  // Only trust x-forwarded-for when running behind a trusted proxy
+  const isTrustedProxy =
+    process.env.VERCEL === "1" ||
+    process.env.NETLIFY === "true" ||
+    process.env.TRUSTED_PROXY === "true"
+
+  if (isTrustedProxy && forwarded) {
+    return forwarded.split(",")[0].trim()
+  }
+
+  // Fall back to x-real-ip or unknown
+  return real || "unknown"
 }
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now()
+
+  // Prune expired entries
+  for (const [key, record] of rateLimitMap.entries()) {
+    if (now > record.resetTime) {
+      rateLimitMap.delete(key)
+    }
+  }
+
+  // Enforce hard cap on rateLimitMap size
+  if (rateLimitMap.size >= RATE_LIMIT_MAX_ENTRIES) {
+    // Evict oldest entries (by lastAccess time)
+    const entries = Array.from(rateLimitMap.entries()).sort(
+      ([, a], [, b]) => a.lastAccess - b.lastAccess,
+    )
+
+    const toEvict = entries.slice(0, Math.floor(RATE_LIMIT_MAX_ENTRIES * 0.1)) // Evict 10%
+    toEvict.forEach(([key]) => rateLimitMap.delete(key))
+  }
+
   const record = rateLimitMap.get(ip)
 
   if (!record || now > record.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
+    rateLimitMap.set(ip, {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW,
+      lastAccess: now,
+    })
     return true
   }
 
@@ -38,6 +80,7 @@ function checkRateLimit(ip: string): boolean {
   }
 
   record.count++
+  record.lastAccess = now
   return true
 }
 
@@ -115,6 +158,13 @@ export async function POST(request: NextRequest) {
           )
         }
 
+        if (texts.length > MAX_BATCH_SIZE) {
+          return NextResponse.json(
+            { error: "Batch too large" },
+            { status: 413 },
+          )
+        }
+
         const results = await generateBatchEmbeddings(texts)
         return NextResponse.json({ embeddings: results })
       }
@@ -180,6 +230,13 @@ export async function POST(request: NextRequest) {
           return NextResponse.json(
             { error: "Embeddings must be a non-empty array" },
             { status: 400 },
+          )
+        }
+
+        if (batchEmbeddings.length > MAX_BATCH_SIZE) {
+          return NextResponse.json(
+            { error: "Batch too large" },
+            { status: 413 },
           )
         }
 
