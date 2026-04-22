@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import crypto from "crypto"
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 
 // Constants
 const MAX_BOOKINGS_DISPLAY = 10
@@ -9,6 +9,7 @@ const MAX_SYNC_LOGS_DISPLAY = 3
 const MAX_RETRIES = 2
 
 export default function CalendarSyncPage() {
+  const { session, loading: authLoading, getAccessToken } = useSupabaseAuth()
   const [syncStatus, setSyncStatus] = useState<string>("idle")
   const [syncedBookingsCount, setSyncedBookingsCount] = useState<number>(0)
   const [syncSuccessCount, setSyncSuccessCount] = useState<number>(0)
@@ -22,7 +23,7 @@ export default function CalendarSyncPage() {
   const [lastSyncedDataHash, setLastSyncedDataHash] = useState<string>("")
 
   // Generate a hash from bookings data to detect changes
-  const generateBookingsHash = (bookingsData: any[]): string => {
+  const generateBookingsHash = async (bookingsData: any[]): Promise<string> => {
     if (!bookingsData?.length) return "empty"
 
     const normalizedData = bookingsData
@@ -31,7 +32,11 @@ export default function CalendarSyncPage() {
       .map(bookingToString)
       .join("||")
 
-    return crypto.createHash("sha256").update(normalizedData).digest("hex")
+    const encoder = new TextEncoder()
+    const data = encoder.encode(normalizedData)
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("")
   }
 
   const normalizeBooking = (booking: any) => ({
@@ -80,14 +85,27 @@ export default function CalendarSyncPage() {
 
   const fetchSyncLogs = async () => {
     try {
-      const syncSecret = process.env.NEXT_PUBLIC_CALENDAR_SYNC_SECRET
-      if (!syncSecret) return
+      // Get auth token from session
+      const accessToken = await getAccessToken()
+      if (!accessToken) {
+        console.error("User not authenticated")
+        return
+      }
 
-      const response = await fetch(`/api/calendar-sync?secret=${syncSecret}`)
+      const response = await fetch("/api/admin/calendar-sync", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+
       if (response.ok) {
         const data = await response.json()
         // Fetch recent sync logs from database
         await fetchRecentSyncLogs()
+      } else if (response.status === 401) {
+        console.error("Authentication required")
+      } else if (response.status === 403) {
+        console.error("Admin access required")
       }
     } catch (error) {
       console.error("Failed to fetch sync logs:", error)
@@ -178,7 +196,7 @@ export default function CalendarSyncPage() {
 
   const handleSync = async () => {
     // Generate hash of current bookings data
-    const currentDataHash = generateBookingsHash(bookings)
+    const currentDataHash = await generateBookingsHash(bookings)
 
     // Check if data has changed since last sync
     if (currentDataHash === lastSyncedDataHash && lastSyncedDataHash !== "") {
@@ -189,18 +207,28 @@ export default function CalendarSyncPage() {
     setSyncStatus("syncing...")
     setErrorMessage("")
     try {
-      const syncSecret = process.env.NEXT_PUBLIC_CALENDAR_SYNC_SECRET
-      if (!syncSecret) {
-        throw new Error("Calendar sync secret not configured")
+      // Get auth token from session
+      const accessToken = await getAccessToken()
+      if (!accessToken) {
+        throw new Error("Authentication required")
       }
 
-      const response = await fetch(`/api/calendar-sync?secret=${syncSecret}`, {
+      const response = await fetch("/api/admin/calendar-sync", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ cleanup: false, dryRun: false }),
       })
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Authentication required")
+        }
+        if (response.status === 403) {
+          throw new Error("Admin access required")
+        }
         const errorData = await response.json().catch(() => ({}))
         throw new Error(
           errorData.message || `Sync failed with status ${response.status}`,
