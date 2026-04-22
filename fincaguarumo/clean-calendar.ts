@@ -210,7 +210,7 @@ async function clearSyncLogs(mode: string, eventIds: string[] = []) {
       const { error } = await supabase
         .from("gcal_sync_log")
         .delete()
-        .neq("booking_id", null)
+        .not("booking_id", "is", null)
 
       if (error) {
         console.error("Failed to delete booking sync logs:", error)
