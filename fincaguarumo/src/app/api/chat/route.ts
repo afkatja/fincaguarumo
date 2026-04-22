@@ -79,33 +79,28 @@ function createSuccessResponse(data: any, status: number = 200): NextResponse {
   return response
 }
 
-// Helper function to sanitize input (basic XSS prevention)
-function sanitizeInput(input: string): string {
-  return (
-    input
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      // Don't sanitize apostrophes for intent detection - will handle in display layer
-      .replace(/\//g, "&#x2F;")
-  )
-}
+// Helper function to validate and trim input (remove HTML escaping - let display layer handle it)
+function validateAndTrimInput(input: string): string {
+  const trimmed = input.trim()
 
-// Helper function to sanitize input for display (includes apostrophes)
-function sanitizeInputForDisplay(input: string): string {
-  return input
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#x27;")
-    .replace(/\//g, "&#x2F;")
+  // Basic validation - reject if empty after trimming
+  if (trimmed.length === 0) {
+    throw new Error("Input cannot be empty")
+  }
+
+  // Optional: Validate against control characters (keep if desired)
+  // if (/[\x00-\x1F\x7F]/.test(trimmed)) {
+  //   throw new Error("Invalid characters in input")
+  // }
+
+  return trimmed
 }
 
 // Helper function to validate chat request
 function validateChatRequest(body: ChatRequest): {
   isValid: boolean
   error?: string
-  sanitizedQuery?: string
+  rawQuery?: string
 } {
   const { messages } = body
 
@@ -124,7 +119,7 @@ function validateChatRequest(body: ChatRequest): {
     return { isValid: false, error: "Valid message content is required" }
   }
 
-  return { isValid: true, sanitizedQuery: sanitizeInput(userQuery.trim()) }
+  return { isValid: true, rawQuery: validateAndTrimInput(userQuery) }
 }
 
 export async function POST(request: NextRequest) {
@@ -147,7 +142,7 @@ export async function POST(request: NextRequest) {
       return createErrorResponse(validation.error!, 400)
     }
 
-    const sanitizedQuery = validation.sanitizedQuery!
+    const rawQuery = validation.rawQuery!
     // For intent detection, use the original query (without apostrophe sanitization)
     const queryForIntentDetection = messages[messages.length - 1]?.content || ""
 
@@ -197,7 +192,7 @@ export async function POST(request: NextRequest) {
 
     // Process chat in background
     streamResponseWithData({
-      userQuery: sanitizedQuery,
+      userQuery: rawQuery,
       context,
       locale,
       messages,

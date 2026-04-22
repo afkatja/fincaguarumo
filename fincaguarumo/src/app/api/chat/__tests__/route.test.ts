@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import { POST } from "../route"
 import { NextRequest, NextResponse } from "next/server"
 
