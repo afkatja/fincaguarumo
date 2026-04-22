@@ -1,4 +1,5 @@
 /**
+ * @jest-environment node
  * Unit tests for multilingual text preprocessing
  */
 

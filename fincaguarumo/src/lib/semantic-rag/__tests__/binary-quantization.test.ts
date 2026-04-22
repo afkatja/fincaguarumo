@@ -1,136 +1,142 @@
-import { getSemanticRAGConfig, isQdrantConfigured } from '../config'
-import { VectorStoreAdapter } from '../vector-store-adapter'
-import { initializeQdrantCollection } from '../qdrant-store'
+/**
+ * @jest-environment node
+ */
 
-describe('Binary Quantization Implementation', () => {
+import { getSemanticRAGConfig, isQdrantConfigured } from "../config"
+import { VectorStoreAdapter } from "../vector-store-adapter"
+import { initializeQdrantCollection } from "../qdrant-store"
+
+describe("Binary Quantization Implementation", () => {
   let adapter: VectorStoreAdapter
 
   beforeAll(() => {
     adapter = new VectorStoreAdapter()
   })
 
-  describe('Configuration', () => {
-    it('should detect Qdrant configuration correctly', () => {
+  describe("Configuration", () => {
+    it("should detect Qdrant configuration correctly", () => {
       const config = getSemanticRAGConfig()
-      expect(['pgvector', 'qdrant']).toContain(config.vectorStore)
-      expect(typeof config.enableBinaryQuantization).toBe('boolean')
+      expect(["pgvector", "qdrant"]).toContain(config.vectorStore)
+      expect(typeof config.enableBinaryQuantization).toBe("boolean")
     })
 
-    it('should check if Qdrant is properly configured', () => {
+    it("should check if Qdrant is properly configured", () => {
       const isConfigured = isQdrantConfigured()
-      expect(typeof isConfigured).toBe('boolean')
+      expect(typeof isConfigured).toBe("boolean")
     })
   })
 
-  describe('Vector Store Adapter', () => {
-    it('should create adapter instance', () => {
+  describe("Vector Store Adapter", () => {
+    it("should create adapter instance", () => {
       expect(adapter).toBeInstanceOf(VectorStoreAdapter)
     })
 
-    it('should return vector store type', () => {
+    it("should return vector store type", () => {
       const type = adapter.getVectorStoreType()
-      expect(['pgvector', 'qdrant']).toContain(type)
+      expect(["pgvector", "qdrant"]).toContain(type)
     })
 
-    it('should provide performance information', () => {
+    it("should provide performance information", () => {
       const perfInfo = adapter.getPerformanceInfo()
-      expect(perfInfo).toHaveProperty('vectorStore')
-      expect(perfInfo).toHaveProperty('binaryQuantization')
-      expect(['pgvector', 'qdrant']).toContain(perfInfo.vectorStore)
+      expect(perfInfo).toHaveProperty("vectorStore")
+      expect(perfInfo).toHaveProperty("binaryQuantization")
+      expect(["pgvector", "qdrant"]).toContain(perfInfo.vectorStore)
     })
 
-    it('should handle Qdrant-specific performance info', () => {
+    it("should handle Qdrant-specific performance info", () => {
       const perfInfo = adapter.getPerformanceInfo()
-      if (perfInfo.vectorStore === 'qdrant' && perfInfo.binaryQuantization) {
-        expect(perfInfo.expectedSpeedup).toBe('40x faster search')
-        expect(perfInfo.memoryReduction).toBe('32x less memory usage')
+      if (perfInfo.vectorStore === "qdrant" && perfInfo.binaryQuantization) {
+        expect(perfInfo.expectedSpeedup).toBe("40x faster search")
+        expect(perfInfo.memoryReduction).toBe("32x less memory usage")
       }
     })
   })
 
-  describe('Qdrant Collection', () => {
-    it('should initialize Qdrant collection when configured', async () => {
+  describe("Qdrant Collection", () => {
+    it("should initialize Qdrant collection when configured", async () => {
       if (isQdrantConfigured()) {
         await expect(initializeQdrantCollection()).resolves.not.toThrow()
       } else {
         // Skip test if Qdrant not configured
-        console.log('Skipping Qdrant tests - not configured')
+        console.log("Skipping Qdrant tests - not configured")
       }
     })
   })
 
-  describe('Search Functions', () => {
-    it('should handle semantic search calls', async () => {
+  describe("Search Functions", () => {
+    it("should handle semantic search calls", async () => {
       // Mock search to test interface compatibility
-      const mockSearch = jest.spyOn(adapter, 'semanticSearch')
+      const mockSearch = jest.spyOn(adapter, "semanticSearch")
       mockSearch.mockResolvedValue([])
 
-      await adapter.semanticSearch('test query', { language: 'en' })
-      
-      expect(mockSearch).toHaveBeenCalledWith('test query', {
-        language: 'en',
+      await adapter.semanticSearch("test query", { language: "en" })
+
+      expect(mockSearch).toHaveBeenCalledWith("test query", {
+        language: "en",
       })
-      
+
       mockSearch.mockRestore()
     })
 
-    it('should handle hybrid search calls', async () => {
-      const mockSearch = jest.spyOn(adapter, 'hybridSearch')
+    it("should handle hybrid search calls", async () => {
+      const mockSearch = jest.spyOn(adapter, "hybridSearch")
       mockSearch.mockResolvedValue([])
 
-      await adapter.hybridSearch('test query', { 
-        language: 'en',
-        semanticWeight: 0.7,
-        keywordWeight: 0.3 
-      })
-      
-      expect(mockSearch).toHaveBeenCalledWith('test query', {
-        language: 'en',
+      await adapter.hybridSearch("test query", {
+        language: "en",
         semanticWeight: 0.7,
         keywordWeight: 0.3,
       })
-      
+
+      expect(mockSearch).toHaveBeenCalledWith("test query", {
+        language: "en",
+        semanticWeight: 0.7,
+        keywordWeight: 0.3,
+      })
+
       mockSearch.mockRestore()
     })
   })
 
-  describe('Storage Functions', () => {
-    it('should handle embedding storage', async () => {
-      const mockStore = jest.spyOn(adapter, 'storeEmbedding')
+  describe("Storage Functions", () => {
+    it("should handle embedding storage", async () => {
+      const mockStore = jest.spyOn(adapter, "storeEmbedding")
       mockStore.mockResolvedValue()
 
       await adapter.storeEmbedding(
-        'test-id',
-        'faq',
-        'en',
-        'test content',
+        "test-id",
+        "faq",
+        "en",
+        "test content",
         [0.1, 0.2, 0.3], // Mock embedding
-        { priority: 'high' }
+        { priority: "high" },
       )
 
       expect(mockStore).toHaveBeenCalledWith(
-        'test-id',
-        'faq',
-        'en',
-        'test content',
+        "test-id",
+        "faq",
+        "en",
+        "test content",
         [0.1, 0.2, 0.3],
-        { priority: 'high' }
+        { priority: "high" },
       )
 
       mockStore.mockRestore()
     })
 
-    it('should handle batch embedding storage', async () => {
-      const mockBatchStore = jest.spyOn(adapter, 'storeBatchEmbeddings')
+    it("should handle batch embedding storage", async () => {
+      const mockBatchStore = jest.spyOn(adapter, "storeBatchEmbeddings")
       mockBatchStore.mockResolvedValue()
 
-      const embeddings = [{
-        contentId: 'test-id',
-        contentType: 'faq',
-        language: 'en',
-        content: 'test content',
-        embedding: [0.1, 0.2, 0.3],
-      }]
+      const embeddings = [
+        {
+          contentId: "test-id",
+          contentType: "faq",
+          language: "en",
+          content: "test content",
+          embedding: [0.1, 0.2, 0.3],
+        },
+      ]
 
       await adapter.storeBatchEmbeddings(embeddings)
 
@@ -139,9 +145,9 @@ describe('Binary Quantization Implementation', () => {
     })
   })
 
-  describe('Migration Support', () => {
-    it('should provide migration statistics', async () => {
-      const mockStats = jest.spyOn(adapter, 'getContentStats')
+  describe("Migration Support", () => {
+    it("should provide migration statistics", async () => {
+      const mockStats = jest.spyOn(adapter, "getContentStats")
       mockStats.mockResolvedValue({
         totalEmbeddings: 1000,
         contentTypeStats: { faq: 500, page: 500 },

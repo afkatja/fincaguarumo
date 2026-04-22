@@ -1,4 +1,5 @@
 /**
+ * @jest-environment node
  * Tests for multilingual preprocessing quality and consistency
  */
 

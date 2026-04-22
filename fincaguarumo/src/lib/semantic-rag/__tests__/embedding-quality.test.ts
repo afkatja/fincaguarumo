@@ -1,4 +1,5 @@
 /**
+ * @jest-environment node
  * Tests for embedding quality consistency across languages
  */
 
