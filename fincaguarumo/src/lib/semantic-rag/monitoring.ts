@@ -175,6 +175,35 @@ export async function getMonitoringMetrics(
 }
 
 /**
+ * Check if there was a recent alert within the specified time window
+ */
+export async function hasRecentAlertInWindow(
+  timeWindow: number,
+): Promise<boolean> {
+  try {
+    const timeWindowStart = new Date(Date.now() - timeWindow).toISOString()
+
+    const { data, error } = await supabase
+      .from("embedding_alerts")
+      .select("timestamp")
+      .gte("timestamp", timeWindowStart)
+      .order("timestamp", { ascending: false })
+      .limit(1)
+
+    if (error) {
+      // If the table doesn't exist or there's an error, assume no recent alert
+      console.error("Error checking for recent alerts:", error)
+      return false
+    }
+
+    return data && data.length > 0
+  } catch (error) {
+    console.error("Error checking for recent alerts:", error)
+    return false
+  }
+}
+
+/**
  * Check if alert conditions are met and trigger alerts
  */
 async function checkAndTriggerAlert(): Promise<void> {
@@ -182,7 +211,14 @@ async function checkAndTriggerAlert(): Promise<void> {
     const recentFailures = await getRecentFailures(ALERT_WINDOW)
 
     if (recentFailures.length >= ALERT_THRESHOLD) {
-      await triggerAlert(recentFailures)
+      // Check if there was a recent alert within the alert window
+      const hasRecentAlert = await hasRecentAlertInWindow(ALERT_WINDOW)
+
+      if (!hasRecentAlert) {
+        await triggerAlert(recentFailures)
+      } else {
+        console.log("Alert recently sent, skipping to prevent alert storm")
+      }
     }
   } catch (error) {
     console.error("Error checking alert conditions:", error)
@@ -219,10 +255,10 @@ async function triggerAlert(failures: EmbeddingFailure[]): Promise<void> {
       timestamp: new Date().toISOString(),
       failure_count: failures.length,
       time_window: ALERT_WINDOW,
-      error_types: [...new Set(failures.map(f => f.error_type))],
-      languages_affected: [
-        ...new Set(failures.map(f => f.language).filter(Boolean)),
-      ],
+      error_types: Array.from(new Set(failures.map(f => f.error_type))),
+      languages_affected: Array.from(
+        new Set(failures.map(f => f.language).filter(Boolean)),
+      ),
       sample_errors: failures.slice(0, 3).map(f => ({
         error_type: f.error_type,
         error_message: f.error_message,
