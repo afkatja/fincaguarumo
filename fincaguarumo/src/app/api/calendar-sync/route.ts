@@ -6,6 +6,40 @@ import { googleCalendarService } from "@/lib/google-calendar"
 const CRON_SECRET = process.env.CALENDAR_SYNC_SECRET
 
 /**
+ * Constant-time comparison to prevent timing attacks
+ */
+function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false
+  }
+
+  let result = 0
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+
+  return result === 0
+}
+
+/**
+ * Validate cron secret with fail-closed security
+ */
+function validateCronSecret(providedSecret: string | null): boolean {
+  // Fail closed: require CRON_SECRET to be set and valid
+  if (!CRON_SECRET) {
+    console.error("CRON_SECRET environment variable is not set")
+    return false
+  }
+
+  if (!providedSecret) {
+    console.error("No secret provided in request")
+    return false
+  }
+
+  return constantTimeCompare(providedSecret, CRON_SECRET)
+}
+
+/**
  * Calendar sync API endpoint
  * Can be called by Netlify cron jobs or manually
  *
@@ -15,11 +49,11 @@ const CRON_SECRET = process.env.CALENDAR_SYNC_SECRET
  */
 export async function GET(request: Request) {
   try {
-    // Validate request (optional for GET)
+    // Validate request (required for security)
     const url = new URL(request.url)
     const providedSecret = url.searchParams.get("secret")
 
-    if (CRON_SECRET && providedSecret !== CRON_SECRET) {
+    if (!validateCronSecret(providedSecret)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -58,7 +92,7 @@ export async function POST(request: Request) {
     const url = new URL(request.url)
     const providedSecret = url.searchParams.get("secret")
 
-    if (CRON_SECRET && providedSecret !== CRON_SECRET) {
+    if (!validateCronSecret(providedSecret)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
