@@ -882,8 +882,18 @@ export function preprocessText(
 
   // Remove special characters if requested (but only if not already done by language patterns)
   if (removeSpecialChars) {
-    processedText = processedText.replace(/[^\w\s]/g, " ")
-    preprocessingSteps.push("Removed special characters")
+    // Use Unicode-aware regex for non-Latin languages to preserve their characters
+    if (detectedLanguage === "ru") {
+      // For Russian, use the same pattern as the Russian-specific preprocessing
+      processedText = processedText.replace(/[^\w\s\u0400-\u04FF]/g, " ")
+      preprocessingSteps.push(
+        "Removed special characters (Unicode-aware for Russian)",
+      )
+    } else {
+      // For Latin-based languages, use the standard ASCII pattern
+      processedText = processedText.replace(/[^\w\s]/g, " ")
+      preprocessingSteps.push("Removed special characters")
+    }
   }
 
   // Normalize whitespace
