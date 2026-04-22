@@ -5,7 +5,7 @@
 
 // Constants for test patterns
 const COMMON_TEST_PATTERNS = [/test/i, /demo/i, /sample/i, /mock/i, /debug/i]
-const STRIPE_TEST_PATTERNS = [/^cs_/, /^pi_test_/, /^acct_test_/]
+const STRIPE_TEST_PATTERNS = [/^cs_test_/, /^pi_test_/, /^acct_test_/]
 const NAME_TEST_PATTERNS = [
   ...COMMON_TEST_PATTERNS,
   /test user/i,
