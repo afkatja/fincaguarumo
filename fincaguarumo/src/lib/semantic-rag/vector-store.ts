@@ -8,22 +8,27 @@ import { SupportedLanguage } from "./multilingual-preprocessing"
 
 /**
  * Get Supabase client with proper server-side environment variable validation
+ * Uses service role key for admin operations on content_embeddings table
  */
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl) {
     throw new Error("NEXT_PUBLIC_SUPABASE_URL environment variable is required")
   }
 
-  if (!supabaseAnonKey) {
+  if (!supabaseServiceKey) {
     throw new Error(
-      "NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is required",
+      "SUPABASE_SERVICE_ROLE_KEY environment variable is required",
     )
   }
 
-  return createClient(supabaseUrl, supabaseAnonKey)
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      persistSession: false,
+    },
+  })
 }
 
 export interface VectorSearchResult {
@@ -312,7 +317,7 @@ export async function deleteEmbeddings(
       query = query.eq("language", language)
     }
 
-    const { data, error } = await query.eq("content_type", contentType)
+    const { data, error } = await query.eq("content_type", contentType).select()
 
     if (error) {
       throw new Error(`Failed to delete embeddings: ${error.message}`)
