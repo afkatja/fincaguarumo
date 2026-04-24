@@ -50,8 +50,7 @@ function validateCronSecret(providedSecret: string | null): boolean {
 export async function GET(request: Request) {
   try {
     // Validate request (required for security)
-    const url = new URL(request.url)
-    const providedSecret = url.searchParams.get("secret")
+    const providedSecret = request.headers.get("x-calendar-sync-secret")
 
     if (!validateCronSecret(providedSecret)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -89,8 +88,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     // Validate cron secret
-    const url = new URL(request.url)
-    const providedSecret = url.searchParams.get("secret")
+    const providedSecret = request.headers.get("x-calendar-sync-secret")
 
     if (!validateCronSecret(providedSecret)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
