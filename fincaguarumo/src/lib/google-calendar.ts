@@ -111,7 +111,7 @@ export class GoogleCalendarService {
         error,
       )
       await this.logSync(booking.uid, undefined, "failed", String(error))
-      return null
+      throw error
     }
   }
 
@@ -142,7 +142,7 @@ export class GoogleCalendarService {
         error,
       )
       await this.logSync(booking.uid, eventId, "failed", String(error))
-      return false
+      throw error
     }
   }
 
@@ -169,7 +169,7 @@ export class GoogleCalendarService {
         error,
       )
       await this.logSync(bookingId, eventId, "failed", String(error))
-      return false
+      throw error
     }
   }
 
@@ -394,20 +394,25 @@ export async function updateCalendarEvent(
 ): Promise<string> {
   const service = new GoogleCalendarService()
 
-  const success = await service.updateEvent(eventId, booking)
-  if (!success) {
-    throw new Error("Event not found")
-  }
-  return eventId
+  return await retryWithBackoff(async () => {
+    const success = await service.updateEvent(eventId, booking)
+    if (!success) {
+      throw new Error(`Failed to update calendar event ${eventId}`)
+    }
+    return eventId
+  })
 }
 
 export async function deleteCalendarEvent(eventId: string): Promise<boolean> {
   const service = new GoogleCalendarService()
-  const success = await service.deleteEvent(eventId, "unknown")
-  if (!success) {
-    throw new Error("Event not found")
-  }
-  return success
+
+  return await retryWithBackoff(async () => {
+    const success = await service.deleteEvent(eventId, "unknown")
+    if (!success) {
+      throw new Error(`Failed to delete calendar event ${eventId}`)
+    }
+    return true
+  })
 }
 
 function validateBookingDates(booking: BookingData): void {
@@ -416,10 +421,10 @@ function validateBookingDates(booking: BookingData): void {
   }
 
   // Validate date format
-  try {
-    new Date(booking.start)
-    new Date(booking.end)
-  } catch {
+  const start = new Date(booking.start)
+  const end = new Date(booking.end)
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
     throw new Error("Invalid booking dates")
   }
 }
