@@ -74,14 +74,6 @@ export default function CalendarSyncPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, session])
 
-  // Auto-sync when authentication is ready and sync status is idle
-  useEffect(() => {
-    if (!authLoading && session && syncStatus === "idle") {
-      handleSync()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, session, syncStatus])
-
   const fetchBookings = async () => {
     setLoadingBookings(true)
     try {
