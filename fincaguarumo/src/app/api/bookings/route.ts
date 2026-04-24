@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminAuth, verifyUserAuth } from "@/lib/auth"
+import { validateBookingForm } from "@/lib/input-validation"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -36,8 +37,19 @@ export async function POST(request: Request) {
 
     const bookingData = await request.json()
 
+    // Validate and sanitize booking data
+    const validation = validateBookingForm(bookingData)
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { error: "Invalid booking data", details: validation.error },
+        { status: 400 },
+      )
+    }
+
+    const sanitizedData = validation.sanitizedValue!
+
     // Authorization: Users can only create bookings for themselves, admins can create for anyone
-    if (!authUser.is_admin && bookingData.uid !== authUser.id) {
+    if (!authUser.is_admin && sanitizedData.uid !== authUser.id) {
       const error = new Error("You can only create bookings for yourself")
       ;(error as any).status = 403
       throw error
@@ -48,13 +60,13 @@ export async function POST(request: Request) {
     const bookingRecord: any = {
       check_in: bookingData.checkIn,
       check_out: bookingData.checkOut,
-      guest_name: bookingData.guestName,
-      email: bookingData.email || null,
-      phone: bookingData.phone || null,
-      source: bookingData.source || "Direct",
-      uid: bookingData.uid,
+      guest_name: sanitizedData.guestName,
+      email: sanitizedData.email || null,
+      phone: sanitizedData.phone || null,
+      source: sanitizedData.source || "Direct",
+      uid: sanitizedData.uid,
       guests: bookingData.guests || 1,
-      booking_type: bookingData.bookingType || "villa",
+      booking_type: sanitizedData.bookingType || "villa",
       total_price: bookingData.totalPrice || 0,
       currency: bookingData.currency || "usd",
     }
