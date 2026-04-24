@@ -53,14 +53,18 @@ describe("Binary Quantization Implementation", () => {
   })
 
   describe("Qdrant Collection", () => {
-    it("should initialize Qdrant collection when configured", async () => {
-      if (isQdrantConfigured()) {
-        await expect(initializeQdrantCollection()).resolves.not.toThrow()
-      } else {
-        // Skip test if Qdrant not configured
-        console.log("Skipping Qdrant tests - not configured")
-      }
-    })
+    const testFn = async () => {
+      await expect(initializeQdrantCollection()).resolves.not.toThrow()
+    }
+
+    if (isQdrantConfigured()) {
+      it("should initialize Qdrant collection when configured", testFn)
+    } else {
+      it.skip(
+        "should initialize Qdrant collection when configured - QDRANT_NOT_CONFIGURED",
+        testFn,
+      )
+    }
   })
 
   describe("Search Functions", () => {

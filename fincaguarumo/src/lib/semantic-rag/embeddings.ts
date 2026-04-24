@@ -4,10 +4,30 @@ import {
   SupportedLanguage,
 } from "./multilingual-preprocessing"
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+/**
+ * Get Supabase client with proper environment variable validation
+ * Uses anon key for embedding operations
+ */
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL environment variable is required")
+  }
+
+  if (!supabaseAnonKey) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is required",
+    )
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+    },
+  })
+}
 
 // TogetherAI configuration
 const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY!
@@ -20,23 +40,31 @@ const API_TIMEOUT = 30000 // 30 seconds
 const RETRY_ATTEMPTS = 3
 const RETRY_DELAY = 1000 // 1 second
 
-// Helper function to create timeout promise
-function createTimeoutPromise(timeoutMs: number): Promise<never> {
-  return new Promise((_, reject) => {
-    setTimeout(
-      () => reject(new Error(`Request timeout after ${timeoutMs}ms`)),
-      timeoutMs,
-    )
-  })
-}
-
-// Helper function to add timeout to fetch requests
+// Helper function to add timeout to fetch requests with AbortController
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
   timeoutMs: number = API_TIMEOUT,
 ): Promise<Response> {
-  return Promise.race([fetch(url, options), createTimeoutPromise(timeoutMs)])
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => {
+    controller.abort()
+  }, timeoutMs)
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Request timeout after ${timeoutMs}ms`)
+    }
+    throw error
+  }
 }
 
 export interface EmbeddingResult {
@@ -67,8 +95,14 @@ async function makeTogetherAIRequest(input: string | string[]): Promise<any> {
 
       if (!response.ok) {
         const errorText = await response.text()
+        // Log detailed error for debugging but sanitize for user-facing error
+        console.error("TogetherAI API error details:", {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText,
+        })
         const error = new Error(
-          `TogetherAI API error: ${response.statusText} - ${errorText}`,
+          `TogetherAI API error: ${response.status} ${response.statusText}`,
         )
 
         // Don't retry on client errors (4xx)
@@ -225,6 +259,7 @@ export async function storeEmbedding(
   metadata: Record<string, any> = {},
 ): Promise<void> {
   try {
+    const supabase = getSupabaseClient()
     const { error } = await supabase.from("content_embeddings").upsert({
       content_id: contentId,
       content_type: contentType,
@@ -258,6 +293,7 @@ export async function storeBatchEmbeddings(
   }>,
 ): Promise<void> {
   try {
+    const supabase = getSupabaseClient()
     const records = embeddings.map(emb => ({
       content_id: emb.contentId,
       content_type: emb.contentType,
@@ -287,6 +323,7 @@ export async function embeddingExists(
   contentType: string,
 ): Promise<boolean> {
   try {
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from("content_embeddings")
       .select("id")

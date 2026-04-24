@@ -270,32 +270,32 @@ export async function storeEmbedding(
   embedding: number[] | string,
   metadata: Record<string, any> = {},
 ): Promise<void> {
-  try {
-    const parsedEmbedding = validateAndParseEmbedding(embedding, contentId)
-    const pointId = crypto.randomUUID()
+  return await qdrantCircuitBreaker.execute(async () => {
+    return await retryWithBackoff(async () => {
+      const parsedEmbedding = validateAndParseEmbedding(embedding, contentId)
+      const pointId = crypto.randomUUID()
 
-    const point = {
-      id: pointId,
-      vector: parsedEmbedding,
-      payload: createPointPayload(
-        contentId,
-        contentType,
-        language,
-        content,
-        metadata,
-      ),
-    }
+      const point = {
+        id: pointId,
+        vector: parsedEmbedding,
+        payload: createPointPayload(
+          contentId,
+          contentType,
+          language,
+          content,
+          metadata,
+        ),
+      }
 
-    await qdrantClient.upsert(COLLECTION_NAME, {
-      points: [point],
-    })
+      await qdrantClient.upsert(COLLECTION_NAME, {
+        points: [point],
+      })
 
-    console.log(
-      `Stored embedding for ${contentType}:${contentId} in ${language}`,
-    )
-  } catch (error) {
-    handleError(error, "Error storing embedding in Qdrant")
-  }
+      console.log(
+        `Stored embedding for ${contentType}:${contentId} in ${language}`,
+      )
+    }, "storeEmbedding")
+  })
 }
 
 /**
@@ -311,58 +311,60 @@ export async function storeBatchEmbeddings(
     metadata?: Record<string, any>
   }>,
 ): Promise<void> {
-  try {
-    const points = embeddings.map((embedding, index) => {
-      // Parse string embedding to number array
-      let parsedEmbedding: number[]
+  return await qdrantCircuitBreaker.execute(async () => {
+    return await retryWithBackoff(async () => {
+      const points = embeddings.map((embedding, index) => {
+        // Parse string embedding to number array
+        let parsedEmbedding: number[]
 
-      if (typeof embedding.embedding === "string") {
-        try {
-          parsedEmbedding = JSON.parse(embedding.embedding)
-        } catch (parseError) {
-          console.error(
-            `Failed to parse embedding for ${embedding.contentId}:`,
-            parseError,
-          )
-          throw new Error(`Invalid embedding format for ${embedding.contentId}`)
+        if (typeof embedding.embedding === "string") {
+          try {
+            parsedEmbedding = JSON.parse(embedding.embedding)
+          } catch (parseError) {
+            console.error(
+              `Failed to parse embedding for ${embedding.contentId}:`,
+              parseError,
+            )
+            throw new Error(
+              `Invalid embedding format for ${embedding.contentId}`,
+            )
+          }
+        } else {
+          parsedEmbedding = embedding.embedding
         }
-      } else {
-        parsedEmbedding = embedding.embedding
-      }
 
-      // Validate embedding format
-      if (!Array.isArray(parsedEmbedding) || parsedEmbedding.length !== 768) {
-        throw new Error(
-          `Invalid embedding dimensions for ${embedding.contentId}: expected 768, got ${parsedEmbedding?.length}`,
-        )
-      }
+        // Validate embedding format
+        if (
+          !Array.isArray(parsedEmbedding) ||
+          parsedEmbedding.length !== VECTOR_SIZE
+        ) {
+          throw new Error(
+            `Invalid embedding dimensions for ${embedding.contentId}: expected ${VECTOR_SIZE}, got ${parsedEmbedding?.length}`,
+          )
+        }
 
-      return {
-        id: crypto.randomUUID(), // Generate UUID for each point
-        vector: parsedEmbedding, // Use parsed number array
-        payload: {
-          content_id: embedding.contentId, // Store original content_id in payload
-          content_type: embedding.contentType,
-          language: embedding.language,
-          content: embedding.content,
-          metadata: embedding.metadata || {},
-          updated_at: new Date().toISOString(),
-        },
-      }
-    })
+        return {
+          id: crypto.randomUUID(), // Generate UUID for each point
+          vector: parsedEmbedding, // Use parsed number array
+          payload: {
+            content_id: embedding.contentId, // Store original content_id in payload
+            content_type: embedding.contentType,
+            language: embedding.language,
+            content: embedding.content,
+            metadata: embedding.metadata || {},
+            updated_at: new Date().toISOString(),
+          },
+        }
+      })
 
-    console.log(`Attempting to store ${points.length} points...`)
-    await qdrantClient.upsert(COLLECTION_NAME, {
-      points,
-    })
+      console.log(`Attempting to store ${points.length} points...`)
+      await qdrantClient.upsert(COLLECTION_NAME, {
+        points,
+      })
 
-    console.log(`Stored batch of ${embeddings.length} embeddings in Qdrant`)
-  } catch (error) {
-    console.error("Error storing batch embeddings in Qdrant:", error)
-    throw new Error(
-      `Failed to store batch embeddings: ${error instanceof Error ? error.message : "Unknown error"}`,
-    )
-  }
+      console.log(`Stored batch of ${embeddings.length} embeddings in Qdrant`)
+    }, "storeBatchEmbeddings")
+  })
 }
 
 /**
@@ -374,78 +376,70 @@ export async function semanticSearch(
 ): Promise<VectorSearchResult[]> {
   const { contentType, language, threshold = 0.7, maxResults = 10 } = options
 
-  try {
-    console.log(`Qdrant semantic search - Query: "${query}", Options:`, options)
-    console.log(
-      `Qdrant URL: ${qdrantUrl}, API Key configured: ${!!qdrantApiKey}`,
-    )
+  return await qdrantCircuitBreaker.execute(async () => {
+    return await retryWithBackoff(async () => {
+      console.log(
+        `Qdrant semantic search - Query: "${query}", Options:`,
+        options,
+      )
+      console.log(
+        `Qdrant URL: ${qdrantUrl}, API Key configured: ${!!qdrantApiKey}`,
+      )
 
-    // Generate embedding for the query
-    const { embedding } = await generateEmbedding(query)
-    console.log(`Generated embedding dimension: ${embedding.length}`)
+      // Generate embedding for the query
+      const { embedding } = await generateEmbedding(query)
+      console.log(`Generated embedding dimension: ${embedding.length}`)
 
-    // Build filter conditions
-    const filter: any = {
-      must: [],
-    }
+      // Build filter conditions
+      const filter: any = {
+        must: [],
+      }
 
-    if (contentType) {
-      filter.must.push({
-        key: "content_type",
-        match: { value: contentType },
-      })
-    }
+      if (contentType) {
+        filter.must.push({
+          key: "content_type",
+          match: { value: contentType },
+        })
+      }
 
-    if (language) {
-      filter.must.push({
-        key: "language",
-        match: { value: language },
-      })
-    }
+      if (language) {
+        filter.must.push({
+          key: "language",
+          match: { value: language },
+        })
+      }
 
-    const searchParams = {
-      vector: embedding,
-      limit: maxResults,
-      score_threshold: threshold,
-      filter: filter.must.length > 0 ? filter : undefined,
-      params: {
-        quantization: {
-          rescore: true,
-          oversampling: 10,
+      const searchParams = {
+        vector: embedding,
+        limit: maxResults,
+        score_threshold: threshold,
+        filter: filter.must.length > 0 ? filter : undefined,
+        params: {
+          quantization: {
+            rescore: true,
+            oversampling: 10,
+          },
         },
-      },
-    }
+      }
 
-    // Search with binary quantization
-    const searchResult = await qdrantClient.search(
-      COLLECTION_NAME,
-      searchParams,
-    )
-    console.log(`Qdrant search returned ${searchResult.length} results`)
+      // Search with binary quantization
+      const searchResult = await qdrantClient.search(
+        COLLECTION_NAME,
+        searchParams,
+      )
+      console.log(`Qdrant search returned ${searchResult.length} results`)
 
-    return searchResult.map(point => ({
-      id: point.id as string,
-      contentId: point.payload?.content_id as string,
-      contentType: point.payload?.content_type as string,
-      language: point.payload?.language as string,
-      content: point.payload?.content as string,
-      metadata: point.payload?.metadata || {},
-      similarity: point.score || 0,
-    }))
-  } catch (error) {
-    console.error("Error in Qdrant semantic search:", error)
-    console.error("Error details:", {
-      query,
-      options,
-      qdrantUrl,
-      hasApiKey: !!qdrantApiKey,
-      errorMessage: error instanceof Error ? error.message : "Unknown error",
-      errorStack: error instanceof Error ? error.stack : undefined,
-    })
-    throw new Error(
-      `Semantic search error: ${error instanceof Error ? error.message : "Unknown error"}`,
-    )
-  }
+      return searchResult.map(point => ({
+        id: point.id as string,
+        contentId: point.payload?.content_id as string,
+        contentType: point.payload?.content_type as string,
+        language: point.payload?.language as string,
+        content: point.payload?.content as string,
+        metadata: point.payload?.metadata || {},
+        similarity: point.score || 0,
+      }))
+    }, "semanticSearch")
+  })
 }
 
 /**
@@ -634,25 +628,41 @@ export async function deleteEmbeddings(
   contentType: string,
   language?: string,
 ): Promise<number> {
-  try {
-    const filter: any = {
-      must: [
-        { key: "content_type", match: { value: contentType } },
-        ...(language ? [{ key: "language", match: { value: language } }] : []),
-      ],
-    }
+  return await qdrantCircuitBreaker.execute(async () => {
+    return await retryWithBackoff(async () => {
+      const filter: any = {
+        must: [
+          { key: "content_type", match: { value: contentType } },
+          ...(language
+            ? [{ key: "language", match: { value: language } }]
+            : []),
+        ],
+      }
 
-    const deleteResult = await qdrantClient.delete(COLLECTION_NAME, {
-      filter,
-    })
+      // First, count the matching embeddings to return actual deleted count
+      const countResult = await qdrantClient.count(COLLECTION_NAME, {
+        filter,
+      })
 
-    return deleteResult.status === "completed" ? 1 : 0 // Simplified for now
-  } catch (error) {
-    console.error("Error deleting embeddings:", error)
-    throw new Error(
-      `Embedding deletion error: ${error instanceof Error ? error.message : "Unknown error"}`,
-    )
-  }
+      const deletedCount = countResult.count || 0
+
+      // Only proceed with deletion if there are embeddings to delete
+      if (deletedCount > 0) {
+        const deleteResult = await qdrantClient.delete(COLLECTION_NAME, {
+          filter,
+        })
+
+        // Verify deletion was successful
+        if (deleteResult.status !== "completed") {
+          throw new Error(
+            `Delete operation failed with status: ${deleteResult.status}`,
+          )
+        }
+      }
+
+      return deletedCount
+    }, "deleteEmbeddings")
+  })
 }
 
 /**

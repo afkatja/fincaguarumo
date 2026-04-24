@@ -9,21 +9,70 @@ import {
   getEmbeddingDimensions,
 } from "@/lib/semantic-rag/embeddings"
 import { verifyAdminAuth } from "@/lib/auth"
+import {
+  validateEmbeddingText,
+  validateEmbeddingBatchText,
+  validateInput,
+  INPUT_LIMITS,
+  validateApiRequest,
+} from "@/lib/input-validation"
+import { embeddingsRateLimiter } from "@/lib/rate-limiting/redis-rate-limit"
 
-// Rate limiting (simple in-memory for demo)
-// TODO: For production/global limits, consider using shared bounded store:
-// - Redis with TTL for distributed rate limiting
-// - Upstash Redis for serverless environments
-// - Netlify KV for edge deployments
-// - Cloudflare KV for edge-first applications
-export const rateLimitMap = new Map<
-  string,
-  { count: number; resetTime: number; lastAccess: number }
->()
-const RATE_LIMIT_WINDOW = 60000 // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 50 // More restrictive for embeddings API
-const RATE_LIMIT_MAX_ENTRIES = 10000 // Hard cap on rate limit entries
+// Allowed content types to prevent data exfiltration and system probing
+const ALLOWED_CONTENT_TYPES = [
+  "faq",
+  "page",
+  "tour",
+  "review",
+  "post",
+  "home",
+  "amenity",
+  "pricing_rule",
+  "payment_method",
+  "cancellation_policy",
+  "logistics",
+  "article",
+  "multilingual-test",
+  "test-type",
+] as const
+
+function isValidContentType(
+  contentType: string,
+): contentType is (typeof ALLOWED_CONTENT_TYPES)[number] {
+  return ALLOWED_CONTENT_TYPES.includes(
+    contentType as (typeof ALLOWED_CONTENT_TYPES)[number],
+  )
+}
+
 const MAX_BATCH_SIZE = 100 // Maximum batch size to match TogetherAI internal BATCH_SIZE
+const MAX_REQUEST_SIZE = 10 * 1024 * 1024 // 10MB maximum request size
+const MAX_JSON_DEPTH = 10 // Maximum JSON parsing depth to prevent stack overflow
+
+function validateRequestSize(request: NextRequest): {
+  valid: boolean
+  error?: string
+} {
+  const contentLength = request.headers.get("content-length")
+
+  if (contentLength) {
+    const size = parseInt(contentLength, 10)
+    if (isNaN(size) || size < 0) {
+      return { valid: false, error: "Invalid Content-Length header" }
+    }
+    if (size > MAX_REQUEST_SIZE) {
+      return {
+        valid: false,
+        error: `Request too large. Maximum size is ${MAX_REQUEST_SIZE / 1024 / 1024}MB`,
+      }
+    }
+  } else {
+    // If no Content-Length header, we'll need to check the actual body size
+    // This is less efficient but provides a fallback
+    return { valid: true }
+  }
+
+  return { valid: true }
+}
 
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for")
@@ -43,88 +92,130 @@ function getClientIP(request: NextRequest): string {
   return real || "unknown"
 }
 
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-
-  // Prune expired entries
-  for (const [key, record] of rateLimitMap.entries()) {
-    if (now > record.resetTime) {
-      rateLimitMap.delete(key)
+async function checkRateLimit(
+  ip: string,
+): Promise<{ allowed: boolean; resetTime: number }> {
+  try {
+    const result = await embeddingsRateLimiter.checkLimit(ip)
+    return {
+      allowed: result.allowed,
+      resetTime: result.resetTime,
+    }
+  } catch (error) {
+    console.error("Rate limiting error:", error)
+    // Fail open: allow request if rate limiting fails
+    return {
+      allowed: true,
+      resetTime: Date.now() + 60000,
     }
   }
-
-  // Enforce hard cap on rateLimitMap size
-  if (rateLimitMap.size >= RATE_LIMIT_MAX_ENTRIES) {
-    // Evict oldest entries (by lastAccess time)
-    const entries = Array.from(rateLimitMap.entries()).sort(
-      ([, a], [, b]) => a.lastAccess - b.lastAccess,
-    )
-
-    const toEvict = entries.slice(0, Math.floor(RATE_LIMIT_MAX_ENTRIES * 0.1)) // Evict 10%
-    toEvict.forEach(([key]) => rateLimitMap.delete(key))
-  }
-
-  const record = rateLimitMap.get(ip)
-
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(ip, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW,
-      lastAccess: now,
-    })
-    return true
-  }
-
-  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return false
-  }
-
-  record.count++
-  record.lastAccess = now
-  return true
-}
-
-function checkAdminToken(request: NextRequest): boolean {
-  const adminToken = request.headers.get("x-admin-token")
-  const expectedToken = process.env.ADMIN_TOKEN
-
-  if (!expectedToken) {
-    // If no ADMIN_TOKEN is set, don't allow token-based auth
-    return false
-  }
-
-  return adminToken === expectedToken
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
-    const clientIP = getClientIP(request)
-    if (!checkRateLimit(clientIP)) {
+    // Early request size validation to prevent DoS attacks
+    const sizeValidation = validateRequestSize(request)
+    if (!sizeValidation.valid) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
-        { status: 429 },
+        { error: sizeValidation.error },
+        { status: 413 }, // Request Entity Too Large
       )
     }
 
-    const body = await request.json()
+    // Rate limiting with Redis-based distributed rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = await checkRateLimit(clientIP)
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+            "Retry-After": Math.ceil(
+              (rateLimitResult.resetTime - Date.now()) / 1000,
+            ).toString(),
+          },
+        },
+      )
+    }
+
+    let body
+    try {
+      // Parse JSON with size limits and depth restrictions
+      const text = await request.text()
+
+      // Additional size check for actual body content
+      if (text.length > MAX_REQUEST_SIZE) {
+        return NextResponse.json(
+          {
+            error: `Request too large. Maximum size is ${MAX_REQUEST_SIZE / 1024 / 1024}MB`,
+          },
+          { status: 413 },
+        )
+      }
+
+      // Safe JSON parsing with depth and prototype protection
+      const parseStack: number[] = []
+      body = JSON.parse(text, (key, value) => {
+        // Track actual nesting depth using a stack approach
+        if (typeof value === "object" && value !== null) {
+          if (key === "") {
+            // Root object - reset stack
+            parseStack.length = 0
+            parseStack.push(1)
+          } else {
+            // Nested object/array - check parent depth
+            const parentDepth = parseStack[parseStack.length - 1] || 0
+            if (parentDepth > MAX_JSON_DEPTH) {
+              throw new Error(
+                `JSON depth exceeds maximum allowed depth of ${MAX_JSON_DEPTH}`,
+              )
+            }
+            parseStack.push(parentDepth + 1)
+          }
+        } else if (key !== "") {
+          // Primitive value, pop the depth stack
+          parseStack.pop()
+        }
+
+        // Prevent prototype pollution
+        if (
+          typeof key === "string" &&
+          (key === "__proto__" || key === "constructor" || key === "prototype")
+        ) {
+          return undefined
+        }
+        return value
+      })
+    } catch (parseError) {
+      let errorMessage = "Invalid JSON in request body"
+      let statusCode = 400
+
+      if (
+        parseError instanceof Error &&
+        parseError.message.includes("JSON depth exceeds")
+      ) {
+        errorMessage = parseError.message
+        statusCode = 413 // Request Entity Too Large for depth violations
+      }
+
+      return NextResponse.json({ error: errorMessage }, { status: statusCode })
+    }
     const { action, ...data } = body
 
     // Authentication and authorization checks
-    const isAdminTokenValid = checkAdminToken(request)
     let isAdminUser = false
 
     // Only verify admin auth for sensitive actions
     if (["store", "storeBatch", "exists"].includes(action)) {
       try {
-        // Try admin token first (for server-to-server calls)
-        if (isAdminTokenValid) {
-          isAdminUser = true
-        } else {
-          // Fall back to Supabase auth
-          await verifyAdminAuth(request)
-          isAdminUser = true
-        }
+        // Enforce JWT-only verification for admin access
+        await verifyAdminAuth(request)
+        isAdminUser = true
       } catch (error: any) {
         return NextResponse.json(
           { error: error.message || "Admin access required" },
@@ -138,31 +229,41 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "generate": {
         const { text } = data
-        if (!text || typeof text !== "string") {
-          return NextResponse.json(
-            { error: "Text is required and must be a string" },
-            { status: 400 },
-          )
+
+        // Validate text input with strict limits and sanitization
+        const validation = validateEmbeddingText(text)
+        if (!validation.isValid) {
+          return NextResponse.json({ error: validation.error }, { status: 400 })
         }
 
-        const result = await generateEmbedding(text)
+        const result = await generateEmbedding(validation.sanitizedValue!)
         return NextResponse.json(result)
       }
 
       case "generateBatch": {
         const { texts } = data
-        if (!Array.isArray(texts) || texts.length === 0) {
+
+        // Early batch size validation before expensive processing
+        if (!Array.isArray(texts)) {
           return NextResponse.json(
-            { error: "Texts must be a non-empty array" },
+            { error: "Texts must be an array" },
             { status: 400 },
           )
         }
 
         if (texts.length > MAX_BATCH_SIZE) {
           return NextResponse.json(
-            { error: "Batch too large" },
+            {
+              error: `Batch too large. Maximum size is ${MAX_BATCH_SIZE} items`,
+            },
             { status: 413 },
           )
+        }
+
+        // Validate batch texts with strict limits and sanitization
+        const validation = validateEmbeddingBatchText(texts)
+        if (!validation.isValid) {
+          return NextResponse.json({ error: validation.error }, { status: 400 })
         }
 
         const results = await generateBatchEmbeddings(texts)
@@ -177,6 +278,7 @@ export async function POST(request: NextRequest) {
             { status: 403 },
           )
         }
+
         const {
           contentId,
           contentType,
@@ -186,11 +288,40 @@ export async function POST(request: NextRequest) {
           metadata,
         } = data
 
-        if (!contentId || !contentType || !language || !content || !embedding) {
+        // Validate all required fields with strict limits and sanitization
+        const validation = validateApiRequest(data, {
+          contentId: {
+            maxLength: INPUT_LIMITS.EMBEDDING_CONTENT_ID,
+            required: true,
+            sanitize: true,
+          },
+          contentType: {
+            maxLength: INPUT_LIMITS.EMBEDDING_CONTENT_TYPE,
+            required: true,
+            sanitize: true,
+          },
+          language: {
+            maxLength: INPUT_LIMITS.EMBEDDING_LANGUAGE,
+            required: true,
+            sanitize: true,
+          },
+          content: {
+            maxLength: INPUT_LIMITS.EMBEDDING_CONTENT,
+            required: true,
+            sanitize: true,
+          },
+        })
+
+        if (!validation.isValid) {
+          return NextResponse.json({ error: validation.error }, { status: 400 })
+        }
+
+        // Additional security validation: ensure contentType is in allowed list
+        const sanitizedData = validation.sanitizedValue!
+        if (!isValidContentType(sanitizedData.contentType)) {
           return NextResponse.json(
             {
-              error:
-                "contentId, contentType, language, content, and embedding are required",
+              error: `Invalid content type: ${sanitizedData.contentType}. Allowed types: ${ALLOWED_CONTENT_TYPES.join(", ")}`,
             },
             { status: 400 },
           )
@@ -204,12 +335,11 @@ export async function POST(request: NextRequest) {
             { status: 400 },
           )
         }
-
         await storeEmbedding(
-          contentId,
-          contentType,
-          language,
-          content,
+          sanitizedData.contentId,
+          sanitizedData.contentType,
+          sanitizedData.language,
+          sanitizedData.content,
           embedding,
           metadata,
         )
@@ -226,7 +356,15 @@ export async function POST(request: NextRequest) {
         }
         const { embeddings: batchEmbeddings } = data
 
-        if (!Array.isArray(batchEmbeddings) || batchEmbeddings.length === 0) {
+        // Early batch size validation before expensive processing
+        if (!Array.isArray(batchEmbeddings)) {
+          return NextResponse.json(
+            { error: "Embeddings must be an array" },
+            { status: 400 },
+          )
+        }
+
+        if (batchEmbeddings.length === 0) {
           return NextResponse.json(
             { error: "Embeddings must be a non-empty array" },
             { status: 400 },
@@ -235,39 +373,70 @@ export async function POST(request: NextRequest) {
 
         if (batchEmbeddings.length > MAX_BATCH_SIZE) {
           return NextResponse.json(
-            { error: "Batch too large" },
+            {
+              error: `Batch too large. Maximum size is ${MAX_BATCH_SIZE} items`,
+            },
             { status: 413 },
           )
         }
 
-        // Validate each embedding in the batch
-        for (const emb of batchEmbeddings) {
-          if (
-            !emb.contentId ||
-            !emb.contentType ||
-            !emb.language ||
-            !emb.content ||
-            !emb.embedding
-          ) {
+        // Validate and sanitize each embedding in the batch
+        const sanitizedBatchEmbeddings = []
+        for (let i = 0; i < batchEmbeddings.length; i++) {
+          const emb = batchEmbeddings[i]
+
+          // Validate each embedding field
+          const validation = validateApiRequest(emb, {
+            contentId: {
+              maxLength: INPUT_LIMITS.EMBEDDING_CONTENT_ID,
+              required: true,
+              sanitize: true,
+            },
+            contentType: {
+              maxLength: INPUT_LIMITS.EMBEDDING_CONTENT_TYPE,
+              required: true,
+              sanitize: true,
+            },
+            language: {
+              maxLength: INPUT_LIMITS.EMBEDDING_LANGUAGE,
+              required: true,
+              sanitize: true,
+            },
+            content: {
+              maxLength: INPUT_LIMITS.EMBEDDING_CONTENT,
+              required: true,
+              sanitize: true,
+            },
+          })
+
+          if (!validation.isValid) {
             return NextResponse.json(
-              {
-                error:
-                  "Each embedding must have contentId, contentType, language, content, and embedding",
-              },
+              { error: `Embedding ${i + 1}: ${validation.error}` },
               { status: 400 },
             )
           }
+
           if (!validateEmbedding(emb.embedding)) {
             return NextResponse.json(
               {
-                error: `Invalid embedding format. Expected ${getEmbeddingDimensions()} dimensions`,
+                error: `Embedding ${i + 1}: Invalid embedding format. Expected ${getEmbeddingDimensions()} dimensions`,
               },
               { status: 400 },
             )
           }
+
+          // Add sanitized embedding to batch
+          const sanitizedData = validation.sanitizedValue as any
+          sanitizedBatchEmbeddings.push({
+            contentId: sanitizedData.contentId,
+            contentType: sanitizedData.contentType,
+            language: sanitizedData.language,
+            content: sanitizedData.content,
+            embedding: emb.embedding, // Keep original embedding array as is
+          })
         }
 
-        await storeBatchEmbeddings(batchEmbeddings)
+        await storeBatchEmbeddings(sanitizedBatchEmbeddings)
         return NextResponse.json({ success: true })
       }
 
@@ -281,14 +450,29 @@ export async function POST(request: NextRequest) {
         }
         const { contentId, contentType } = data
 
-        if (!contentId || !contentType) {
-          return NextResponse.json(
-            { error: "contentId and contentType are required" },
-            { status: 400 },
-          )
+        // Validate required fields
+        const validation = validateApiRequest(data, {
+          contentId: {
+            maxLength: INPUT_LIMITS.EMBEDDING_CONTENT_ID,
+            required: true,
+            sanitize: true,
+          },
+          contentType: {
+            maxLength: INPUT_LIMITS.EMBEDDING_CONTENT_TYPE,
+            required: true,
+            sanitize: true,
+          },
+        })
+
+        if (!validation.isValid) {
+          return NextResponse.json({ error: validation.error }, { status: 400 })
         }
 
-        const exists = await embeddingExists(contentId, contentType)
+        const sanitizedData = validation.sanitizedValue as any
+        const exists = await embeddingExists(
+          sanitizedData.contentId,
+          sanitizedData.contentType,
+        )
         return NextResponse.json({ exists })
       }
 

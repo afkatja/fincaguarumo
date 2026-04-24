@@ -358,6 +358,10 @@ export async function rebuildEmbeddings(
       return
     }
 
+    // Hoist imports outside the loop to avoid repeated dynamic imports
+    const { generateBatchEmbeddings } = await import("./embeddings-hybrid")
+    const { storeBatchEmbeddings } = await import("./embeddings")
+
     // Generate embeddings in batches
     const batchSize = 50
     for (let i = 0; i < contentItems.length; i += batchSize) {
@@ -365,11 +369,16 @@ export async function rebuildEmbeddings(
       const texts = batch.map(item => item.content)
 
       // Generate embeddings
-      const { generateBatchEmbeddings } = await import("./embeddings-hybrid")
       const embeddings = await generateBatchEmbeddings(texts)
 
+      // Validate embeddings length matches batch length
+      if (embeddings.length !== batch.length) {
+        throw new Error(
+          `Embeddings length mismatch: expected ${batch.length} embeddings, got ${embeddings.length}`,
+        )
+      }
+
       // Store embeddings
-      const { storeBatchEmbeddings } = await import("./embeddings")
       await storeBatchEmbeddings(
         batch.map((item, index) => ({
           contentId: item.contentId || `${contentType}_${language}_${index}`,

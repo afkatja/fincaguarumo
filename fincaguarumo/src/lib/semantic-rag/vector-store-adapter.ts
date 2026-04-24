@@ -1,7 +1,4 @@
 import { getSemanticRAGConfig, isQdrantConfigured } from "./config"
-import * as pgvectorStore from "./vector-store"
-import * as qdrantStore from "./qdrant-store"
-import * as embeddingFunctions from "./embeddings"
 
 export interface VectorSearchResult {
   id: string
@@ -31,16 +28,43 @@ export interface SearchOptions {
  * Adapter that switches between pgvector and Qdrant based on configuration
  */
 export class VectorStoreAdapter {
-  private useQdrant: boolean
+  private _useQdrant: boolean | undefined
+  private _pgvectorStore: any
+  private _qdrantStore: any
+  private _embeddingFunctions: any
 
-  constructor() {
-    this.useQdrant = isQdrantConfigured()
+  private get useQdrant(): boolean {
+    if (this._useQdrant === undefined) {
+      this._useQdrant = isQdrantConfigured()
 
-    if (this.useQdrant) {
-      console.log("Using Qdrant vector store with binary quantization")
-    } else {
-      console.log("Using pgvector vector store")
+      if (this._useQdrant) {
+        console.log("Using Qdrant vector store with binary quantization")
+      } else {
+        console.log("Using pgvector vector store")
+      }
     }
+    return this._useQdrant
+  }
+
+  private async getPgvectorStore() {
+    if (!this._pgvectorStore) {
+      this._pgvectorStore = await import("./vector-store")
+    }
+    return this._pgvectorStore
+  }
+
+  private async getQdrantStore() {
+    if (!this._qdrantStore) {
+      this._qdrantStore = await import("./qdrant-store")
+    }
+    return this._qdrantStore
+  }
+
+  private async getEmbeddingFunctions() {
+    if (!this._embeddingFunctions) {
+      this._embeddingFunctions = await import("./embeddings")
+    }
+    return this._embeddingFunctions
   }
 
   /**
@@ -52,16 +76,22 @@ export class VectorStoreAdapter {
   ): Promise<VectorSearchResult[]> {
     if (this.useQdrant) {
       try {
+        const qdrantStore = await this.getQdrantStore()
         const results = await qdrantStore.semanticSearch(query, options)
-        return results.map(r => ({ ...r, language: r.language as string }))
+        return results.map((r: any) => ({
+          ...r,
+          language: r.language as string,
+        }))
       } catch (error) {
         console.warn(
           "Qdrant semantic search failed, falling back to pgvector:",
           error,
         )
+        const pgvectorStore = await this.getPgvectorStore()
         return pgvectorStore.semanticSearch(query, options)
       }
     } else {
+      const pgvectorStore = await this.getPgvectorStore()
       return pgvectorStore.semanticSearch(query, options)
     }
   }
@@ -75,16 +105,22 @@ export class VectorStoreAdapter {
   ): Promise<HybridSearchResult[]> {
     if (this.useQdrant) {
       try {
+        const qdrantStore = await this.getQdrantStore()
         const results = await qdrantStore.hybridSearch(query, options)
-        return results.map(r => ({ ...r, language: r.language as string }))
+        return results.map((r: any) => ({
+          ...r,
+          language: r.language as string,
+        }))
       } catch (error) {
         console.warn(
           "Qdrant hybrid search failed, falling back to pgvector:",
           error,
         )
+        const pgvectorStore = await this.getPgvectorStore()
         return pgvectorStore.hybridSearch(query, options)
       }
     } else {
+      const pgvectorStore = await this.getPgvectorStore()
       return pgvectorStore.hybridSearch(query, options)
     }
   }
@@ -99,20 +135,26 @@ export class VectorStoreAdapter {
   ): Promise<VectorSearchResult[]> {
     if (this.useQdrant) {
       try {
+        const qdrantStore = await this.getQdrantStore()
         const results = await qdrantStore.findSimilarContent(
           contentId,
           contentType,
           options,
         )
-        return results.map(r => ({ ...r, language: r.language as string }))
+        return results.map((r: any) => ({
+          ...r,
+          language: r.language as string,
+        }))
       } catch (error) {
         console.warn(
           "Qdrant findSimilarContent failed, falling back to pgvector:",
           error,
         )
+        const pgvectorStore = await this.getPgvectorStore()
         return pgvectorStore.findSimilarContent(contentId, contentType, options)
       }
     } else {
+      const pgvectorStore = await this.getPgvectorStore()
       return pgvectorStore.findSimilarContent(contentId, contentType, options)
     }
   }
@@ -127,15 +169,18 @@ export class VectorStoreAdapter {
   }> {
     if (this.useQdrant) {
       try {
+        const qdrantStore = await this.getQdrantStore()
         return qdrantStore.getContentStats()
       } catch (error) {
         console.warn(
           "Qdrant getContentStats failed, falling back to pgvector:",
           error,
         )
+        const pgvectorStore = await this.getPgvectorStore()
         return pgvectorStore.getContentStats()
       }
     } else {
+      const pgvectorStore = await this.getPgvectorStore()
       return pgvectorStore.getContentStats()
     }
   }
@@ -153,6 +198,7 @@ export class VectorStoreAdapter {
   ): Promise<void> {
     if (this.useQdrant) {
       try {
+        const qdrantStore = await this.getQdrantStore()
         return qdrantStore.storeEmbedding(
           contentId,
           contentType,
@@ -166,6 +212,7 @@ export class VectorStoreAdapter {
           "Qdrant storeEmbedding failed, falling back to pgvector:",
           error,
         )
+        const embeddingFunctions = await this.getEmbeddingFunctions()
         return embeddingFunctions.storeEmbedding(
           contentId,
           contentType,
@@ -176,6 +223,7 @@ export class VectorStoreAdapter {
         )
       }
     } else {
+      const embeddingFunctions = await this.getEmbeddingFunctions()
       return embeddingFunctions.storeEmbedding(
         contentId,
         contentType,
@@ -202,6 +250,7 @@ export class VectorStoreAdapter {
   ): Promise<void> {
     if (this.useQdrant) {
       try {
+        const qdrantStore = await this.getQdrantStore()
         return qdrantStore.storeBatchEmbeddings(embeddings)
       } catch (error) {
         console.warn(
@@ -213,6 +262,7 @@ export class VectorStoreAdapter {
           ...e,
           language: e.language as any,
         }))
+        const embeddingFunctions = await this.getEmbeddingFunctions()
         return embeddingFunctions.storeBatchEmbeddings(castEmbeddings)
       }
     } else {
@@ -221,6 +271,7 @@ export class VectorStoreAdapter {
         ...e,
         language: e.language as any,
       }))
+      const embeddingFunctions = await this.getEmbeddingFunctions()
       return embeddingFunctions.storeBatchEmbeddings(castEmbeddings)
     }
   }
@@ -234,15 +285,18 @@ export class VectorStoreAdapter {
   ): Promise<number> {
     if (this.useQdrant) {
       try {
+        const qdrantStore = await this.getQdrantStore()
         return qdrantStore.deleteEmbeddings(contentType, language)
       } catch (error) {
         console.warn(
           "Qdrant deleteEmbeddings failed, falling back to pgvector:",
           error,
         )
+        const pgvectorStore = await this.getPgvectorStore()
         return pgvectorStore.deleteEmbeddings(contentType, language)
       }
     } else {
+      const pgvectorStore = await this.getPgvectorStore()
       return pgvectorStore.deleteEmbeddings(contentType, language)
     }
   }
@@ -256,15 +310,18 @@ export class VectorStoreAdapter {
   ): Promise<boolean> {
     if (this.useQdrant) {
       try {
+        const qdrantStore = await this.getQdrantStore()
         return qdrantStore.embeddingExists(contentId, contentType)
       } catch (error) {
         console.warn(
           "Qdrant embeddingExists failed, falling back to pgvector:",
           error,
         )
+        const embeddingFunctions = await this.getEmbeddingFunctions()
         return embeddingFunctions.embeddingExists(contentId, contentType)
       }
     } else {
+      const embeddingFunctions = await this.getEmbeddingFunctions()
       return embeddingFunctions.embeddingExists(contentId, contentType)
     }
   }
@@ -275,7 +332,8 @@ export class VectorStoreAdapter {
   async initialize(): Promise<void> {
     if (this.useQdrant) {
       try {
-        const { initializeQdrantCollection } = await import("./qdrant-store")
+        const qdrantStore = await this.getQdrantStore()
+        const { initializeQdrantCollection } = qdrantStore
         return initializeQdrantCollection()
       } catch (error) {
         console.warn(
@@ -320,23 +378,41 @@ export class VectorStoreAdapter {
   }
 }
 
-// Create singleton instance
-export const vectorStoreAdapter = new VectorStoreAdapter()
+// Lazy singleton getter
+let vectorStoreAdapterInstance: VectorStoreAdapter | undefined
+
+export function getVectorStoreAdapter(): VectorStoreAdapter {
+  if (!vectorStoreAdapterInstance) {
+    vectorStoreAdapterInstance = new VectorStoreAdapter()
+  }
+  return vectorStoreAdapterInstance
+}
+
+// For backward compatibility, export a getter that creates the instance on first access
+export const vectorStoreAdapter = new Proxy(
+  {},
+  {
+    get(target, prop) {
+      const adapter = getVectorStoreAdapter()
+      return adapter[prop as keyof VectorStoreAdapter]
+    },
+  },
+) as VectorStoreAdapter
 
 // Export individual functions for backward compatibility
 export const semanticSearch = (query: string, options?: SearchOptions) =>
-  vectorStoreAdapter.semanticSearch(query, options)
+  getVectorStoreAdapter().semanticSearch(query, options)
 
 export const hybridSearch = (query: string, options?: SearchOptions) =>
-  vectorStoreAdapter.hybridSearch(query, options)
+  getVectorStoreAdapter().hybridSearch(query, options)
 
 export const findSimilarContent = (
   contentId: string,
   contentType: string,
   options?: SearchOptions,
-) => vectorStoreAdapter.findSimilarContent(contentId, contentType, options)
+) => getVectorStoreAdapter().findSimilarContent(contentId, contentType, options)
 
-export const getContentStats = () => vectorStoreAdapter.getContentStats()
+export const getContentStats = () => getVectorStoreAdapter().getContentStats()
 
 export const storeEmbedding = (
   contentId: string,
@@ -346,7 +422,7 @@ export const storeEmbedding = (
   embedding: number[],
   metadata?: Record<string, any>,
 ) =>
-  vectorStoreAdapter.storeEmbedding(
+  getVectorStoreAdapter().storeEmbedding(
     contentId,
     contentType,
     language,
@@ -364,16 +440,18 @@ export const storeBatchEmbeddings = (
     embedding: number[]
     metadata?: Record<string, any>
   }>,
-) => vectorStoreAdapter.storeBatchEmbeddings(embeddings)
+) => getVectorStoreAdapter().storeBatchEmbeddings(embeddings)
 
 export const deleteEmbeddings = (contentType: string, language?: string) =>
-  vectorStoreAdapter.deleteEmbeddings(contentType, language)
+  getVectorStoreAdapter().deleteEmbeddings(contentType, language)
 
 export const embeddingExists = (contentId: string, contentType: string) =>
-  vectorStoreAdapter.embeddingExists(contentId, contentType)
+  getVectorStoreAdapter().embeddingExists(contentId, contentType)
 
-export const initializeVectorStore = () => vectorStoreAdapter.initialize()
+export const initializeVectorStore = () => getVectorStoreAdapter().initialize()
 
-export const getVectorStoreType = () => vectorStoreAdapter.getVectorStoreType()
+export const getVectorStoreType = () =>
+  getVectorStoreAdapter().getVectorStoreType()
 
-export const getPerformanceInfo = () => vectorStoreAdapter.getPerformanceInfo()
+export const getPerformanceInfo = () =>
+  getVectorStoreAdapter().getPerformanceInfo()

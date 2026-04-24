@@ -150,12 +150,29 @@ export async function getMonitoringMetrics(
       processingTimeCount > 0 ? totalProcessingTime / processingTimeCount : 0
 
     // Get total requests in the same window to calculate failure rate
-    const { count } = await supabase
-      .from("embedding_requests")
-      .select("*", { count: "exact" })
-      .gte("timestamp", timeWindowStart)
+    // Use count-only query for better performance
+    let totalRequestsCount = totalFailures // fallback to failure count if requests table unavailable
+    try {
+      const { count, error: countError } = await supabase
+        .from("embedding_requests")
+        .select("id", { count: "exact", head: true }) // head: true for count-only query
+        .gte("timestamp", timeWindowStart)
 
-    const totalRequestsCount = count ?? totalFailures
+      if (!countError && count !== null) {
+        totalRequestsCount = count
+      } else if (countError) {
+        console.warn(
+          "Failed to get request count for failure rate calculation:",
+          countError,
+        )
+      }
+    } catch (countQueryError) {
+      console.warn(
+        "Request count query failed, using fallback:",
+        countQueryError,
+      )
+    }
+
     const failureRate =
       totalRequestsCount > 0 ? (totalFailures / totalRequestsCount) * 100 : 0
 
@@ -278,20 +295,41 @@ async function triggerAlert(failures: EmbeddingFailure[]): Promise<void> {
     const webhookUrl = process.env.EMBEDDING_ALERT_WEBHOOK_URL
     if (webhookUrl) {
       try {
-        await fetch(webhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(alertData),
-        })
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => {
+          controller.abort()
+        }, 10000) // 10 second timeout
+
+        try {
+          await fetch(webhookUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(alertData),
+            signal: controller.signal,
+          })
+          clearTimeout(timeoutId)
+        } catch (fetchError) {
+          clearTimeout(timeoutId)
+          if (fetchError instanceof Error && fetchError.name === "AbortError") {
+            console.error("Alert webhook timeout after 10 seconds")
+          } else {
+            throw fetchError
+          }
+        }
       } catch (webhookError) {
         console.error("Failed to send alert webhook:", webhookError)
       }
     }
 
     // Log the alert to Supabase for audit trail
-    await supabase.from("embedding_alerts").insert(alertData)
+    const { error: alertInsertError } = await supabase
+      .from("embedding_alerts")
+      .insert(alertData)
+    if (alertInsertError) {
+      console.error("Failed to log alert to database:", alertInsertError)
+    }
   } catch (error) {
     console.error("Error triggering alert:", error)
   }
@@ -342,19 +380,37 @@ export async function getFailureTrends(
       return []
     }
 
-    // Group by hour
+    // Group by hour, including zero-count hours
     const hourlyCounts: Record<string, number> = {}
+    const startHour = new Date(timeWindowStart)
+    const endHour = new Date()
 
+    // Initialize all hours in the window with 0 count
+    for (
+      let hour = new Date(startHour);
+      hour <= endHour;
+      hour.setHours(hour.getHours() + 1)
+    ) {
+      const hourKey = hour.toISOString().substring(0, 13) + ":00:00Z"
+      hourlyCounts[hourKey] = 0
+    }
+
+    // Count failures by hour
     data.forEach(failure => {
       const hour =
         new Date(failure.timestamp).toISOString().substring(0, 13) + ":00:00Z"
-      hourlyCounts[hour] = (hourlyCounts[hour] || 0) + 1
+      if (hourlyCounts.hasOwnProperty(hour)) {
+        hourlyCounts[hour]++
+      }
     })
 
-    return Object.entries(hourlyCounts).map(([timestamp, count]) => ({
-      timestamp,
-      count,
-    }))
+    // Return sorted array with all hours included
+    return Object.entries(hourlyCounts)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([timestamp, count]) => ({
+        timestamp,
+        count,
+      }))
   } catch (error) {
     console.error("Error getting failure trends:", error)
     throw error

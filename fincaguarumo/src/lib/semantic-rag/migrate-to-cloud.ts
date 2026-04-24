@@ -1,6 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
-import { initializeQdrantCollection, storeBatchEmbeddings } from './qdrant-store'
-import { getSemanticRAGConfig } from './config'
+import { createClient } from "@supabase/supabase-js"
+import {
+  initializeQdrantCollection,
+  storeBatchEmbeddings,
+} from "./qdrant-store"
+import { getSemanticRAGConfig } from "./config"
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -27,7 +30,7 @@ export interface CloudMigrationStats {
  * Migrate embeddings from Supabase to Qdrant Cloud
  */
 export async function migrateEmbeddingsToCloud(
-  options: CloudMigrationOptions = {}
+  options: CloudMigrationOptions = {},
 ): Promise<CloudMigrationStats> {
   const {
     contentType,
@@ -44,65 +47,69 @@ export async function migrateEmbeddingsToCloud(
     totalSkipped: 0,
     totalErrors: 0,
     processingTime: 0,
-    cloudUrl: config.qdrantUrl || 'unknown',
+    cloudUrl: config.qdrantUrl || "unknown",
   }
 
   try {
-    console.log('Starting migration to Qdrant Cloud...')
+    console.log("Starting migration to Qdrant Cloud...")
     console.log(`Target cluster: ${config.qdrantUrl}`)
     console.log(`Options: ${JSON.stringify(options, null, 2)}`)
 
     if (!config.qdrantUrl || !config.qdrantApiKey) {
-      throw new Error('Qdrant cloud configuration missing. Please check QDRANT_URL and QDRANT_API_KEY.')
+      throw new Error(
+        "Qdrant cloud configuration missing. Please check QDRANT_URL and QDRANT_API_KEY.",
+      )
     }
 
     // Initialize Qdrant Cloud collection
     if (!dryRun) {
       if (clearExisting) {
-        console.log('Clearing existing collection...')
-        const { QdrantClient } = await import('@qdrant/js-client-rest')
+        console.log("Clearing existing collection...")
+        const { QdrantClient } = await import("@qdrant/js-client-rest")
         const qdrantClient = new QdrantClient({
           url: config.qdrantUrl,
           apiKey: config.qdrantApiKey,
         })
-        
+
         try {
-          await qdrantClient.deleteCollection('content_embeddings')
-          console.log('Existing collection cleared')
+          await qdrantClient.deleteCollection("content_embeddings")
+          console.log("Existing collection cleared")
         } catch (error) {
-          console.log('Collection may not exist, continuing...')
+          console.log("Collection may not exist, continuing...")
         }
       }
-      
+
       await initializeQdrantCollection()
-      console.log('Qdrant Cloud collection initialized')
+      console.log("Qdrant Cloud collection initialized")
     } else {
-      console.log('DRY RUN: Skipping Qdrant Cloud collection initialization')
+      console.log("DRY RUN: Skipping Qdrant Cloud collection initialization")
     }
 
     // Build query to fetch embeddings from Supabase
     let query = supabase
-      .from('content_embeddings')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .from("content_embeddings")
+      .select("*")
+      .order("created_at", { ascending: false })
 
     if (contentType) {
-      query = query.eq('content_type', contentType)
+      query = query.eq("content_type", contentType)
     }
 
     if (language) {
-      query = query.eq('language', language)
+      query = query.eq("language", language)
     }
 
     // Fetch all embeddings
     const { data: embeddings, error } = await query
 
     if (error) {
-      throw new Error(`Failed to fetch embeddings from Supabase: ${error.message}`)
+      throw new Error(
+        `Failed to fetch embeddings from Supabase: ${error.message}`,
+      )
     }
 
     if (!embeddings || embeddings.length === 0) {
-      console.log('No embeddings found to migrate')
+      console.log("No embeddings found to migrate")
       stats.processingTime = Date.now() - startTime
       return stats
     }
@@ -115,7 +122,9 @@ export async function migrateEmbeddingsToCloud(
       const batchNumber = Math.floor(i / batchSize) + 1
       const totalBatches = Math.ceil(embeddings.length / batchSize)
 
-      console.log(`Processing cloud batch ${batchNumber}/${totalBatches} (${batch.length} embeddings)`)
+      console.log(
+        `Processing cloud batch ${batchNumber}/${totalBatches} (${batch.length} embeddings)`,
+      )
 
       try {
         // Convert embeddings to Qdrant format
@@ -138,7 +147,10 @@ export async function migrateEmbeddingsToCloud(
 
         stats.totalMigrated += batch.length
       } catch (batchError) {
-        console.error(`Error processing cloud batch ${batchNumber}:`, batchError)
+        console.error(
+          `Error processing cloud batch ${batchNumber}:`,
+          batchError,
+        )
         stats.totalErrors += batch.length
       }
 
@@ -148,7 +160,7 @@ export async function migrateEmbeddingsToCloud(
 
     stats.processingTime = Date.now() - startTime
 
-    console.log('Cloud migration completed!')
+    console.log("Cloud migration completed!")
     console.log(`Migrated: ${stats.totalMigrated}`)
     console.log(`Errors: ${stats.totalErrors}`)
     console.log(`Processing time: ${stats.processingTime}ms`)
@@ -156,7 +168,7 @@ export async function migrateEmbeddingsToCloud(
 
     return stats
   } catch (error) {
-    console.error('Cloud migration failed:', error)
+    console.error("Cloud migration failed:", error)
     stats.processingTime = Date.now() - startTime
     throw error
   }
@@ -166,23 +178,28 @@ export async function migrateEmbeddingsToCloud(
  * Validate cloud migration
  */
 export async function validateCloudMigration(
-  options: CloudMigrationOptions = {}
-): Promise<{ supabaseCount: number; qdrantCount: number; match: boolean; cloudUrl: string }> {
+  options: CloudMigrationOptions = {},
+): Promise<{
+  supabaseCount: number
+  qdrantCount: number
+  match: boolean
+  cloudUrl: string
+}> {
   const { contentType, language } = options
   const config = getSemanticRAGConfig()
 
   try {
     // Get Supabase count
     let supabaseQuery = supabase
-      .from('content_embeddings')
-      .select('id', { count: 'exact', head: true })
+      .from("content_embeddings")
+      .select("id", { count: "exact", head: true })
 
     if (contentType) {
-      supabaseQuery = supabaseQuery.eq('content_type', contentType)
+      supabaseQuery = supabaseQuery.eq("content_type", contentType)
     }
 
     if (language) {
-      supabaseQuery = supabaseQuery.eq('language', language)
+      supabaseQuery = supabaseQuery.eq("language", language)
     }
 
     const { count: supabaseCount, error: supabaseError } = await supabaseQuery
@@ -192,7 +209,7 @@ export async function validateCloudMigration(
     }
 
     // Get Qdrant Cloud count
-    const { getContentStats } = await import('./vector-store-adapter')
+    const { getContentStats } = await import("./vector-store-adapter")
     const qdrantStats = await getContentStats()
     const qdrantCount = qdrantStats.totalEmbeddings
 
@@ -207,46 +224,46 @@ export async function validateCloudMigration(
       supabaseCount: supabaseCount || 0,
       qdrantCount,
       match,
-      cloudUrl: config.qdrantUrl || 'unknown',
+      cloudUrl: config.qdrantUrl || "unknown",
     }
   } catch (error) {
-    console.error('Cloud validation failed:', error)
+    console.error("Cloud validation failed:", error)
     throw error
-  }
-}
-
-// CLI interface for cloud migration
-const args = process.argv.slice(2)
-const command = args[0]
-
-const options: CloudMigrationOptions = {
-  contentType: process.env.CONTENT_TYPE,
-  language: process.env.LANGUAGE,
-  batchSize: parseInt(process.env.BATCH_SIZE || '25'),
-  dryRun: process.env.DRY_RUN === 'true',
-  clearExisting: process.env.CLEAR_EXISTING === 'true',
-}
-
-async function runCloudCommand() {
-  switch (command) {
-    case 'migrate':
-      await migrateEmbeddingsToCloud(options)
-      break
-    case 'validate':
-      await validateCloudMigration(options)
-      break
-    default:
-      console.log('Usage: npm run migrate:to-cloud [migrate|validate]')
-      console.log('Environment variables:')
-      console.log('  CONTENT_TYPE - Filter by content type')
-      console.log('  LANGUAGE - Filter by language')
-      console.log('  BATCH_SIZE - Batch size for migration (default: 25)')
-      console.log('  DRY_RUN - Set to "true" for dry run')
-      console.log('  CLEAR_EXISTING - Set to "true" to clear existing data')
   }
 }
 
 // Only run CLI if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
+  // CLI interface for cloud migration
+  const args = process.argv.slice(2)
+  const command = args[0]
+
+  const options: CloudMigrationOptions = {
+    contentType: process.env.CONTENT_TYPE,
+    language: process.env.LANGUAGE,
+    batchSize: parseInt(process.env.BATCH_SIZE || "25"),
+    dryRun: process.env.DRY_RUN === "true",
+    clearExisting: process.env.CLEAR_EXISTING === "true",
+  }
+
+  async function runCloudCommand() {
+    switch (command) {
+      case "migrate":
+        await migrateEmbeddingsToCloud(options)
+        break
+      case "validate":
+        await validateCloudMigration(options)
+        break
+      default:
+        console.log("Usage: npm run migrate:to-cloud [migrate|validate]")
+        console.log("Environment variables:")
+        console.log("  CONTENT_TYPE - Filter by content type")
+        console.log("  LANGUAGE - Filter by language")
+        console.log("  BATCH_SIZE - Batch size for migration (default: 25)")
+        console.log('  DRY_RUN - Set to "true" for dry run')
+        console.log('  CLEAR_EXISTING - Set to "true" to clear existing data')
+    }
+  }
+
   runCloudCommand().catch(console.error)
 }

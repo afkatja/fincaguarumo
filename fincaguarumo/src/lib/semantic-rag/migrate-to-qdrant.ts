@@ -217,41 +217,41 @@ export async function rollbackMigration(): Promise<void> {
   }
 }
 
-// CLI interface for running migration
-const args = process.argv.slice(2)
-const command = args[0]
-
-const options: MigrationOptions = {
-  contentType: process.env.CONTENT_TYPE,
-  language: process.env.LANGUAGE,
-  batchSize: parseInt(process.env.BATCH_SIZE || "50"),
-  dryRun: process.env.DRY_RUN === "true",
-}
-
-async function runCommand() {
-  switch (command) {
-    case "migrate":
-      await migrateEmbeddingsToQdrant(options)
-      break
-    case "validate":
-      await validateMigration(options)
-      break
-    case "rollback":
-      await rollbackMigration()
-      break
-    default:
-      console.log(
-        "Usage: npm run migrate-to-qdrant [migrate|validate|rollback]",
-      )
-      console.log("Environment variables:")
-      console.log("  CONTENT_TYPE - Filter by content type")
-      console.log("  LANGUAGE - Filter by language")
-      console.log("  BATCH_SIZE - Batch size for migration (default: 50)")
-      console.log('  DRY_RUN - Set to "true" for dry run')
-  }
-}
-
 // Only run CLI if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
+  // CLI interface for running migration
+  const args = process.argv.slice(2)
+  const command = args[0]
+
+  const options: MigrationOptions = {
+    contentType: process.env.CONTENT_TYPE,
+    language: process.env.LANGUAGE,
+    batchSize: parseInt(process.env.BATCH_SIZE || "50"),
+    dryRun: process.env.DRY_RUN === "true",
+  }
+
+  async function runCommand() {
+    switch (command) {
+      case "migrate":
+        await migrateEmbeddingsToQdrant(options)
+        break
+      case "validate":
+        await validateMigration(options)
+        break
+      case "rollback":
+        await rollbackMigration()
+        break
+      default:
+        console.log(
+          "Usage: npm run migrate-to-qdrant [migrate|validate|rollback]",
+        )
+        console.log("Environment variables:")
+        console.log("  CONTENT_TYPE - Filter by content type")
+        console.log("  LANGUAGE - Filter by language")
+        console.log("  BATCH_SIZE - Batch size for migration (default: 50)")
+        console.log('  DRY_RUN - Set to "true" for dry run')
+    }
+  }
+
   runCommand().catch(console.error)
 }

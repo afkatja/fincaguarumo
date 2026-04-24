@@ -359,7 +359,8 @@ async function buildKeywordBasedRAGContext(
       }
       if (pageInfo.body) {
         const plainText = portableTextToPlain(pageInfo.body)
-        contextText += `Details: ${plainText.substring(0, 800)}...\n`
+        const truncated = plainText.substring(0, 800)
+        contextText += `Details: ${truncated}${plainText.length > 800 ? "..." : ""}\n`
       }
       if (pageInfo.categories && pageInfo.categories.length > 0) {
         contextText += `Categories: ${pageInfo.categories.map((c: any) => c.title).join(", ")}\n`
@@ -450,7 +451,8 @@ async function buildKeywordBasedRAGContext(
         }
         if (post.body) {
           const plainText = portableTextToPlain(post.body)
-          contextText += `   Preview: ${plainText.substring(0, 200)}...\n`
+          const truncated = plainText.substring(0, 200)
+          contextText += `   Preview: ${truncated}${plainText.length > 200 ? "..." : ""}\n`
         }
       })
     }
@@ -471,7 +473,8 @@ async function buildKeywordBasedRAGContext(
       }
       if (homeInfo.intro_body) {
         const plainText = portableTextToPlain(homeInfo.intro_body)
-        contextText += `About: ${plainText.substring(0, 600)}...\n`
+        const truncated = plainText.substring(0, 600)
+        contextText += `About: ${truncated}${plainText.length > 600 ? "..." : ""}\n`
       }
     }
   }
@@ -525,7 +528,8 @@ export async function getPropertyOverview(
     }
     if (homeInfo.intro_body) {
       const plainText = portableTextToPlain(homeInfo.intro_body)
-      overview += `\n${plainText.substring(0, 500)}...\n`
+      const truncated = plainText.substring(0, 500)
+      overview += `\n${truncated}${plainText.length > 500 ? "..." : ""}\n`
     }
   }
 
@@ -535,7 +539,9 @@ export async function getPropertyOverview(
       if (page.language === locale) {
         overview += `\n• ${page.title}\n`
         if (page.description) {
-          overview += `  ${page.description.substring(0, 150)}...\n`
+          const description = page.description || ""
+          const truncated = description.substring(0, 150)
+          overview += `  ${truncated}${description.length > 150 ? "..." : ""}\n`
         }
         if (page.price) {
           overview += `  Price: $${page.price} per person\n`
