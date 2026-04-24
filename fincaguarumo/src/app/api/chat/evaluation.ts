@@ -1,4 +1,6 @@
 import { introspectionModeEvaluation } from "../../../lib/better-chatbot/config"
+import { ChatMessage, ToolOutput, EvaluationResult } from "../../../types"
+import { ChatContext as ContextAwareChatContext } from "../../../lib/better-chatbot/context-aware"
 
 // Simplified critical flow detection - only evaluate booking and payment related queries
 export function isCriticalFlow(userQuery: string): boolean {
@@ -19,7 +21,7 @@ export function isCriticalFlow(userQuery: string): boolean {
 // Simplified feedback storage - just log for now
 function logEvaluationResult(
   userQuery: string,
-  evaluation: any,
+  evaluation: EvaluationResult,
   threadId?: string,
 ) {
   console.log("Chat evaluation completed:", {
@@ -37,10 +39,10 @@ function logEvaluationResult(
 // Simplified background evaluation - focus on critical flows only
 export async function performBackgroundEvaluation(
   fullResponse: string,
-  toolOutputs: any[],
+  toolOutputs: ToolOutput[],
   sanityData: any,
-  messages: any[],
-  context: any,
+  messages: ChatMessage[],
+  context: ContextAwareChatContext,
   systemPrompt: string,
   threadId?: string,
   userQuery?: string,
@@ -57,7 +59,7 @@ export async function performBackgroundEvaluation(
       response: fullResponse,
       toolOutputs,
       sanityData,
-      userMessages: messages.map((m: any) => m.content).filter(Boolean),
+      userMessages: messages.map((m: ChatMessage) => m.content).filter(Boolean),
       context,
       apiError: null,
     })

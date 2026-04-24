@@ -5,6 +5,13 @@ import {
   UserIntent,
 } from "../../../lib/intent-detection"
 import { streamResponseWithData } from "./streamResponse"
+import { ChatMessage } from "../../../types"
+import { ChatContext as ContextAwareChatContext } from "../../../lib/better-chatbot/context-aware"
+import {
+  validateChatMessage,
+  validateInput,
+  INPUT_LIMITS,
+} from "../../../lib/input-validation"
 
 interface ChatRequest {
   messages: Array<{ role: string; content: string }>
@@ -18,22 +25,67 @@ interface ChatRequest {
 }
 
 // Rate limiting (simple in-memory for demo)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
+// TODO: For production/global limits, consider using shared bounded store:
+// - Redis with TTL for distributed rate limiting
+// - Upstash Redis for serverless environments
+// - Netlify KV for edge deployments
+// - Cloudflare KV for edge-first applications
+const rateLimitMap = new Map<
+  string,
+  { count: number; resetTime: number; lastAccess: number }
+>()
 const RATE_LIMIT_WINDOW = 60000 // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 100 // Increased for tests
+const RATE_LIMIT_MAX_ENTRIES = 10000 // Hard cap on rate limit entries
 
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for")
   const real = request.headers.get("x-real-ip")
-  return forwarded?.split(",")[0] || real || "unknown"
+
+  // Only trust x-forwarded-for when running behind a trusted proxy
+  const isTrustedProxy =
+    process.env.VERCEL === "1" ||
+    process.env.NETLIFY === "true" ||
+    process.env.TRUSTED_PROXY === "true"
+
+  if (isTrustedProxy && forwarded) {
+    // x-forwarded-for can contain multiple IPs, take the first one (original client)
+    return forwarded.split(",")[0].trim()
+  }
+
+  // Fall back to x-real-ip or unknown
+  return real || "unknown"
 }
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now()
+
+  // Prune expired entries
+  for (const [key, record] of rateLimitMap.entries()) {
+    if (now > record.resetTime) {
+      rateLimitMap.delete(key)
+    }
+  }
+
+  // Enforce hard cap on rateLimitMap size
+  if (rateLimitMap.size >= RATE_LIMIT_MAX_ENTRIES) {
+    // Evict oldest entries (by lastAccess time)
+    const entries = Array.from(rateLimitMap.entries()).sort(
+      ([, a], [, b]) => a.lastAccess - b.lastAccess,
+    )
+
+    const toEvict = entries.slice(0, Math.floor(RATE_LIMIT_MAX_ENTRIES * 0.1)) // Evict 10%
+    toEvict.forEach(([key]) => rateLimitMap.delete(key))
+  }
+
   const record = rateLimitMap.get(ip)
 
   if (!record || now > record.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
+    rateLimitMap.set(ip, {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW,
+      lastAccess: now,
+    })
     return true
   }
 
@@ -42,6 +94,7 @@ function checkRateLimit(ip: string): boolean {
   }
 
   record.count++
+  record.lastAccess = now
   return true
 }
 
@@ -79,47 +132,98 @@ function createSuccessResponse(data: any, status: number = 200): NextResponse {
   return response
 }
 
-// Helper function to validate and trim input (remove HTML escaping - let display layer handle it)
-function validateAndTrimInput(input: string): string {
-  const trimmed = input.trim()
-
-  // Basic validation - reject if empty after trimming
-  if (trimmed.length === 0) {
-    throw new Error("Input cannot be empty")
-  }
-
-  // Optional: Validate against control characters (keep if desired)
-  // if (/[\x00-\x1F\x7F]/.test(trimmed)) {
-  //   throw new Error("Invalid characters in input")
-  // }
-
-  return trimmed
-}
-
-// Helper function to validate chat request
+// Helper function to validate chat request with strict input validation
 function validateChatRequest(body: ChatRequest): {
   isValid: boolean
   error?: string
   rawQuery?: string
+  sanitizedMessages?: ChatMessage[]
 } {
-  const { messages } = body
+  const { messages, threadId, locale } = body
 
+  // Validate messages array
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return { isValid: false, error: "Messages array is required" }
   }
 
-  const lastMessage = messages[messages.length - 1]
+  // Validate thread ID if provided
+  if (threadId) {
+    const threadIdValidation = validateInput(
+      threadId,
+      INPUT_LIMITS.CHAT_THREAD_ID,
+      {
+        fieldName: "threadId",
+        required: false,
+        sanitize: true,
+      },
+    )
+    if (!threadIdValidation.isValid) {
+      return { isValid: false, error: threadIdValidation.error }
+    }
+  }
+
+  // Validate locale if provided
+  if (locale) {
+    const localeValidation = validateInput(locale, 10, {
+      fieldName: "locale",
+      required: false,
+      sanitize: true,
+    })
+    if (!localeValidation.isValid) {
+      return { isValid: false, error: localeValidation.error }
+    }
+  }
+
+  // Validate each message
+  const sanitizedMessages: ChatMessage[] = []
+  for (let i = 0; i < messages.length; i++) {
+    const message = messages[i]
+
+    // Validate message structure
+    if (!message.role || !message.content) {
+      return {
+        isValid: false,
+        error: `Message ${i + 1} is missing required fields`,
+      }
+    }
+
+    // Validate message role
+    const validRoles = ["user", "assistant", "system", "tool"]
+    if (!validRoles.includes(message.role)) {
+      return {
+        isValid: false,
+        error: `Message ${i + 1} has invalid role: ${message.role}`,
+      }
+    }
+
+    // Validate message content
+    const contentValidation = validateChatMessage(message.content)
+    if (!contentValidation.isValid) {
+      return {
+        isValid: false,
+        error: `Message ${i + 1}: ${contentValidation.error}`,
+      }
+    }
+
+    sanitizedMessages.push({
+      role: message.role as "user" | "assistant" | "system" | "tool",
+      content: contentValidation.sanitizedValue!,
+    })
+  }
+
+  // Get the last user message for processing
+  const lastMessage = sanitizedMessages[sanitizedMessages.length - 1]
   const userQuery = lastMessage?.content || ""
 
-  if (
-    !userQuery ||
-    typeof userQuery !== "string" ||
-    userQuery.trim().length === 0
-  ) {
+  if (!userQuery || userQuery.trim().length === 0) {
     return { isValid: false, error: "Valid message content is required" }
   }
 
-  return { isValid: true, rawQuery: validateAndTrimInput(userQuery) }
+  return {
+    isValid: true,
+    rawQuery: userQuery,
+    sanitizedMessages,
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -133,7 +237,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body: ChatRequest = await request.json()
+    let body: ChatRequest
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      return createErrorResponse("Invalid JSON in request body", 400)
+    }
     const { messages, threadId, locale = "en", context } = body
 
     // Validate request
@@ -143,6 +252,8 @@ export async function POST(request: NextRequest) {
     }
 
     const rawQuery = validation.rawQuery!
+    const sanitizedMessages = validation.sanitizedMessages!
+
     // For intent detection, use the original query (without apostrophe sanitization)
     const queryForIntentDetection = messages[messages.length - 1]?.content || ""
 
@@ -193,9 +304,16 @@ export async function POST(request: NextRequest) {
     // Process chat in background
     streamResponseWithData({
       userQuery: rawQuery,
-      context,
+      context: context
+        ? ({
+            page: context.page || "homepage",
+            locale,
+            bookingData: context.bookingState,
+            propertyTitle: context.propertySlug,
+          } as ContextAwareChatContext)
+        : undefined,
       locale,
-      messages,
+      messages: sanitizedMessages,
       threadId,
       writer,
       userIntent,

@@ -9,6 +9,8 @@ import { buildRAGContext } from "@/lib/rag-context-builder"
 import { extractPropertyConfig } from "@/lib/sanity-data-extractor"
 import { isCriticalFlow, performBackgroundEvaluation } from "./evaluation"
 import { detectUserIntent, UserIntent } from "../../../lib/intent-detection"
+import { ChatMessage, ToolOutput } from "../../../types"
+import { ChatContext as ContextAwareChatContext } from "../../../lib/better-chatbot/context-aware"
 
 export const streamResponseWithData = async ({
   userQuery,
@@ -20,9 +22,9 @@ export const streamResponseWithData = async ({
   userIntent,
 }: {
   userQuery: string
-  context?: any
+  context?: ContextAwareChatContext
   locale: string
-  messages: any[]
+  messages: ChatMessage[]
   threadId?: string
   writer: WritableStreamDefaultWriter<Uint8Array>
   userIntent?: UserIntent
@@ -38,7 +40,7 @@ export const streamResponseWithData = async ({
     // Build RAG context from Sanity
     const ragContext = await buildRAGContext(userQuery, {
       page: context?.page || "homepage",
-      slug: context?.propertySlug,
+      slug: (context as any)?.propertySlug,
       locale,
     })
 
@@ -90,7 +92,7 @@ Use this preloaded data instead of calling tools for basic property information.
     const reader = response.body?.getReader()
 
     let fullResponse = ""
-    let toolOutputs: any[] = []
+    let toolOutputs: ToolOutput[] = []
 
     // Process the stream and forward AI chunks
     const processStream = async () => {
@@ -139,11 +141,13 @@ Use this preloaded data instead of calling tools for basic property information.
           // console.log("Found tool-calls step with content:", step.content)
           return step.content
             .filter((item: any) => item.type === "tool-result")
-            .map((item: any) => ({
-              toolName: item.toolName,
-              args: item.input, // The args are in the input property
-              result: item.output, // The result is directly in the output property
-            }))
+            .map(
+              (item: any): ToolOutput => ({
+                toolName: item.toolName,
+                args: item.input, // The args are in the input property
+                result: item.output, // The result is directly in the output property
+              }),
+            )
         }
 
         return []
@@ -162,7 +166,7 @@ Use this preloaded data instead of calling tools for basic property information.
         toolOutputs,
         sanityData,
         messages,
-        context,
+        context || { page: "homepage", locale },
         systemPrompt,
         threadId,
         userQuery,

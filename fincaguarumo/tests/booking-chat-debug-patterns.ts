@@ -370,7 +370,7 @@ export const testDataGenerators = {
     totalPrice: 100,
     currency: "usd",
     source: "Direct",
-    uid: "test-uid-" + Math.random().toString(36).substr(2, 9),
+    uid: "test-uid-" + Math.random().toString(36).substring(2, 11),
   }),
 
   validChatMessage: (content = "What amenities are available?") => ({

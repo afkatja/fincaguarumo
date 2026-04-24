@@ -347,16 +347,39 @@ Netlify Functions have a **10 second sync limit**. The embeddings API handles th
 
 ## Security
 
-- API endpoints are not authenticated by default
-- For production, consider adding:
-  - Basic auth
-  - API key validation
-  - Rate limiting
+- API endpoints implement authentication and rate limiting
+- **Authentication**: Admin token validation and Supabase auth for sensitive operations
+- **Rate Limiting**: In-memory rate limiting with IP spoofing protection
+- **Trusted Proxy**: Only trusts IP headers when running behind trusted proxies (Vercel, Netlify)
 
-Example rate limiting with Netlify:
+### Authentication Methods
+
+1. **Admin Token** (for server-to-server calls):
+
+   ```bash
+   curl -X POST /api/embeddings \
+     -H "Content-Type: application/json" \
+     -H "x-admin-token: ${ADMIN_TOKEN}" \
+     -d '{"action":"store","contentId":"test","contentType":"page","language":"en","content":"test","embedding":[...]}'
+   ```
+
+2. **Supabase Auth** (for admin users):
+   - Requires valid Supabase session for sensitive operations
+   - Public operations (generate, generateBatch, validate) have relaxed auth
+
+### Rate Limiting
+
+- **Chat API**: 100 requests per minute per IP
+- **Embeddings API**: 50 requests per minute per IP
+- **Memory Management**: Automatic pruning and eviction of expired entries
+- **IP Validation**: Only trusts `x-forwarded-for` behind trusted proxies
+
+### Production Rate Limiting
+
+For distributed environments, consider using:
 
 ```toml
-# Add to netlify.toml
+# Add to netlify.toml for additional edge rate limiting
 [[redirects]]
   from = "/api/embeddings"
   to = "/api/embeddings"
@@ -364,3 +387,10 @@ Example rate limiting with Netlify:
   force = true
   conditions = { Role = ["admin"] }
 ```
+
+Or use distributed stores:
+
+- Redis with TTL for distributed rate limiting
+- Upstash Redis for serverless environments
+- Netlify KV for edge deployments
+- Cloudflare KV for edge-first applications
