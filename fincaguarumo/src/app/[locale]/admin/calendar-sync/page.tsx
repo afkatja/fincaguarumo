@@ -20,53 +20,67 @@ export default function CalendarSyncPage() {
   const [bookings, setBookings] = useState<any[]>([])
   const [syncLogs, setSyncLogs] = useState<any[]>([])
   const [loadingBookings, setLoadingBookings] = useState<boolean>(false)
-  const [lastSyncedDataHash, setLastSyncedDataHash] = useState<string>("")
+  const [isCalendarConnected, setIsCalendarConnected] = useState<boolean>(false)
+  const [calendarId, setCalendarId] = useState<string>("")
 
-  // Generate a hash from bookings data to detect changes
-  const generateBookingsHash = async (bookingsData: any[]): Promise<string> => {
-    if (!bookingsData?.length) return "empty"
+  // Test calendar access on component mount
+  useEffect(() => {
+    const testCalendarConnection = async () => {
+      try {
+        // Wait for authentication to be ready
+        if (authLoading) {
+          return
+        }
 
-    const normalizedData = bookingsData
-      .map(normalizeBooking)
-      .sort(sortBookings)
-      .map(bookingToString)
-      .join("||")
+        const accessToken = await getAccessToken()
+        if (!accessToken) {
+          console.error("User not authenticated")
+          setIsCalendarConnected(false)
+          return
+        }
 
-    const encoder = new TextEncoder()
-    const data = encoder.encode(normalizedData)
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("")
-  }
+        const response = await fetch("/api/admin/calendar-sync/test", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
 
-  const normalizeBooking = (booking: any) => ({
-    uid: booking.uid || "",
-    start: booking.start || "",
-    end: booking.end || "",
-    summary: booking.summary || "",
-    source: booking.source || "",
-    guestName: booking.guestName || "",
-  })
-
-  const sortBookings = (a: any, b: any) => {
-    if (a.uid !== b.uid) {
-      return (a.uid || "").localeCompare(b.uid || "")
+        if (response.ok) {
+          setIsCalendarConnected(true)
+          setCalendarId(process.env.GOOGLE_CALENDAR_ID || "primary")
+        } else {
+          setIsCalendarConnected(false)
+        }
+      } catch (error) {
+        console.error("Failed to test calendar access:", error)
+        setIsCalendarConnected(false)
+      }
     }
-    return (a.start || "").localeCompare(b.start || "")
-  }
 
-  const bookingToString = (booking: any) =>
-    `${booking.uid}|${booking.start}|${booking.end}|${booking.summary}|${booking.source}|${booking.guestName}`
+    testCalendarConnection()
+  }, [authLoading, getAccessToken])
 
   // Fetch bookings and sync data on component mount
   useEffect(() => {
     fetchBookings()
-    fetchSyncLogs()
-    if (syncStatus === "idle") {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Fetch sync logs when authentication is ready
+  useEffect(() => {
+    if (!authLoading && session) {
+      fetchSyncLogs()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, session])
+
+  // Auto-sync when authentication is ready and sync status is idle
+  useEffect(() => {
+    if (!authLoading && session && syncStatus === "idle") {
       handleSync()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [authLoading, session, syncStatus])
 
   const fetchBookings = async () => {
     setLoadingBookings(true)
@@ -85,6 +99,11 @@ export default function CalendarSyncPage() {
 
   const fetchSyncLogs = async () => {
     try {
+      // Wait for authentication to be ready
+      if (authLoading) {
+        return
+      }
+
       // Get auth token from session
       const accessToken = await getAccessToken()
       if (!accessToken) {
@@ -100,8 +119,7 @@ export default function CalendarSyncPage() {
 
       if (response.ok) {
         const data = await response.json()
-        // Fetch recent sync logs from database
-        await fetchRecentSyncLogs()
+        // Sync logs are fetched independently in useEffect
       } else if (response.status === 401) {
         console.error("Authentication required")
       } else if (response.status === 403) {
@@ -114,27 +132,51 @@ export default function CalendarSyncPage() {
 
   const fetchRecentSyncLogs = async () => {
     try {
-      const recentLogs = bookings
-        .slice(0, MAX_SYNC_LOGS_DISPLAY + 2)
-        .map(createMockSyncLog)
-      setSyncLogs(recentLogs)
+      // Wait for authentication to be ready
+      if (authLoading) {
+        return
+      }
+
+      // Get auth token from session
+      const accessToken = await getAccessToken()
+      if (!accessToken) {
+        console.error("User not authenticated")
+        return
+      }
+
+      const response = await fetch("/api/admin/calendar-sync", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const recentLogs = data.data?.recentSyncLogs || []
+        // Parse and slice the real sync log data
+        const parsedLogs = recentLogs
+          .slice(0, MAX_SYNC_LOGS_DISPLAY)
+          .map((log: any) => ({
+            booking_id: log.booking_id,
+            guest_name: log.bookings?.guest_name || "Unknown Guest",
+            source: log.bookings?.source || "unknown",
+            status: log.status,
+            synced_at: log.synced_at,
+            email: log.bookings?.email,
+            phone: log.bookings?.phone,
+            error_message: log.error_message,
+            gcal_event_id: log.gcal_event_id,
+          }))
+        setSyncLogs(parsedLogs)
+      } else if (response.status === 401) {
+        console.error("Authentication required")
+      } else if (response.status === 403) {
+        console.error("Admin access required")
+      }
     } catch (error) {
       console.error("Failed to fetch recent sync logs:", error)
     }
   }
-
-  const createMockSyncLog = (booking: any) => ({
-    booking_id: booking.uid,
-    guest_name: booking.guestName,
-    source: booking.source,
-    status: "success",
-    synced_at: new Date().toISOString(),
-    reminders: {
-      checkin: "24 hours before",
-      checkout: "24 hours before",
-      methods: ["popup", "email"],
-    },
-  })
 
   const renderBookingItem = (booking: any, index: number) => (
     <div
@@ -161,21 +203,33 @@ export default function CalendarSyncPage() {
     <div key={index} className="p-4 border rounded">
       <div className="font-medium">{log.guest_name || "Unknown Guest"}</div>
       <div className="text-sm text-gray-600 mb-2">
-        Source: {log.source || "unknown"} · Status: {log.status || "synced"}
+        Booking ID: {log.booking_id || "unknown"} · Status:{" "}
+        <span
+          className={`font-medium ${
+            log.status === "success"
+              ? "text-green-600"
+              : log.status === "failed"
+                ? "text-red-600"
+                : "text-yellow-600"
+          }`}
+        >
+          {log.status || "unknown"}
+        </span>
       </div>
       <div className="text-sm space-y-1">
         <div>
-          <strong>Check-in reminder:</strong>{" "}
-          {log.reminders?.checkin || "24 hours before"}
+          <strong>Source:</strong> {log.source || "unknown"}
         </div>
-        <div>
-          <strong>Check-out reminder:</strong>{" "}
-          {log.reminders?.checkout || "24 hours before"}
-        </div>
-        <div>
-          <strong>Reminder methods:</strong>{" "}
-          {log.reminders?.methods?.join(", ") || "popup, email"}
-        </div>
+        {log.gcal_event_id && (
+          <div>
+            <strong>Calendar Event ID:</strong> {log.gcal_event_id}
+          </div>
+        )}
+        {log.error_message && (
+          <div className="text-red-600">
+            <strong>Error:</strong> {log.error_message}
+          </div>
+        )}
         {log.email && (
           <div>
             <strong>Email:</strong> {log.email}
@@ -195,15 +249,6 @@ export default function CalendarSyncPage() {
   )
 
   const handleSync = async () => {
-    // Generate hash of current bookings data
-    const currentDataHash = await generateBookingsHash(bookings)
-
-    // Check if data has changed since last sync
-    if (currentDataHash === lastSyncedDataHash && lastSyncedDataHash !== "") {
-      setSyncStatus("No changes detected - sync skipped")
-      return
-    }
-
     setSyncStatus("syncing...")
     setErrorMessage("")
     try {
@@ -244,8 +289,7 @@ export default function CalendarSyncPage() {
       setSyncFailedCount(data.data?.sync?.errors || 0)
       setDeletedBookingsCount(data.data?.sync?.deleted || 0)
 
-      // Update the last synced hash after successful sync
-      setLastSyncedDataHash(currentDataHash)
+      // Note: Server-side deduplication handles preventing duplicate syncs
 
       // Refresh data after sync
       await fetchBookings()
@@ -415,22 +459,28 @@ export default function CalendarSyncPage() {
           <h2 className="text-lg font-semibold mb-4">
             Google Calendar Authentication
           </h2>
-          <button
-            data-testid="google-auth-button"
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          >
-            Connect Google Calendar
-          </button>
-          <div
-            data-testid="auth-success-message"
-            className="mt-4 text-green-600"
-          >
-            Successfully connected!
-          </div>
-          <div data-testid="calendar-connected-status" className="mt-2">
-            Connected to Google Calendar
-          </div>
-          <div data-testid="calendar-id">primary</div>
+
+          {isCalendarConnected && calendarId ? (
+            <>
+              <div
+                data-testid="auth-success-message"
+                className="mt-4 text-green-600"
+              >
+                Successfully connected!
+              </div>
+              <div data-testid="calendar-connected-status" className="mt-2">
+                Connected to Google Calendar
+              </div>
+              <div data-testid="calendar-id">{calendarId}</div>
+            </>
+          ) : (
+            <button
+              data-testid="google-auth-button"
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+              Connect Google Calendar
+            </button>
+          )}
         </div>
 
         {/* Sync Frequency */}
