@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     )
     apiUrl.searchParams.set("secret", CALENDAR_SYNC_SECRET)
 
-    const response = await fetch(apiUrl.toString(), {
+    const response = await fetchWithTimeout(apiUrl.toString(), {
       method: "GET",
     })
 
@@ -41,11 +41,17 @@ export async function GET(request: Request) {
       throw new Error(`Internal sync API failed with status ${response.status}`)
     }
 
-    const data = await response.json()
+    const res = await response.json()
+
+    // Fetch recent sync logs
+    const recentSyncLogs = await getRecentSyncLogs()
 
     return NextResponse.json({
       status: "success",
-      data: data.data,
+      data: {
+        ...res.data,
+        recentSyncLogs,
+      },
       requestedBy: adminUser.email,
     })
   } catch (error: any) {
@@ -102,7 +108,7 @@ export async function POST(request: Request) {
     )
     apiUrl.searchParams.set("secret", CALENDAR_SYNC_SECRET)
 
-    const response = await fetch(apiUrl.toString(), {
+    const response = await fetchWithTimeout(apiUrl.toString(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(options),
@@ -116,12 +122,12 @@ export async function POST(request: Request) {
       )
     }
 
-    const data = await response.json()
+    const res = await response.json()
 
     return NextResponse.json({
       status: "success",
-      data: data.data,
-      message: data.message,
+      data: res.data,
+      message: res.message,
       triggeredBy: adminUser.email,
     })
   } catch (error: any) {
@@ -162,4 +168,67 @@ export async function DELETE() {
 
 export async function PATCH() {
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 })
+}
+
+// Helper function to fetch recent sync logs
+
+// Helper function to fetch with timeout
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs = 10000,
+): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Request timeout after ${timeoutMs}ms`)
+    }
+    throw error
+  }
+}
+
+async function getRecentSyncLogs(limit = 10) {
+  try {
+    const { createClient } = await import("@supabase/supabase-js")
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    const { data, error } = await supabase
+      .from("gcal_sync_log")
+      .select(
+        `
+        *,
+        bookings (
+          uid,
+          guest_name,
+          source,
+          email,
+          phone
+        )
+      `,
+      )
+      .order("synced_at", { ascending: false })
+      .limit(limit)
+
+    if (error) {
+      console.error("Failed to fetch recent sync logs:", error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error("Error fetching recent sync logs:", error)
+    return []
+  }
 }
