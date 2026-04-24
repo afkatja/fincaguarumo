@@ -92,7 +92,7 @@ export class GoogleCalendarService {
 
       const response = await this.calendar.events.insert({
         calendarId: this.calendarId,
-        resource: event,
+        requestBody: event,
         sendUpdates: "none", // Don't send emails to attendees
       })
 
@@ -125,7 +125,7 @@ export class GoogleCalendarService {
       await this.calendar.events.update({
         calendarId: this.calendarId,
         eventId: eventId,
-        resource: event,
+        requestBody: event,
         sendUpdates: "none",
       })
 
