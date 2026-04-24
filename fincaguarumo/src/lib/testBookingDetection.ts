@@ -40,19 +40,35 @@ export function isTestBooking(
   guestName?: string,
   email?: string,
 ): boolean {
-  console.log("isTestBooking check executed")
+  // Only log in development or test environments to avoid PII in production logs
+  if (
+    process.env.NODE_ENV === "development" ||
+    process.env.NODE_ENV === "test"
+  ) {
+    console.log("isTestBooking check executed")
+  }
 
   // Check for test indicators in UID
   if (
     matchesPatterns(uid, [...COMMON_TEST_PATTERNS, ...STRIPE_TEST_PATTERNS])
   ) {
-    console.log("testBooking detected via UID pattern")
+    if (
+      process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "test"
+    ) {
+      console.log("testBooking detected via UID pattern")
+    }
     return true
   }
 
   // Check for test indicators in guest name
   if (guestName && matchesPatterns(guestName, NAME_TEST_PATTERNS)) {
-    console.log("testBooking detected via name pattern")
+    if (
+      process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "test"
+    ) {
+      console.log("testBooking detected via name pattern")
+    }
     return true
   }
 
