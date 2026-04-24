@@ -9,6 +9,14 @@ const createMockSupabase = () => ({
         data: [],
         error: null,
       })),
+      order: jest.fn(() => ({
+        limit: jest.fn(() => ({
+          single: jest.fn(() => ({
+            data: null,
+            error: null,
+          })),
+        })),
+      })),
       single: jest.fn(() => ({
         data: null,
         error: null,
@@ -33,7 +41,13 @@ let mockSupabase: ReturnType<typeof createMockSupabase>
 
 // Mock the Google Calendar service
 jest.mock("../google-calendar", () => ({
-  syncBookingToCalendar: jest.fn(),
+  googleCalendarService: {
+    createEvent: jest.fn(),
+    updateEvent: jest.fn(),
+    deleteEvent: jest.fn(),
+    eventExists: jest.fn(),
+    getSyncLog: jest.fn(),
+  },
 }))
 
 // Mock Supabase createClient
@@ -118,43 +132,42 @@ describe("Calendar Sync Service", () => {
     })
 
     it("should sync bookings to calendar without performance impact (AC3)", async () => {
-      const { syncBookingToCalendar } = require("../google-calendar")
-      syncBookingToCalendar.mockResolvedValue({
-        checkinEventId: "event-123",
-        checkoutEventId: "event-456",
-        status: "created",
-      })
+      const { googleCalendarService } = require("../google-calendar")
+      googleCalendarService.getSyncLog.mockResolvedValue(null)
+      googleCalendarService.createEvent.mockResolvedValue("event-123")
 
       const result = await syncBookingsToCalendar(mockBookings)
 
       expect(result.processed).toBe(2)
       expect(result.success).toBe(2)
       expect(result.failed).toBe(0)
-      expect(syncBookingToCalendar).toHaveBeenCalledTimes(2)
+      expect(result.created).toBe(2)
+      expect(googleCalendarService.createEvent).toHaveBeenCalledTimes(2)
     })
 
     it("should handle booking updates in calendar (AC3)", async () => {
-      const { syncBookingToCalendar } = require("../google-calendar")
-      syncBookingToCalendar.mockResolvedValue({
-        checkinEventId: "updated-event-123",
-        checkoutEventId: "updated-event-456",
-        status: "updated",
+      const { googleCalendarService } = require("../google-calendar")
+      googleCalendarService.getSyncLog.mockResolvedValue({
+        gcal_event_id: "existing-event",
       })
+      googleCalendarService.eventExists.mockResolvedValue(true)
+      googleCalendarService.updateEvent.mockResolvedValue(true)
 
       const result = await syncBookingsToCalendar(mockBookings)
 
       expect(result.processed).toBe(2)
+      expect(result.success).toBe(2)
       expect(result.updated).toBe(2)
       expect(result.created).toBe(0)
     })
 
     it("should handle cancelled bookings by removing from calendar (AC3)", async () => {
-      const { syncBookingToCalendar } = require("../google-calendar")
-      syncBookingToCalendar.mockResolvedValue({
-        status: "deleted",
-        checkinEventId: null,
-        checkoutEventId: null,
+      const { googleCalendarService } = require("../google-calendar")
+      googleCalendarService.getSyncLog.mockResolvedValue({
+        gcal_event_id: "existing-event",
       })
+      googleCalendarService.eventExists.mockResolvedValue(true)
+      googleCalendarService.deleteEvent.mockResolvedValue(true)
 
       const cancelledBooking = {
         ...mockBookings[0],
@@ -170,25 +183,20 @@ describe("Calendar Sync Service", () => {
 
   describe("Sync State Tracking (TR7)", () => {
     it("should record sync state in gcal_sync_log table", async () => {
-      const mockSyncResult = {
-        checkinEventId: "event-123",
-        checkoutEventId: "event-456",
-        status: "created" as const,
-      }
-
-      await calendarSyncService.recordSyncState("booking-1", mockSyncResult)
+      await calendarSyncService.recordSyncState(
+        "booking-1",
+        "event-123",
+        "success",
+      )
 
       expect(mockSupabase.from).toHaveBeenCalledWith("gcal_sync_log")
       expect(mockSupabase.from().upsert).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            booking_id: "booking-1",
-            gcal_checkin_event_id: "event-123",
-            gcal_checkout_event_id: "event-456",
-            sync_status: "success",
-            synced_at: expect.any(String),
-          }),
-        ]),
+        expect.objectContaining({
+          booking_id: "booking-1",
+          gcal_event_id: "event-123",
+          status: "success",
+          synced_at: expect.any(String),
+        }),
         expect.any(Object),
       )
     })
@@ -198,9 +206,8 @@ describe("Calendar Sync Service", () => {
         {
           id: "existing-sync-123",
           booking_id: "booking-1",
-          gcal_checkin_event_id: "old-event-123",
-          gcal_checkout_event_id: "old-event-456",
-          sync_status: "pending",
+          gcal_event_id: "old-event-123",
+          status: "pending",
         },
       ]
 
@@ -210,24 +217,18 @@ describe("Calendar Sync Service", () => {
       })
       mockSupabase.from().select().eq = selectEqMock
 
-      const mockUpdatedSync = {
-        checkinEventId: "new-event-123",
-        checkoutEventId: "new-event-456",
-        status: "updated" as const,
-      }
-
-      await calendarSyncService.recordSyncState("booking-1", mockUpdatedSync)
+      await calendarSyncService.recordSyncState(
+        "booking-1",
+        "new-event-123",
+        "success",
+      )
 
       expect(mockSupabase.from().upsert).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: "existing-sync-123",
-            booking_id: "booking-1",
-            gcal_checkin_event_id: "new-event-123",
-            gcal_checkout_event_id: "new-event-456",
-            sync_status: "success",
-          }),
-        ]),
+        expect.objectContaining({
+          booking_id: "booking-1",
+          gcal_event_id: "new-event-123",
+          status: "success",
+        }),
         expect.any(Object),
       )
     })
@@ -238,9 +239,8 @@ describe("Calendar Sync Service", () => {
       const mockExistingSync = [
         {
           booking_id: "booking-1",
-          gcal_checkin_event_id: "existing-checkin-event",
-          gcal_checkout_event_id: "existing-checkout-event",
-          sync_status: "success",
+          gcal_event_id: "existing-event",
+          status: "success",
         },
       ]
 
@@ -250,21 +250,18 @@ describe("Calendar Sync Service", () => {
       })
       mockSupabase.from().select().eq = selectEqMock
 
-      const { syncBookingToCalendar } = require("../google-calendar")
-      syncBookingToCalendar.mockResolvedValue({
-        checkinEventId: "existing-checkin-event",
-        checkoutEventId: "existing-checkout-event",
-        status: "updated",
+      const { googleCalendarService } = require("../google-calendar")
+      googleCalendarService.getSyncLog.mockResolvedValue({
+        gcal_event_id: "existing-event",
       })
+      googleCalendarService.eventExists.mockResolvedValue(true)
+      googleCalendarService.updateEvent.mockResolvedValue(true)
 
       await syncBookingsToCalendar([mockBookings[0]])
 
-      expect(syncBookingToCalendar).toHaveBeenCalledWith(
-        mockBookings[0],
-        expect.objectContaining({
-          checkinEventId: "existing-checkin-event",
-          checkoutEventId: "existing-checkout-event",
-        }),
+      expect(googleCalendarService.updateEvent).toHaveBeenCalledWith(
+        "existing-event",
+        expect.any(Object),
       )
     })
   })
@@ -284,34 +281,28 @@ describe("Calendar Sync Service", () => {
     })
 
     it("should implement exponential backoff for calendar API failures", async () => {
-      const { syncBookingToCalendar } = require("../google-calendar")
+      const { googleCalendarService } = require("../google-calendar")
       const retryError = new Error("Rate limit exceeded") as any
       retryError.code = 429
 
-      syncBookingToCalendar
+      googleCalendarService.getSyncLog.mockResolvedValue(null)
+      googleCalendarService.createEvent
         .mockRejectedValueOnce(retryError)
         .mockRejectedValueOnce(retryError)
-        .mockResolvedValueOnce({
-          checkinEventId: "retry-success-event",
-          checkoutEventId: "retry-success-event",
-          status: "created",
-        })
+        .mockResolvedValueOnce("retry-success-event")
 
       const result = await syncBookingsToCalendar([mockBookings[0]])
 
       expect(result.success).toBe(1)
       expect(result.retries).toBe(2)
-      expect(syncBookingToCalendar).toHaveBeenCalledTimes(3)
+      expect(googleCalendarService.createEvent).toHaveBeenCalledTimes(3)
     })
 
     it("should handle partial sync failures", async () => {
-      const { syncBookingToCalendar } = require("../google-calendar")
-      syncBookingToCalendar
-        .mockResolvedValueOnce({
-          checkinEventId: "success-event-1",
-          checkoutEventId: "success-event-2",
-          status: "created",
-        })
+      const { googleCalendarService } = require("../google-calendar")
+      googleCalendarService.getSyncLog.mockResolvedValue(null)
+      googleCalendarService.createEvent
+        .mockResolvedValueOnce("success-event-1")
         .mockRejectedValueOnce(new Error("Calendar API error"))
 
       const result = await syncBookingsToCalendar(mockBookings)
@@ -328,7 +319,7 @@ describe("Calendar Sync Service", () => {
       const lastSyncTime = new Date(Date.now() - 10 * 60 * 1000) // 10 minutes ago
       const mockSyncRecord = {
         synced_at: lastSyncTime.toISOString(),
-        sync_status: "success",
+        status: "success",
       }
 
       const selectEqMock = jest.fn().mockResolvedValueOnce({
@@ -346,7 +337,7 @@ describe("Calendar Sync Service", () => {
       const lastSyncTime = new Date(Date.now() - 20 * 60 * 1000) // 20 minutes ago
       const mockSyncRecord = {
         synced_at: lastSyncTime.toISOString(),
-        sync_status: "success",
+        status: "success",
       }
 
       const selectEqMock = jest.fn().mockResolvedValueOnce({
@@ -363,26 +354,22 @@ describe("Calendar Sync Service", () => {
 
   describe("Initial Backfill (TR10)", () => {
     it("should handle initial backfill for existing bookings", async () => {
-      const { syncBookingToCalendar } = require("../google-calendar")
-      syncBookingToCalendar.mockResolvedValue({
-        checkinEventId: "backfill-event-1",
-        checkoutEventId: "backfill-event-2",
-        status: "created",
-      })
+      const { googleCalendarService } = require("../google-calendar")
+      googleCalendarService.createEvent.mockResolvedValue("backfill-event-1")
 
       const result =
         await calendarSyncService.performInitialBackfill(mockBookings)
 
       expect(result.processed).toBe(2)
       expect(result.backfill).toBe(true)
-      expect(syncBookingToCalendar).toHaveBeenCalledTimes(2)
+      expect(googleCalendarService.createEvent).toHaveBeenCalledTimes(2)
     })
 
     it("should skip already synced bookings during backfill", async () => {
       const mockExistingSyncs = [
         {
           booking_id: "booking-1",
-          sync_status: "success",
+          status: "success",
           synced_at: new Date().toISOString(),
         },
       ]
@@ -393,12 +380,8 @@ describe("Calendar Sync Service", () => {
       })
       mockSupabase.from().select().eq = selectEqMock
 
-      const { syncBookingToCalendar } = require("../google-calendar")
-      syncBookingToCalendar.mockResolvedValue({
-        checkinEventId: "new-backfill-event",
-        checkoutEventId: "new-backfill-event-2",
-        status: "created",
-      })
+      const { googleCalendarService } = require("../google-calendar")
+      googleCalendarService.createEvent.mockResolvedValue("new-backfill-event")
 
       const result =
         await calendarSyncService.performInitialBackfill(mockBookings)
