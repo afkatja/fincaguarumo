@@ -63,4 +63,4 @@
 # Netlify cron jobs for background tasks
 [functions."calendar-sync"]
   schedule = "*/15 * * * *"  # Every 15 minutes
-  function = "calendar-sync-background"
+  function = "calendar-sync/calendar-sync"
