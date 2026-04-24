@@ -90,7 +90,7 @@ export class CalendarSyncService {
           .from("gcal_sync_log")
           .select("*")
           .eq("booking_id", booking.uid || "unknown")
-          .eq("sync_status", "success")
+          .eq("status", "success")
           .single()
 
         if (existingSync) {
@@ -230,10 +230,62 @@ export class CalendarSyncService {
       return "error"
     }
 
-    // Skip test bookings
+    // Skip test bookings and clean up any existing calendar events
     if (booking.isTest) {
-      console.log(`Skipping test booking ${booking.uid} from calendar sync`)
-      return "deleted" // Treat as deleted to avoid creating calendar events
+      console.log(
+        `Processing test booking ${booking.uid} - cleaning up any existing calendar events`,
+      )
+
+      try {
+        const syncLog = await googleCalendarService.getSyncLog(booking.uid)
+
+        if (syncLog?.gcal_event_id) {
+          // Check if event exists in Google Calendar before deleting
+          const eventExists = await googleCalendarService.eventExists(
+            syncLog.gcal_event_id,
+          )
+
+          if (eventExists) {
+            const success = await googleCalendarService.deleteEvent(
+              syncLog.gcal_event_id,
+              booking.uid,
+            )
+
+            if (success) {
+              await this.recordSyncState(booking.uid, null, "success")
+              console.log(
+                `Deleted existing calendar event ${syncLog.gcal_event_id} for test booking ${booking.uid}`,
+              )
+              return "deleted"
+            } else {
+              await this.recordSyncState(
+                booking.uid,
+                syncLog.gcal_event_id,
+                "failed",
+                "Failed to delete calendar event for test booking",
+              )
+              return "error"
+            }
+          } else {
+            await this.recordSyncState(
+              booking.uid,
+              syncLog.gcal_event_id,
+              "failed",
+              "Event not found in Google Calendar for test booking",
+            )
+            return "deleted" // Event already gone, treat as deleted
+          }
+        } else {
+          // No existing event to delete, just record that we skipped this test booking
+          console.log(
+            `No existing calendar event found for test booking ${booking.uid}`,
+          )
+          return "deleted"
+        }
+      } catch (error) {
+        console.error(`Error processing test booking ${booking.uid}:`, error)
+        return "error"
+      }
     }
 
     // Check if booking is cancelled (look for cancellation indicators)
@@ -356,7 +408,7 @@ export class CalendarSyncService {
       const { data, error } = await supabase
         .from("gcal_sync_log")
         .select("synced_at")
-        .eq("sync_status", "success")
+        .eq("status", "success")
         .order("synced_at", { ascending: false })
         .limit(1)
         .single()
@@ -456,11 +508,7 @@ export class CalendarSyncService {
           )
 
           if (success) {
-            await this.recordSyncState(
-              booking.uid,
-              syncLog.gcal_event_id,
-              "success",
-            )
+            await this.recordSyncState(booking.uid, null, "success")
             return "deleted"
           } else {
             await this.recordSyncState(
