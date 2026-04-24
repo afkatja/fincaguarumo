@@ -42,11 +42,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-// For testing, allow mock injection
-if (process.env.NODE_ENV === "test") {
-  ;(global as any).mockSupabase = supabase
-}
-
 /**
  * Convert Booking type to BookingData for Google Calendar sync
  */
@@ -468,7 +463,7 @@ export class CalendarSyncService {
   async recordSyncState(
     bookingId: string,
     eventId: string | null,
-    status: "success" | "failed" | "pending" = "success",
+    status: "success" | "failed" | "pending" | "cancelled" = "success",
     errorMessage?: string,
   ): Promise<void> {
     try {
@@ -508,7 +503,7 @@ export class CalendarSyncService {
           )
 
           if (success) {
-            await this.recordSyncState(booking.uid, null, "success")
+            await this.recordSyncState(booking.uid, null, "cancelled")
             return "deleted"
           } else {
             await this.recordSyncState(
@@ -553,21 +548,31 @@ export class CalendarSyncService {
     }
 
     // Check for cancellation indicators in summary or description
+    // Use more specific patterns to avoid false positives
     const summary = (booking.summary || "").toLowerCase()
     const description = (booking.description || "").toLowerCase()
 
-    const cancellationKeywords = [
-      "cancelled",
-      "canceled",
-      "deleted",
-      "removed",
-      "refund",
-      "cancellation",
+    // More specific cancellation patterns that are less likely to match legitimate bookings
+    const cancellationPatterns = [
+      // Exact status indicators
+      "\bcancelled\b",
+      "\bcanceled\b",
+      "\bdeleted\b",
+      // Cancellation-related phrases (with word boundaries)
+      "\bbooking cancelled\b",
+      "\bbooking canceled\b",
+      "\breservation cancelled\b",
+      "\breservation canceled\b",
+      // Refund patterns (more specific)
+      "\brefund processed\b",
+      "\bfull refund\b",
+      "\bpartial refund\b",
     ]
 
-    return cancellationKeywords.some(
-      keyword => summary.includes(keyword) || description.includes(keyword),
-    )
+    return cancellationPatterns.some(pattern => {
+      const regex = new RegExp(pattern, "i")
+      return regex.test(summary) || regex.test(description)
+    })
   }
 
   /**
