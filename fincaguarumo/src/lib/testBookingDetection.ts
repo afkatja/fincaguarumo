@@ -40,18 +40,19 @@ export function isTestBooking(
   guestName?: string,
   email?: string,
 ): boolean {
-  console.log("isTestBooking", uid, guestName, email)
+  console.log("isTestBooking check executed")
 
   // Check for test indicators in UID
   if (
     matchesPatterns(uid, [...COMMON_TEST_PATTERNS, ...STRIPE_TEST_PATTERNS])
   ) {
+    console.log("testBooking detected via UID pattern")
     return true
   }
 
   // Check for test indicators in guest name
   if (guestName && matchesPatterns(guestName, NAME_TEST_PATTERNS)) {
-    console.log("nameMatch", guestName, true)
+    console.log("testBooking detected via name pattern")
     return true
   }
 

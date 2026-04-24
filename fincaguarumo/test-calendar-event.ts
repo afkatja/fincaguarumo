@@ -51,7 +51,7 @@ async function testCalendarEventCreation() {
     console.log("Creating event in calendar:", calendarId)
     const response = await calendar.events.insert({
       calendarId: calendarId,
-      resource: testEvent,
+      ...testEvent,
       sendUpdates: "none",
     })
 
@@ -59,11 +59,13 @@ async function testCalendarEventCreation() {
     console.log("Event link:", response.data.htmlLink)
 
     // Clean up - delete the test event
-    await calendar.events.delete({
-      calendarId: calendarId,
-      eventId: response.data.id,
-    })
-    console.log("Test event cleaned up")
+    if (response.data.id) {
+      await calendar.events.delete({
+        calendarId: calendarId,
+        eventId: response.data.id,
+      })
+      console.log("Test event cleaned up")
+    }
   } catch (error: any) {
     console.error("Event creation failed:", error.message)
     if (error.code) console.error("Error code:", error.code)

@@ -290,9 +290,11 @@ async function cleanCalendar(options: CleanupOptions) {
     console.log(`- Successfully deleted: ${deletedCount} events`)
     console.log(`- Failed to delete: ${errorCount} events`)
 
-    // Clean up sync logs with appropriate event IDs
-    const eventIds = eventsToDelete.map(event => event.id).filter(Boolean)
-    await clearSyncLogs(options.mode, options.dryRun ? [] : eventIds)
+    // Clean up sync logs with appropriate event IDs (only when not in dry run)
+    if (!options.dryRun) {
+      const eventIds = eventsToDelete.map(event => event.id).filter(Boolean)
+      await clearSyncLogs(options.mode, eventIds)
+    }
 
     console.log(
       `\n${options.dryRun ? "DRY RUN COMPLETED" : "CALENDAR CLEANUP COMPLETED"}!`,
