@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { MessageCircle, X, Send, Loader2 } from "lucide-react"
@@ -9,9 +9,9 @@ import remarkGfm from "remark-gfm"
 import {
   ChatContext,
   getPersonalizedGreeting,
-  detectUserIntent,
 } from "@/lib/better-chatbot/context-aware"
-import Input from "../Input"
+import { patterns } from "@/lib/better-chatbot/patterns"
+import { INPUT_LIMITS } from "@/lib/input-validation"
 import Textarea from "../Textarea"
 import { Button } from "../ui/button"
 import { useBookingCore } from "../../app/providers/BookingCoreProvider"
@@ -29,59 +29,53 @@ function extractUserContext(previousMessages: Message[]) {
   previousMessages.forEach(msg => {
     const content = msg.content.toLowerCase()
 
-    // Extract guest count
-    const guestMatch = content.match(/(\d+)\s+(guests?|people?)\b/)
-    if (guestMatch) {
-      context.guestCount = parseInt(guestMatch[1])
-    }
-
-    // Extract number of nights
-    const nightsMatch = content.match(/(\d+)\s+(nights?)\b/)
-    if (nightsMatch) {
-      context.nights = parseInt(nightsMatch[1])
-    }
-
-    // Extract dates (simple patterns)
-    const dateMatches = content.match(
-      /\b(april|march|may|january|february|june|july|august|september|october|november|december)\s+\d{1,2}\b/gi,
-    )
-    if (dateMatches) {
-      context.dates.push(...dateMatches)
-    }
-
-    // Extract amenities
-    const amenitiesKeywords = [
-      "ac",
-      "air conditioning",
-      "wifi",
-      "pool",
-      "kitchen",
-      "parking",
-      "beach",
-      "ocean",
-    ]
-    amenitiesKeywords.forEach(amenity => {
-      if (content.includes(amenity)) {
-        context.amenities.push(amenity)
+    // Extract guest count (try all languages)
+    Object.values(patterns.guests).forEach(pattern => {
+      const match = content.match(pattern)
+      if (match) {
+        context.guestCount = parseInt(match[1])
       }
     })
 
-    // Extract general interests
-    const interestKeywords = [
-      "price",
-      "cost",
-      "availability",
-      "booking",
-      "reservation",
-      "cancel",
-      "payment",
-    ]
-    interestKeywords.forEach(interest => {
-      if (content.includes(interest)) {
-        context.interests.push(interest)
+    // Extract number of nights (try all languages)
+    Object.values(patterns.nights).forEach(pattern => {
+      const match = content.match(pattern)
+      if (match) {
+        context.nights = parseInt(match[1])
       }
+    })
+
+    // Extract dates (try all languages)
+    Object.values(patterns.months).forEach(pattern => {
+      const matches = content.match(pattern)
+      if (matches) {
+        context.dates.push(...matches)
+      }
+    })
+
+    // Extract amenities (try all languages)
+    Object.values(patterns.amenities).forEach(keywords => {
+      keywords.forEach(amenity => {
+        if (content.includes(amenity.toLowerCase())) {
+          context.amenities.push(amenity)
+        }
+      })
+    })
+
+    // Extract general interests (try all languages)
+    Object.values(patterns.interests).forEach(keywords => {
+      keywords.forEach(interest => {
+        if (content.includes(interest.toLowerCase())) {
+          context.interests.push(interest)
+        }
+      })
     })
   })
+
+  // Remove duplicates
+  context.amenities = [...new Set(context.amenities)]
+  context.interests = [...new Set(context.interests)]
+  context.dates = [...new Set(context.dates)]
 
   return context
 }
@@ -149,14 +143,23 @@ export default function ChatInterface({
     controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen
   const toggleOpen = onToggle || (() => setInternalIsOpen(!internalIsOpen))
 
-  // Build chat context
-  const chatContext: ChatContext = {
-    page: context?.page || "other",
-    locale: locale as string,
-    bookingData: bookingData,
-    propertyTitle: context?.propertyTitle,
-    userIntent: context?.userIntent,
-  }
+  // Build chat context (memoized to prevent unnecessary re-renders)
+  const chatContext: ChatContext = useMemo(
+    () => ({
+      page: context?.page || "other",
+      locale: locale as string,
+      bookingData: bookingData,
+      propertyTitle: context?.propertyTitle,
+      userIntent: context?.userIntent,
+    }),
+    [
+      context?.page,
+      locale,
+      bookingData,
+      context?.propertyTitle,
+      context?.userIntent,
+    ],
+  )
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -171,7 +174,7 @@ export default function ChatInterface({
     scrollToBottom()
   }, [messages])
 
-  // Initialize with greeting message
+  // Initialize with greeting message (stable dependencies)
   useEffect(() => {
     if (messages.length === 0) {
       const greeting =
@@ -179,7 +182,7 @@ export default function ChatInterface({
 
       setMessages([{ role: "assistant", content: greeting }])
     }
-  }, [locale, initialMessage, messages.length, chatContext, tGreetings])
+  }, [locale, initialMessage, messages.length]) // Only depend on stable values
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -392,7 +395,9 @@ export default function ChatInterface({
           className={`fixed bottom-6 right-6 z-50 bg-guarumo-primary hover:bg-guarumo-secondary text-zinc-50 rounded-full p-4 shadow-lg transition-all duration-300 ${
             isOpen ? "scale-0" : "scale-100"
           }`}
-          aria-label="Open chat"
+          aria-hidden={isOpen}
+          tabIndex={isOpen ? -1 : 0}
+          aria-label={t("openChat", { defaultValue: "Open chat" })}
         >
           <MessageCircle className="w-6 h-6" />
         </button>
@@ -483,7 +488,7 @@ function ChatHeader({ onClose }: { onClose?: () => void }) {
           variant="ghost"
           onClick={onClose}
           className="p-1"
-          aria-label="Close chat"
+          aria-label={t("closeChat", { defaultValue: "Close chat" })}
         >
           <X className="w-5 h-5" />
         </Button>
@@ -530,7 +535,14 @@ function ChatBody({
                 <Markdown remarkPlugins={[remarkGfm]}>{msg.content}</Markdown>
               </div>
             ) : (
+              // Sanitize user input for display to prevent XSS
               msg.content
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#x27;")
+                .replace(/\//g, "&#x2F;")
             )}
           </div>
         </div>
@@ -569,36 +581,108 @@ function ChatFooter({
   isLoading: boolean
 }) {
   const t = useTranslations("bookingChat")
+  const [error, setError] = useState("")
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault()
-      if (input.trim() && !isLoading) {
+      if (
+        input.trim() &&
+        !isLoading &&
+        input.length <= INPUT_LIMITS.CHAT_MESSAGE
+      ) {
         onSubmit(e as any)
       }
     }
   }
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value
+
+    // Enforce length limit
+    if (newValue.length > INPUT_LIMITS.CHAT_MESSAGE) {
+      setError(`Message cannot exceed ${INPUT_LIMITS.CHAT_MESSAGE} characters`)
+      return
+    }
+
+    // Clear error if within limits
+    if (error) {
+      setError("")
+    }
+
+    setInput(newValue)
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Validate input before submission
+    if (!input.trim()) {
+      setError("Please enter a message")
+      return
+    }
+
+    if (input.length > INPUT_LIMITS.CHAT_MESSAGE) {
+      setError(`Message cannot exceed ${INPUT_LIMITS.CHAT_MESSAGE} characters`)
+      return
+    }
+
+    // Basic sanitization check for malicious patterns
+    const maliciousPatterns = [
+      /<script[^>]*>/i,
+      /javascript:/i,
+      /data:text\/html/i,
+      /vbscript:/i,
+    ]
+
+    for (const pattern of maliciousPatterns) {
+      if (pattern.test(input)) {
+        setError("Message contains invalid content")
+        return
+      }
+    }
+
+    setError("")
+    onSubmit(e)
+  }
+
   return (
-    <form onSubmit={onSubmit} className="p-4">
+    <form onSubmit={handleSubmit} className="p-4">
       <div className="flex gap-2 w-full items-end">
-        <Textarea
-          id="chat-user-input"
-          required={false}
-          errorMessage=""
-          value={input}
-          onChangeHandler={e => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={t("inputPlaceholder", {
-            defaultValue: "Ask about booking...",
-          })}
-          disabled={isLoading}
-          className="flex-1"
-        />
+        <div className="flex-1">
+          <Textarea
+            id="chat-user-input"
+            required={false}
+            errorMessage={error}
+            value={input}
+            onChangeHandler={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder={t("inputPlaceholder", {
+              defaultValue: "Ask about booking...",
+            })}
+            disabled={isLoading}
+            className="flex-1"
+            maxLength={INPUT_LIMITS.CHAT_MESSAGE}
+          />
+          <div className="flex justify-between items-center mt-1 text-xs text-muted-foreground">
+            <span className={error ? "text-destructive" : ""}>
+              {error ||
+                `${input.length}/${INPUT_LIMITS.CHAT_MESSAGE} characters`}
+            </span>
+            <span className="hidden sm:inline">
+              {navigator.platform.includes("Mac") ? "â" : "Ctrl"}+Enter to send
+            </span>
+          </div>
+        </div>
         <Button
           type="submit"
           variant="secondary"
-          disabled={isLoading || !input.trim()}
+          disabled={
+            isLoading ||
+            !input.trim() ||
+            input.length > INPUT_LIMITS.CHAT_MESSAGE ||
+            !!error
+          }
           className="mb-2 flex items-center gap-1"
         >
           {isLoading ? (
@@ -606,9 +690,7 @@ function ChatFooter({
           ) : (
             <>
               <Send className="w-5 h-5" />
-              <span className="text-xs opacity-60 hidden sm:inline">
-                {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"}+Enter
-              </span>
+              <span className="text-xs opacity-60 hidden sm:inline">Send</span>
             </>
           )}
         </Button>
