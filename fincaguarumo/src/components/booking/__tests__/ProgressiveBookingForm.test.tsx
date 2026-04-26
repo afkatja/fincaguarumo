@@ -75,7 +75,7 @@ jest.mock("@/components/DatePicker", () => {
     selectedDate: Date
   }) {
     return (
-      <div data-testid="date-picker">
+      <div data-testid="date-picker-component">
         <div data-testid="date-picker-label">{label}</div>
         <button
           onClick={() =>
@@ -146,6 +146,36 @@ jest.mock("@/app/[locale]/(pages)/(payment)/SelectGuestsOptions", () => {
         <button onClick={() => onChange(4)} data-testid="select-4-guests">
           4 Guests
         </button>
+      </div>
+    )
+  }
+})
+
+// Mock the availability preview
+jest.mock("@/components/booking/AvailabilityPreview", () => {
+  return function MockAvailabilityPreview({
+    checkIn,
+    checkOut,
+    onAvailabilityChange,
+  }: {
+    checkIn?: Date | null
+    checkOut?: Date | null
+    bookingType: string
+    onAvailabilityChange?: (isAvailable: boolean | null) => void
+  }) {
+    // Simulate availability change when both dates are provided
+    React.useEffect(() => {
+      if (checkIn && checkOut && onAvailabilityChange) {
+        // Simulate availability check - assume available for testing
+        onAvailabilityChange(true)
+      } else if (onAvailabilityChange) {
+        onAvailabilityChange(null)
+      }
+    }, [checkIn, checkOut, onAvailabilityChange])
+
+    return (
+      <div data-testid="availability-preview">
+        {checkIn && checkOut ? "Available" : "Select dates"}
       </div>
     )
   }
@@ -276,26 +306,35 @@ describe("ProgressiveBookingForm", () => {
       fireEvent.click(guestsButton)
     }
 
-    // Click next to proceed to personal details
-    const nextButton = screen.queryByText("Next")
-    if (nextButton) {
-      fireEvent.click(nextButton)
-    }
+    // Wait a moment for state to update, then click next to proceed to personal details
+    await waitFor(
+      () => {
+        const nextButton = screen.getByRole("button", { name: /next/i })
+        expect(nextButton).not.toBeDisabled()
+      },
+      { timeout: 2000 },
+    )
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/name/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/phone/i)).toBeInTheDocument()
-    })
+    const nextButton = screen.getByRole("button", { name: /next/i })
+    fireEvent.click(nextButton)
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("name")).toBeInTheDocument()
+        expect(screen.getByTestId("email")).toBeInTheDocument()
+        expect(screen.getByTestId("phone")).toBeInTheDocument()
+      },
+      { timeout: 2000 },
+    )
 
     // Fill personal details
-    fireEvent.change(screen.getByLabelText(/name/i), {
+    fireEvent.change(screen.getByTestId("name"), {
       target: { value: "John Doe" },
     })
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    fireEvent.change(screen.getByTestId("email"), {
       target: { value: "john@example.com" },
     })
-    fireEvent.change(screen.getByLabelText(/phone/i), {
+    fireEvent.change(screen.getByTestId("phone"), {
       target: { value: "+1234567890" },
     })
 
@@ -395,7 +434,7 @@ describe("ProgressiveBookingForm", () => {
     }
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/name/i)).toBeInTheDocument()
+      expect(screen.getByTestId("name")).toBeInTheDocument()
     })
 
     // Go back to dates step
@@ -441,16 +480,16 @@ describe("ProgressiveBookingForm", () => {
     }
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/name/i)).toBeInTheDocument()
+      expect(screen.getByTestId("name")).toBeInTheDocument()
     })
 
-    fireEvent.change(screen.getByLabelText(/name/i), {
+    fireEvent.change(screen.getByTestId("name"), {
       target: { value: "John Doe" },
     })
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    fireEvent.change(screen.getByTestId("email"), {
       target: { value: "john@example.com" },
     })
-    fireEvent.change(screen.getByLabelText(/phone/i), {
+    fireEvent.change(screen.getByTestId("phone"), {
       target: { value: "+1234567890" },
     })
 

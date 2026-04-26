@@ -12,7 +12,11 @@ const customJestConfig = {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
   testEnvironment: "jest-environment-jsdom",
-  testPathIgnorePatterns: ["<rootDir>/.next/", "<rootDir>/node_modules/"],
+  testPathIgnorePatterns: [
+    "<rootDir>/.next/",
+    "<rootDir>/node_modules/",
+    "<rootDir>/tests/e2e/",
+  ],
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",
     "!src/**/*.d.ts",
@@ -22,7 +26,7 @@ const customJestConfig = {
   ],
   extensionsToTreatAsEsm: [".ts", ".tsx"],
   transformIgnorePatterns: [
-    "node_modules/(?!(next-sanity|@sanity|@next|@portabletext|@hookform|groq|jsdom|dompurify)/)",
+    "node_modules/(?!(next-sanity|@sanity|@next|@portabletext|@hookform|groq|jsdom|dompurify|next-intl|react-markdown|remark-gfm|@radix-ui|lucide-react|@next-intl|react-markdown|remark-gfm|unified|micromark|bail|is-plain-obj|trough|vfile|unist-builder|unist-util-stringify-position|unist-util-generated|unist-util-position|unist-util-is|unist-util-remove-position|unist-util-stringify-position|mdast-util-to-hast|hastscript|html-void-elements|property-information|space-separated-tokens|comma-separated-tokens|web-namespaces)/)",
   ],
 }
 
