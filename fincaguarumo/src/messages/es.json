@@ -59,6 +59,8 @@
     "phoneLabel": "Su número de teléfono *",
     "priceLabel": "Precio para",
     "rateLabel": "Precio",
+    "priceFrom": "Precio desde {price} para {guests} {guestsLabel}",
+    "priceFromShort": "para {guests} {guestsLabel}",
     "reserveButton": "Reserva ahora",
     "selectDate": "Seleccionar fecha",
     "rateVATlabel": "Tasa (incluido 13% de IVA)",
@@ -66,6 +68,15 @@
     "discount10": "Descuento (10% por estancias de 7+ noches)",
     "discount20": "Descuento (20% por estancias de 28+ noches)",
     "checkinDate": "fecha de entrada",
+    "selectDates": "Selecciona fechas para verificar disponibilidad",
+    "selectCheckInFirst": "Por favor selecciona una fecha de check-in primero",
+    "priceSummary": "Resumen de precios",
+    "vatLabel": "IVA 13%",
+    "totalWithoutVat": "Precio (excl IVA) x {guests} {guestsLabel} x {nights}",
+    "totalVat": "IVA x {guests} {guestsLabel} x {nights}",
+    "totalWithVat": "Precio (incl IVA) x {guests} {guestsLabel} x {nights}",
+    "totalDisplayedVilla": "Total para {nights} noches",
+    "totalDisplayedTour": "Total para {guests} {guestsLabel}",
     "back": "Atrás",
     "next": "Próximo",
     "submitButton": "Enviar Reserva",
@@ -88,6 +99,14 @@
   "page": {
     "moreFAQ": "Más preguntas frecuentes",
     "FAQ": "Preguntas frecuentes",
+    "quickInfo": "Información rápida",
+    "reviews": "Reseñas",
+    "about": "Acerca de",
+    "details": "Detalles",
+    "allReviews": "Todas las reseñas",
+    "moreReviews": "Más reseñas",
+    "more": "Más",
+    "less": "Menos",
     "greetings": {
       "homepage": "¡Bienvenidos a Villa Bruno! ¿Cómo puedo ayudarte hoy?",
       "stay": "¡Hola! Estoy aquí para ayudarte a reservar {propertyTitle}. ¿Qué te gustaría saber?",
@@ -112,11 +131,17 @@
     "sendMessage": "Enviar mensaje"
   },
   "bookingChat": {
+    "title": "Asistente de Reservas Villa Bruno",
     "initialMessage": "¡Hola! ¿Cómo puedo ayudarte a reservar Villa Bruno hoy?",
     "errorMessage": "Lo siento, encontré un error. Por favor inténtalo de nuevo.",
     "inputPlaceholder": "Pregunta por la reserva...",
     "sendButton": "Enviar",
-    "title": "Asistente de reservas de Villa Bruno"
+    "keyboardShortcut": "{shortcut}+Enter para enviar",
+    "closeChat": "Cerrar chat",
+    "expandChat": "Expandir chat",
+    "collapseChat": "Contraer chat",
+    "openChat": "Abrir chat",
+    "readyToBook": "¿Listo para reservar? Responde con tus fechas y número de huéspedes."
   },
   "greetings": {
     "homepage": "¡Bienvenido a Villa Bruno! ¿Cómo puedo ayudarte hoy?",
@@ -140,7 +165,11 @@
     "continueReading": "Continúe leyendo para aprender más sobre esta experiencia única de eco-villa...",
     "readMore": "Leer más"
   },
+  "faq": {
+    "title": "Preguntas Frecuentes"
+  },
   "reviews": {
+    "title": "Reseñas de Huéspedes",
     "wildlifeNature": "Vida silvestre y naturaleza",
     "ecoFriendly": "Ecológico",
     "peacefulSetting": "Entorno tranquilo",

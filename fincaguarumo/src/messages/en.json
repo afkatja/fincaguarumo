@@ -119,7 +119,13 @@
     "initialMessage": "Hello! How can I help you book Villa Bruno today?",
     "errorMessage": "Sorry, I encountered an error. Please try again.",
     "inputPlaceholder": "Ask about booking...",
-    "sendButton": "Send"
+    "sendButton": "Send",
+    "keyboardShortcut": "{shortcut}+Enter to send",
+    "closeChat": "Close chat",
+    "expandChat": "Expand chat",
+    "collapseChat": "Collapse chat",
+    "openChat": "Open chat",
+    "readyToBook": "Ready to book? Reply with your dates and guest count."
   },
   "greetings": {
     "homepage": "Welcome to Villa Bruno! How can I help you today?",
