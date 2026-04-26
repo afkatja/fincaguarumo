@@ -45,15 +45,17 @@ export default function EmbeddedChat({
   const { page } = usePageContext()
 
   return (
-    <ChatInterface
-      variant="embedded"
-      className={className}
-      initialMessage={initialMessage}
-      context={{
-        page: context?.page || page,
-        bookingData: context?.bookingData || bookingData,
-        propertyTitle: context?.propertyTitle,
-      }}
-    />
+    <div data-testid="embedded-chat">
+      <ChatInterface
+        variant="embedded"
+        className={className}
+        initialMessage={initialMessage}
+        context={{
+          page: context?.page || page,
+          bookingData: context?.bookingData || bookingData,
+          propertyTitle: context?.propertyTitle,
+        }}
+      />
+    </div>
   )
 }

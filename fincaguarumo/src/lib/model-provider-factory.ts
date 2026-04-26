@@ -29,12 +29,12 @@ export interface ModelProvider {
 
 // Model configurations from environment variables
 const modelConfigs: Record<string, ModelConfig> = {
-  // Main generation model (with tools)
+  // Main generation model (with tools) - switched to Perplexity for better multilingual formatting
   generation: {
-    provider: (process.env.MAIN_MODEL_PROVIDER as any) || "mistral",
-    modelId: process.env.MAIN_MODEL_ID || "mistral-large-latest",
+    provider: (process.env.MAIN_MODEL_PROVIDER as any) || "perplexity",
+    modelId: process.env.MAIN_MODEL_ID || "llama-3.1-sonar-large-128k-online",
     maxTokens: parseInt(process.env.MAIN_MODEL_MAX_TOKENS || "1000"),
-    temperature: parseFloat(process.env.MAIN_MODEL_TEMPERATURE || "0.7"),
+    temperature: parseFloat(process.env.MAIN_MODEL_TEMPERATURE || "0.3"),
   },
 
   // Evaluation model (uses same generation model for introspection mode)

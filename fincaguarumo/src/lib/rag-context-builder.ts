@@ -12,15 +12,10 @@ import {
   searchTours,
   getAverageRating,
   extractAllAmenities,
-  extractFeaturedAmenities,
   extractAllPricingRules,
   extractAllPaymentMethods,
-  extractAllCancellationPolicies,
   extractDefaultCancellationPolicy,
-  extractAllLogistics,
   extractImportantLogistics,
-  searchAmenities,
-  searchLogistics,
 } from "./sanity-data-extractor"
 import { portableTextToPlain } from "@/sanity/lib/portableTextHelper"
 import {

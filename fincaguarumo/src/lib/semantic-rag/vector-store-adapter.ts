@@ -74,6 +74,8 @@ export class VectorStoreAdapter {
     query: string,
     options: SearchOptions = {},
   ): Promise<VectorSearchResult[]> {
+    console.log(`Starting semantic search for query: "${query}"`)
+
     if (this.useQdrant) {
       try {
         const qdrantStore = await this.getQdrantStore()

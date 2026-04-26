@@ -22,16 +22,16 @@ export async function generateEmbedding(
   language?: SupportedLanguage | "auto",
 ): Promise<EmbeddingResult> {
   try {
-    // Apply multilingual preprocessing
-    const preprocessingResult = preprocessTextWithFallback(text, language, {
-      normalizeWhitespace: true,
-      removeSpecialChars: true,
-      lowercase: true,
-      removeStopWords: false, // Keep stop words for better semantic understanding
-    })
-
-    console.log(
-      `🏠 Generating local embedding for language: ${preprocessingResult.detectedLanguage || "unknown"}`,
+    // Preprocess text for better embedding quality
+    const preprocessingResult = await preprocessTextWithFallback(
+      text,
+      language,
+      {
+        normalizeWhitespace: true,
+        removeSpecialChars: true,
+        lowercase: true,
+        removeStopWords: false, // Keep stop words for better semantic understanding
+      },
     )
 
     const response = await fetch("http://localhost:11434/api/embed", {

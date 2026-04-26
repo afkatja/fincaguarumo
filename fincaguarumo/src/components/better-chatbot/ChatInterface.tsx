@@ -3,7 +3,14 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { MessageCircle, X, Send, Loader2 } from "lucide-react"
+import {
+  MessageCircle,
+  X,
+  Send,
+  Loader2,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react"
 import Markdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import {
@@ -132,6 +139,7 @@ export default function ChatInterface({
     pricingRules: state.data.pricingRules,
   }
   const [internalIsOpen, setInternalIsOpen] = useState(false)
+  const [isEmbeddedCollapsed, setIsEmbeddedCollapsed] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -166,7 +174,12 @@ export default function ChatInterface({
     const scrollToBottom = () => {
       const chatBody = messagesEndRef.current?.parentElement
       if (chatBody) {
-        chatBody.scrollTop = chatBody.scrollHeight
+        // Get the actual header height to calculate proper scroll offset
+        const headerElement = chatBody.previousElementSibling as HTMLElement
+        const headerHeight = headerElement?.offsetHeight || 0
+        // Add a small buffer (20px) to ensure content isn't flush against header
+        const scrollOffset = headerHeight + 20
+        chatBody.scrollTop = chatBody.scrollHeight - scrollOffset
       }
     }
 
@@ -255,11 +268,20 @@ export default function ChatInterface({
             for (const line of lines) {
               if (!line.trim()) continue
 
+              console.log("🔍 UI processing line:", line)
+
               // line looks like: 0:"Checking availability..."
 
               const match = line.match(/^(\d+):(.*)$/)
               const id = match?.[1]
               const payload = match?.[2]
+              console.log(
+                "📝 Parsed - ID:",
+                id,
+                "Payload preview:",
+                payload?.substring(0, 50),
+              )
+
               if (match && payload) {
                 if (id === "0") {
                   try {
@@ -300,8 +322,16 @@ export default function ChatInterface({
                   })
                 }
               } else {
+                console.log(
+                  "⚠️  Line doesn't match ID:payload format, trying fallback parsing",
+                )
                 // Handle SSE format or other content as fallback
                 const trimmedLine = line.trim()
+                console.log(
+                  "🔄 Trying SSE format, trimmed line:",
+                  trimmedLine.substring(0, 100),
+                )
+
                 if (trimmedLine.startsWith("data: ")) {
                   const data = trimmedLine.slice(6)
                   if (data === "[DONE]" || data === "") continue
@@ -309,6 +339,10 @@ export default function ChatInterface({
                   try {
                     const parsed = JSON.parse(data)
                     if (parsed.content && typeof parsed.content === "string") {
+                      console.log(
+                        "✅ SSE content found:",
+                        parsed.content.substring(0, 50),
+                      )
                       assistantMessage += parsed.content
 
                       // Mark that we've received assistant response
@@ -338,6 +372,10 @@ export default function ChatInterface({
                   !trimmedLine.startsWith("event:") &&
                   !trimmedLine.startsWith("id:")
                 ) {
+                  console.log(
+                    "📝 Treating as plain text content:",
+                    trimmedLine.substring(0, 50),
+                  )
                   // Treat as plain text content
                   assistantMessage += trimmedLine + "\n"
 
@@ -359,6 +397,11 @@ export default function ChatInterface({
                     }
                     return newMessages
                   })
+                } else {
+                  console.log(
+                    "❌ Line ignored, doesn't match any format:",
+                    line.substring(0, 100),
+                  )
                 }
               }
             }
@@ -392,7 +435,7 @@ export default function ChatInterface({
       <>
         <button
           onClick={toggleOpen}
-          className={`fixed bottom-6 right-6 z-50 bg-guarumo-primary hover:bg-guarumo-secondary text-zinc-50 rounded-full p-4 shadow-lg transition-all duration-300 ${
+          className={`fixed bottom-6 right-6 z-50 bg-guarumo-primary hover:bg-guarumo-secondary text-zinc-50 rounded-full p-4 shadow-lg transition-all duration-300 min-w-[44px] min-h-[44px] ${
             isOpen ? "scale-0" : "scale-100"
           }`}
           aria-hidden={isOpen}
@@ -449,31 +492,48 @@ export default function ChatInterface({
     )
   }
 
-  // Embedded variant
+  // Embedded variant - collapsible
   return (
     <div
-      className={`flex flex-col bg-zinc-50 rounded-lg ${className} h-[300px] sm:h-[400px]`}
+      className={`flex flex-col bg-zinc-50 rounded-lg ${className} ${
+        isEmbeddedCollapsed ? "h-auto" : "h-[300px] sm:h-[400px]"
+      }`}
     >
-      <ChatHeader onClose={toggleOpen} />
-      <ChatBody
-        messages={messages}
-        isLoading={isLoading}
-        messagesEndRef={messagesEndRef}
-        variant="embedded"
-        progressMessage={progressMessage}
-        hasAssistantResponse={hasAssistantResponse}
+      <ChatHeader
+        onToggleCollapse={() => setIsEmbeddedCollapsed(!isEmbeddedCollapsed)}
+        isCollapsed={isEmbeddedCollapsed}
       />
-      <ChatFooter
-        input={input}
-        setInput={setInput}
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-      />
+      {!isEmbeddedCollapsed && (
+        <>
+          <ChatBody
+            messages={messages}
+            isLoading={isLoading}
+            messagesEndRef={messagesEndRef}
+            variant="embedded"
+            progressMessage={progressMessage}
+            hasAssistantResponse={hasAssistantResponse}
+          />
+          <ChatFooter
+            input={input}
+            setInput={setInput}
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
+        </>
+      )}
     </div>
   )
 }
 
-function ChatHeader({ onClose }: { onClose?: () => void }) {
+function ChatHeader({
+  onClose,
+  onToggleCollapse,
+  isCollapsed,
+}: {
+  onClose?: () => void
+  onToggleCollapse?: () => void
+  isCollapsed?: boolean
+}) {
   const t = useTranslations("bookingChat")
   return (
     <div className="flex items-center justify-between p-4 border-b bg-guarumo-primary text-zinc-50 rounded-t-lg">
@@ -483,18 +543,48 @@ function ChatHeader({ onClose }: { onClose?: () => void }) {
           {t("title", { defaultValue: "Booking Assistant" })}
         </h3>
       </div>
-      {onClose && (
-        <Button
-          variant="ghost"
-          onClick={onClose}
-          className="p-1"
-          aria-label={t("closeChat", { defaultValue: "Close chat" })}
-        >
-          <X className="w-5 h-5" />
-        </Button>
-      )}
+      <div className="flex items-center gap-1">
+        {onToggleCollapse && (
+          <Button
+            variant="ghost"
+            onClick={onToggleCollapse}
+            className="p-1"
+            aria-label={
+              isCollapsed
+                ? t("expandChat", { defaultValue: "Expand chat" })
+                : t("collapseChat", { defaultValue: "Collapse chat" })
+            }
+          >
+            {isCollapsed ? (
+              <ChevronUp className="w-5 h-5" />
+            ) : (
+              <ChevronDown className="w-5 h-5" />
+            )}
+          </Button>
+        )}
+        {onClose && (
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            className="p-1"
+            aria-label={t("closeChat", { defaultValue: "Close chat" })}
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        )}
+      </div>
     </div>
   )
+}
+
+// Utility function to sanitize user input while preserving readable characters
+function sanitizeUserInput(content: string): string {
+  // Only escape characters that could break HTML if rendered as HTML
+  // Since we're displaying as plain text, we can be more conservative
+  return content
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/&/g, "&amp;")
 }
 
 function ChatBody({
@@ -536,13 +626,7 @@ function ChatBody({
               </div>
             ) : (
               // Sanitize user input for display to prevent XSS
-              msg.content
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#x27;")
-                .replace(/\//g, "&#x2F;")
+              sanitizeUserInput(msg.content)
             )}
           </div>
         </div>
@@ -669,31 +753,38 @@ function ChatFooter({
               {error ||
                 `${input.length}/${INPUT_LIMITS.CHAT_MESSAGE} characters`}
             </span>
-            <span className="hidden sm:inline">
-              {navigator.platform.includes("Mac") ? "â" : "Ctrl"}+Enter to send
-            </span>
           </div>
         </div>
-        <Button
-          type="submit"
-          variant="secondary"
-          disabled={
-            isLoading ||
-            !input.trim() ||
-            input.length > INPUT_LIMITS.CHAT_MESSAGE ||
-            !!error
-          }
-          className="mb-2 flex items-center gap-1"
-        >
-          {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <>
-              <Send className="w-5 h-5" />
-              <span className="text-xs opacity-60 hidden sm:inline">Send</span>
-            </>
-          )}
-        </Button>
+        <div>
+          <Button
+            type="submit"
+            variant="secondary"
+            disabled={
+              isLoading ||
+              !input.trim() ||
+              input.length > INPUT_LIMITS.CHAT_MESSAGE ||
+              !!error
+            }
+            className="mb-2 flex items-center gap-1"
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                <Send className="w-5 h-5" />
+                <span className="text-xs opacity-60 hidden sm:inline">
+                  {t("sendButton", { defaultValue: "Send" })}
+                </span>
+              </>
+            )}
+          </Button>
+          <span className="hidden sm:block text-xs text-muted-foreground">
+            {t("keyboardShortcut", {
+              defaultValue: "{shortcut}+Enter to send",
+              shortcut: navigator.platform.includes("Mac") ? "⌘" : "Ctrl",
+            })}
+          </span>
+        </div>
       </div>
     </form>
   )

@@ -116,6 +116,52 @@ import {
   cacheEvaluationData,
   getCachedEvaluationData,
 } from "@/lib/model-provider-factory"
+import { detectLanguage } from "@/lib/semantic-rag/multilingual-preprocessing"
+
+// Import translations for CTA text
+import enMessages from "@/messages/en.json"
+import esMessages from "@/messages/es.json"
+import deMessages from "@/messages/de.json"
+import nlMessages from "@/messages/nl.json"
+import ruMessages from "@/messages/ru.json"
+
+// Translation messages mapping
+const translations = {
+  en: enMessages,
+  es: esMessages,
+  de: deMessages,
+  nl: nlMessages,
+  ru: ruMessages,
+}
+
+// Helper function to get translated CTA text
+function getTranslatedCTA(language: string = "en"): string {
+  const messages =
+    translations[language as keyof typeof translations] || translations.en
+  const cta = messages.bookingChat.readyToBook
+  console.log(`🔍 DEBUG - CTA Translation: Language=${language}, CTA="${cta}"`)
+  return cta
+}
+
+// Helper function to detect language from user messages
+function detectLanguageFromMessages(messages: Message[]): string {
+  // Get the last user message for language detection
+  const lastUserMessage = messages.filter(msg => msg.role === "user").pop()
+
+  if (!lastUserMessage?.content) {
+    console.log(
+      "🔍 DEBUG - Language Detection: No user message found, defaulting to English",
+    )
+    return "en" // Default to English
+  }
+
+  const detectedLanguage = detectLanguage(lastUserMessage.content)
+  const finalLanguage = detectedLanguage === "unknown" ? "en" : detectedLanguage
+  console.log(
+    `🔍 DEBUG - Language Detection: Message="${lastUserMessage.content}", Detected="${detectedLanguage}", Final="${finalLanguage}"`,
+  )
+  return finalLanguage
+}
 
 // Simple in-memory cache for availability data
 const availabilityCache = new Map<string, { data: any; timestamp: number }>()
@@ -215,6 +261,7 @@ interface PromptConfig {
   cancellationInfo?: string
   pricingRules?: any[]
   useDynamicValues?: boolean
+  language?: string
 }
 
 function buildSystemPrompt(config: PromptConfig = {}): string {
@@ -227,7 +274,11 @@ function buildSystemPrompt(config: PromptConfig = {}): string {
     cancellationInfo = "Cancellations are free up to 14 days before arrival",
     pricingRules = [],
     useDynamicValues = false,
+    language = "en",
   } = config
+
+  // Get translated CTA text
+  const translatedCTA = getTranslatedCTA(language)
 
   const staticPropertyInfo = useDynamicValues
     ? ""
@@ -330,7 +381,9 @@ RULES:
 
 MANDATORY CTA:
 ALWAYS end relevant responses with:
-"Ready to book? Reply with your dates and guest count."
+"\n\n${translatedCTA}"
+
+IMPORTANT: The ${translatedCTA} will be automatically translated to the user's language. DO NOT manually translate it or use English CTA for non-English conversations.
 
 Your tasks:
 1. Answer questions directly and concisely
@@ -358,14 +411,36 @@ RESPONSE FORMATTING RULES (VERY IMPORTANT):
    - Property/capacity information should be in its own paragraph
    - "Ready to book?" call-to-action should start a new paragraph
 4. When there is NO discount applicable, DO NOT mention discounts at all. Omit the discount line entirely.
-4. Use the payment link/method provided in the property configuration context - never use placeholder text like "[payment link or method]"
+5. Use the payment link/method provided in the property configuration context - never use placeholder text like "[payment link or method]"
+6. MARKDOWN LIST FORMATTING (CRITICAL):
+   - For unordered lists: use "- " at the start of EACH list item, with each item on a NEW LINE
+   - For ordered lists: use "1. ", "2. ", etc. at the start of EACH list item, with each item on a NEW LINE
+   - NEVER concatenate list items on the same line
+   - ALWAYS put a blank line before and after lists
+   - NEVER add random numbers or symbols after list items
+   - EXAMPLE OF CORRECT FORMAT:
+     "- Koelkast
+     - Kookplaat
+     - Oven"
+   - EXAMPLE OF INCORRECT FORMAT:
+     "- Koelkast1:K ookplaat-O ven" (NEVER DO THIS)
+   - NEVER add "1:" or any numbers after list items
+   - NEVER add spaces within words
+7. QUESTION AND CTA SPACING:
+   - ALWAYS put a blank line before generic intent questions
+   - ALWAYS put a blank line before call-to-action statements
+   - NEVER run questions or CTAs directly into previous content
+   - EXAMPLE: Always put "\n\n" (two newlines) before CTA like "Ready to book?"
 Always maintain a warm, welcoming tone that reflects the hospitality of Villa Bruno.
 
 MINIMAL RESPONSE FORMAT:
 1. Direct answer (1-2 sentences, not bold)
 2. Blank line
 3. Essential details only (price/availability if relevant)
-4. Single call-to-action: "Ready to book?" (if booking-related)
+   - Use proper markdown lists: each item on new line starting with "- "
+   - Put blank lines before and after lists
+4. Blank line before questions and CTAs
+5. Single call-to-action: "Ready to book?" (if booking-related)
 
 Keep responses brief and focused on the user's specific question.`
 }
@@ -385,7 +460,9 @@ export const bookingAgentConfig = {
  * Build a dynamic system prompt with current property configuration
  * This fetches real values from Sanity for pricing, capacity, payment methods, etc.
  */
-export async function getDynamicSystemPrompt(): Promise<string> {
+export async function getDynamicSystemPrompt(
+  language: string = "en",
+): Promise<string> {
   try {
     const config = await extractPropertyConfig()
 
@@ -452,6 +529,7 @@ export async function getDynamicSystemPrompt(): Promise<string> {
         cancellationInfo,
         pricingRules,
         useDynamicValues: true,
+        language,
       }),
     )
   } catch (error) {
@@ -739,8 +817,12 @@ export async function createChatStream({
   systemPrompt?: string
 }) {
   try {
-    // Use dynamic system prompt if none provided
-    const finalSystemPrompt = systemPrompt || (await getDynamicSystemPrompt())
+    // Detect language from user messages
+    const detectedLanguage = detectLanguageFromMessages(messages)
+
+    // Use dynamic system prompt if none provided, with detected language
+    const finalSystemPrompt =
+      systemPrompt || (await getDynamicSystemPrompt(detectedLanguage))
 
     // Validate message alternation
     // The API expects: system → user → assistant → user → assistant...
