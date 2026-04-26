@@ -41,7 +41,7 @@ export const QuickInfoBar = ({ content, price, guests }: QuickInfoBarProps) => {
 
         {/* Capacity */}
         <div className="flex flex-col items-center text-center p-3 md:p-4 bg-zinc-50/50 rounded-lg min-h-0">
-          <User2Icon className="h-6 w-6 md:h-8 md:w-8 text-guarumo-primary mb-1 md:mb-2 flex-shrink-0" />
+          <User2Icon className="h-6 w-6 md:h-8 md:w-8 text-guarumo-primary mb-1 md:mb-2 shrink-0" />
           <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400 leading-tight">
             {t("capacity")}
           </span>

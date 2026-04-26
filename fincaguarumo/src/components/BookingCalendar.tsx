@@ -1,6 +1,16 @@
-import React, { useEffect, useState } from "react"
+"use client"
+
+import React, { useEffect, useState, useRef } from "react"
 import { useTranslations } from "next-intl"
 import DatePicker from "./DatePicker"
+
+// Global cache to prevent duplicate calendar requests
+const calendarRequestCache = {
+  inProgress: false,
+  lastFetch: 0,
+  cooldown: 30000, // 30 seconds cooldown
+  cachedData: null as any,
+}
 
 const BookingCalendar = ({
   onSelectDate,
@@ -24,6 +34,9 @@ const BookingCalendar = ({
   const [loading, setLoading] = useState(false)
   const [activePopover, setActivePopover] = useState<string | null>(null)
   const [blockedDates, setBlockedDates] = useState<Date[]>([])
+  const componentId = useRef(
+    `calendar-${Math.random().toString(36).substr(2, 9)}`,
+  )
 
   // Update parent component when loading state changes
   useEffect(() => {
@@ -44,6 +57,48 @@ const BookingCalendar = ({
     setLoading(true)
 
     const fetchData = async () => {
+      const now = Date.now()
+
+      // Check if we have cached data or if a request is in progress
+      if (calendarRequestCache.inProgress) {
+        console.log(
+          `[${componentId.current}] Calendar request already in progress, waiting...`,
+        )
+        // Wait for the existing request to complete
+        const checkInterval = setInterval(() => {
+          if (
+            !calendarRequestCache.inProgress &&
+            calendarRequestCache.cachedData
+          ) {
+            clearInterval(checkInterval)
+            const blockedDatesArray = (
+              calendarRequestCache.cachedData.blockedDates || []
+            ).map((date: string) => new Date(date))
+            setBlockedDates(blockedDatesArray)
+            setLoading(false)
+          }
+        }, 100)
+        return
+      }
+
+      // Check if we have recent cached data
+      if (
+        calendarRequestCache.cachedData &&
+        now - calendarRequestCache.lastFetch < calendarRequestCache.cooldown
+      ) {
+        console.log(`[${componentId.current}] Using cached calendar data`)
+        const blockedDatesArray = (
+          calendarRequestCache.cachedData.blockedDates || []
+        ).map((date: string) => new Date(date))
+        setBlockedDates(blockedDatesArray)
+        setLoading(false)
+        return
+      }
+
+      // Mark request as in progress
+      calendarRequestCache.inProgress = true
+      console.log(`[${componentId.current}] Starting calendar request...`)
+
       try {
         // Use the unified availability endpoint that matches the availability checking data
         const data = await fetch("/api/availability/calendar")
@@ -52,9 +107,16 @@ const BookingCalendar = ({
         if (!data.ok) {
           console.error("Error fetching calendar availability:", json.error)
           setBlockedDates([])
-          setLoading(false)
           return
         }
+
+        // Cache the response
+        calendarRequestCache.cachedData = json
+        calendarRequestCache.lastFetch = now
+        calendarRequestCache.inProgress = false
+        console.log(
+          `[${componentId.current}] Calendar request completed and cached`,
+        )
 
         // Convert blocked dates from ISO strings to Date objects
         const blockedDatesArray = (json.blockedDates || []).map(
@@ -62,15 +124,19 @@ const BookingCalendar = ({
         )
         setBlockedDates(blockedDatesArray)
       } catch (error) {
-        console.error("Error fetching calendar availability:", error)
+        console.error(
+          `[${componentId.current}] Error fetching calendar availability:`,
+          error,
+        )
         setBlockedDates([])
       } finally {
         setLoading(false)
+        calendarRequestCache.inProgress = false
       }
     }
 
     fetchData()
-  }, [blockedDates])
+  }, []) // Remove blockedDates dependency to prevent re-fetches
 
   return (
     <div data-testid="booking-calendar">
