@@ -1,13 +1,72 @@
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
 import { validateContactForm } from "@/lib/input-validation"
+import { contactRateLimiter } from "@/lib/rate-limiting/redis-rate-limit"
 
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_API_KEY || "",
 })
 
-export async function POST(request: Request) {
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for")
+  const real = request.headers.get("x-real-ip")
+
+  // Only trust x-forwarded-for when running behind a trusted proxy
+  const isTrustedProxy =
+    process.env.VERCEL === "1" ||
+    process.env.NETLIFY === "true" ||
+    process.env.TRUSTED_PROXY === "true"
+
+  if (isTrustedProxy && forwarded) {
+    return forwarded.split(",")[0].trim()
+  }
+
+  // Fall back to x-real-ip or unknown
+  return real || "unknown"
+}
+
+async function checkRateLimit(
+  ip: string,
+): Promise<{ allowed: boolean; resetTime: number }> {
   try {
+    const result = await contactRateLimiter.checkLimit(ip)
+    return {
+      allowed: result.allowed,
+      resetTime: result.resetTime,
+    }
+  } catch (error) {
+    console.error("Rate limiting error:", error)
+    // Fail open: allow request if rate limiting fails
+    return {
+      allowed: true,
+      resetTime: Date.now() + 60000,
+    }
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Rate limiting with Redis-based distributed rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = await checkRateLimit(clientIP)
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+            "Retry-After": Math.ceil(
+              (rateLimitResult.resetTime - Date.now()) / 1000,
+            ).toString(),
+          },
+        },
+      )
+    }
+
     const { name, email, message } = await request.json()
 
     // Validate and sanitize input

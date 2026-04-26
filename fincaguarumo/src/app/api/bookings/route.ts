@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminAuth, verifyUserAuth } from "@/lib/auth"
 import { validateBookingForm } from "@/lib/input-validation"
+import { bookingsRateLimiter } from "@/lib/rate-limiting/redis-rate-limit"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Helper function to create authenticated Supabase client
-function createAuthenticatedSupabaseClient(request: Request) {
+function createAuthenticatedSupabaseClient(request: NextRequest) {
   const authHeader = request.headers.get("authorization")
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     throw new Error("Missing or invalid authorization header")
@@ -22,13 +23,71 @@ function createAuthenticatedSupabaseClient(request: Request) {
   })
 }
 
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for")
+  const real = request.headers.get("x-real-ip")
+
+  // Only trust x-forwarded-for when running behind a trusted proxy
+  const isTrustedProxy =
+    process.env.VERCEL === "1" ||
+    process.env.NETLIFY === "true" ||
+    process.env.TRUSTED_PROXY === "true"
+
+  if (isTrustedProxy && forwarded) {
+    return forwarded.split(",")[0].trim()
+  }
+
+  // Fall back to x-real-ip or unknown
+  return real || "unknown"
+}
+
+async function checkRateLimit(
+  ip: string,
+): Promise<{ allowed: boolean; resetTime: number }> {
+  try {
+    const result = await bookingsRateLimiter.checkLimit(ip)
+    return {
+      allowed: result.allowed,
+      resetTime: result.resetTime,
+    }
+  } catch (error) {
+    console.error("Rate limiting error:", error)
+    // Fail open: allow request if rate limiting fails
+    return {
+      allowed: true,
+      resetTime: Date.now() + 60000,
+    }
+  }
+}
+
 /**
  * POST: Create a new booking
  * Also updates the availability table to mark dates as unavailable
  * Requires authentication and authorization
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Rate limiting with Redis-based distributed rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = await checkRateLimit(clientIP)
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+            "Retry-After": Math.ceil(
+              (rateLimitResult.resetTime - Date.now()) / 1000,
+            ).toString(),
+          },
+        },
+      )
+    }
+
     // Verify user authentication
     const authUser = await verifyUserAuth(request)
 
@@ -146,8 +205,29 @@ export async function POST(request: Request) {
  * Supports filtering by date range and source
  * Requires admin authentication to prevent PII exposure
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    // Rate limiting with Redis-based distributed rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = await checkRateLimit(clientIP)
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+            "Retry-After": Math.ceil(
+              (rateLimitResult.resetTime - Date.now()) / 1000,
+            ).toString(),
+          },
+        },
+      )
+    }
+
     // Verify admin authentication before accessing booking data
     await verifyAdminAuth(request)
 
@@ -239,8 +319,29 @@ export async function GET(request: Request) {
  * PUT: Update an existing booking
  * Requires authentication and authorization
  */
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
+    // Rate limiting with Redis-based distributed rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = await checkRateLimit(clientIP)
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+            "Retry-After": Math.ceil(
+              (rateLimitResult.resetTime - Date.now()) / 1000,
+            ).toString(),
+          },
+        },
+      )
+    }
+
     // Verify user authentication
     const authUser = await verifyUserAuth(request)
 
@@ -327,8 +428,29 @@ export async function PUT(request: Request) {
  * Also removes the corresponding availability entry
  * Requires authentication and authorization
  */
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    // Rate limiting with Redis-based distributed rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = await checkRateLimit(clientIP)
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+            "Retry-After": Math.ceil(
+              (rateLimitResult.resetTime - Date.now()) / 1000,
+            ).toString(),
+          },
+        },
+      )
+    }
+
     // Verify user authentication
     const authUser = await verifyUserAuth(request)
 

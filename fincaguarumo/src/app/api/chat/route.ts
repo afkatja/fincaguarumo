@@ -272,11 +272,8 @@ export async function POST(request: NextRequest) {
       await writer.write(new TextEncoder().encode(progressChunk))
     }
 
-    // Send immediate progress based on detected intent
-    const progressMessage = getProgressMessage(userIntent)
-    sendProgress(progressMessage).catch(error => {
-      console.error("Progress send error:", error)
-    })
+    // No immediate progress message - let the UI loading spinner handle visual feedback
+    console.log("Processing request with intent:", userIntent)
 
     // Create streaming response
     const createStreamResponse = () => {

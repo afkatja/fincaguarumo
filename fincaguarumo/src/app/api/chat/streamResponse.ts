@@ -38,11 +38,41 @@ export const streamResponseWithData = async ({
     // console.log("SANITY DATA", { sanityData })
 
     // Build RAG context from Sanity
-    const ragContext = await buildRAGContext(userQuery, {
-      page: context?.page || "homepage",
-      slug: (context as any)?.propertySlug,
-      locale,
-    })
+    let ragContext = ""
+    console.log("🔍 Starting RAG context building for query:", userQuery)
+
+    // TEMPORARY DEBUG: Bypass RAG to test AI stream
+    const bypassRAG = userQuery.includes("test") || userQuery.includes("bypass")
+    if (bypassRAG) {
+      console.log("🔄 Bypassing RAG context for testing")
+      ragContext = ""
+    } else {
+      try {
+        ragContext = await buildRAGContext(userQuery, {
+          page: context?.page || "homepage",
+          slug: (context as any)?.propertySlug,
+          locale,
+        })
+        console.log(
+          "✅ RAG context built successfully, length:",
+          ragContext.length,
+        )
+        console.log(
+          "📄 RAG context preview:",
+          ragContext.substring(0, 200) + (ragContext.length > 200 ? "..." : ""),
+        )
+      } catch (ragError) {
+        console.error("❌ RAG context building failed:", ragError)
+        // Send error to user and continue without RAG context
+        const errorPayload = JSON.stringify({
+          type: "progress",
+          message:
+            "Having trouble accessing property database. I'll help you with general information.",
+        })
+        await writer.write(new TextEncoder().encode(`0:${errorPayload}\n`))
+        ragContext = ""
+      }
+    }
 
     // Build context-aware system prompt
     let systemPrompt = bookingAgentConfig.systemPrompt
@@ -51,9 +81,45 @@ export const streamResponseWithData = async ({
       systemPrompt = `${systemPrompt}\n\n${contextPrompt}`
     }
 
+    // Check if RAG context is meaningful
+    const hasMeaningfulContext =
+      ragContext &&
+      ragContext.trim().length > 0 &&
+      !ragContext.includes("No specific information found") &&
+      !ragContext.includes("Please provide general assistance") &&
+      !ragContext.includes("=== GENERAL INFORMATION ===")
+
+    console.log("🤔 Has meaningful RAG context:", hasMeaningfulContext)
+
     // Add RAG context to system prompt
-    if (ragContext) {
-      systemPrompt = `${systemPrompt}\n\n=== RELEVANT INFORMATION FROM OUR DATABASE ===\n${ragContext}\n\nUse this information to answer the user's question accurately. If the information doesn't fully answer their question, you can still provide helpful guidance based on your general knowledge.`
+    if (hasMeaningfulContext) {
+      systemPrompt = `${systemPrompt}\n\n=== RELEVANT INFORMATION FROM OUR DATABASE ===\n${ragContext}\n\nIMPORTANT: Use ONLY the information provided above to answer the user's question. Do NOT add details from general knowledge or make assumptions about features not explicitly mentioned in the context. If specific information is missing, acknowledge what you don't know rather than guessing.`
+
+      // Send RAG context to UI for display
+      try {
+        const ragPayload = JSON.stringify({
+          type: "rag-context",
+          context: ragContext,
+          metadata: {
+            timestamp: new Date().toISOString(),
+            query: userQuery,
+          },
+        })
+        await writer.write(new TextEncoder().encode(`0:${ragPayload}\n`))
+      } catch (error) {
+        console.warn("Failed to send RAG context to UI:", error)
+      }
+    } else {
+      // Add fallback instruction when no meaningful context is found
+      console.log(
+        "🔄 No meaningful RAG context found, adding fallback instruction",
+      )
+      systemPrompt = `${systemPrompt}\n\n=== CONTEXT ===\nThe user asked a general or vague question that didn't match specific information in our database. Please provide a helpful, general response about Villa Bruno and Finca Guarumo. If you don't have specific information, acknowledge this and suggest what information you can help with.`
+
+      // No fallback message needed - the UI will show a loading spinner
+      console.log(
+        "🔄 No meaningful RAG context found, proceeding with general response",
+      )
     }
 
     // Add preloaded Sanity data to system prompt to avoid repeated tool calls
@@ -81,12 +147,31 @@ Use this preloaded data instead of calling tools for basic property information.
     const relevantTools = filterToolsByIntent(detectedIntent)
     console.log("Using filtered tools:", Object.keys(relevantTools))
 
-    const result = await createChatStream({
-      messages,
-      threadId,
-      tools: relevantTools,
-      systemPrompt,
-    })
+    let result
+    console.log(
+      "🤖 Starting AI chat stream creation with tools:",
+      Object.keys(relevantTools),
+    )
+    try {
+      result = await createChatStream({
+        messages,
+        threadId,
+        tools: relevantTools,
+        systemPrompt,
+      })
+      console.log("✅ AI chat stream created successfully")
+    } catch (aiError) {
+      console.error("❌ AI chat stream creation failed:", aiError)
+      // Send error message and close stream
+      const errorPayload = JSON.stringify({
+        type: "progress",
+        message:
+          "I'm having trouble generating a response. Please try again in a moment.",
+      })
+      await writer.write(new TextEncoder().encode(`0:${errorPayload}\n`))
+      await writer.close()
+      return
+    }
 
     const response = result.toTextStreamResponse()
     const reader = response.body?.getReader()
@@ -94,31 +179,78 @@ Use this preloaded data instead of calling tools for basic property information.
     let fullResponse = ""
     let toolOutputs: ToolOutput[] = []
 
-    // Process the stream and forward AI chunks
+    // Process the stream and send AI chunks immediately
     const processStream = async () => {
       if (reader) {
+        console.log("📖 Starting stream processing, reader available")
         try {
+          let chunkCount = 0
           while (true) {
             const { done, value } = await reader.read()
-            if (done) break
+            if (done) {
+              console.log("✅ Stream reading completed, done:", done)
+              break
+            }
 
             const chunk = new TextDecoder().decode(value, { stream: true })
             fullResponse += chunk
+            chunkCount++
 
-            // Forward the original AI SDK chunks (they use different event IDs)
-            await writer.write(value)
+            // Send each chunk immediately for streaming effect
+            if (chunk.trim()) {
+              const formattedChunk = `1:${chunk}\n`
+              await writer.write(new TextEncoder().encode(formattedChunk))
+            }
           }
+          console.log(
+            `✅ Stream processing completed, total chunks: ${chunkCount}`,
+          )
+        } catch (streamError) {
+          console.error("❌ AI stream processing error:", streamError)
+          // Send error message to user
+          const errorPayload = JSON.stringify({
+            type: "progress",
+            message: "Response was interrupted. Please try again.",
+          })
+          await writer.write(new TextEncoder().encode(`0:${errorPayload}\n`))
         } finally {
+          console.log("🔒 Closing writer after stream processing")
           // Only close writer after AI stream is completely done
           await writer.close()
         }
+      } else {
+        console.error("❌ No reader available from AI response")
       }
     }
 
-    // Start stream processing in background
-    processStream().catch(error => {
-      console.error("Stream processing error:", error)
-    })
+    // Start stream processing in background with timeout
+    console.log("⏰ Setting up 30-second timeout for stream processing")
+    const streamTimeout = setTimeout(async () => {
+      console.error("⏰ Stream processing timeout - no response received")
+      try {
+        const timeoutPayload = JSON.stringify({
+          type: "progress",
+          message: "Request is taking longer than expected. Please try again.",
+        })
+        await writer.write(new TextEncoder().encode(`0:${timeoutPayload}\n`))
+        await writer.close()
+        console.log("🔒 Stream closed due to timeout")
+      } catch (closeError) {
+        console.error("❌ Error closing stream after timeout:", closeError)
+      }
+    }, 30000) // 30 second timeout
+
+    console.log("🚀 Starting background stream processing")
+    processStream()
+      .catch(error => {
+        console.error("❌ Background stream processing error:", error)
+      })
+      .finally(() => {
+        console.log(
+          "✅ Background stream processing completed, clearing timeout",
+        )
+        clearTimeout(streamTimeout)
+      })
 
     // Extract tool outputs from the result properly
     try {
