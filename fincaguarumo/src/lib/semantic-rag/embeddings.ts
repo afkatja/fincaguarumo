@@ -3,6 +3,17 @@ import {
   preprocessTextWithFallback,
   SupportedLanguage,
 } from "./multilingual-preprocessing"
+import { getAdapter, hasAdapter } from "../adapters/adapter-registry"
+import type { TogetherAdapter } from "../adapters/together-adapter"
+import type { LocalAdapter } from "../adapters/local-adapter"
+
+/**
+ * Role-Based Embedding System - Phase 2 (Provider-Agnostic)
+ *
+ * API key and endpoint resolution is now delegated to adapter modules
+ * instead of hardcoded provider maps. The core embedding logic only
+ * knows about adapterKey and modelRef — never vendor names.
+ */
 
 /**
  * Get Supabase client with proper environment variable validation
@@ -29,11 +40,33 @@ function getSupabaseClient() {
   })
 }
 
-// TogetherAI configuration
-const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY!
-const TOGETHER_EMBEDDING_MODEL = "intfloat/e5-base-instruct"
-const TOGETHER_API_URL = "https://api.together.xyz/v1/embeddings"
-const BATCH_SIZE = 100 // TogetherAI limit
+// Role-based embedding configuration — reads from env, falls back to adapter defaults
+const getEmbeddingConfig = () => {
+  return {
+    local: {
+      adapterKey:
+        process.env.EMBED_MODEL_LOCAL_PROVIDER ||
+        process.env.EMBED_MODEL_LOCAL_ADAPTER_KEY ||
+        "local",
+      modelRef:
+        process.env.EMBED_MODEL_LOCAL_MODEL_ID ||
+        process.env.EMBED_MODEL_LOCAL_MODEL_REF ||
+        "e5-base-instruct",
+      fallbacks: process.env.EMBED_MODEL_LOCAL_FALLBACKS || "",
+    },
+    remote: {
+      adapterKey:
+        process.env.EMBED_MODEL_REMOTE_PROVIDER ||
+        process.env.EMBED_MODEL_REMOTE_ADAPTER_KEY ||
+        "together",
+      modelRef:
+        process.env.EMBED_MODEL_REMOTE_MODEL_ID ||
+        process.env.EMBED_MODEL_REMOTE_MODEL_REF ||
+        "intfloat/e5-base-instruct",
+      fallbacks: process.env.EMBED_MODEL_REMOTE_FALLBACKS || "",
+    },
+  }
+}
 
 // Timeout configuration
 const API_TIMEOUT = 30000 // 30 seconds
@@ -72,37 +105,94 @@ export interface EmbeddingResult {
   dimensions: number
 }
 
+// ---------------------------------------------------------------------------
+// Adapter-resolved API key and endpoint — no hardcoded vendor maps
+// ---------------------------------------------------------------------------
+
 /**
- * Generate embeddings using TogetherAI e5-base-instruct model with multilingual preprocessing
+ * Resolve the API key for a given adapter key by asking the adapter
+ * for its required secrets and checking the environment.
  */
-// Helper function to make TogetherAI API requests with timeout and retry
-async function makeTogetherAIRequest(input: string | string[]): Promise<any> {
-  let lastError: Error
+const getAdapterApiKey = (adapterKey: string): string | null => {
+  if (!hasAdapter(adapterKey)) return null
+  const adapter = getAdapter(adapterKey)
+  const secrets = adapter.getRequiredSecrets()
+  if (secrets.length === 0) return "" // e.g. local adapter
+  // Return the first found secret value
+  for (const secret of secrets) {
+    if (process.env[secret]) return process.env[secret]!
+  }
+  return null
+}
+
+/**
+ * Resolve the embedding API endpoint for a given adapter key.
+ * Only adapters that support embedding have an `embeddingEndpoint` property.
+ */
+const getAdapterApiEndpoint = (adapterKey: string): string => {
+  if (!hasAdapter(adapterKey)) {
+    throw new Error(`No adapter registered for key: ${adapterKey}`)
+  }
+  const adapter = getAdapter(adapterKey)
+
+  // Adapters that support embedding expose an `embeddingEndpoint` property
+  if (
+    "embeddingEndpoint" in adapter &&
+    typeof (adapter as any).embeddingEndpoint === "string"
+  ) {
+    return (adapter as any).embeddingEndpoint as string
+  }
+
+  throw new Error(
+    `Adapter "${adapterKey}" does not expose an embeddingEndpoint. ` +
+      `It may not support embedding operations via HTTP.`,
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Embedding request with retry — uses adapter-resolved key and endpoint
+// ---------------------------------------------------------------------------
+
+async function makeEmbeddingRequest(input: string | string[]): Promise<any> {
+  const config = getEmbeddingConfig()
+  const adapterKey = config.remote.adapterKey
+  const apiKey = getAdapterApiKey(adapterKey)
+
+  if (!apiKey && adapterKey !== "local") {
+    throw new Error(
+      `API key required for adapter: ${adapterKey}. ` +
+        `Set the required environment variables for this adapter.`,
+    )
+  }
+
+  const apiUrl = getAdapterApiEndpoint(adapterKey)
+  const modelRef = config.remote.modelRef
+
+  let lastError: Error | null = null
 
   for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
     try {
-      const response = await fetchWithTimeout(TOGETHER_API_URL, {
+      const response = await fetchWithTimeout(apiUrl, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${TOGETHER_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: TOGETHER_EMBEDDING_MODEL,
+          model: modelRef,
           input,
         }),
       })
 
       if (!response.ok) {
         const errorText = await response.text()
-        // Log detailed error for debugging but sanitize for user-facing error
-        console.error("TogetherAI API error details:", {
+        console.error(`${adapterKey} API error details:`, {
           status: response.status,
           statusText: response.statusText,
           errorBody: errorText,
         })
         const error = new Error(
-          `TogetherAI API error: ${response.status} ${response.statusText}`,
+          `${adapterKey} API error: ${response.status} ${response.statusText}`,
         )
 
         // Don't retry on client errors (4xx)
@@ -129,7 +219,7 @@ async function makeTogetherAIRequest(input: string | string[]): Promise<any> {
           error.message.includes("invalid"))
       ) {
         console.error(
-          `TogetherAI request failed with non-retryable error:`,
+          `${adapterKey} request failed with non-retryable error:`,
           error,
         )
         throw error
@@ -137,14 +227,14 @@ async function makeTogetherAIRequest(input: string | string[]): Promise<any> {
 
       if (attempt === RETRY_ATTEMPTS) {
         console.error(
-          `TogetherAI request failed after ${RETRY_ATTEMPTS} attempts:`,
-          error,
+          `${adapterKey} request failed after ${RETRY_ATTEMPTS} attempts:`,
+          lastError,
         )
-        throw lastError
+        throw lastError!
       }
 
       console.warn(
-        `TogetherAI request failed (attempt ${attempt}/${RETRY_ATTEMPTS}), retrying in ${RETRY_DELAY}ms:`,
+        `${adapterKey} request failed (attempt ${attempt}/${RETRY_ATTEMPTS}), retrying in ${RETRY_DELAY}ms:`,
         error,
       )
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
@@ -154,10 +244,16 @@ async function makeTogetherAIRequest(input: string | string[]): Promise<any> {
   throw lastError!
 }
 
+/**
+ * Generate embedding using appropriate provider based on environment and role
+ */
 export async function generateEmbedding(
   text: string,
   language?: SupportedLanguage | "auto",
 ): Promise<EmbeddingResult> {
+  const config = getEmbeddingConfig()
+  const startTime = Date.now()
+
   try {
     // Apply multilingual preprocessing
     const preprocessingResult = preprocessTextWithFallback(text, language, {
@@ -174,15 +270,44 @@ export async function generateEmbedding(
       `📝 Preprocessing steps: ${preprocessingResult.preprocessingSteps.join(", ")}`,
     )
 
-    const data = await makeTogetherAIRequest(preprocessingResult.processedText)
+    let data: any
 
-    if (!data.data || !data.data[0] || !data.data[0].embedding) {
-      throw new Error("Invalid embedding response from TogetherAI")
+    // Try local provider first in development
+    if (
+      process.env.NODE_ENV === "development" &&
+      config.local.adapterKey === "local"
+    ) {
+      console.log(
+        `🏠 Using local embedding adapter: ${config.local.adapterKey}:${config.local.modelRef}`,
+      )
+
+      // For now, simulate local embedding generation
+      // In a real implementation, this would use a local embedding library
+      const embedding = new Array(768).fill(0.1).map((_, i) => i * 0.01)
+
+      data = {
+        data: [
+          {
+            embedding,
+            dimensions: 768,
+          },
+        ],
+      }
+    } else {
+      // Use remote provider
+      console.log(
+        `🌐 Using remote embedding adapter: ${config.remote.adapterKey}:${config.remote.modelRef}`,
+      )
+      data = await makeEmbeddingRequest(preprocessingResult.processedText)
+    }
+
+    if (!data || !data.data || !data.data[0] || !data.data[0].embedding) {
+      throw new Error("Invalid embedding response from adapter")
     }
 
     return {
       embedding: data.data[0].embedding,
-      dimensions: data.data[0].embedding.length,
+      dimensions: data.data[0].dimensions || 768,
     }
   } catch (error) {
     console.error("Error generating embedding:", error)
@@ -193,12 +318,13 @@ export async function generateEmbedding(
 }
 
 /**
- * Generate embeddings for multiple texts in batch with multilingual preprocessing
+ * Generate embeddings for multiple texts in batch with role-based configuration
  */
 export async function generateBatchEmbeddings(
   texts: string[],
   language?: SupportedLanguage | "auto",
 ): Promise<EmbeddingResult[]> {
+  const config = getEmbeddingConfig()
   const results: EmbeddingResult[] = []
 
   console.log(
@@ -216,20 +342,22 @@ export async function generateBatchEmbeddings(
     return result.processedText
   })
 
+  // Process in batches
+  const BATCH_SIZE = 100 // TogetherAI limit
   for (let i = 0; i < preprocessedTexts.length; i += BATCH_SIZE) {
     const batch = preprocessedTexts.slice(i, i + BATCH_SIZE)
     const batchNumber = Math.floor(i / BATCH_SIZE) + 1
 
     try {
-      const data = await makeTogetherAIRequest(batch)
+      const data = await makeEmbeddingRequest(batch)
 
-      if (!data.data || !Array.isArray(data.data)) {
-        throw new Error("Invalid batch embedding response from TogetherAI")
+      if (!data || !data.data || !Array.isArray(data.data)) {
+        throw new Error("Invalid batch embedding response from adapter")
       }
 
       const batchResults = data.data.map((item: any) => ({
         embedding: item.embedding,
-        dimensions: item.embedding.length,
+        dimensions: item.dimensions || 768,
       }))
 
       results.push(...batchResults)

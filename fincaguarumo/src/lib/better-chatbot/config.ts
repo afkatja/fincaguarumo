@@ -1,4 +1,3 @@
-import { mistral } from "@ai-sdk/mistral"
 import { LanguageModelV3 } from "@ai-sdk/provider"
 import { streamText, tool, stepCountIs } from "ai"
 import z from "zod"
@@ -236,7 +235,7 @@ const DEFAULT_BASE_PRICE_PER_NIGHT = 150
 const DEFAULT_MAX_GUESTS = 4
 
 // Get model providers from environment configuration
-const generationProvider = createModelProvider("generation")
+const generationProvider = createModelProvider("primary")
 const evaluationProvider = createModelProvider("evaluation")
 
 const MAX_STEPS = 4
@@ -293,7 +292,7 @@ Property Information:
     : `
 Pricing Information:
 - Base price: Use calculatePrice tool for current pricing
-- Extra guest fee: $20 per night for each guest above 1 (max 4 extra guests)
+- Extra guest fee: $20 per night for each guest above 1 (max 4 total guests)
 - Discount for 7+ nights: 13% off
 - Discount for 28+ nights: 33% off
 - VAT: 13% added to final price`
@@ -453,7 +452,9 @@ export const bookingAgentConfig = {
     buildSystemPrompt({ useDynamicValues: false }),
   ),
   model: generationProvider.model,
-  maxTokens: generationProvider.modelId.includes("mistral-large") ? 4000 : 1000,
+  maxTokens: generationProvider.modelRef.includes("mistral-large")
+    ? 4000
+    : 1000,
 }
 
 /**

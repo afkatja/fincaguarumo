@@ -1,11 +1,15 @@
 import "@testing-library/jest-dom"
+import { TransformStream } from "node:stream/web"
+
+// Used by @ai-sdk / eventsource-parser when adapter modules load in unit tests
+globalThis.TransformStream ??= TransformStream
 
 // Polyfill Web APIs for Jest environment
 import { TextEncoder, TextDecoder } from "util"
 
 // Add Web API polyfills
-global.TextEncoder = TextEncoder
-global.TextDecoder = TextDecoder
+globalThis.TextEncoder = TextEncoder
+globalThis.TextDecoder = TextDecoder
 
 // Mock Next.js router
 jest.mock("next/navigation", () => ({
