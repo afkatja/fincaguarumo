@@ -1,23 +1,67 @@
 /**
- * Model-agnostic AI provider factory
- * Allows easy switching between different AI models for generation and evaluation
+ * Role-Based Model Provider Factory — Provider-Agnostic Phase 2
+ *
+ * The factory no longer imports vendor SDKs or switches on provider names.
+ * Instead, it asks the adapter registry for an adapter by key and delegates
+ * model instantiation, health checks, and config validation to the adapter.
+ *
+ * A6 (Graceful degradation): When all models in a role fail, the factory
+ * returns a typed DegradationResponse instead of throwing, allowing callers
+ * to distinguish between no-answer-available, partial-answer,
+ * stale-cached-answer, and fallback-generated-minimal-response.
  */
 
 import { LanguageModelV3 } from "@ai-sdk/provider"
-import { perplexity } from "@ai-sdk/perplexity"
-import { mistral } from "@ai-sdk/mistral"
+import {
+  getModelConfig,
+  getModelRole,
+  ModelRole,
+  getEffectiveCapabilities,
+} from "./model-registry"
+import {
+  getAdapter,
+  validateAllAdapters,
+  hasAdapter,
+} from "./adapters/adapter-registry"
+import type { AdapterConfig } from "./adapters/provider-adapter"
+import {
+  shouldAllowRequest,
+  recordSuccessfulRequest,
+  recordFailedRequest,
+  shouldTriggerCircuitBreaker,
+  armCircuitBreakerWithProgressiveDisable,
+  getCircuitBreakerState,
+} from "./health-checker"
+import {
+  assertModelSelectionWithinBudget,
+  FALLBACK_CHAIN_MAX_DURATION_MS,
+} from "./model-performance-budgets"
+import { withTimeout } from "./monitoring/retry"
 
-export interface ModelConfig {
-  provider: "perplexity" | "mistral" | "openai" | "anthropic"
-  modelId: string
-  maxTokens: number
-  temperature?: number
-}
+// Re-export all degradation types and helpers from the dedicated module
+// so existing import paths continue to work.
+export type {
+  DegradationType,
+  DegradationResponse,
+} from "./degradation-response"
+export {
+  classifyDegradationType,
+  createDegradationResponse,
+  isDegradationResponse,
+  cacheEvaluationData,
+  getCachedEvaluationData,
+  clearEvaluationCache,
+} from "./degradation-response"
+
+import {
+  createDegradationResponse,
+  type DegradationResponse,
+} from "./degradation-response"
 
 export interface ModelProvider {
   model: LanguageModelV3
-  modelId: string
-  provider: string
+  modelRef: string
+  adapterKey: string
   capabilities: {
     streaming: boolean
     tools: boolean
@@ -25,145 +69,436 @@ export interface ModelProvider {
     generation: boolean
   }
   maxTokens: number
-}
-
-// Model configurations from environment variables
-const modelConfigs: Record<string, ModelConfig> = {
-  // Main generation model (with tools) - switched to Perplexity for better multilingual formatting
-  generation: {
-    provider: (process.env.MAIN_MODEL_PROVIDER as any) || "perplexity",
-    modelId: process.env.MAIN_MODEL_ID || "llama-3.1-sonar-large-128k-online",
-    maxTokens: parseInt(process.env.MAIN_MODEL_MAX_TOKENS || "1000"),
-    temperature: parseFloat(process.env.MAIN_MODEL_TEMPERATURE || "0.3"),
-  },
-
-  // Evaluation model (uses same generation model for introspection mode)
-  evaluation: {
-    provider: (process.env.EVALUATOR_MODEL_PROVIDER as any) || "mistral",
-    modelId: process.env.EVALUATOR_MODEL_ID || "mistral-large-latest",
-    maxTokens: parseInt(process.env.EVALUATOR_MODEL_MAX_TOKENS || "2000"),
-    temperature: parseFloat(process.env.EVALUATOR_MODEL_TEMPERATURE || "0.1"),
-  },
-}
-
-// Model provider factory
-export function createModelProvider(
-  configKey: "generation" | "evaluation",
-): ModelProvider {
-  const config = modelConfigs[configKey]
-
-  let model: LanguageModelV3
-  let capabilities: ModelProvider["capabilities"]
-  let maxTokens: number
-
-  switch (configKey) {
-    case "generation":
-      model = mistral(config.modelId)
-      capabilities = {
-        streaming: true,
-        tools: true,
-        evaluation: true,
-        generation: true,
-      }
-      maxTokens = config.maxTokens
-      break
-    case "evaluation":
-      model = mistral(config.modelId)
-      capabilities = {
-        streaming: true,
-        tools: true, // Mistral supports function calling
-        evaluation: true,
-        generation: true,
-      }
-      maxTokens = config.maxTokens
-      break
-    default:
-      throw new Error(`Unsupported provider: ${config.provider}`)
+  role: string
+  fallbacks: Array<{ adapterKey: string; modelRef: string }>
+  healthStatus: {
+    isHealthy: boolean
+    lastChecked: Date
+    consecutiveFailures: number
+    circuitBreakerActive: boolean
   }
+}
+
+// ---------------------------------------------------------------------------
+// Core factory — no switch statements, no vendor imports
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a ModelProvider for the given role by looking up the adapter
+ * from the registry and delegating instantiation.
+ */
+export function createModelProvider(roleId: string): ModelProvider {
+  const selectionStart = Date.now()
+  const role = getModelRole(roleId)
+
+  if (!role) {
+    throw new Error(`No model configured for role: ${roleId}`)
+  }
+
+  // Check circuit breaker before proceeding
+  if (!shouldAllowRequest(roleId)) {
+    throw new Error(`Model ${roleId} is circuit-breaked`)
+  }
+
+  // Resolve adapter from registry — no vendor switch needed
+  if (!hasAdapter(role.adapterKey)) {
+    throw new Error(
+      `No adapter registered for key "${role.adapterKey}". ` +
+        `Register an adapter before using role "${roleId}".`,
+    )
+  }
+
+  const adapter = getAdapter(role.adapterKey)
+
+  let aiModel: LanguageModelV3
+  try {
+    aiModel = adapter.createModelInstance(role.modelRef)
+  } catch (error) {
+    throw new Error(
+      `Failed to create model instance for ${role.adapterKey}:${role.modelRef}: ${error instanceof Error ? error.message : "Unknown error"}`,
+    )
+  }
+
+  const effective = getEffectiveCapabilities(role)
+
+  assertModelSelectionWithinBudget(
+    Date.now() - selectionStart,
+    `createModelProvider(${roleId})`,
+  )
 
   return {
-    model,
-    modelId: config.modelId,
-    provider: config.provider,
-    capabilities,
-    maxTokens,
+    model: aiModel,
+    modelRef: role.modelRef,
+    adapterKey: role.adapterKey,
+    capabilities: {
+      streaming: effective.streaming,
+      tools: effective.toolCalling,
+      evaluation: effective.evaluation,
+      generation: effective.generation,
+    },
+    maxTokens: role.maxTokens,
+    role: role.id,
+    fallbacks: role.fallbacks,
+    healthStatus: role.healthStatus,
   }
 }
 
-// Cache for evaluation data to avoid re-running tools
-const evaluationCache = new Map<string, any>()
+// ---------------------------------------------------------------------------
+// Fallback-aware factory (A6: returns DegradationResponse instead of throwing)
+// ---------------------------------------------------------------------------
 
-export function cacheEvaluationData(key: string, data: any) {
-  evaluationCache.set(key, {
-    data,
-    timestamp: Date.now(),
-  })
-}
+/**
+ * Enhanced model provider with role-based routing and fallback chains.
+ *
+ * When all models in the chain fail the function no longer throws — it
+ * returns a typed {@link DegradationResponse} so callers can gracefully
+ * degrade the user experience.  Use the {@link isDegradationResponse} type
+ * guard to distinguish between a healthy `ModelProvider` and a degradation
+ * result.
+ */
+export async function createModelProviderWithFallback(
+  roleId: string,
+): Promise<ModelProvider | DegradationResponse> {
+  const chainStart = Date.now()
+  const startTime = chainStart
 
-export function getCachedEvaluationData(key: string): any | null {
-  const cached = evaluationCache.get(key)
-  if (!cached) return null
+  // Track every model that was attempted and why it failed
+  const attemptedModels: Array<{ adapterKey: string; modelRef: string }> = []
+  const failureReasons: Array<{
+    adapterKey: string
+    modelRef: string
+    error: string
+  }> = []
+  let partialContent: string | undefined
 
-  // Cache expires after 5 minutes
-  if (Date.now() - cached.timestamp > 5 * 60 * 1000) {
-    evaluationCache.delete(key)
-    return null
+  // --- Try primary model --------------------------------------------------
+  try {
+    const provider = createModelProvider(roleId)
+    recordSuccessfulRequest(roleId, Date.now() - startTime)
+    return provider
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : "Unknown error"
+
+    // Record failed request for circuit breaker
+    recordFailedRequest(roleId, errorMsg)
+
+    const role = getModelRole(roleId)
+    if (role) {
+      attemptedModels.push({
+        adapterKey: role.adapterKey,
+        modelRef: role.modelRef,
+      })
+      failureReasons.push({
+        adapterKey: role.adapterKey,
+        modelRef: role.modelRef,
+        error: errorMsg,
+      })
+    } else {
+      // No configuration at all — immediately degrade
+      return createDegradationResponse(
+        roleId,
+        attemptedModels,
+        failureReasons,
+        partialContent,
+      )
+    }
   }
 
-  return cached.data
+  // --- Try fallback models ------------------------------------------------
+  const role = getModelRole(roleId)!
+  if (role.fallbacks && role.fallbacks.length > 0) {
+    console.log(`🔄 Primary model ${roleId} failed, trying fallbacks`)
+
+    for (let i = 0; i < role.fallbacks.length; i++) {
+      const fallback = role.fallbacks[i]
+      const elapsedChain = Date.now() - chainStart
+      if (elapsedChain >= FALLBACK_CHAIN_MAX_DURATION_MS) {
+        failureReasons.push({
+          adapterKey: fallback.adapterKey,
+          modelRef: fallback.modelRef,
+          error: `FG-29 NFR: fallback chain exceeded ${FALLBACK_CHAIN_MAX_DURATION_MS}ms before this attempt`,
+        })
+        break
+      }
+
+      attemptedModels.push({
+        adapterKey: fallback.adapterKey,
+        modelRef: fallback.modelRef,
+      })
+
+      try {
+        console.log(
+          `🔄 Trying fallback ${i + 1}/${role.fallbacks.length}: ${fallback.adapterKey}:${fallback.modelRef}`,
+        )
+
+        // Create a temporary model role for the fallback
+        const fallbackRole: ModelRole = {
+          ...role,
+          id: `${roleId}-fallback-${i}`,
+          adapterKey: fallback.adapterKey,
+          modelRef: fallback.modelRef,
+        }
+
+        const remainingMs = Math.max(
+          1,
+          FALLBACK_CHAIN_MAX_DURATION_MS - (Date.now() - chainStart),
+        )
+
+        const result = await testConnectivityForModelRole(fallbackRole, {
+          timeoutMs: remainingMs,
+        })
+
+        if (result.success) {
+          // Create provider for fallback model
+          const fallbackProvider = createModelProviderForRole(fallbackRole)
+          recordSuccessfulRequest(roleId, result.latency || 0)
+          return fallbackProvider
+        }
+
+        // Connectivity test returned unsuccessful — record reason
+        failureReasons.push({
+          adapterKey: fallback.adapterKey,
+          modelRef: fallback.modelRef,
+          error: result.error || "Connectivity test failed",
+        })
+      } catch (fallbackError) {
+        const fallbackErrorMsg =
+          fallbackError instanceof Error
+            ? fallbackError.message
+            : "Unknown error"
+
+        failureReasons.push({
+          adapterKey: fallback.adapterKey,
+          modelRef: fallback.modelRef,
+          error: fallbackErrorMsg,
+        })
+
+        console.error(`Fallback ${i + 1} failed:`, fallbackErrorMsg)
+      }
+    }
+  }
+
+  // --- All models failed — return graceful degradation (A6) ---------------
+  console.warn(
+    `⚠️ All models failed for role ${roleId}. Returning degradation response.`,
+  )
+
+  return createDegradationResponse(
+    roleId,
+    attemptedModels,
+    failureReasons,
+    partialContent,
+  )
 }
 
-export function clearEvaluationCache() {
-  evaluationCache.clear()
-}
+// ---------------------------------------------------------------------------
+// Internal: create ModelProvider for a direct ModelRole (used for fallbacks)
+// ---------------------------------------------------------------------------
 
-/**
- * Get all available model configurations
- */
-export function getAvailableModels(): Record<string, ModelConfig> {
-  return { ...modelConfigs }
-}
+function createModelProviderForRole(modelRole: ModelRole): ModelProvider {
+  const selectionStart = Date.now()
+  // Check circuit breaker before proceeding
+  if (!shouldAllowRequest(modelRole.id)) {
+    throw new Error(`Model ${modelRole.id} is circuit-breaked`)
+  }
 
-/**
- * Add a new model configuration
- */
-export function addModelConfig(key: string, config: ModelConfig): void {
-  modelConfigs[key] = config
-}
+  // Resolve adapter from registry
+  if (!hasAdapter(modelRole.adapterKey)) {
+    throw new Error(`No adapter registered for key "${modelRole.adapterKey}".`)
+  }
 
-/**
- * Update an existing model configuration
- */
-export function updateModelConfig(
-  key: string,
-  updates: Partial<ModelConfig>,
-): void {
-  if (modelConfigs[key]) {
-    modelConfigs[key] = { ...modelConfigs[key], ...updates }
+  const adapter = getAdapter(modelRole.adapterKey)
+
+  let aiModel: LanguageModelV3
+  try {
+    aiModel = adapter.createModelInstance(modelRole.modelRef)
+  } catch (error) {
+    throw new Error(
+      `Failed to create model instance for ${modelRole.adapterKey}:${modelRole.modelRef}: ${error instanceof Error ? error.message : "Unknown error"}`,
+    )
+  }
+
+  const effective = getEffectiveCapabilities(modelRole)
+
+  assertModelSelectionWithinBudget(
+    Date.now() - selectionStart,
+    `createModelProviderForRole(${modelRole.id})`,
+  )
+
+  return {
+    model: aiModel,
+    modelRef: modelRole.modelRef,
+    adapterKey: modelRole.adapterKey,
+    capabilities: {
+      streaming: effective.streaming,
+      tools: effective.toolCalling,
+      evaluation: effective.evaluation,
+      generation: effective.generation,
+    },
+    maxTokens: modelRole.maxTokens,
+    role: modelRole.id,
+    fallbacks: modelRole.fallbacks,
+    healthStatus: modelRole.healthStatus,
   }
 }
 
 /**
- * Test model connectivity
+ * Probe a concrete adapter+model via a minimal generateText call, bounded by FG-29 fallback budget.
  */
-export async function testModelConnectivity(configKey: string): Promise<{
+async function testConnectivityForModelRole(
+  modelRole: ModelRole,
+  options: { timeoutMs: number },
+): Promise<{ success: boolean; error?: string; latency?: number }> {
+  try {
+    const provider = createModelProviderForRole(modelRole)
+    const startTime = Date.now()
+    const { generateText } = await import("ai")
+    await withTimeout(
+      generateText({
+        model: provider.model,
+        prompt: "Test connectivity",
+        maxRetries: 1,
+      }),
+      options.timeoutMs,
+    )
+    return { success: true, latency: Date.now() - startTime }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Connectivity & health
+// ---------------------------------------------------------------------------
+
+/**
+ * Test model connectivity with circuit breaker awareness
+ */
+export async function testModelConnectivityWithCircuitBreaker(
+  roleId: string,
+): Promise<{
   success: boolean
   error?: string
   latency?: number
 }> {
+  // Check if circuit breaker allows the request
+  if (!shouldAllowRequest(roleId)) {
+    return { success: false, error: "Circuit breaker active" }
+  }
+
+  // Import health check function
+  const { performHealthCheck } = await import("./health-checker")
+
+  try {
+    const result = await performHealthCheck(roleId)
+
+    if (result.isHealthy) {
+      return { success: true, latency: result.latency }
+    } else {
+      // Health check failed, trigger circuit breaker if needed
+      if (shouldTriggerCircuitBreaker(roleId)) {
+        const s = getCircuitBreakerState(roleId)
+        armCircuitBreakerWithProgressiveDisable(roleId, {
+          failureCount: (s.failureCount || 0) + 1,
+          lastFailureTime: new Date(),
+          consecutiveFailures: (s.consecutiveFailures || 0) + 1,
+        })
+      }
+
+      return { success: false, error: result.error }
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    }
+  }
+}
+
+/**
+ * Get all available model configurations
+ * Returns model roles in a provider-agnostic format
+ */
+export function getAvailableModels() {
+  const config = getModelConfig()
+
+  return {
+    primary: config.primary,
+    tools: config.tools,
+    fast: config.fast,
+    evaluation: config.evaluation,
+    embeddingLocal: config.embeddingLocal,
+    embeddingRemote: config.embeddingRemote,
+  }
+}
+
+/**
+ * Add a new model configuration through the model registry
+ * Note: This would require extending the model registry to support dynamic updates
+ */
+export function addModelConfig(
+  roleId: string,
+  modelRole: Partial<ModelRole>,
+): void {
+  // TODO: Implement dynamic model registry updates
+  console.warn(
+    `Dynamic model configuration not yet implemented for role: ${roleId}`,
+  )
+  throw new Error(
+    `Dynamic model configuration not supported. Please use environment variables to configure models.`,
+  )
+}
+
+/**
+ * Update an existing model configuration through the model registry
+ * Note: This would require extending the model registry to support dynamic updates
+ */
+export function updateModelConfig(
+  roleId: string,
+  updates: Partial<ModelRole>,
+): void {
+  // TODO: Implement dynamic model registry updates
+  console.warn(
+    `Dynamic model configuration not yet implemented for role: ${roleId}`,
+  )
+  throw new Error(
+    `Dynamic model configuration not supported. Please use environment variables to configure models.`,
+  )
+}
+
+/**
+ * Test model connectivity
+ *
+ * @param options.timeoutMs — defaults to {@link FALLBACK_CHAIN_MAX_DURATION_MS} (FG-29 NFR).
+ */
+export async function testModelConnectivity(
+  configKey: string,
+  options?: { timeoutMs?: number },
+): Promise<{
+  success: boolean
+  error?: string
+  latency?: number
+}> {
+  const timeoutMs = options?.timeoutMs ?? FALLBACK_CHAIN_MAX_DURATION_MS
   try {
     const provider = createModelProvider(
-      configKey as "generation" | "evaluation",
+      configKey as "primary" | "tools" | "fast" | "evaluation",
     )
     const startTime = Date.now()
 
     // Simple test request
     const { generateText } = await import("ai")
-    await generateText({
-      model: provider.model,
-      prompt: "Test connectivity",
-      maxRetries: 1,
-    })
+    await withTimeout(
+      generateText({
+        model: provider.model,
+        prompt: "Test connectivity",
+        maxRetries: 1,
+      }),
+      timeoutMs,
+    )
 
     const latency = Date.now() - startTime
     return { success: true, latency }
@@ -176,59 +511,44 @@ export async function testModelConnectivity(configKey: string): Promise<{
 }
 
 /**
- * Get model recommendations based on use case
+ * Get model recommendations based on use case in a provider-agnostic way
+ * Returns role IDs that match the requested capability
  */
 export function getModelRecommendation(
   useCase: "generation" | "evaluation" | "fast" | "quality",
 ): string[] {
-  const recommendations = {
-    generation: ["generation", "perplexity-sonar", "mistral-large"],
-    evaluation: ["evaluation", "mistral-large"],
-    fast: ["perplexity-sonar", "mistral-small"],
-    quality: ["mistral-large", "evaluation"],
+  // Provider-agnostic recommendations based on capabilities
+  const recommendations: Record<string, string[]> = {
+    generation: ["primary", "tools"], // Models with generation capability
+    evaluation: ["evaluation"], // Models with evaluation capability
+    fast: ["fast"], // Fast models
+    quality: ["primary", "evaluation"], // High-quality models
   }
 
   return recommendations[useCase] || []
 }
 
 /**
- * Environment variable validation for models
+ * Environment variable validation — fully provider-agnostic.
+ *
+ * Instead of a hardcoded providerApiKeys map, the core asks each
+ * adapter what secrets it requires via getRequiredSecrets().
  */
 export function validateModelEnvironment(): {
   isValid: boolean
   missing: string[]
   warnings: string[]
 } {
-  const required: Record<string, string[]> = {
-    perplexity: ["PERPLEXITY_API_KEY"],
-    mistral: ["MISTRAL_API_KEY"],
-    openai: ["OPENAI_API_KEY"],
-    anthropic: ["ANTHROPIC_API_KEY"],
-  }
+  const config = getModelConfig()
 
-  const missing: string[] = []
-  const warnings: string[] = []
+  // Build adapter configs from the current model roles
+  const adapterConfigs: AdapterConfig[] = Object.values(config).map(role => ({
+    adapterKey: role.adapterKey,
+    requiredSecrets: hasAdapter(role.adapterKey)
+      ? getAdapter(role.adapterKey).getRequiredSecrets()
+      : [],
+  }))
 
-  // Check current models
-  Object.values(modelConfigs).forEach(config => {
-    const requiredVars = required[config.provider]
-    if (requiredVars) {
-      requiredVars.forEach((varName: string) => {
-        if (!process.env[varName]) {
-          missing.push(varName)
-        }
-      })
-    }
-  })
-
-  // Check for deprecated variables
-  if (process.env.OPENAI_API_KEY && !modelConfigs.openai) {
-    warnings.push("OPENAI_API_KEY found but no OpenAI models configured")
-  }
-
-  return {
-    isValid: missing.length === 0,
-    missing,
-    warnings,
-  }
+  // Delegate validation to the adapter registry
+  return validateAllAdapters(adapterConfigs)
 }
