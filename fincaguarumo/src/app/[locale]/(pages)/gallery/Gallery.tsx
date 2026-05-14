@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react"
+import { useState } from "react"
 import { urlFor } from "../../../../sanity/lib/image"
 import Image from "next/image"
 import { SanityImageObject } from "../../../../types"
