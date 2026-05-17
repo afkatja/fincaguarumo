@@ -4,6 +4,29 @@
 
 - Notes file: ./architecture-notes/FG-29-role-based-model-provider.md
 
+## 0.1 Gateway Architecture
+
+The system uses a centralized **Model Gateway** (`src/lib/model-gateway.ts`) as the single entry point for all LLM calls. Callers (chatbot, RAG pipeline, evaluation, etc.) only express what they want — not how to reach a model. The gateway is responsible for the full execute contract:
+
+- Resolve role → adapter + modelRef via registry
+- Check circuit breaker before sending
+- Select adapter (local Ollama in dev, remote in production) based on NEXT_PUBLIC_NETLIFY_ENV
+- Resolve auth — look up the right API key for the resolved adapter
+- Send request with timeout
+- On failure: log, update circuit breaker, advance fallback chain, retry with next model
+- Return typed result including which model was actually used and latency
+- Record metrics for health and promotion decisions
+
+The gateway consolidates logic into a single callable entry point with a unified `execute(role, request)` function.
+
+### Tool-Calling Format Configuration
+
+When the gateway routes requests to the tools role, it must configure the appropriate tool-calling format based on the model's requirements:
+
+- **Hermes-style template**: For models that perform best with Hermes-style tool-calling (not bare JSON mode)
+- **System prompt configuration**: Gateway sets the appropriate system prompt or tool-calling format before sending requests to the tools role
+- **Model-specific handling**: Gateway reads model capabilities from registry and applies the correct format automatically
+
 ## 1. Problem & context
 
 - Business problem: Current AI model provider system has hardcoded models, ignores environment configuration, and lacks flexibility for rapid AI landscape evolution
@@ -33,22 +56,24 @@
 
 #### Implementation Phases
 
-| Phase | What belongs there                                                                                                                   |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| V1    | Fix provider bug, add role-based config, backward-compatible aliases, rule-based router, explicit fallback chains, manual overrides. |
-| V1.5  | Benchmark harness, nightly smoke checks, weekly benchmark jobs, promotion recommendations.                                           |
-| V2    | Semi-automatic promotion, richer capability verification, optional learned routing/classification.                                   |
+| Phase | What belongs there                                                                                                                                                                                                        |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| V1    | Create model gateway with execute(role, request), fix provider bug, add role-based config, backward-compatible aliases, explicit fallback chains, manual overrides, consolidate logic from factory/health-checker/router. |
+| V1.5  | Benchmark harness, nightly smoke checks, weekly benchmark jobs, promotion recommendations.                                                                                                                                |
+| V2    | Semi-automatic promotion, richer capability verification, optional learned routing/classification.                                                                                                                        |
 
+- Centralized model gateway with execute(role, request) as single entry point for all LLM calls
 - Role-based model configuration with provider/model separation using canonical naming above
 - Backward-compatible alias layer for existing MAIN_MODEL_PROVIDER, MAIN_MODEL_ID variables
 - Model provider registry with declared capabilities and optional smoke-test verification
-- Rule-based task router for automatic model selection (v1), learned classification deferred
+- Gateway handles environment selection (local Ollama in dev, remote in production)
+- Gateway resolves auth credentials and passes to adapters (adapters never read process.env directly)
+- Gateway manages fallback chain iteration, circuit breaker checks, and timeout policy
 - Health checking and automatic fallback chains with explicit failure triggers
 - Comprehensive multilingual RAG benchmarking (retrieval + grounded generation)
 - Semi-automatic model promotion with weighted scoring and regression guards
 - Manual override capabilities for production safety
 - Version pinning policy for model stability
-- Fix current model provider factory hardcoded bug
 
 ### Out of scope
 
@@ -97,11 +122,11 @@
 ## 6. Data model & contracts
 
 - Data model changes:
-  - New/updated entities: ModelRole, ModelCapability, ModelProvider, BenchmarkResult, PromotionRule
+  - New/updated entities: ModelRole, ModelCapability, ModelProvider, BenchmarkResult, PromotionRule, GatewayRequest, GatewayResponse
 - API / function contracts:
-  - Endpoint or function name: createModelProvider(), routeRequest(), benchmarkModel(), promoteModel()
-  - Request shape: { taskType: string, content: string, context: object, preferences?: object }
-  - Response shape: { result: object, modelUsed: string, fallbackChain: string[], metrics: object }
+  - Endpoint or function name: execute(role, request), benchmarkModel(), promoteModel()
+  - Request shape: { role: string, taskType: string, content: string, context: object, preferences?: object }
+  - Response shape: { result: object, modelUsed: string, adapterKey: string, fallbackChain: string[], metrics: { latency: number, modelRef: string } }
   - Status / error codes: Standard HTTP status + model-specific error codes
 
 ### Precedence Rules

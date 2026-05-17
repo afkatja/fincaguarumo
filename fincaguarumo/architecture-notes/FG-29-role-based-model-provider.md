@@ -16,12 +16,31 @@ This document captures architectural decisions and design patterns for the role-
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                  Model Provider Factory                          │
-│  - Role-based routing                                            │
-│  - Provider selection                                            │
-│  - Fallback orchestration                                        │
+│                    Model Gateway                                 │
+│  src/lib/model-gateway.ts                                        │
+│  - execute(role, request) - single entry point                   │
+│  - Role → adapter + modelRef resolution                          │
+│  - Circuit breaker checking                                       │
+│  - Environment selection (local vs remote)                       │
+│  - Auth resolution (reads API keys, passes to adapters)          │
+│  - Fallback chain iteration                                      │
+│  - Timeout policy enforcement                                     │
+│  - Metrics recording                                             │
 └────────────────────────┬────────────────────────────────────────┘
                          │
+         ┌───────────────┼───────────────┐
+         ▼               ▼               ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│ Model        │ │ Health       │ │ Model        │
+│ Registry     │ │ Checker      │ │ Provider    │
+│              │ │              │ │ Factory     │
+│ (config)     │ │ (circuit     │ │ (legacy,    │
+│              │ │ breaker)     │ │ being       │
+│              │ │              │ │ phased out) │
+└──────────────┘ └──────────────┘ └──────────────┘
+         │               │               │
+         └───────────────┼───────────────┘
+                         ▼
          ┌───────────────┼───────────────┐
          ▼               ▼               ▼
 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
@@ -32,15 +51,25 @@ This document captures architectural decisions and design patterns for the role-
 
 ### Component Responsibilities
 
-#### 1. Model Provider Factory (`src/lib/model-provider-factory.ts`)
-- **Responsibility**: Central routing and provider selection
-- **Key Functions**:
-  - `createModelProvider(role, context)`: Returns appropriate provider for role
-  - `routeRequest(taskType, content, context)`: Routes to optimal model
-  - `getProviderWithFallback(role)`: Handles fallback chain resolution
-- **Design Pattern**: Strategy pattern for provider selection, Chain of Responsibility for fallbacks
+#### 1. Model Gateway (`src/lib/model-gateway.ts`)
 
-#### 2. Model Provider Registry
+- **Responsibility**: Central entry point for all LLM calls, consolidates routing, health checking, fallback, auth, and environment selection
+- **Key Function**:
+  - `execute(role, request)`: Single callable entry point that handles the full execute contract
+- **Execute Contract**:
+  1. Resolve role → adapter + modelRef via registry
+  2. Check circuit breaker before sending
+  3. Select adapter (local Ollama in dev, remote in production) based on NEXT_PUBLIC_NETLIFY_ENV
+  4. Resolve auth — look up the right API key for the resolved adapter
+  5. Send request with timeout
+  6. On failure: log, update circuit breaker, advance fallback chain, retry with next model
+  7. Return typed result including which model was actually used and latency
+  8. Record metrics for health and promotion decisions
+- **Design Pattern**: Facade pattern - provides simplified interface to complex subsystem
+- **Migration Note**: Consolidates logic previously spread across `model-provider-factory.ts`, `health-checker.ts`, and `task-router.ts`
+
+#### 2. Model Registry
+
 - **Responsibility**: Provider capability declaration and validation
 - **Data Structure**: Registry of providers with declared capabilities
 - **Key Fields**:
@@ -51,6 +80,7 @@ This document captures architectural decisions and design patterns for the role-
   - `embeddingFamily`: For embedding compatibility validation
 
 #### 3. Health Checker (`src/lib/health-checker.ts`)
+
 - **Responsibility**: Provider health monitoring and circuit breaker management
 - **Key Functions**:
   - `checkProviderHealth(providerId)`: Returns health status
@@ -60,8 +90,28 @@ This document captures architectural decisions and design patterns for the role-
   - Trigger: 3 consecutive failures in 5 minutes OR 50% failure rate over 20 requests
   - Disable duration: 15min (first), 30min (second), 60min (subsequent)
   - Recovery: Low-volume test traffic before full reintegration
+- **Usage**: Called by gateway, not directly by application code
 
-#### 4. Benchmark Harness (V1.5)
+#### 4. Model Provider Factory (`src/lib/model-provider-factory.ts`)
+
+- **Responsibility**: Legacy provider instantiation (being phased out)
+- **Status**: Logic being migrated to gateway; will become internal utility
+- **Key Functions**:
+  - `createModelProvider(role)`: Creates provider instance (used internally by gateway)
+  - `createModelProviderWithFallback(role)`: Fallback-aware creation (used internally by gateway)
+- **Migration Path**: Fallback iteration and retry logic moved to gateway; factory becomes simple instantiation helper
+
+#### 5. Task Router (`src/lib/task-router.ts`)
+
+- **Responsibility**: Task-to-role mapping (used by gateway for role resolution)
+- **Status**: Environment selection logic moved to gateway; retains routing logic
+- **Key Functions**:
+  - `routeRequest(request)`: Maps task type to role
+  - `shouldUseLocalEmbedding()`: Environment selection (moved to gateway)
+- **Migration Path**: Gateway calls router for role resolution, but handles environment selection internally
+
+#### 6. Benchmark Harness (V1.5)
+
 - **Responsibility**: Model performance evaluation and comparison
 - **Location**: `scripts/benchmark-models.ts`
 - **Key Functions**:
@@ -70,7 +120,8 @@ This document captures architectural decisions and design patterns for the role-
   - `generatePromotionRecommendation()`: Suggests model changes
 - **Storage**: `./benchmarks/results/` with timestamped subdirectories
 
-#### 5. Promotion System (V2)
+#### 7. Promotion System (V2)
+
 - **Responsibility**: Semi-automatic model promotion with safety guards
 - **Key Functions**:
   - `evaluatePromotion(candidateId, incumbentId)`: Checks promotion criteria
@@ -90,18 +141,22 @@ This document captures architectural decisions and design patterns for the role-
 Environment variables follow the pattern: `{ROLE}_{ATTRIBUTE}`
 
 **Generation Roles**:
+
 - `GEN_MODEL_PRIMARY_PROVIDER`, `GEN_MODEL_PRIMARY_MODEL_ID`, `GEN_MODEL_PRIMARY_FALLBACKS`
 - `GEN_MODEL_TOOLS_PROVIDER`, `GEN_MODEL_TOOLS_MODEL_ID`, `GEN_MODEL_TOOLS_FALLBACKS`
 - `GEN_MODEL_FAST_PROVIDER`, `GEN_MODEL_FAST_MODEL_ID`, `GEN_MODEL_FAST_FALLBACKS`
 
 **Evaluation Role**:
+
 - `EVAL_MODEL_PROVIDER`, `EVAL_MODEL_MODEL_ID`, `EVAL_MODEL_FALLBACKS`
 
 **Embedding Roles**:
+
 - `EMBED_MODEL_LOCAL_PROVIDER`, `EMBED_MODEL_LOCAL_MODEL_ID`, `EMBED_MODEL_LOCAL_FALLBACKS`
 - `EMBED_MODEL_REMOTE_PROVIDER`, `EMBED_MODEL_REMOTE_MODEL_ID`, `EMBED_MODEL_REMOTE_FALLBACKS`
 
 **Backward Compatibility**:
+
 - `MAIN_MODEL_PROVIDER`, `MAIN_MODEL_ID` map to `GEN_MODEL_PRIMARY_*`
 - `EMBEDDING_MODEL_PROVIDER`, `EMBEDDING_MODEL_ID` map to `EMBED_MODEL_REMOTE_*`
 
@@ -204,6 +259,7 @@ GEN_MODEL_PRIMARY_OVERRIDE_MODEL_ID=model-x
 ### Failure Triggers
 
 Explicit failure conditions that trigger fallback:
+
 - Timeout (>5 seconds)
 - HTTP 429 (rate limit)
 - HTTP 5xx (server error)
@@ -246,24 +302,25 @@ Explicit failure conditions that trigger fallback:
 
 ### Multilingual RAG Benchmark Matrix
 
-| Dimension | Test Cases | Metric | Pass Threshold |
-|-----------|------------|--------|----------------|
-| Query language handling | ES, EN, NL, mixed-language | Task success rate | ≥90% |
-| Retrieval relevance | Top-k retrieval | Recall@5, MRR, nDCG@10 | Recall@5 ≥0.85 |
-| Cross-lingual retrieval | ES→EN, EN→ES, NL→EN | Recall@5 | ≥0.75 |
-| Grounded answer accuracy | Curated context sets | Rubric score | ≥4/5 |
-| Faithfulness | Unanswerable, conflicting context | Hallucination rate | ≤5% |
-| Citation quality | Multi-claim answers | Citation precision | ≥0.9 |
-| Structured output reliability | JSON, tool args | Valid JSON rate | ≥98% |
-| Tool-calling robustness | Tool selection | Tool success rate | ≥95% |
-| Latency | Benchmark set | p50, p95 ms | p95 within SLA |
-| Cost efficiency | Same benchmark set | Cost per task | Better than incumbent |
-| Failure recovery | Simulated outages | Recovery rate, failover time | Recovery ≥95%, <5s |
-| Language style quality | Native-speaker rubric | Human rubric score | ≥4/5 each language |
+| Dimension                     | Test Cases                        | Metric                       | Pass Threshold        |
+| ----------------------------- | --------------------------------- | ---------------------------- | --------------------- |
+| Query language handling       | ES, EN, NL, mixed-language        | Task success rate            | ≥90%                  |
+| Retrieval relevance           | Top-k retrieval                   | Recall@5, MRR, nDCG@10       | Recall@5 ≥0.85        |
+| Cross-lingual retrieval       | ES→EN, EN→ES, NL→EN               | Recall@5                     | ≥0.75                 |
+| Grounded answer accuracy      | Curated context sets              | Rubric score                 | ≥4/5                  |
+| Faithfulness                  | Unanswerable, conflicting context | Hallucination rate           | ≤5%                   |
+| Citation quality              | Multi-claim answers               | Citation precision           | ≥0.9                  |
+| Structured output reliability | JSON, tool args                   | Valid JSON rate              | ≥98%                  |
+| Tool-calling robustness       | Tool selection                    | Tool success rate            | ≥95%                  |
+| Latency                       | Benchmark set                     | p50, p95 ms                  | p95 within SLA        |
+| Cost efficiency               | Same benchmark set                | Cost per task                | Better than incumbent |
+| Failure recovery              | Simulated outages                 | Recovery rate, failover time | Recovery ≥95%, <5s    |
+| Language style quality        | Native-speaker rubric             | Human rubric score           | ≥4/5 each language    |
 
 ### Promotion Scoring Formula
 
 **Weights for Multilingual RAG**:
+
 - Retrieval relevance: 20%
 - Cross-lingual retrieval: 15%
 - Grounded answer accuracy: 20%
@@ -273,6 +330,7 @@ Explicit failure conditions that trigger fallback:
 - Cost efficiency: 5%
 
 **Promotion Requirements**:
+
 - Total weighted score beats incumbent by ≥5%
 - Faithfulness regression ≤1%
 - Structured output validity ≥98%
@@ -294,18 +352,21 @@ Explicit failure conditions that trigger fallback:
 ## Security Considerations
 
 ### API Key Management
+
 - Provider API keys stored in environment variables
 - Never log credentials or expose in error messages
 - Use separate keys for development and production
 - Rotate keys regularly via provider dashboards
 
 ### Input Validation
+
 - Validate all model inputs before sending to providers
 - Sanitize user prompts to prevent injection attacks
 - Validate structured output schemas before use
 - Rate limit requests per provider to prevent abuse
 
 ### Audit Logging
+
 - Log all model selection decisions
 - Log all fallback attempts with reasons
 - Log all promotion decisions with justification
@@ -314,18 +375,21 @@ Explicit failure conditions that trigger fallback:
 ## Performance Considerations
 
 ### Latency Budget
+
 - Model selection: <50ms
 - Fallback timeout: <5 seconds
 - p95 latency: Within product SLA
 - Health check cache: 5 minutes (stable), 2 minutes (recovered)
 
 ### Caching Strategy
+
 - Health status cached with TTL
 - Benchmark results cached for 24 hours
 - Model responses cached where appropriate (with invalidation)
 - Embedding vectors cached in Qdrant
 
 ### Resource Management
+
 - Connection pooling for provider APIs
 - Request queuing for rate-limited providers
 - Exponential backoff for retries
@@ -334,6 +398,7 @@ Explicit failure conditions that trigger fallback:
 ## Implementation Phases
 
 ### Phase V1 (Current)
+
 - Fix hardcoded provider bug in `model-provider-factory.ts`
 - Add role-based configuration with canonical naming
 - Implement backward-compatible alias layer
@@ -345,6 +410,7 @@ Explicit failure conditions that trigger fallback:
 - Add graceful degradation response
 
 ### Phase V1.5
+
 - Implement benchmark harness
 - Add nightly smoke checks
 - Add weekly benchmark jobs
@@ -353,6 +419,7 @@ Explicit failure conditions that trigger fallback:
 - Add regression detection
 
 ### Phase V2
+
 - Implement semi-automatic promotion
 - Add canary rollout system
 - Implement rollback triggers
@@ -362,18 +429,21 @@ Explicit failure conditions that trigger fallback:
 ## Migration Strategy
 
 ### Backward Compatibility
+
 - Existing `MAIN_MODEL_*` variables map to `GEN_MODEL_PRIMARY_*`
 - Existing `EMBEDDING_MODEL_*` variables map to `EMBED_MODEL_REMOTE_*`
 - No breaking changes to existing API contracts
 - Gradual migration path for configuration
 
 ### Version Pinning
+
 - Use pinned model versions only (no "latest" aliases)
 - Treat each version change as new candidate
 - Require compatibility tests before promotion
 - Keep previous version available for rollback (one release cycle)
 
 ### Embedding Migration
+
 - Require retrieval parity validation before promotion
 - A/B testing with 50/50 traffic split for 24 hours
 - Previous model available for rollback (minimum 7 days)
@@ -382,12 +452,14 @@ Explicit failure conditions that trigger fallback:
 ## Error Handling
 
 ### Graceful Degradation Response Types
+
 - **No answer available**: When no model can respond
 - **Partial answer**: When models return incomplete results
 - **Stale cached answer**: When models unavailable but cache exists
 - **Fallback-generated minimal response**: When models fail but basic response possible
 
 ### Error States
+
 - **Model unavailable**: Automatic fallback to next in chain
 - **All models failed**: Return graceful degradation response
 - **Invalid configuration**: Log error, use safe defaults
@@ -396,6 +468,7 @@ Explicit failure conditions that trigger fallback:
 ## Testing Strategy
 
 ### Unit Tests
+
 - Provider selection logic
 - Fallback chain resolution
 - Circuit breaker state transitions
@@ -403,18 +476,21 @@ Explicit failure conditions that trigger fallback:
 - Graceful degradation response generation
 
 ### Integration Tests
+
 - End-to-end request routing
 - Health check integration
 - Fallback behavior under simulated failures
 - Configuration override functionality
 
 ### Benchmark Tests
+
 - Smoke test execution
 - Benchmark result calculation
 - Promotion criteria evaluation
 - Regression detection
 
 ### E2E Tests
+
 - Full request lifecycle with fallbacks
 - Manual override scenarios
 - Canary rollout simulation
@@ -423,6 +499,7 @@ Explicit failure conditions that trigger fallback:
 ## Monitoring and Observability
 
 ### Metrics to Track
+
 - Model selection latency
 - Fallback rate per provider
 - Circuit breaker triggers
@@ -432,6 +509,7 @@ Explicit failure conditions that trigger fallback:
 - Latency percentiles per model
 
 ### Alerting
+
 - Circuit breaker triggers
 - High fallback rates (>20%)
 - Benchmark regression (>2%)
@@ -439,6 +517,7 @@ Explicit failure conditions that trigger fallback:
 - Health check failures
 
 ### Dashboards
+
 - Model performance overview
 - Fallback chain status
 - Benchmark trends
