@@ -13,11 +13,11 @@
 import { getModelRole, getEffectiveCapabilities } from "./model-registry"
 
 // ---------------------------------------------------------------------------
-// Evaluation cache (shared with model-provider-factory)
+// Evaluation cache (shared with chatbot evaluation flows)
 // ---------------------------------------------------------------------------
 
 /**
- * Internal evaluation cache.  Also used by model-provider-factory for
+ * Internal evaluation cache. Also used by better-chatbot config for
  * evaluation result caching.  Exported so that createDegradationResponse
  * can read cached data for stale-cached-answer responses.
  */
@@ -65,6 +65,7 @@ export type DegradationType =
   | "partial-answer"
   | "stale-cached-answer"
   | "fallback-generated-minimal-response"
+  | "rag-context-fallback"
 
 /**
  * Structured response returned when every model in a role's fallback chain
@@ -157,10 +158,10 @@ export function classifyDegradationType(
  * Build a default user-facing message for each degradation type.
  */
 function defaultDegradationMessage(
-  type: DegradationType,
+  degradationType: DegradationType,
   roleId: string,
 ): string {
-  switch (type) {
+  switch (degradationType) {
     case "no-answer-available":
       return `No AI response is currently available for the "${roleId}" role. Please try again later.`
     case "partial-answer":
@@ -169,6 +170,33 @@ function defaultDegradationMessage(
       return `Live models are unavailable for the "${roleId}" role. A previously cached result is being served and may be outdated.`
     case "fallback-generated-minimal-response":
       return `AI models are temporarily unavailable for the "${roleId}" role. A minimal fallback response has been generated.`
+    case "rag-context-fallback":
+      return `AI models are temporarily unavailable, but I found relevant information from our knowledge base to help answer your question.`
+  }
+}
+
+/**
+ * Create a RAG context fallback response when AI models fail but we have meaningful context.
+ */
+export function createRAGContextFallbackResponse(
+  roleId: string,
+  attemptedModels: Array<{ adapterKey: string; modelRef: string }>,
+  failureReasons: Array<{
+    adapterKey: string
+    modelRef: string
+    error: string
+  }>,
+  ragContext: string,
+): DegradationResponse {
+  return {
+    isDegradation: true,
+    degradationType: "rag-context-fallback",
+    message: defaultDegradationMessage("rag-context-fallback", roleId),
+    roleId,
+    attemptedModels,
+    failureReasons,
+    timestamp: new Date(),
+    partialContent: ragContext,
   }
 }
 

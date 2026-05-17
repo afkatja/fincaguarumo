@@ -1,28 +1,20 @@
 import {
   extractAllFAQs,
-  extractPageContent,
   extractAllTours,
-  extractHomeContent,
   extractAllReviews,
-  extractTopReviews,
   extractAllPosts,
   extractAllPages,
-  searchFAQs,
-  searchPosts,
-  searchTours,
-  getAverageRating,
+  extractHomeContent,
   extractAllAmenities,
   extractAllPricingRules,
   extractAllPaymentMethods,
   extractDefaultCancellationPolicy,
-  extractImportantLogistics,
+  extractAllLogistics,
 } from "./sanity-data-extractor"
 import { portableTextToPlain } from "@/sanity/lib/portableTextHelper"
-import {
-  buildSemanticRAGContext,
-  validateSemanticRAGSetup,
-} from "./semantic-rag/semantic-context-builder"
-import { detectUserIntent, enhanceQuery } from "./intent-detection"
+import { validateSemanticRAGSetup } from "./semantic-rag/semantic-context-builder"
+import { buildSemanticRAGContext } from "./semantic-rag/semantic-context-builder"
+import { generateEmbedding } from "./semantic-rag/embeddings"
 
 export interface RAGContext {
   faqs?: any[]
@@ -39,7 +31,217 @@ export interface RAGContext {
   logistics?: any[]
 }
 
-// Build context based on user query and page context
+/**
+ * Calculate cosine similarity between two vectors
+ */
+function cosineSimilarity(vecA: number[], vecB: number[]): number {
+  if (vecA.length !== vecB.length) {
+    throw new Error("Vectors must have the same length")
+  }
+
+  let dotProduct = 0
+  let normA = 0
+  let normB = 0
+
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i]
+    normA += vecA[i] * vecA[i]
+    normB += vecB[i] * vecB[i]
+  }
+
+  if (normA === 0 || normB === 0) {
+    return 0
+  }
+
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB))
+}
+
+/**
+ * Multi-language content type definitions for semantic matching
+ */
+const CONTENT_TYPE_DEFINITIONS = {
+  faq: {
+    examples: [
+      "questions answers help support frequently asked",
+      "preguntas respuestas ayuda soporte preguntas frecuentes",
+      "vragen antwoorden hulp ondersteuning veelgestelde vragen",
+      "вопросы ответы помощь поддержка часто задаваемые",
+      "Fragen Antworten Hilfe Support häufig gestellte Fragen",
+    ],
+  },
+  amenities: {
+    examples: [
+      "amenities facilities pool wifi features services",
+      "amenidades instalaciones piscina wifi características servicios",
+      "voorzieningen faciliteiten zwembad wifi kenmerken diensten",
+      "удобства бассейн wifi услуги удобства",
+      "Annehmlichkeiten Einrichtungen Pool WLAN Funktionen Dienstleistungen",
+    ],
+  },
+  pricing: {
+    examples: [
+      "pricing cost fee discount rates prices booking",
+      "precios costos tarifas descuentos tasas reservación",
+      "prijzen kosten tarieven korting boeking",
+      "цены стоимость скидки тарифы бронирование",
+      "Preise Kosten Gebühr Rabatt Tarife Buchung",
+    ],
+  },
+  tours: {
+    examples: [
+      "tours activities excursions trips experiences adventures",
+      "tours actividades excursiones viajes experiencias aventuras",
+      "tochten activiteiten excursies trips ervaringen avonturen",
+      "туры активности экскурсии поездки приключения",
+      "Touren Aktivitäten Ausflüge Reisen Erlebnisse Abenteuer",
+    ],
+  },
+  reviews: {
+    examples: [
+      "reviews ratings feedback testimonials opinions comments",
+      "reseñas calificaciones comentarios testimonios opiniones",
+      "beoordelingen ratings feedback testimonials meningen commentaren",
+      "отзывы рейтинги отзывы мнения комментарии",
+      "Bewertungen Ratings Feedback Testimonials Meinungen Kommentare",
+    ],
+  },
+  logistics: {
+    examples: [
+      "logistics transport parking directions check-in arrival",
+      "logística transporte estacionamiento direcciones registro llegada",
+      "logistiek transport parkeren route inchecken aankomst",
+      "логистика транспорт парковка направления регистрация прибытие",
+      "Logistik Transport Parken Anreise Check-in Ankunft",
+    ],
+  },
+  cancellation: {
+    examples: [
+      "cancellation refund modification changes policy terms",
+      "cancelación reembolso modificación cambios política términos",
+      "annulering teruggave wijziging veranderingen voorwaarden",
+      "отмена возврат изменения условия политика",
+      "Stornierung Rückerstattung Änderungen Richtlinien Bedingungen",
+    ],
+  },
+  booking: {
+    examples: [
+      "booking reservation availability dates calendar schedule",
+      "reserva disponibilidad fechas calendario horario",
+      "boeking beschikbaarheid data kalender schema",
+      "бронирование доступность даты календарь расписание",
+      "Buchung Verfügbarkeit Termine Kalender Zeitplan",
+    ],
+  },
+  payment: {
+    examples: [
+      "payment methods credit card paypal bank transfer deposit",
+      "métodos de pago tarjeta crédito paypal transferencia bancaria depósito",
+      "betaalmethoden creditcard paypal bankoverschrijving aanbetaling",
+      "способы оплаты кредитная карта paypal банковский перевод депозит",
+      "Zahlungsmethoden Kreditkarte PayPal Banküberweisung Anzahlung",
+    ],
+  },
+  home: {
+    examples: [
+      "home welcome introduction about property overview summary",
+      "inicio bienvenida introducción sobre propiedad resumen general",
+      "thuis welkom introductie over eigendom overzicht samenvatting",
+      "дом приветствие введение о собственности обзор общая информация",
+      "Start Willkommen Einführung über Immobilie Übersicht Zusammenfassung",
+    ],
+  },
+  general: {
+    examples: [
+      "information details help support contact about property",
+      "información detalles ayuda soporte contacto acerca propiedad",
+      "informatie details hulp ondersteuning contact over eigendom",
+      "информация детали помощь поддержка контакт собственность",
+      "Informationen Hilfe Unterstützung Kontakt über Immobilie",
+    ],
+  },
+} as const
+
+/**
+ * Cached content type embeddings for performance
+ */
+let contentTypeEmbeddingsCache: Record<string, number[]> = {}
+
+/**
+ * Generate or retrieve cached content type embeddings
+ */
+async function getContentTypeEmbeddings(): Promise<Record<string, number[]>> {
+  if (Object.keys(contentTypeEmbeddingsCache).length > 0) {
+    return contentTypeEmbeddingsCache
+  }
+
+  console.log("Generating content type embeddings for semantic fallback RAG...")
+
+  for (const [contentType, definition] of Object.entries(
+    CONTENT_TYPE_DEFINITIONS,
+  )) {
+    const combinedExamples = definition.examples.join(" ")
+
+    try {
+      const embeddingResult = await generateEmbedding(combinedExamples)
+      contentTypeEmbeddingsCache[contentType] = embeddingResult.embedding
+    } catch (error) {
+      console.error(
+        `Failed to generate embedding for content type ${contentType}:`,
+        error,
+      )
+      contentTypeEmbeddingsCache[contentType] = new Array(768).fill(0)
+    }
+  }
+
+  console.log(
+    `Generated embeddings for ${Object.keys(contentTypeEmbeddingsCache).length} content types`,
+  )
+  return contentTypeEmbeddingsCache
+}
+
+/**
+ * Detect content type similarity using semantic search
+ */
+async function detectContentTypeSimilarity(
+  queryEmbedding: number[],
+  contentText: string,
+): Promise<number> {
+  try {
+    const contentEmbeddingResult = await generateEmbedding(contentText)
+    return cosineSimilarity(queryEmbedding, contentEmbeddingResult.embedding)
+  } catch (error) {
+    console.error("Failed to generate content embedding for similarity:", error)
+    return 0
+  }
+}
+
+/**
+ * Semantic content filtering - replaces keyword matching
+ */
+async function semanticContentFilter(
+  items: any[],
+  queryEmbedding: number[],
+  getTextFunction: (item: any) => string,
+  threshold: number = 0.3,
+): Promise<any[]> {
+  const scoredItems = await Promise.all(
+    items.map(async item => {
+      const text = getTextFunction(item)
+      const similarity = await detectContentTypeSimilarity(queryEmbedding, text)
+      return { item, similarity }
+    }),
+  )
+
+  // Filter by threshold and sort by similarity
+  return scoredItems
+    .filter(({ similarity }) => similarity >= threshold)
+    .sort((a, b) => b.similarity - a.similarity)
+    .map(({ item }) => item)
+}
+
+/**
+ * Main RAG context builder - tries semantic first, falls back to semantic keyword RAG
+ */
 export async function buildRAGContext(
   userQuery: string,
   pageContext: { page: string; slug?: string; locale: string },
@@ -56,64 +258,69 @@ export async function buildRAGContext(
         pageContext,
         {
           locale: pageContext.locale,
-          useMultiStep: true,
-          includeMetadata: true,
+          useMultiStep: false, // Disable for cost optimization
+          includeMetadata: false, // Disable to reduce noise and tokens
+          useBatchProcessing: true, // Enable batch processing for cost savings
+          modelRole: "primary", // Use appropriate token budget
         },
       )
 
       return semanticContext.formattedContext
     } else {
       console.warn(
-        "Semantic RAG not available, falling back to keyword-based RAG",
+        "Semantic RAG not available, falling back to semantic keyword-based RAG",
       )
       console.warn("Issues:", validation.errors)
 
-      // Fallback to original keyword-based approach
-      return await buildKeywordBasedRAGContext(userQuery, pageContext)
+      // Fallback to semantic keyword-based approach
+      return await buildSemanticKeywordBasedRAGContext(userQuery, pageContext)
     }
   } catch (error) {
     console.error(
-      "Error in buildRAGContext, falling back to keyword-based:",
+      "Error in buildRAGContext, falling back to semantic keyword-based:",
       error,
     )
-    return await buildKeywordBasedRAGContext(userQuery, pageContext)
+    return await buildSemanticKeywordBasedRAGContext(userQuery, pageContext)
   }
 }
 
-// Fallback keyword-based RAG context builder
-async function buildKeywordBasedRAGContext(
+/**
+ * Semantic keyword-based RAG context builder (multilingual fallback)
+ * Uses semantic similarity instead of English-only keywords
+ */
+async function buildSemanticKeywordBasedRAGContext(
   userQuery: string,
   pageContext: { page: string; slug?: string; locale: string },
 ): Promise<string> {
   const context: RAGContext = {}
   let contextText = ""
 
-  const userIntent = detectUserIntent(userQuery)
-  const enhancedTerms = enhanceQuery(userQuery)
+  // Initialize content type embeddings for performance
+  await getContentTypeEmbeddings()
 
-  // Extract relevant FAQs with enhanced matching
+  // Generate query embedding for semantic matching
+  const queryEmbeddingResult = await generateEmbedding(userQuery)
+  const queryEmbedding = queryEmbeddingResult.embedding
+
+  // Extract relevant FAQs using semantic similarity
   const faqs = await extractAllFAQs()
-  const relevantFAQs = faqs.filter(
-    (faq: any) =>
-      faq.language === pageContext.locale &&
-      (faq.intent === userIntent || faq.priority >= 5) &&
-      enhancedTerms.some(
-        term =>
-          faq.question.toLowerCase().includes(term) ||
-          faq.answer.toLowerCase().includes(term) ||
-          faq.keywords?.some((k: string) => k.toLowerCase().includes(term)),
-      ),
+  const languageFAQs = faqs.filter(
+    (faq: any) => faq.language === pageContext.locale,
   )
 
-  // Sort by priority and relevance
-  relevantFAQs.sort((a: any, b: any) => {
-    if (a.intent === userIntent && b.intent !== userIntent) return -1
-    if (b.intent === userIntent && a.intent !== userIntent) return 1
-    return (b.priority || 1) - (a.priority || 1)
-  })
+  const relevantFAQs = await semanticContentFilter(
+    languageFAQs,
+    queryEmbedding,
+    (faq: any) =>
+      `${faq.question} ${faq.answer} ${(faq.keywords || []).join(" ")}`,
+    0.25, // Lower threshold for broader matching
+  )
+
+  // Sort by priority (keep existing logic)
+  relevantFAQs.sort((a: any, b: any) => (b.priority || 1) - (a.priority || 1))
 
   if (relevantFAQs.length > 0) {
-    context.faqs = relevantFAQs.slice(0, 8) // Increased limit
+    context.faqs = relevantFAQs.slice(0, 8)
     contextText += "\n\n=== RELEVANT FAQs ===\n"
     context.faqs?.forEach((faq: any, i: number) => {
       contextText += `\nQ${i + 1}: ${faq.question}\nA: ${faq.answer}\n`
@@ -123,431 +330,306 @@ async function buildKeywordBasedRAGContext(
     })
   }
 
-  // Enhanced amenities context
-  if (
-    userIntent === "amenities" ||
-    enhancedTerms.some(term =>
-      ["amenit", "facilit", "feature", "pool", "wifi", "kitchen"].some(
-        keyword => term.includes(keyword),
-      ),
-    )
-  ) {
-    const amenities = await extractAllAmenities()
-    const relevantAmenities = amenities.filter(
-      (amenity: any) =>
-        amenity.language === pageContext.locale &&
-        enhancedTerms.some(
-          term =>
-            amenity.title.toLowerCase().includes(term) ||
-            amenity.description.toLowerCase().includes(term) ||
-            amenity.keywords?.some((k: string) =>
-              k.toLowerCase().includes(term),
-            ) ||
-            amenity.category.toLowerCase().includes(term),
-        ),
-    )
+  // Semantic amenities context
+  const amenities = await extractAllAmenities()
+  const languageAmenities = amenities.filter(
+    (amenity: any) => amenity.language === pageContext.locale,
+  )
 
-    if (relevantAmenities.length > 0) {
-      context.amenities = relevantAmenities.slice(0, 10)
-      contextText += "\n\n=== AMENITIES & FEATURES ===\n"
-      context.amenities?.forEach((amenity: any, i: number) => {
-        contextText += `\n${i + 1}. ${amenity.title} (${amenity.category})\n`
-        contextText += `   ${amenity.description}\n`
-        if (amenity.isFeatured) contextText += "   ⭐ Featured\n"
-      })
-    }
+  const relevantAmenities = await semanticContentFilter(
+    languageAmenities,
+    queryEmbedding,
+    (amenity: any) =>
+      `${amenity.title} ${amenity.description} ${amenity.category} ${(amenity.keywords || []).join(" ")}`,
+    0.3,
+  )
+
+  if (relevantAmenities.length > 0) {
+    context.amenities = relevantAmenities.slice(0, 10)
+    contextText += "\n\n=== AMENITIES & FEATURES ===\n"
+    context.amenities?.forEach((amenity: any, i: number) => {
+      contextText += `\n${i + 1}. ${amenity.title} (${amenity.category})\n`
+      contextText += `   ${amenity.description}\n`
+      if (amenity.isFeatured) contextText += "   ⭐ Featured\n"
+    })
   }
 
-  // Enhanced pricing context
-  if (
-    userIntent === "pricing" ||
-    enhancedTerms.some(term =>
-      ["price", "cost", "fee", "discount", "season", "rate"].some(keyword =>
-        term.includes(keyword),
-      ),
-    )
-  ) {
-    const pricingRules = await extractAllPricingRules()
-    const relevantPricing = pricingRules.filter(
-      (rule: any) =>
-        rule.language === pageContext.locale &&
-        enhancedTerms.some(
-          term =>
-            rule.title.toLowerCase().includes(term) ||
-            rule.description.toLowerCase().includes(term) ||
-            rule.ruleType.toLowerCase().includes(term) ||
-            rule.season?.toLowerCase().includes(term),
-        ),
-    )
+  // Semantic pricing context
+  const pricingRules = await extractAllPricingRules()
+  const languagePricing = pricingRules.filter(
+    (rule: any) => rule.language === pageContext.locale,
+  )
 
-    if (relevantPricing.length > 0) {
-      context.pricingRules = relevantPricing
-      contextText += "\n\n=== PRICING INFORMATION ===\n"
-      context.pricingRules?.forEach((rule: any, i: number) => {
-        contextText += `\n${i + 1}. ${rule.title}\n`
-        contextText += `   Type: ${rule.ruleType}\n`
-        if (rule.season) contextText += `   Season: ${rule.season}\n`
-        if (rule.basePrice) contextText += `   Base Price: $${rule.basePrice}\n`
-        if (rule.percentage) contextText += `   ${rule.percentage}%\n`
-        if (rule.fixedAmount) contextText += `   Fee: $${rule.fixedAmount}\n`
-        if (rule.minimumNights)
-          contextText += `   Minimum nights: ${rule.minimumNights}\n`
-        contextText += `   ${rule.description}\n`
-      })
-    }
+  const relevantPricing = await semanticContentFilter(
+    languagePricing,
+    queryEmbedding,
+    (rule: any) =>
+      `${rule.title} ${rule.description} ${rule.ruleType} ${rule.season || ""}`,
+    0.3,
+  )
+
+  if (relevantPricing.length > 0) {
+    context.pricingRules = relevantPricing.slice(0, 6)
+    contextText += "\n\n=== PRICING INFORMATION ===\n"
+    context.pricingRules?.forEach((rule: any, i: number) => {
+      contextText += `\n${i + 1}. ${rule.title}\n`
+      contextText += `   Type: ${rule.ruleType}\n`
+      if (rule.season) contextText += `   Season: ${rule.season}\n`
+      contextText += `   ${rule.description}\n`
+    })
   }
 
-  // Enhanced payment methods context
-  if (
-    userIntent === "payment" ||
-    enhancedTerms.some(term =>
-      ["payment", "pay", "card", "stripe", "paypal"].some(keyword =>
-        term.includes(keyword),
-      ),
-    )
-  ) {
-    const paymentMethods = await extractAllPaymentMethods()
-    const relevantPayments = paymentMethods.filter(
-      (method: any) =>
-        method.language === pageContext.locale &&
-        enhancedTerms.some(
-          term =>
-            method.title.toLowerCase().includes(term) ||
-            method.description.toLowerCase().includes(term) ||
-            method.methodType.toLowerCase().includes(term) ||
-            method.processor?.toLowerCase().includes(term),
-        ),
-    )
+  // Semantic tours context
+  const tours = await extractAllTours()
+  const languageTours = tours.filter(
+    (tour: any) => tour.language === pageContext.locale,
+  )
 
-    if (relevantPayments.length > 0) {
-      context.paymentMethods = relevantPayments
-      contextText += "\n\n=== PAYMENT METHODS ===\n"
-      context.paymentMethods?.forEach((method: any, i: number) => {
-        contextText += `\n${i + 1}. ${method.title}\n`
-        contextText += `   Type: ${method.methodType}\n`
-        if (method.processor)
-          contextText += `   Processor: ${method.processor}\n`
-        if (method.processingTime)
-          contextText += `   Processing time: ${method.processingTime}\n`
-        if (method.fees) contextText += `   Fees: ${method.fees}\n`
-        if (method.isRecommended) contextText += "   ⭐ Recommended\n"
-        contextText += `   ${method.description}\n`
-      })
-    }
+  const relevantTours = await semanticContentFilter(
+    languageTours,
+    queryEmbedding,
+    (tour: any) =>
+      `${tour.title} ${tour.description} ${(tour.keywords || []).join(" ")}`,
+    0.3,
+  )
+
+  if (relevantTours.length > 0) {
+    context.tours = relevantTours.slice(0, 6)
+    contextText += "\n\n=== AVAILABLE TOURS ===\n"
+    context.tours?.forEach((tour: any, i: number) => {
+      contextText += `\n${i + 1}. ${tour.title}\n`
+      contextText += `   ${tour.description}\n`
+      if (tour.duration) contextText += `   Duration: ${tour.duration}\n`
+      if (tour.price) contextText += `   Price: $${tour.price}\n`
+    })
   }
 
-  // Enhanced cancellation policy context
-  if (
-    userIntent === "cancellation" ||
-    enhancedTerms.some(term =>
-      ["cancel", "refund", "modification", "change"].some(keyword =>
-        term.includes(keyword),
-      ),
-    )
-  ) {
-    const cancellationPolicy = await extractDefaultCancellationPolicy()
-    if (
-      cancellationPolicy &&
-      cancellationPolicy.language === pageContext.locale
-    ) {
-      context.cancellationPolicy = cancellationPolicy
-      contextText += "\n\n=== CANCELLATION POLICY ===\n"
-      contextText += `Policy: ${cancellationPolicy.title}\n`
-      contextText += `Type: ${cancellationPolicy.policyType}\n`
-      contextText += `${cancellationPolicy.description}\n`
+  // Semantic reviews context
+  const reviews = await extractAllReviews()
+  const languageReviews = reviews.filter(
+    (review: any) => review.language === pageContext.locale,
+  )
 
-      if (
-        cancellationPolicy.timeframes &&
-        cancellationPolicy.timeframes.length > 0
-      ) {
-        contextText += "\nCancellation Timeframes:\n"
-        cancellationPolicy.timeframes.forEach((timeframe: any) => {
-          contextText += `- ${timeframe.daysBeforeCheckIn}+ days before check-in: ${timeframe.refundPercentage}% refund\n`
-          contextText += `  ${timeframe.description}\n`
-        })
+  const relevantReviews = await semanticContentFilter(
+    languageReviews,
+    queryEmbedding,
+    (review: any) =>
+      `${review.title || ""} ${review.comment || ""} ${review.rating || ""}`,
+    0.3,
+  )
+
+  if (relevantReviews.length > 0) {
+    context.reviews = relevantReviews.slice(0, 6)
+    contextText += "\n\n=== GUEST REVIEWS ===\n"
+    context.reviews?.forEach((review: any, i: number) => {
+      contextText += `\n${i + 1}. ${review.title || "Review"}\n`
+      if (review.rating) contextText += `   Rating: ${review.rating}/5\n`
+      if (review.comment) {
+        const truncatedComment =
+          review.comment.length > 200
+            ? review.comment.substring(0, 200) + "..."
+            : review.comment
+        contextText += `   ${truncatedComment}\n`
       }
+      if (review.guestName) contextText += `   Guest: ${review.guestName}\n`
+    })
 
-      if (cancellationPolicy.modificationsAllowed) {
-        contextText += `\nModifications: ${cancellationPolicy.modificationPolicy || "Allowed"}\n`
-      }
-
-      contextText += `\nNo-show policy: ${cancellationPolicy.noShowPolicy}\n`
-    }
-  }
-
-  // Enhanced logistics context
-  if (
-    userIntent === "logistics" ||
-    enhancedTerms.some(term =>
-      [
-        "check",
-        "arrival",
-        "departure",
-        "transport",
-        "direction",
-        "parking",
-      ].some(keyword => term.includes(keyword)),
-    )
-  ) {
-    const logistics = await extractImportantLogistics()
-    const relevantLogistics = logistics.filter(
-      (logistic: any) =>
-        logistic.language === pageContext.locale &&
-        enhancedTerms.some(
-          term =>
-            logistic.title.toLowerCase().includes(term) ||
-            logistic.description.toLowerCase().includes(term) ||
-            logistic.instructions?.toLowerCase().includes(term) ||
-            logistic.category.toLowerCase().includes(term) ||
-            logistic.keywords?.some((k: string) =>
-              k.toLowerCase().includes(term),
-            ),
-        ),
-    )
-
-    if (relevantLogistics.length > 0) {
-      context.logistics = relevantLogistics
-      contextText += "\n\n=== LOGISTICS & PRACTICAL INFORMATION ===\n"
-      context.logistics?.forEach((logistic: any, i: number) => {
-        contextText += `\n${i + 1}. ${logistic.title} (${logistic.category})\n`
-        contextText += `   ${logistic.description}\n`
-        if (logistic.checkInTime)
-          contextText += `   Check-in: ${logistic.checkInTime}\n`
-        if (logistic.checkOutTime)
-          contextText += `   Check-out: ${logistic.checkOutTime}\n`
-        if (logistic.instructions)
-          contextText += `   Instructions: ${logistic.instructions}\n`
-        if (logistic.contactInfo)
-          contextText += `   Contact: ${logistic.contactInfo}\n`
-        if (logistic.isImportant) contextText += "   ⭐ Important\n"
-      })
-    }
-  }
-
-  // Extract page content if on a specific page
-  if (pageContext.page === "stay" && pageContext.slug) {
-    const pageInfo = await extractPageContent(pageContext.slug)
-    if (pageInfo) {
-      context.pageInfo = pageInfo
-      contextText += "\n\n=== PROPERTY INFORMATION ===\n"
-      contextText += `Title: ${pageInfo.title}\n`
-      if (pageInfo.subtitle) {
-        contextText += `Subtitle: ${pageInfo.subtitle}\n`
-      }
-      contextText += `Description: ${pageInfo.description}\n`
-      if (pageInfo.price) {
-        contextText += `Price: $${pageInfo.price} per person\n`
-      } else if (pageInfo.pricingRules && pageInfo.pricingRules.length > 0) {
-        const baseRate = pageInfo.pricingRules.find(
-          (rule: any) => rule.ruleType === "base_rate",
-        )
-        if (baseRate && baseRate.basePrice) {
-          contextText += `Base Price: $${baseRate.basePrice} per person\n`
-        }
-        // Add discount information
-        const discounts = pageInfo.pricingRules.filter(
-          (rule: any) => rule.ruleType === "discount",
-        )
-        if (discounts.length > 0) {
-          contextText += `Available discounts: ${discounts.map((d: any) => `${d.title} (${d.percentage}% off for ${d.minimumNights}+ nights)`).join(", ")}\n`
-        }
-      }
-      if (pageInfo.body) {
-        const plainText = portableTextToPlain(pageInfo.body)
-        const truncated = plainText.substring(0, 800)
-        contextText += `Details: ${truncated}${plainText.length > 800 ? "..." : ""}\n`
-      }
-      if (pageInfo.categories && pageInfo.categories.length > 0) {
-        contextText += `Categories: ${pageInfo.categories.map((c: any) => c.title).join(", ")}\n`
-      }
-    }
-  }
-
-  // Extract tour information if query mentions tours/activities
-  if (
-    userIntent === "tours" ||
-    enhancedTerms.some(term =>
-      ["tour", "activity", "attraction", "excursion", "trip"].some(keyword =>
-        term.includes(keyword),
-      ),
-    )
-  ) {
-    const tours = await extractAllTours()
-    const relevantTours = tours.filter(
-      (t: any) => t.language === pageContext.locale,
-    )
-    if (relevantTours.length > 0) {
-      context.tours = relevantTours.slice(0, 8)
-      contextText += "\n\n=== AVAILABLE TOURS & ACTIVITIES ===\n"
-      context.tours?.forEach((tour: any, i: number) => {
-        contextText += `\n${i + 1}. ${tour.title}`
-        if (tour.isFeatured) contextText += " ⭐ Featured"
-        if (tour.isNew) contextText += " 🆕 New"
-        contextText += `\n   Location: ${tour.location}\n`
-        contextText += `   Duration: ${tour.duration}\n`
-        contextText += `   Price: $${tour.price}\n`
-        contextText += `   Description: ${tour.description}\n`
-      })
-    }
-  }
-
-  // Extract reviews if query mentions reviews/ratings
-  if (
-    userIntent === "reviews" ||
-    enhancedTerms.some(term =>
-      ["review", "rating", "feedback", "guest", "experience"].some(keyword =>
-        term.includes(keyword),
-      ),
-    )
-  ) {
-    const topReviews = await extractTopReviews(5)
-    const avgRating = await getAverageRating()
-
-    if (topReviews.length > 0) {
-      context.reviews = topReviews
+    // Add average rating if available
+    if (context.reviews && context.reviews.length > 0) {
+      const avgRating =
+        context.reviews.reduce(
+          (sum: number, r: any) => sum + (r.rating || 0),
+          0,
+        ) / context.reviews.length
       context.averageRating = avgRating
-      contextText += "\n\n=== GUEST REVIEWS ===\n"
-      contextText += `Average Rating: ${avgRating.average}/10 (${avgRating.total} reviews)\n`
-      contextText += `Airbnb: ${avgRating.airbnb} reviews | Booking.com: ${avgRating.booking} reviews\n\n`
-      context.reviews?.forEach((review: any, i: number) => {
-        contextText += `${i + 1}. ${review.author?.name || "Anonymous"} (${review.platform})\n`
-        contextText += `   Rating: ${review.rating}/10\n`
-        contextText += `   Date: ${review.date}\n`
-        contextText += `   "${review.reviewText}"\n\n`
-      })
+      contextText += `\nAverage Rating: ${avgRating.toFixed(1)}/5\n`
     }
   }
 
-  // Extract blog posts if query mentions blog/articles/local attractions
-  if (
-    enhancedTerms.some(term =>
-      ["blog", "article", "post", "local", "area", "nearby", "around"].some(
-        keyword => term.includes(keyword),
-      ),
-    )
-  ) {
-    const posts = await extractAllPosts()
-    const relevantPosts = posts.filter(
-      (p: any) => p.language === pageContext.locale,
-    )
-    if (relevantPosts.length > 0) {
-      context.posts = relevantPosts.slice(0, 5)
-      contextText += "\n\n=== BLOG POSTS & LOCAL ATTRACTIONS ===\n"
-      context.posts?.forEach((post: any, i: number) => {
-        contextText += `\n${i + 1}. ${post.title}\n`
-        if (post.author) {
-          contextText += `   By: ${post.author.name}\n`
-        }
-        if (post.publishedAt) {
-          contextText += `   Published: ${new Date(post.publishedAt).toLocaleDateString()}\n`
-        }
-        if (post.categories && post.categories.length > 0) {
-          contextText += `   Categories: ${post.categories.map((c: any) => c.title).join(", ")}\n`
-        }
-        if (post.body) {
-          const plainText = portableTextToPlain(post.body)
-          const truncated = plainText.substring(0, 200)
-          contextText += `   Preview: ${truncated}${plainText.length > 200 ? "..." : ""}\n`
-        }
-      })
+  // Semantic logistics context
+  const logistics = await extractAllLogistics()
+  const languageLogistics = logistics.filter(
+    (logistic: any) => logistic.language === pageContext.locale,
+  )
+
+  const relevantLogistics = await semanticContentFilter(
+    languageLogistics,
+    queryEmbedding,
+    (logistic: any) =>
+      `${logistic.title} ${logistic.description} ${(logistic.keywords || []).join(" ")}`,
+    0.3,
+  )
+
+  if (relevantLogistics.length > 0) {
+    context.logistics = relevantLogistics.slice(0, 6)
+    contextText += "\n\n=== LOGISTICS INFORMATION ===\n"
+    context.logistics?.forEach((logistic: any, i: number) => {
+      contextText += `\n${i + 1}. ${logistic.title}\n`
+      contextText += `   ${logistic.description}\n`
+    })
+  }
+
+  // Semantic cancellation policy context
+  const cancellationPolicy = await extractDefaultCancellationPolicy()
+  const languageCancellation =
+    cancellationPolicy?.filter(
+      (policy: any) => policy.language === pageContext.locale,
+    ) || []
+
+  const relevantCancellation = await semanticContentFilter(
+    languageCancellation,
+    queryEmbedding,
+    (policy: any) =>
+      `${policy.title} ${policy.description} ${policy.policy || ""}`,
+    0.3,
+  )
+
+  if (relevantCancellation.length > 0) {
+    context.cancellationPolicy = relevantCancellation[0]
+    contextText += "\n\n=== CANCELLATION POLICY ===\n"
+    const policy = relevantCancellation[0]
+    contextText += `\n${policy.title}\n`
+    contextText += `${policy.description}\n`
+    if (policy.policy) {
+      const truncatedPolicy =
+        policy.policy.length > 300
+          ? policy.policy.substring(0, 300) + "..."
+          : policy.policy
+      contextText += `${truncatedPolicy}\n`
     }
   }
 
-  // Extract home page content for general property info
-  if (pageContext.page === "homepage") {
-    const homeInfo = await extractHomeContent()
-    if (homeInfo) {
-      context.homeInfo = homeInfo
-      contextText += "\n\n=== VILLA BRUNO OVERVIEW ===\n"
-      contextText += `Title: ${homeInfo.hero_title}\n`
-      if (homeInfo.hero_slogan) {
-        contextText += `Slogan: ${homeInfo.hero_slogan}\n`
+  // Semantic blog posts context
+  const posts = await extractAllPosts()
+  const languagePosts = posts.filter(
+    (post: any) => post.language === pageContext.locale,
+  )
+
+  const relevantPosts = await semanticContentFilter(
+    languagePosts,
+    queryEmbedding,
+    (post: any) =>
+      `${post.title} ${portableTextToPlain(post.body || "")} ${(post.categories || []).map((c: any) => c.title).join(" ")}`,
+    0.25,
+  )
+
+  if (relevantPosts.length > 0) {
+    context.posts = relevantPosts.slice(0, 4)
+    contextText += "\n\n=== BLOG POSTS ===\n"
+    context.posts?.forEach((post: any, i: number) => {
+      contextText += `\n${i + 1}. ${post.title}\n`
+      if (post.author) contextText += `   Author: ${post.author.name}\n`
+      if (post.publishedAt)
+        contextText += `   Published: ${new Date(post.publishedAt).toLocaleDateString()}\n`
+      if (post.categories && post.categories.length > 0) {
+        contextText += `   Categories: ${post.categories.map((c: any) => c.title).join(", ")}\n`
       }
-      if (homeInfo.subtitle) {
-        contextText += `Subtitle: ${homeInfo.subtitle}\n`
-      }
-      if (homeInfo.intro_body) {
-        const plainText = portableTextToPlain(homeInfo.intro_body)
-        const truncated = plainText.substring(0, 600)
-        contextText += `About: ${truncated}${plainText.length > 600 ? "..." : ""}\n`
-      }
-    }
-  }
-
-  // If no specific context was found, provide general information
-  if (contextText === "") {
-    contextText += "\n\n=== GENERAL INFORMATION ===\n"
-    contextText +=
-      "Villa Bruno is a beautiful vacation rental property in Costa Rica.\n"
-    contextText +=
-      "For specific information about availability, bookings, tours, or local attractions, please ask a more specific question.\n"
-  }
-
-  return contextText
-}
-
-// Search across all content types
-export async function searchAllContent(
-  searchTerm: string,
-  locale: string = "en",
-): Promise<{
-  faqs: any[]
-  posts: any[]
-  tours: any[]
-}> {
-  const [faqs, posts, tours] = await Promise.all([
-    searchFAQs(searchTerm, locale),
-    searchPosts(searchTerm, locale),
-    searchTours(searchTerm, locale),
-  ])
-
-  return { faqs, posts, tours }
-}
-
-// Get comprehensive property information
-export async function getPropertyOverview(
-  locale: string = "en",
-): Promise<string> {
-  const [homeInfo, pages, avgRating] = await Promise.all([
-    extractHomeContent(),
-    extractAllPages(),
-    getAverageRating(),
-  ])
-
-  let overview = "\n\n=== VILLA BRUNO PROPERTY OVERVIEW ===\n"
-
-  if (homeInfo) {
-    overview += `\n${homeInfo.hero_title}\n`
-    if (homeInfo.hero_slogan) {
-      overview += `"${homeInfo.hero_slogan}"\n`
-    }
-    if (homeInfo.intro_body) {
-      const plainText = portableTextToPlain(homeInfo.intro_body)
-      const truncated = plainText.substring(0, 500)
-      overview += `\n${truncated}${plainText.length > 500 ? "..." : ""}\n`
-    }
-  }
-
-  if (pages && pages.length > 0) {
-    overview += "\n\n=== AVAILABLE PROPERTIES ===\n"
-    pages.forEach((page: any) => {
-      if (page.language === locale) {
-        overview += `\n• ${page.title}\n`
-        if (page.description) {
-          const description = page.description || ""
-          const truncated = description.substring(0, 150)
-          overview += `  ${truncated}${description.length > 150 ? "..." : ""}\n`
-        }
-        if (page.price) {
-          overview += `  Price: $${page.price} per person\n`
-        }
+      // Add a brief excerpt
+      if (post.body) {
+        const plainText = portableTextToPlain(post.body)
+        const excerpt =
+          plainText.length > 150
+            ? plainText.substring(0, 150) + "..."
+            : plainText
+        contextText += `   Excerpt: ${excerpt}\n`
       }
     })
   }
 
-  overview += `\n\n=== GUEST RATINGS ===\n`
-  overview += `Average Rating: ${avgRating.average}/10 (${avgRating.total} total reviews)\n`
-  overview += `Airbnb: ${avgRating.airbnb} reviews | Booking.com: ${avgRating.booking} reviews\n`
+  // Semantic payment methods context
+  const paymentMethods = await extractAllPaymentMethods()
+  const languagePaymentMethods = paymentMethods.filter(
+    (method: any) => method.language === pageContext.locale,
+  )
 
-  return overview
+  const relevantPaymentMethods = await semanticContentFilter(
+    languagePaymentMethods,
+    queryEmbedding,
+    (method: any) =>
+      `${method.title} ${method.description} ${(method.keywords || []).join(" ")}`,
+    0.3,
+  )
+
+  if (relevantPaymentMethods.length > 0) {
+    context.paymentMethods = relevantPaymentMethods.slice(0, 6)
+    contextText += "\n\n=== PAYMENT METHODS ===\n"
+    context.paymentMethods?.forEach((method: any, i: number) => {
+      contextText += `\n${i + 1}. ${method.title}\n`
+      contextText += `   ${method.description}\n`
+      if (method.type) contextText += `   Type: ${method.type}\n`
+      if (method.fees) contextText += `   Fees: ${method.fees}\n`
+    })
+  }
+
+  // Semantic home content context
+  const homeContent = await extractHomeContent()
+  const languageHomeContent = homeContent.filter(
+    (home: any) => home.language === pageContext.locale,
+  )
+
+  const relevantHomeContent = await semanticContentFilter(
+    languageHomeContent,
+    queryEmbedding,
+    (home: any) =>
+      `${home.title || ""} ${home.welcomeMessage || ""} ${home.introduction || ""} ${home.overview || ""}`,
+    0.25,
+  )
+
+  if (relevantHomeContent.length > 0) {
+    context.homeInfo = relevantHomeContent[0]
+    contextText += "\n\n=== HOME INFORMATION ===\n"
+    const home = relevantHomeContent[0]
+    contextText += `\n${home.title || "Welcome"}\n`
+    if (home.welcomeMessage) {
+      const truncatedWelcome =
+        home.welcomeMessage.length > 200
+          ? home.welcomeMessage.substring(0, 200) + "..."
+          : home.welcomeMessage
+      contextText += `${truncatedWelcome}\n`
+    }
+    if (home.introduction) {
+      const truncatedIntro =
+        home.introduction.length > 200
+          ? home.introduction.substring(0, 200) + "..."
+          : home.introduction
+      contextText += `${truncatedIntro}\n`
+    }
+    if (home.overview) {
+      const truncatedOverview =
+        home.overview.length > 200
+          ? home.overview.substring(0, 200) + "..."
+          : home.overview
+      contextText += `${truncatedOverview}\n`
+    }
+  }
+
+  // Add basic page information
+  const pages = await extractAllPages()
+  const languagePages = pages.filter(
+    (page: any) => page.language === pageContext.locale,
+  )
+
+  const relevantPages = await semanticContentFilter(
+    languagePages,
+    queryEmbedding,
+    (page: any) =>
+      `${page.title} ${page.subtitle || ""} ${page.description || ""}`,
+    0.25,
+  )
+
+  if (relevantPages.length > 0) {
+    context.pageInfo = relevantPages[0]
+    contextText += "\n\n=== PROPERTY INFORMATION ===\n"
+    const page = relevantPages[0]
+    contextText += `\n${page.title}\n`
+    if (page.subtitle) contextText += `${page.subtitle}\n`
+    if (page.description) contextText += `${page.description}\n`
+  }
+
+  // Return context or fallback message
+  if (contextText.trim()) {
+    return contextText.trim()
+  } else {
+    return "No specific information found. Please provide general assistance based on your knowledge."
+  }
 }

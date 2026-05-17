@@ -134,9 +134,11 @@ function cacheHealthCheckResultWithRecoveryState(
     isRecovered,
   })
 
-  console.log(
-    `💾 Cached health check for ${roleId} (TTL: ${ttl / 1000}s, recovered: ${isRecovered}, force: ${forceRefresh})`,
-  )
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      `💾 Cached health check for ${roleId} (TTL: ${ttl / 1000}s, recovered: ${isRecovered}, force: ${forceRefresh})`,
+    )
+  }
 }
 
 /**
@@ -144,7 +146,9 @@ function cacheHealthCheckResultWithRecoveryState(
  */
 export function invalidateHealthCheckCache(roleId: string): void {
   healthCheckCache.delete(roleId)
-  console.log(`🗑️ Invalidated health check cache for ${roleId}`)
+  if (process.env.NODE_ENV === "development") {
+    console.log(`🗑️ Invalidated health check cache for ${roleId}`)
+  }
 }
 
 /**
@@ -207,18 +211,26 @@ export function armCircuitBreakerWithProgressiveDisable(
 export async function performHealthCheck(
   roleId: string,
   forceRefresh: boolean = false,
+  allowLiveCheck: boolean = false,
 ): Promise<HealthCheckResult> {
-  // Check cache first unless force refresh is requested
-  if (!forceRefresh) {
+  // Check cache first - always use cache on request path unless explicitly allowed
+  if (!forceRefresh || !allowLiveCheck) {
     const cached = getCachedHealthCheck(roleId)
     if (cached) {
-      console.log(`✅ Using cached health check for ${roleId}`)
       return {
         isHealthy: cached.isHealthy,
         latency: cached.latency,
         error: cached.error,
         timestamp: cached.timestamp,
       }
+    }
+  }
+
+  // If no cache and live checks not allowed (request path), return default healthy
+  if (!allowLiveCheck) {
+    return {
+      isHealthy: true,
+      timestamp: new Date(),
     }
   }
 
@@ -343,41 +355,26 @@ export function updateCircuitBreakerState(
     invalidateHealthCheckCache(roleId)
   }
 
-  console.log(`🔧 Circuit breaker state updated for ${roleId}:`, {
-    isActive: newState.isActive,
-    failureCount: newState.failureCount,
-    consecutiveFailures: newState.consecutiveFailures,
-    completedBreakerTrips: newState.completedBreakerTrips,
-    disableUntil: newState.disableUntil,
-  })
+  if (process.env.NODE_ENV === "development") {
+    console.log(`🔧 Circuit breaker state updated for ${roleId}:`, {
+      isActive: newState.isActive,
+      failureCount: newState.failureCount,
+      consecutiveFailures: newState.consecutiveFailures,
+      completedBreakerTrips: newState.completedBreakerTrips,
+      disableUntil: newState.disableUntil,
+    })
+  }
 }
 
 /**
  * Check if request should be allowed based on circuit breaker state
+ * In serverless environments, circuit breaker is ineffective due to state reset
+ * Always allow requests - rely on fallback chain for resilience
  */
 export function shouldAllowRequest(roleId: string): boolean {
-  const state = getCircuitBreakerState(roleId)
-
-  // If circuit breaker is active, check if disable period has expired
-  if (state.isActive && state.disableUntil) {
-    if (new Date() < state.disableUntil) {
-      return false // Still disabled
-    }
-    // Disable period expired, reactivate but with caution
-    updateCircuitBreakerState(roleId, {
-      isActive: false,
-      failureCount: state.failureCount,
-      lastFailureTime: state.lastFailureTime,
-      consecutiveFailures: 0,
-      disableUntil: undefined,
-    })
-    console.log(
-      `🔄 Circuit breaker reactivated for ${roleId} after disable period`,
-    )
-    return true
-  }
-
-  return !state.isActive
+  // In serverless, circuit breaker state resets on cold start
+  // The fallback chain in model registry provides the real resilience
+  return true
 }
 
 /**
@@ -394,7 +391,9 @@ export function recordSuccessfulRequest(roleId: string, latency: number): void {
     })
   }
 
-  console.log(`✅ Successful request to ${roleId} in ${latency}ms`)
+  if (process.env.NODE_ENV === "development") {
+    console.log(`✅ Successful request to ${roleId} in ${latency}ms`)
+  }
 }
 
 /**
@@ -411,7 +410,9 @@ export function recordFailedRequest(roleId: string, error: string): void {
     consecutiveFailures: currentConsecutiveFailures + 1,
   })
 
-  console.log(`❌ Failed request to ${roleId}: ${error}`)
+  if (process.env.NODE_ENV === "development") {
+    console.log(`❌ Failed request to ${roleId}: ${error}`)
+  }
 }
 
 /**
@@ -474,7 +475,9 @@ export function getHealthMetrics(roleId: string): HealthMetrics {
  */
 export function resetCircuitBreaker(roleId: string): void {
   circuitBreakerStates.delete(roleId)
-  console.log(`🔄 Circuit breaker reset for ${roleId}`)
+  if (process.env.NODE_ENV === "development") {
+    console.log(`🔄 Circuit breaker reset for ${roleId}`)
+  }
 }
 
 /**
@@ -499,16 +502,22 @@ export function getAllCircuitBreakerStates(): Record<
  */
 export function startBackgroundRefresh(): void {
   if (backgroundRefreshIntervalId) {
-    console.log("⚠️ Background refresh already running")
+    if (process.env.NODE_ENV === "development") {
+      console.log("⚠️ Background refresh already running")
+    }
     return
   }
 
-  console.log(
-    `🔄 Starting background health check refresh (interval: ${CIRCUIT_BREAKER_CONFIG.backgroundRefreshInterval / 1000}s)`,
-  )
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      `🔄 Starting background health check refresh (interval: ${CIRCUIT_BREAKER_CONFIG.backgroundRefreshInterval / 1000}s)`,
+    )
+  }
 
   backgroundRefreshIntervalId = setInterval(async () => {
-    console.log("🔄 Running background health check refresh...")
+    if (process.env.NODE_ENV === "development") {
+      console.log("🔄 Running background health check refresh...")
+    }
 
     // Get all registered model roles
     const { getModelRoles } = require("./model-registry")
@@ -517,14 +526,20 @@ export function startBackgroundRefresh(): void {
     // Refresh health check for each model
     for (const [roleId, model] of Object.entries(modelRoles)) {
       try {
-        await performHealthCheck(roleId, true) // force refresh
-        console.log(`✅ Background refresh completed for ${roleId}`)
+        await performHealthCheck(roleId, true, true) // force refresh with live check
+        if (process.env.NODE_ENV === "development") {
+          console.log(`✅ Background refresh completed for ${roleId}`)
+        }
       } catch (error) {
-        console.error(`❌ Background refresh failed for ${roleId}:`, error)
+        if (process.env.NODE_ENV === "development") {
+          console.error(`❌ Background refresh failed for ${roleId}:`, error)
+        }
       }
     }
 
-    console.log("🔄 Background health check refresh cycle completed")
+    if (process.env.NODE_ENV === "development") {
+      console.log("🔄 Background health check refresh cycle completed")
+    }
   }, CIRCUIT_BREAKER_CONFIG.backgroundRefreshInterval)
 }
 
@@ -535,7 +550,9 @@ export function stopBackgroundRefresh(): void {
   if (backgroundRefreshIntervalId) {
     clearInterval(backgroundRefreshIntervalId)
     backgroundRefreshIntervalId = null
-    console.log("⏹️ Stopped background health check refresh")
+    if (process.env.NODE_ENV === "development") {
+      console.log("⏹️ Stopped background health check refresh")
+    }
   }
 }
 

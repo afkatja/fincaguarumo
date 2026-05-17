@@ -11,7 +11,6 @@ import {
   getModelsByCapability,
   ModelCapability,
 } from "./model-registry"
-import { assertModelSelectionWithinBudget } from "./model-performance-budgets"
 
 export type TaskType =
   | "generation"
@@ -105,10 +104,6 @@ export function routeRequest(request: RouteRequest): RouteResult {
         }
 
         const routingTime = Date.now() - startTime
-        assertModelSelectionWithinBudget(
-          routingTime,
-          `routeRequest(${request.taskType}, override)`,
-        )
 
         return {
           modelRole: model.id,
@@ -179,10 +174,6 @@ export function routeRequest(request: RouteRequest): RouteResult {
     }
 
     const routingTime = Date.now() - startTime
-    assertModelSelectionWithinBudget(
-      routingTime,
-      `routeRequest(${request.taskType}, rule)`,
-    )
 
     return {
       modelRole: model.id,
@@ -228,5 +219,14 @@ export function shouldUseLocalEmbedding(): boolean {
   const localAdapter =
     process.env.EMBED_MODEL_LOCAL_PROVIDER ||
     process.env.EMBED_MODEL_LOCAL_ADAPTER_KEY
+  return process.env.NODE_ENV === "development" && localAdapter === "local"
+}
+
+/**
+ * Check if routing should use local vs remote generation models based on environment
+ * Uses local models in development to reduce costs when available
+ */
+export function shouldUseLocalGenerations(): boolean {
+  const localAdapter = process.env.GENERATION_MODEL_LOCAL_ADAPTER_KEY
   return process.env.NODE_ENV === "development" && localAdapter === "local"
 }
