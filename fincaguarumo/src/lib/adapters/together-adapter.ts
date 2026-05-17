@@ -12,6 +12,7 @@ import {
   AdapterHealthResult,
   CapabilityFlag,
 } from "./provider-adapter"
+import { createOpenAI } from "@ai-sdk/openai"
 
 export class TogetherAdapter implements ProviderAdapter {
   readonly adapterKey = "together"
@@ -29,11 +30,12 @@ export class TogetherAdapter implements ProviderAdapter {
     modelRef: string,
     _options?: Record<string, unknown>,
   ): LanguageModelV3 {
-    // Together uses the OpenAI-compatible SDK
-    const { openai } = require("@ai-sdk/openai")
-    return openai(modelRef, {
+    // Together uses the OpenAI-compatible SDK with custom baseURL
+    const togetherAI = createOpenAI({
       baseURL: "https://api.together.xyz/v1",
+      apiKey: process.env.TOGETHER_API_KEY,
     })
+    return togetherAI(modelRef)
   }
 
   async healthCheck(modelRef: string): Promise<AdapterHealthResult> {
@@ -61,6 +63,10 @@ export class TogetherAdapter implements ProviderAdapter {
       return {
         isHealthy: response.ok || response.status === 429, // 429 = rate limited but service is up
         latency: Date.now() - startTime,
+        error:
+          response.ok || response.status === 429
+            ? undefined
+            : `HTTP ${response.status}: ${response.statusText}`,
         timestamp: new Date(),
       }
     } catch (error) {

@@ -47,6 +47,7 @@ export interface ModelRole {
   /** Capabilities verified by smoke tests / benchmarks (optional) */
   verifiedCapabilities?: Partial<ModelCapability>
   maxTokens: number
+  maxInputTokens?: number // For embedding models - input sequence limit
   temperature?: number
   fallbacks: FallbackEntry[]
   healthStatus: {
@@ -62,6 +63,10 @@ export interface ModelConfig {
   tools: ModelRole
   fast: ModelRole
   evaluation: ModelRole
+  primaryLocal: ModelRole
+  toolsLocal: ModelRole
+  fastLocal: ModelRole
+  evaluationLocal: ModelRole
   embeddingLocal: ModelRole
   embeddingRemote: ModelRole
 }
@@ -128,6 +133,7 @@ function getRoleConfig(
   adapterKey: string
   modelRef: string
   maxTokens: number
+  maxInputTokens?: number
   temperature: number
   fallbacks: string
 } {
@@ -162,6 +168,15 @@ function getRoleConfig(
       String(defaults?.maxTokens ?? 1000),
   )
 
+  const maxInputTokens =
+    parseInt(
+      process.env[`${envPrefix}_MAX_INPUT_TOKENS`] ||
+        (legacyEnvPrefix
+          ? process.env[`${legacyEnvPrefix}_MAX_INPUT_TOKENS`]
+          : undefined) ||
+        String(defaults?.maxInputTokens ?? 0),
+    ) || undefined
+
   const temperature = parseFloat(
     process.env[`${envPrefix}_TEMPERATURE`] ||
       (legacyEnvPrefix
@@ -178,7 +193,48 @@ function getRoleConfig(
     defaults?.fallbacks ||
     ""
 
-  return { adapterKey, modelRef, maxTokens, temperature, fallbacks }
+  return {
+    adapterKey,
+    modelRef,
+    maxTokens,
+    maxInputTokens,
+    temperature,
+    fallbacks,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Helper: create a ModelRole from config and capabilities
+// ---------------------------------------------------------------------------
+
+function createModelRole(
+  id: string,
+  config: {
+    adapterKey: string
+    modelRef: string
+    maxTokens: number
+    maxInputTokens?: number
+    temperature: number
+    fallbacks: string
+  },
+  capabilities: ModelCapability,
+): ModelRole {
+  return {
+    id,
+    adapterKey: config.adapterKey,
+    modelRef: config.modelRef,
+    declaredCapabilities: capabilities,
+    maxTokens: config.maxTokens,
+    maxInputTokens: config.maxInputTokens,
+    temperature: config.temperature,
+    fallbacks: parseFallbackChain(config.fallbacks),
+    healthStatus: {
+      isHealthy: true,
+      lastChecked: new Date(),
+      consecutiveFailures: 0,
+      circuitBreakerActive: false,
+    },
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -186,157 +242,122 @@ function getRoleConfig(
 // ---------------------------------------------------------------------------
 
 export function getModelConfig(): ModelConfig {
-  // Primary Generation Models
   const primaryCfg = getRoleConfig("primary", "GEN_MODEL_PRIMARY", "MAIN_MODEL")
-  const primary: ModelRole = {
-    id: "primary",
-    adapterKey: primaryCfg.adapterKey,
-    modelRef: primaryCfg.modelRef,
-    declaredCapabilities: {
-      multilingual: true,
-      toolCalling: true,
-      evaluation: true,
-      generation: true,
-      embedding: false,
-      streaming: true,
-    },
-    maxTokens: primaryCfg.maxTokens,
-    temperature: primaryCfg.temperature,
-    fallbacks: parseFallbackChain(primaryCfg.fallbacks),
-    healthStatus: {
-      isHealthy: true,
-      lastChecked: new Date(),
-      consecutiveFailures: 0,
-      circuitBreakerActive: false,
-    },
-  }
+  const primary = createModelRole("primary", primaryCfg, {
+    multilingual: true,
+    toolCalling: true,
+    evaluation: true,
+    generation: true,
+    embedding: false,
+    streaming: true,
+  })
 
-  // Tools Generation Models
   const toolsCfg = getRoleConfig("tools", "GEN_MODEL_TOOLS")
-  const tools: ModelRole = {
-    id: "tools",
-    adapterKey: toolsCfg.adapterKey,
-    modelRef: toolsCfg.modelRef,
-    declaredCapabilities: {
-      multilingual: true,
-      toolCalling: true,
-      evaluation: false,
-      generation: true,
-      embedding: false,
-      streaming: true,
-    },
-    maxTokens: toolsCfg.maxTokens,
-    temperature: toolsCfg.temperature,
-    fallbacks: parseFallbackChain(toolsCfg.fallbacks),
-    healthStatus: {
-      isHealthy: true,
-      lastChecked: new Date(),
-      consecutiveFailures: 0,
-      circuitBreakerActive: false,
-    },
-  }
+  const tools = createModelRole("tools", toolsCfg, {
+    multilingual: true,
+    toolCalling: true,
+    evaluation: false,
+    generation: true,
+    embedding: false,
+    streaming: true,
+  })
 
-  // Fast Generation Models
   const fastCfg = getRoleConfig("fast", "GEN_MODEL_FAST")
-  const fast: ModelRole = {
-    id: "fast",
-    adapterKey: fastCfg.adapterKey,
-    modelRef: fastCfg.modelRef,
-    declaredCapabilities: {
-      multilingual: true,
-      toolCalling: false,
-      evaluation: false,
-      generation: true,
-      embedding: false,
-      streaming: true,
-    },
-    maxTokens: fastCfg.maxTokens,
-    temperature: fastCfg.temperature,
-    fallbacks: parseFallbackChain(fastCfg.fallbacks),
-    healthStatus: {
-      isHealthy: true,
-      lastChecked: new Date(),
-      consecutiveFailures: 0,
-      circuitBreakerActive: false,
-    },
-  }
+  const fast = createModelRole("fast", fastCfg, {
+    multilingual: true,
+    toolCalling: false,
+    evaluation: false,
+    generation: true,
+    embedding: false,
+    streaming: true,
+  })
 
-  // Evaluation Models
   const evalCfg = getRoleConfig("evaluation", "EVAL_MODEL")
-  const evaluation: ModelRole = {
-    id: "evaluation",
-    adapterKey: evalCfg.adapterKey,
-    modelRef: evalCfg.modelRef,
-    declaredCapabilities: {
-      multilingual: true,
-      toolCalling: true,
-      evaluation: true,
-      generation: true,
-      embedding: false,
-      streaming: true,
-    },
-    maxTokens: evalCfg.maxTokens,
-    temperature: evalCfg.temperature,
-    fallbacks: parseFallbackChain(evalCfg.fallbacks),
-    healthStatus: {
-      isHealthy: true,
-      lastChecked: new Date(),
-      consecutiveFailures: 0,
-      circuitBreakerActive: false,
-    },
-  }
+  const evaluation = createModelRole("evaluation", evalCfg, {
+    multilingual: true,
+    toolCalling: true,
+    evaluation: true,
+    generation: true,
+    embedding: false,
+    streaming: true,
+  })
 
-  // Local Embedding Models
   const embedLocalCfg = getRoleConfig("embedding-local", "EMBED_MODEL_LOCAL")
-  const embeddingLocal: ModelRole = {
-    id: "embedding-local",
-    adapterKey: embedLocalCfg.adapterKey,
-    modelRef: embedLocalCfg.modelRef,
-    declaredCapabilities: {
-      multilingual: true,
-      toolCalling: false,
-      evaluation: false,
-      generation: false,
-      embedding: true,
-      streaming: false,
-    },
-    maxTokens: embedLocalCfg.maxTokens,
-    temperature: embedLocalCfg.temperature,
-    fallbacks: parseFallbackChain(embedLocalCfg.fallbacks),
-    healthStatus: {
-      isHealthy: true,
-      lastChecked: new Date(),
-      consecutiveFailures: 0,
-      circuitBreakerActive: false,
-    },
-  }
+  const embeddingLocal = createModelRole("embedding-local", embedLocalCfg, {
+    multilingual: true,
+    toolCalling: false,
+    evaluation: false,
+    generation: false,
+    embedding: true,
+    streaming: false,
+  })
 
-  // Remote Embedding Models
   const embedRemoteCfg = getRoleConfig("embedding-remote", "EMBED_MODEL_REMOTE")
-  const embeddingRemote: ModelRole = {
-    id: "embedding-remote",
-    adapterKey: embedRemoteCfg.adapterKey,
-    modelRef: embedRemoteCfg.modelRef,
-    declaredCapabilities: {
-      multilingual: true,
-      toolCalling: false,
-      evaluation: false,
-      generation: false,
-      embedding: true,
-      streaming: false,
-    },
-    maxTokens: embedRemoteCfg.maxTokens,
-    temperature: embedRemoteCfg.temperature,
-    fallbacks: parseFallbackChain(embedRemoteCfg.fallbacks),
-    healthStatus: {
-      isHealthy: true,
-      lastChecked: new Date(),
-      consecutiveFailures: 0,
-      circuitBreakerActive: false,
-    },
-  }
+  const embeddingRemote = createModelRole("embedding-remote", embedRemoteCfg, {
+    multilingual: true,
+    toolCalling: false,
+    evaluation: false,
+    generation: false,
+    embedding: true,
+    streaming: false,
+  })
 
-  return { primary, tools, fast, evaluation, embeddingLocal, embeddingRemote }
+  // Local generation roles for development cost savings
+  const primaryLocalCfg = getRoleConfig(
+    "primary-local",
+    "GEN_MODEL_PRIMARY_LOCAL",
+  )
+  const primaryLocal = createModelRole("primary-local", primaryLocalCfg, {
+    multilingual: true,
+    toolCalling: true,
+    evaluation: true,
+    generation: true,
+    embedding: false,
+    streaming: true,
+  })
+
+  const toolsLocalCfg = getRoleConfig("tools-local", "GEN_MODEL_TOOLS_LOCAL")
+  const toolsLocal = createModelRole("tools-local", toolsLocalCfg, {
+    multilingual: true,
+    toolCalling: true,
+    evaluation: false,
+    generation: true,
+    embedding: false,
+    streaming: true,
+  })
+
+  const fastLocalCfg = getRoleConfig("fast-local", "GEN_MODEL_FAST_LOCAL")
+  const fastLocal = createModelRole("fast-local", fastLocalCfg, {
+    multilingual: true,
+    toolCalling: false,
+    evaluation: false,
+    generation: true,
+    embedding: false,
+    streaming: true,
+  })
+
+  const evalLocalCfg = getRoleConfig("evaluation-local", "EVAL_MODEL_LOCAL")
+  const evaluationLocal = createModelRole("evaluation-local", evalLocalCfg, {
+    multilingual: true,
+    toolCalling: true,
+    evaluation: true,
+    generation: true,
+    embedding: false,
+    streaming: true,
+  })
+
+  return {
+    primary,
+    tools,
+    fast,
+    evaluation,
+    primaryLocal,
+    toolsLocal,
+    fastLocal,
+    evaluationLocal,
+    embeddingLocal,
+    embeddingRemote,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -354,6 +375,14 @@ export function getModelRole(roleId: string): ModelRole | null {
       return config.fast
     case "evaluation":
       return config.evaluation
+    case "primary-local":
+      return config.primaryLocal
+    case "tools-local":
+      return config.toolsLocal
+    case "fast-local":
+      return config.fastLocal
+    case "evaluation-local":
+      return config.evaluationLocal
     case "embedding-local":
       return config.embeddingLocal
     case "embedding-remote":

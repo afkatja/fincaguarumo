@@ -111,10 +111,11 @@ import {
 } from "@/lib/sanity-data-extractor"
 import { getSourceRestrictedPrompt } from "./source-restrictions"
 import {
-  createModelProvider,
   cacheEvaluationData,
   getCachedEvaluationData,
-} from "@/lib/model-provider-factory"
+} from "@/lib/degradation-response"
+import { resolveModel } from "@/lib/model-gateway"
+import { getModelRole } from "@/lib/model-registry"
 import { detectLanguage } from "@/lib/semantic-rag/multilingual-preprocessing"
 
 // Import translations for CTA text
@@ -234,11 +235,15 @@ const DEFAULT_BASE_PRICE_PER_NIGHT = 150
 // Default max guests - used as fallback
 const DEFAULT_MAX_GUESTS = 4
 
-// Get model providers from environment configuration
-const generationProvider = createModelProvider("primary")
-const evaluationProvider = createModelProvider("evaluation")
-
 const MAX_STEPS = 4
+
+async function getGatewayModel(
+  role: string,
+  taskType: string,
+): Promise<LanguageModelV3> {
+  const resolved = await resolveModel(role, { taskType })
+  return resolved.model
+}
 
 const setTemperature = (messages: Message[]): number => {
   const isFactual = messages.some(m =>
@@ -444,6 +449,8 @@ MINIMAL RESPONSE FORMAT:
 Keep responses brief and focused on the user's specific question.`
 }
 
+const primaryModelRole = getModelRole("primary")
+
 // Booking-specific agent configuration
 export const bookingAgentConfig = {
   name: "Booking Assistant",
@@ -451,10 +458,7 @@ export const bookingAgentConfig = {
   systemPrompt: getSourceRestrictedPrompt(
     buildSystemPrompt({ useDynamicValues: false }),
   ),
-  model: generationProvider.model,
-  maxTokens: generationProvider.modelRef.includes("mistral-large")
-    ? 4000
-    : 1000,
+  maxTokens: primaryModelRole?.modelRef.includes("mistral-large") ? 4000 : 1000,
 }
 
 /**
@@ -808,7 +812,7 @@ export async function createChatStream({
   messages,
   threadId,
   tools,
-  model = generationProvider.model,
+  model,
   systemPrompt,
 }: {
   messages: Message[]
@@ -824,6 +828,7 @@ export async function createChatStream({
     // Use dynamic system prompt if none provided, with detected language
     const finalSystemPrompt =
       systemPrompt || (await getDynamicSystemPrompt(detectedLanguage))
+    console.log("Final system prompt", finalSystemPrompt)
 
     // Validate message alternation
     // The API expects: system → user → assistant → user → assistant...
@@ -850,8 +855,21 @@ export async function createChatStream({
       { role: "system", content: finalSystemPrompt },
       ...validMessages,
     ]
+
+    const effectiveModel =
+      model ??
+      (
+        await resolveModel("primary", {
+          taskType: "generation",
+          messages: allMessages,
+          tools: tools || bookingTools,
+          stream: true,
+        })
+      ).model
+    console.log("Chat stream model", effectiveModel)
+
     const result = streamText({
-      model: model,
+      model: effectiveModel,
       messages: allMessages,
       tools: tools || bookingTools,
       temperature: setTemperature(allMessages),
@@ -980,9 +998,9 @@ Respond with JSON:
 }`
 
   try {
-    // Use generation model with reduced temperature for more consistent evaluation
+    const introspectionModel = await getGatewayModel("primary", "generation")
     const introspectionResult = await streamText({
-      model: generationProvider.model,
+      model: introspectionModel,
       messages: [{ role: "user", content: introspectionPrompt }],
       temperature: 0.2, // Lower temperature for more consistent evaluation
       maxRetries: 1, // Reduce retries to minimize rate limiting
@@ -1212,8 +1230,9 @@ Respond with JSON:
 
     let result
     try {
+      const evaluationModel = await getGatewayModel("evaluation", "evaluation")
       result = await streamText({
-        model: evaluationProvider.model,
+        model: evaluationModel,
         messages: [{ role: "user", content: evaluationPrompt }],
         temperature: 0.1,
         maxRetries: 2, // Limit retries to prevent multiple API calls

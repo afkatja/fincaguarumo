@@ -12,6 +12,7 @@ import {
   AdapterHealthResult,
   CapabilityFlag,
 } from "./provider-adapter"
+import { openai } from "@ai-sdk/openai"
 
 export class OpenAIAdapter implements ProviderAdapter {
   readonly adapterKey = "openai"
@@ -29,8 +30,6 @@ export class OpenAIAdapter implements ProviderAdapter {
     modelRef: string,
     _options?: Record<string, unknown>,
   ): LanguageModelV3 {
-    // Lazy import to avoid hard dependency at module level
-    const { openai } = require("@ai-sdk/openai")
     return openai(modelRef)
   }
 

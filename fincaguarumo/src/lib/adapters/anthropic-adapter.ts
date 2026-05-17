@@ -12,6 +12,7 @@ import {
   AdapterHealthResult,
   CapabilityFlag,
 } from "./provider-adapter"
+import { anthropic } from "@ai-sdk/anthropic"
 
 export class AnthropicAdapter implements ProviderAdapter {
   readonly adapterKey = "anthropic"
@@ -29,8 +30,6 @@ export class AnthropicAdapter implements ProviderAdapter {
     modelRef: string,
     _options?: Record<string, unknown>,
   ): LanguageModelV3 {
-    // Lazy import to avoid hard dependency at module level
-    const { anthropic } = require("@ai-sdk/anthropic")
     return anthropic(modelRef)
   }
 

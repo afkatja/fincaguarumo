@@ -6,6 +6,7 @@
  */
 
 import { LanguageModelV3 } from "@ai-sdk/provider"
+import { createOpenAI } from "@ai-sdk/openai"
 import {
   ProviderAdapter,
   AdapterConfig,
@@ -19,24 +20,27 @@ export class LocalAdapter implements ProviderAdapter {
 
   private readonly supportedCapabilities: Set<CapabilityFlag> = new Set([
     "embedding",
+    "generation",
+    "toolCalling",
     "multilingual",
   ])
 
-  /** Default Ollama embedding endpoint */
-  readonly embeddingEndpoint = "http://localhost:11434/api/embed"
+  /** Default Ollama endpoints */
+  readonly embeddingEndpoint = "http://localhost:11434/api/embeddings"
+  readonly generationEndpoint = "http://localhost:11434/v1"
 
   createModelInstance(
-    _modelRef: string,
+    modelRef: string,
     _options?: Record<string, unknown>,
   ): LanguageModelV3 {
-    // Local models don't use the AI SDK LanguageModelV3 interface directly.
-    // They are accessed via raw HTTP (see embeddings-local.ts).
-    // This method throws because local models should be accessed through
-    // the embedding-specific path, not the generation path.
-    throw new Error(
-      "Local adapter does not support LanguageModelV3 generation. " +
-        "Use the embedding-specific path for local models.",
-    )
+    // Use AI SDK's OpenAI adapter to connect to Ollama's OpenAI-compatible endpoint
+    // Ollama provides OpenAI-compatible API at /v1 endpoint
+    const openai = createOpenAI({
+      baseURL: this.generationEndpoint,
+      apiKey: "ollama", // Ollama doesn't require real API key but OpenAI adapter expects one
+    })
+
+    return openai(modelRef)
   }
 
   async healthCheck(_modelRef: string): Promise<AdapterHealthResult> {
