@@ -6,6 +6,7 @@ import {
 import { getAdapter, hasAdapter } from "../adapters/adapter-registry"
 import type { TogetherAdapter } from "../adapters/together-adapter"
 import type { LocalAdapter } from "../adapters/local-adapter"
+import { getModelRole } from "../model-registry"
 
 /**
  * Role-Based Embedding System - Phase 2 (Provider-Agnostic)
@@ -40,29 +41,36 @@ function getSupabaseClient() {
   })
 }
 
-// Role-based embedding configuration — reads from env, falls back to adapter defaults
+// Role-based embedding configuration — reads from env, falls back to model registry
 const getEmbeddingConfig = () => {
+  // Get model roles from registry
+  const embeddingLocalRole = getModelRole("embedding-local")
+  const embeddingRemoteRole = getModelRole("embedding-remote")
+
   return {
     local: {
       adapterKey:
         process.env.EMBED_MODEL_LOCAL_PROVIDER ||
         process.env.EMBED_MODEL_LOCAL_ADAPTER_KEY ||
+        embeddingLocalRole?.adapterKey ||
         "local",
       modelRef:
         process.env.EMBED_MODEL_LOCAL_MODEL_ID ||
         process.env.EMBED_MODEL_LOCAL_MODEL_REF ||
-        "e5-base-instruct",
+        "nomic-embed-text", // Force working model, ignore registry cache
       fallbacks: process.env.EMBED_MODEL_LOCAL_FALLBACKS || "",
     },
     remote: {
       adapterKey:
         process.env.EMBED_MODEL_REMOTE_PROVIDER ||
         process.env.EMBED_MODEL_REMOTE_ADAPTER_KEY ||
+        embeddingRemoteRole?.adapterKey ||
         "together",
       modelRef:
         process.env.EMBED_MODEL_REMOTE_MODEL_ID ||
         process.env.EMBED_MODEL_REMOTE_MODEL_REF ||
-        "intfloat/e5-base-instruct",
+        embeddingRemoteRole?.modelRef ||
+        "intfloat/multilingual-e5-large-instruct",
       fallbacks: process.env.EMBED_MODEL_REMOTE_FALLBACKS || "",
     },
   }
@@ -281,15 +289,45 @@ export async function generateEmbedding(
         `🏠 Using local embedding adapter: ${config.local.adapterKey}:${config.local.modelRef}`,
       )
 
-      // For now, simulate local embedding generation
-      // In a real implementation, this would use a local embedding library
-      const embedding = new Array(768).fill(0.1).map((_, i) => i * 0.01)
+      // Use real Ollama embedding API
+      const embeddingEndpoint = getAdapterApiEndpoint(config.local.adapterKey)
+
+      const requestBody = {
+        model: config.local.modelRef,
+        prompt: preprocessingResult.processedText,
+      }
+
+      const rawResponse = await fetch(embeddingEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!rawResponse.ok) {
+        throw new Error(
+          `Ollama embedding request failed: ${rawResponse.status} ${rawResponse.statusText}`,
+        )
+      }
+
+      const ollamaResponse = await rawResponse.json()
+
+      // Ollama /api/embeddings returns embedding array directly in the embedding field
+      // Convert to expected format for compatibility
+      const embedding = ollamaResponse.embedding // Direct array from the embedding field
+      if (!embedding) {
+        console.error("Unexpected Ollama response format:", ollamaResponse)
+        throw new Error(
+          "Invalid embedding response from Ollama - missing embedding field",
+        )
+      }
 
       data = {
         data: [
           {
             embedding,
-            dimensions: 768,
+            dimensions: embedding.length,
           },
         ],
       }
@@ -305,9 +343,12 @@ export async function generateEmbedding(
       throw new Error("Invalid embedding response from adapter")
     }
 
+    const embedding = data.data[0].embedding
+    const dimensions = data.data[0].dimensions || 768
+
     return {
-      embedding: data.data[0].embedding,
-      dimensions: data.data[0].dimensions || 768,
+      embedding: embedding,
+      dimensions: dimensions,
     }
   } catch (error) {
     console.error("Error generating embedding:", error)

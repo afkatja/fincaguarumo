@@ -798,8 +798,8 @@ export function detectLanguage(text: string): SupportedLanguage | "unknown" {
     }
   }
 
-  // Return unknown if no clear winner
-  return maxScore > 0 ? detectedLang : "unknown"
+  // Return detected language if score > 0, otherwise default to English for better UX
+  return maxScore > 0 ? detectedLang : "en"
 }
 
 /**

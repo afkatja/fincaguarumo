@@ -13,6 +13,7 @@ import {
 } from "../sanity-data-extractor"
 import { portableTextToPlain } from "@/sanity/lib/portableTextHelper"
 import { generateBatchEmbeddings } from "./embeddings-hybrid"
+import { estimateTokenCount } from "./token-utils"
 
 export interface ProcessedDocument {
   contentId: string
@@ -20,6 +21,107 @@ export interface ProcessedDocument {
   language: string
   content: string
   metadata: Record<string, any>
+}
+
+/**
+ * Chunk long documents into smaller pieces for better embedding and retrieval
+ */
+export interface ChunkOptions {
+  maxTokens?: number
+  overlap?: number
+  minChunkSize?: number
+}
+
+/**
+ * Split text into chunks based on token count with overlap
+ */
+export function chunkText(
+  text: string,
+  options: ChunkOptions = {},
+  language: string = "en",
+): string[] {
+  // Get embedding model's maxInputTokens from config if not provided in options
+  const defaultMaxTokens =
+    options.maxTokens ||
+    (() => {
+      try {
+        const { getModelRole } = require("../model-registry")
+        const embeddingModel =
+          getModelRole("embedding-local") || getModelRole("embedding-remote")
+        // Use maxInputTokens for embeddings (input sequence limit for chunking)
+        return embeddingModel?.maxInputTokens || 400 // Fallback to 400 if config unavailable
+      } catch {
+        return 400 // Fallback if model registry unavailable
+      }
+    })()
+
+  const {
+    maxTokens = defaultMaxTokens,
+    overlap = 50, // Overlap tokens between chunks
+    minChunkSize = 100,
+  } = options
+
+  const estimatedTokens = estimateTokenCount(text, language)
+
+  // If text is short enough, return as single chunk
+  if (estimatedTokens <= maxTokens) {
+    return [text]
+  }
+
+  const chunks: string[] = []
+  const words = text.split(/\s+/)
+
+  let currentChunk: string[] = []
+  let currentTokens = 0
+
+  for (const word of words) {
+    const wordTokens = estimateTokenCount(word, language)
+
+    // If adding this word would exceed max tokens and we have enough content, create a chunk
+    if (
+      currentTokens + wordTokens > maxTokens &&
+      currentTokens >= minChunkSize
+    ) {
+      chunks.push(currentChunk.join(" "))
+
+      // Start new chunk with overlap
+      const overlapWords = Math.floor(overlap / 4) // Rough estimate of words for overlap
+      currentChunk = currentChunk.slice(-overlapWords)
+      currentTokens = estimateTokenCount(currentChunk.join(" "), language)
+    }
+
+    currentChunk.push(word)
+    currentTokens += wordTokens
+  }
+
+  // Add final chunk if it has content
+  if (currentChunk.length > 0) {
+    chunks.push(currentChunk.join(" "))
+  }
+
+  return chunks
+}
+
+/**
+ * Create chunked documents from a base document
+ */
+export function createChunkedDocuments(
+  baseDoc: ProcessedDocument,
+  chunks: string[],
+  chunkIndex: number = 0,
+): ProcessedDocument[] {
+  return chunks.map((chunk, index) => ({
+    ...baseDoc,
+    contentId: `${baseDoc.contentId}_chunk_${chunkIndex + index}`,
+    content: chunk,
+    metadata: {
+      ...baseDoc.metadata,
+      chunkIndex: chunkIndex + index,
+      totalChunks: chunks.length,
+      isChunk: true,
+      originalContentId: baseDoc.contentId,
+    },
+  }))
 }
 
 /**
@@ -57,7 +159,7 @@ export async function processFAQDocuments(
 }
 
 /**
- * Process page/villa documents for embedding
+ * Process page/villa documents for embedding with chunking for long content
  */
 export async function processPageDocuments(
   language: string = "en",
@@ -71,51 +173,82 @@ export async function processPageDocuments(
     const processedPages: ProcessedDocument[] = []
 
     for (const page of languagePages) {
-      let content = `Title: ${page.title}\n`
+      // Create base content (metadata and short descriptions)
+      let baseContent = `Title: ${page.title}\n`
 
       if (page.subtitle) {
-        content += `Subtitle: ${page.subtitle}\n`
+        baseContent += `Subtitle: ${page.subtitle}\n`
       }
 
       if (page.description) {
-        content += `Description: ${page.description}\n`
+        baseContent += `Description: ${page.description}\n`
       }
 
       if (page.price) {
-        content += `Price: $${page.price} per person\n`
+        baseContent += `Price: $${page.price} per person\n`
       } else if (page.pricingRules && page.pricingRules.length > 0) {
         const baseRate = page.pricingRules.find(
           (rule: any) => rule.ruleType === "base_rate",
         )
         if (baseRate && baseRate.basePrice) {
-          content += `Base Price: $${baseRate.basePrice} per person\n`
+          baseContent += `Base Price: $${baseRate.basePrice} per person\n`
         }
       }
 
+      if (page.categories && page.categories.length > 0) {
+        baseContent += `Categories: ${page.categories.map((c: any) => c.title).join(", ")}\n`
+      }
+
+      // Handle long body content with chunking
+      let bodyChunks: string[] = []
       if (page.body) {
         const plainText = portableTextToPlain(page.body)
-        content += `Details: ${plainText}\n`
+        bodyChunks = chunkText(
+          plainText,
+          { maxTokens: 350, overlap: 30 },
+          language,
+        )
       }
 
-      if (page.categories && page.categories.length > 0) {
-        content += `Categories: ${page.categories.map((c: any) => c.title).join(", ")}\n`
-      }
+      if (bodyChunks.length === 0) {
+        // No body content or short content, create single document
+        processedPages.push({
+          contentId: page.slug,
+          contentType: "page",
+          language: page.language,
+          content: baseContent,
+          metadata: {
+            title: page.title,
+            subtitle: page.subtitle,
+            description: page.description,
+            price: page.price,
+            pricingRules: page.pricingRules,
+            categories: page.categories?.map((c: any) => c.title) || [],
+            slug: page.slug,
+          },
+        })
+      } else {
+        // Create chunked documents for long content
+        const baseDoc: ProcessedDocument = {
+          contentId: page.slug,
+          contentType: "page",
+          language: page.language,
+          content: baseContent, // Will be overridden by chunks
+          metadata: {
+            title: page.title,
+            subtitle: page.subtitle,
+            description: page.description,
+            price: page.price,
+            pricingRules: page.pricingRules,
+            categories: page.categories?.map((c: any) => c.title) || [],
+            slug: page.slug,
+          },
+        }
 
-      processedPages.push({
-        contentId: page.slug,
-        contentType: "page",
-        language: page.language,
-        content,
-        metadata: {
-          title: page.title,
-          subtitle: page.subtitle,
-          description: page.description,
-          price: page.price,
-          pricingRules: page.pricingRules,
-          categories: page.categories?.map((c: any) => c.title) || [],
-          slug: page.slug,
-        },
-      })
+        // Create chunked documents
+        const chunkedDocs = createChunkedDocuments(baseDoc, bodyChunks)
+        processedPages.push(...chunkedDocs)
+      }
     }
 
     return processedPages
@@ -202,7 +335,7 @@ export async function processReviewDocuments(
 }
 
 /**
- * Process blog post documents for embedding
+ * Process blog post documents for embedding with chunking for better retrieval
  */
 export async function processPostDocuments(
   language: string = "en",
@@ -216,38 +349,68 @@ export async function processPostDocuments(
     const processedPosts: ProcessedDocument[] = []
 
     for (const post of languagePosts) {
-      let content = `Title: ${post.title}\n`
+      // Create base content (metadata and short descriptions)
+      let baseContent = `Title: ${post.title}\n`
 
       if (post.author) {
-        content += `Author: ${post.author.name}\n`
+        baseContent += `Author: ${post.author.name}\n`
       }
 
       if (post.publishedAt) {
-        content += `Published: ${new Date(post.publishedAt).toLocaleDateString()}\n`
+        baseContent += `Published: ${new Date(post.publishedAt).toLocaleDateString()}\n`
       }
 
       if (post.categories && post.categories.length > 0) {
-        content += `Categories: ${post.categories.map((c: any) => c.title).join(", ")}\n`
+        baseContent += `Categories: ${post.categories.map((c: any) => c.title).join(", ")}\n`
       }
 
+      // Handle long body content with chunking (especially important for blog posts)
+      let bodyChunks: string[] = []
       if (post.body) {
         const plainText = portableTextToPlain(post.body)
-        content += `Content: ${plainText}\n`
+        // Use smaller chunks for blog posts for better retrieval
+        bodyChunks = chunkText(
+          plainText,
+          { maxTokens: 300, overlap: 40 },
+          language,
+        )
       }
 
-      processedPosts.push({
-        contentId: post._id,
-        contentType: "post",
-        language: post.language,
-        content,
-        metadata: {
-          title: post.title,
-          author: post.author?.name,
-          publishedAt: post.publishedAt,
-          categories: post.categories?.map((c: any) => c.title) || [],
-          slug: post.slug,
-        },
-      })
+      if (bodyChunks.length === 0) {
+        // No body content or short content, create single document
+        processedPosts.push({
+          contentId: post._id,
+          contentType: "post",
+          language: post.language,
+          content: baseContent,
+          metadata: {
+            title: post.title,
+            author: post.author?.name,
+            publishedAt: post.publishedAt,
+            categories: post.categories?.map((c: any) => c.title) || [],
+            slug: post.slug,
+          },
+        })
+      } else {
+        // Create chunked documents for long content
+        const baseDoc: ProcessedDocument = {
+          contentId: post._id,
+          contentType: "post",
+          language: post.language,
+          content: baseContent, // Will be overridden by chunks
+          metadata: {
+            title: post.title,
+            author: post.author?.name,
+            publishedAt: post.publishedAt,
+            categories: post.categories?.map((c: any) => c.title) || [],
+            slug: post.slug,
+          },
+        }
+
+        // Create chunked documents with better context for each chunk
+        const chunkedDocs = createChunkedDocuments(baseDoc, bodyChunks)
+        processedPosts.push(...chunkedDocs)
+      }
     }
 
     return processedPosts

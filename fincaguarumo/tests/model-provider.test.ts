@@ -1,55 +1,67 @@
 /**
  * Test suite for Role-Based Model Provider System - Phase 1
  * Tests acceptance criteria from FG-29-role-based-model-provider.md
+ *
+ * Model selection and fallbacks are exercised via model-gateway (not the legacy factory).
  */
 
 import {
-  createModelProvider,
+  resolveModel,
+  execute,
+  isDegradationResponse,
   validateModelEnvironment,
   testModelConnectivity,
   getAvailableModels,
-} from "../src/lib/model-provider-factory"
+} from "../src/lib/model-gateway"
 import {
   FALLBACK_CHAIN_MAX_DURATION_MS,
   MODEL_SELECTION_MAX_LATENCY_MS,
 } from "../src/lib/model-performance-budgets"
 import { routeRequest, RouteRequest } from "../src/lib/task-router"
+import {
+  getAllCircuitBreakerStates,
+  resetCircuitBreaker,
+} from "../src/lib/health-checker"
 
-// Mock environment variables
 const originalEnv = process.env
+
+function resetAllCircuitBreakers(): void {
+  for (const roleId of Object.keys(getAllCircuitBreakerStates())) {
+    resetCircuitBreaker(roleId)
+  }
+  resetCircuitBreaker("primary")
+  resetCircuitBreaker("evaluation")
+}
 
 describe("Role-Based Model Provider System", () => {
   beforeEach(() => {
-    jest.resetModules()
+    resetAllCircuitBreakers()
     process.env = { ...originalEnv }
   })
 
   afterEach(() => {
+    resetAllCircuitBreakers()
     process.env = originalEnv
   })
 
   describe("A1: Role-based model configuration", () => {
-    test("should use GEN_MODEL_PRIMARY for general generation", () => {
+    test("should use GEN_MODEL_PRIMARY for general generation", async () => {
       process.env.GEN_MODEL_PRIMARY_PROVIDER = "perplexity"
       process.env.GEN_MODEL_PRIMARY_MODEL_ID =
         "llama-3.1-sonar-large-128k-online"
       process.env.GEN_MODEL_TOOLS_PROVIDER = "mistral"
       process.env.GEN_MODEL_TOOLS_MODEL_ID = "mistral-large-latest"
 
-      const primaryProvider = createModelProvider("primary")
-      const toolsProvider = createModelProvider("primary") // Will be updated for tools role
+      const primary = await resolveModel("primary", { taskType: "generation" })
 
-      expect(primaryProvider.adapterKey).toBe("perplexity")
-      expect(primaryProvider.modelRef).toBe("llama-3.1-sonar-large-128k-online")
-      // Note: This test will be updated after tools role is implemented
+      expect(primary.adapterKey).toBe("perplexity")
+      expect(primary.modelRef).toBe("llama-3.1-sonar-large-128k-online")
     })
 
     test("should use GEN_MODEL_TOOLS for tool-calling tasks", () => {
       process.env.GEN_MODEL_TOOLS_PROVIDER = "mistral"
       process.env.GEN_MODEL_TOOLS_MODEL_ID = "mistral-large-latest"
 
-      // This test will be updated when tools role is fully implemented
-      // For now, testing that environment variables are read correctly
       expect(process.env.GEN_MODEL_TOOLS_PROVIDER).toBe("mistral")
       expect(process.env.GEN_MODEL_TOOLS_MODEL_ID).toBe("mistral-large-latest")
     })
@@ -59,47 +71,27 @@ describe("Role-Based Model Provider System", () => {
     test("should fallback to next model in chain within 5 seconds", async () => {
       const startTime = Date.now()
 
-      // Mock first model to fail
-      jest.mock("@ai-sdk/mistral", () => ({
-        mistral: jest.fn().mockImplementation(() => {
-          throw new Error("Model unavailable")
-        }),
-      }))
-
       process.env.GEN_MODEL_PRIMARY_FALLBACKS =
         "perplexity:llama-3.1-sonar-large-128k-online,mistral:mistral-small"
 
       try {
-        const provider = createModelProvider("primary")
+        await resolveModel("primary", { taskType: "generation" })
         const connectivity = await testModelConnectivity("primary")
 
-        // Should eventually succeed with fallback
         expect(connectivity.success).toBe(true)
         expect(Date.now() - startTime).toBeLessThanOrEqual(
           FALLBACK_CHAIN_MAX_DURATION_MS,
         )
       } catch (error) {
-        // If all models fail, should handle gracefully
         expect(error).toBeDefined()
       }
     }, 10000)
 
     test("should handle timeout, 429, 5xx, malformed output, tool-call invalidity", async () => {
-      const errorTypes = [
-        { type: "timeout", error: new Error("Request timeout") },
-        { type: "429", error: new Error("Rate limit exceeded") },
-        { type: "5xx", error: new Error("Internal server error") },
-        { type: "malformed", error: new Error("Malformed structured output") },
-        { type: "invalid-tool", error: new Error("Tool-call invalidity") },
-      ]
+      const result = await testModelConnectivity("primary")
 
-      for (const { type, error } of errorTypes) {
-        const result = await testModelConnectivity("primary")
-
-        // Should handle all error types appropriately
-        expect(result.error).toBeDefined()
-        expect(result.success).toBe(false)
-      }
+      expect(result.error).toBeDefined()
+      expect(result.success).toBe(false)
     })
   })
 
@@ -116,21 +108,20 @@ describe("Role-Based Model Provider System", () => {
         },
         candidateModel: {
           modelId: "model-b",
-          weightedScore: 90, // 5.9% improvement
-          faithfulnessRegression: 0.5, // ≤1% regression
-          structuredOutputValidity: 99, // ≥98%
-          p95Latency: 1400, // Within SLA
-          cost: 0.8, // Lower cost
+          weightedScore: 90,
+          faithfulnessRegression: 0.5,
+          structuredOutputValidity: 99,
+          p95Latency: 1400,
+          cost: 0.8,
         },
       }
 
-      // Mock promotion logic (to be implemented)
       const shouldPromote =
         benchmarkResults.candidateModel.weightedScore >=
           benchmarkResults.currentModel.weightedScore * 1.05 &&
         benchmarkResults.candidateModel.faithfulnessRegression <= 1.0 &&
         benchmarkResults.candidateModel.structuredOutputValidity >= 98 &&
-        benchmarkResults.candidateModel.p95Latency <= 2000 // SLA threshold
+        benchmarkResults.candidateModel.p95Latency <= 2000
 
       expect(shouldPromote).toBe(true)
     })
@@ -147,9 +138,9 @@ describe("Role-Based Model Provider System", () => {
         },
         candidateModel: {
           modelId: "model-b",
-          weightedScore: 92, // Higher score
-          faithfulnessRegression: 1.5, // >1% regression
-          structuredOutputValidity: 97, // <98%
+          weightedScore: 92,
+          faithfulnessRegression: 1.5,
+          structuredOutputValidity: 97,
           p95Latency: 1400,
           cost: 0.8,
         },
@@ -164,24 +155,19 @@ describe("Role-Based Model Provider System", () => {
   })
 
   describe("A4: Manual override capabilities", () => {
-    test("should use override model for primary generation role only", () => {
+    test("should read override environment variables for primary generation", () => {
       process.env.GEN_MODEL_PRIMARY_PROVIDER = "mistral"
       process.env.GEN_MODEL_PRIMARY_MODEL_ID = "mistral-large-latest"
       process.env.GEN_MODEL_PRIMARY_OVERRIDE_PROVIDER = "perplexity"
       process.env.GEN_MODEL_PRIMARY_OVERRIDE_MODEL_ID =
         "llama-3.1-sonar-large-128k-online"
 
-      // Override should take precedence for primary generation
       expect(process.env.GEN_MODEL_PRIMARY_OVERRIDE_PROVIDER).toBe(
         "perplexity",
       )
       expect(process.env.GEN_MODEL_PRIMARY_OVERRIDE_MODEL_ID).toBe(
         "llama-3.1-sonar-large-128k-online",
       )
-
-      // Implementation will need to check for override variables first
-      const provider = createModelProvider("primary")
-      // This test will be updated when override logic is implemented
     })
 
     test("should reject override during benchmark runs", () => {
@@ -256,21 +242,35 @@ describe("Role-Based Model Provider System", () => {
         isBenchmark: false,
       }
 
-      // This should not throw - override is allowed for primary generation
-      // Note: This test will need mocking of getModelRole to fully test
-      // For now, we verify it doesn't throw a scope error
       try {
         routeRequest(request)
       } catch (error) {
-        // If it throws, it should NOT be a scope restriction error
         expect((error as Error).message).not.toContain("A4 scope restriction")
+      }
+    })
+
+    test("gateway should reject manual override during benchmark runs", async () => {
+      const result = await execute({
+        role: "primary",
+        taskType: "generation",
+        isBenchmark: true,
+        manualOverrides: {
+          adapterKey: "perplexity",
+          modelRef: "llama-3.1-sonar-large-128k-online",
+        },
+      })
+
+      expect(isDegradationResponse(result)).toBe(true)
+      if (isDegradationResponse(result)) {
+        expect(result.failureReasons[0]?.error).toContain(
+          "Manual overrides not allowed during benchmark runs",
+        )
       }
     })
   })
 
   describe("A5: Local/Remote embedding roles", () => {
     test("should use local embedding model in development environment", async () => {
-      // Set environment for development testing
       const mockEnv = { ...originalEnv }
       mockEnv.NODE_ENV = "development"
       process.env = mockEnv
@@ -282,13 +282,11 @@ describe("Role-Based Model Provider System", () => {
       const { generateEmbedding } =
         await import("../src/lib/semantic-rag/embeddings")
 
-      // Should attempt local first, fallback to remote if needed
       try {
         const result = await generateEmbedding("test text", "en")
         expect(result.embedding).toBeDefined()
         expect(result.dimensions).toBeGreaterThan(0)
       } catch (error) {
-        // Should handle fallback gracefully
         expect(error).toBeDefined()
       }
     })
@@ -329,16 +327,6 @@ describe("Role-Based Model Provider System", () => {
   })
 
   describe("A6: Graceful degradation when all models fail", () => {
-    // Comprehensive unit tests for classifyDegradationType,
-    // createDegradationResponse, and isDegradationResponse live in
-    // tests/degradation-response.test.ts (separated to avoid the
-    // TransformStream polyfill issue caused by transitive adapter-registry
-    // imports in this file).
-    //
-    // The tests below verify the A6 contract at the integration level:
-    // createModelProviderWithFallback must return a DegradationResponse
-    // instead of throwing when all models fail.
-
     test("should define all four degradation types from the spec", () => {
       const degradationTypes = [
         "no-answer-available",
@@ -347,7 +335,6 @@ describe("Role-Based Model Provider System", () => {
         "fallback-generated-minimal-response",
       ] as const
 
-      // Verify all four types exist as string literals
       expect(degradationTypes).toHaveLength(4)
       expect(degradationTypes).toContain("no-answer-available")
       expect(degradationTypes).toContain("partial-answer")
@@ -356,7 +343,6 @@ describe("Role-Based Model Provider System", () => {
     })
 
     test("DegradationResponse shape should include required fields", () => {
-      // Verify the expected shape of a degradation response
       const response = {
         isDegradation: true,
         degradationType: "fallback-generated-minimal-response" as const,
@@ -377,11 +363,17 @@ describe("Role-Based Model Provider System", () => {
       expect(response.timestamp).toBeInstanceOf(Date)
     })
 
+    test("execute returns DegradationResponse when role is unknown", async () => {
+      const result = await execute({ role: "nonexistent-role-xyz" })
+
+      expect(isDegradationResponse(result)).toBe(true)
+      if (isDegradationResponse(result)) {
+        expect(result.roleId).toBe("nonexistent-role-xyz")
+        expect(result.isDegradation).toBe(true)
+      }
+    })
+
     test("see tests/degradation-response.test.ts for full A6 coverage", () => {
-      // This is a signpost test — the real A6 unit tests are in
-      // tests/degradation-response.test.ts which imports from
-      // src/lib/degradation-response.ts directly (avoiding the
-      // adapter-registry TransformStream issue).
       expect(true).toBe(true)
     })
   })
@@ -405,7 +397,6 @@ describe("Role-Based Model Provider System", () => {
 
       const models = getAvailableModels()
 
-      // Should have safe defaults
       expect(models.primary).toBeDefined()
       expect(models.evaluation).toBeDefined()
     })
@@ -413,12 +404,16 @@ describe("Role-Based Model Provider System", () => {
 
   describe("Performance requirements", () => {
     test("model selection latency should be < 50ms", async () => {
+      process.env.GEN_MODEL_PRIMARY_PROVIDER = "perplexity"
+      process.env.GEN_MODEL_PRIMARY_MODEL_ID =
+        "llama-3.1-sonar-large-128k-online"
+      delete process.env.GEN_MODEL_PRIMARY_FALLBACKS
+
       const startTime = Date.now()
 
-      expect(createModelProvider("primary")).toMatchObject({
-        adapterKey: expect.any(String),
-        modelRef: expect.any(String),
-      })
+      const resolved = await resolveModel("primary", { taskType: "generation" })
+      expect(resolved.adapterKey).toBe("perplexity")
+      expect(resolved.modelRef).toEqual(expect.any(String))
 
       const selectionTime = Date.now() - startTime
       expect(selectionTime).toBeLessThanOrEqual(MODEL_SELECTION_MAX_LATENCY_MS)
@@ -441,13 +436,16 @@ describe("Role-Based Model Provider System", () => {
 
   describe("Backward compatibility", () => {
     test("should support existing MAIN_MODEL_* variables", () => {
+      delete process.env.GEN_MODEL_PRIMARY_PROVIDER
+      delete process.env.GEN_MODEL_PRIMARY_ADAPTER_KEY
+      delete process.env.GEN_MODEL_PRIMARY_MODEL_ID
+      delete process.env.GEN_MODEL_PRIMARY_MODEL_REF
       process.env.MAIN_MODEL_PROVIDER = "perplexity"
       process.env.MAIN_MODEL_MODEL_ID = "llama-3.1-sonar-large-128k-online"
       process.env.MAIN_MODEL_MAX_TOKENS = "2000"
 
       const models = getAvailableModels()
 
-      // Should map old variables to new role-based system
       expect(models.primary.adapterKey).toBe("perplexity")
       expect(models.primary.modelRef).toBe("llama-3.1-sonar-large-128k-online")
       expect(models.primary.maxTokens).toBe(2000)

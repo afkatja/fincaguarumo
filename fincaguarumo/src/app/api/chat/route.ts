@@ -98,11 +98,7 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
-// Helper function to create error responses
-function createErrorResponse(error: string, status: number): NextResponse {
-  const response = NextResponse.json({ error }, { status })
-
-  // Add Content Security Policy headers for XSS protection
+function setSecurityHeaders(response: Response): Response {
   response.headers.set(
     "Content-Security-Policy",
     "default-src 'none'; script-src 'none'; style-src 'none'; img-src 'none'; font-src 'none'; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
@@ -111,25 +107,89 @@ function createErrorResponse(error: string, status: number): NextResponse {
   response.headers.set("X-Frame-Options", "DENY")
   response.headers.set("X-XSS-Protection", "1; mode=block")
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
-
   return response
+}
+
+// Helper function to create error responses
+function createErrorResponse(error: string, status: number): NextResponse {
+  const response = NextResponse.json({ error }, { status })
+  return setSecurityHeaders(response) as NextResponse
 }
 
 // Helper function to create successful responses with security headers
 function createSuccessResponse(data: any, status: number = 200): NextResponse {
   const response = NextResponse.json(data, { status })
+  return setSecurityHeaders(response) as NextResponse
+}
 
-  // Add Content Security Policy headers for XSS protection
-  response.headers.set(
-    "Content-Security-Policy",
-    "default-src 'none'; script-src 'none'; style-src 'none'; img-src 'none'; font-src 'none'; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
-  )
-  response.headers.set("X-Content-Type-Options", "nosniff")
-  response.headers.set("X-Frame-Options", "DENY")
-  response.headers.set("X-XSS-Protection", "1; mode=block")
-  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+// Helper function to validate thread ID
+function validateThreadId(threadId?: string): {
+  isValid: boolean
+  error?: string
+} {
+  if (!threadId) return { isValid: true }
 
-  return response
+  const validation = validateInput(threadId, INPUT_LIMITS.CHAT_THREAD_ID, {
+    fieldName: "threadId",
+    required: false,
+    sanitize: true,
+  })
+
+  return validation.isValid
+    ? { isValid: true }
+    : { isValid: false, error: validation.error }
+}
+
+// Helper function to validate locale
+function validateLocale(locale?: string): { isValid: boolean; error?: string } {
+  if (!locale) return { isValid: true }
+
+  const validation = validateInput(locale, 10, {
+    fieldName: "locale",
+    required: false,
+    sanitize: true,
+  })
+
+  return validation.isValid
+    ? { isValid: true }
+    : { isValid: false, error: validation.error }
+}
+
+// Helper function to validate a single message
+function validateMessage(
+  message: { role?: string; content?: string },
+  index: number,
+): { isValid: boolean; error?: string; sanitizedMessage?: ChatMessage } {
+  if (!message.role || !message.content) {
+    return {
+      isValid: false,
+      error: `Message ${index + 1} is missing required fields`,
+    }
+  }
+
+  const validRoles = ["user", "assistant", "system", "tool"]
+  if (!validRoles.includes(message.role)) {
+    return {
+      isValid: false,
+      error: `Message ${index + 1} has invalid role: ${message.role}`,
+    }
+  }
+
+  const contentValidation = validateChatMessage(message.content)
+  if (!contentValidation.isValid) {
+    return {
+      isValid: false,
+      error: `Message ${index + 1}: ${contentValidation.error}`,
+    }
+  }
+
+  return {
+    isValid: true,
+    sanitizedMessage: {
+      role: message.role as "user" | "assistant" | "system" | "tool",
+      content: contentValidation.sanitizedValue!,
+    },
+  }
 }
 
 // Helper function to validate chat request with strict input validation
@@ -146,69 +206,26 @@ function validateChatRequest(body: ChatRequest): {
     return { isValid: false, error: "Messages array is required" }
   }
 
-  // Validate thread ID if provided
-  if (threadId) {
-    const threadIdValidation = validateInput(
-      threadId,
-      INPUT_LIMITS.CHAT_THREAD_ID,
-      {
-        fieldName: "threadId",
-        required: false,
-        sanitize: true,
-      },
-    )
-    if (!threadIdValidation.isValid) {
-      return { isValid: false, error: threadIdValidation.error }
-    }
+  // Validate thread ID
+  const threadIdValidation = validateThreadId(threadId)
+  if (!threadIdValidation.isValid) {
+    return { isValid: false, error: threadIdValidation.error }
   }
 
-  // Validate locale if provided
-  if (locale) {
-    const localeValidation = validateInput(locale, 10, {
-      fieldName: "locale",
-      required: false,
-      sanitize: true,
-    })
-    if (!localeValidation.isValid) {
-      return { isValid: false, error: localeValidation.error }
-    }
+  // Validate locale
+  const localeValidation = validateLocale(locale)
+  if (!localeValidation.isValid) {
+    return { isValid: false, error: localeValidation.error }
   }
 
   // Validate each message
   const sanitizedMessages: ChatMessage[] = []
   for (let i = 0; i < messages.length; i++) {
-    const message = messages[i]
-
-    // Validate message structure
-    if (!message.role || !message.content) {
-      return {
-        isValid: false,
-        error: `Message ${i + 1} is missing required fields`,
-      }
+    const messageValidation = validateMessage(messages[i], i)
+    if (!messageValidation.isValid) {
+      return { isValid: false, error: messageValidation.error }
     }
-
-    // Validate message role
-    const validRoles = ["user", "assistant", "system", "tool"]
-    if (!validRoles.includes(message.role)) {
-      return {
-        isValid: false,
-        error: `Message ${i + 1} has invalid role: ${message.role}`,
-      }
-    }
-
-    // Validate message content
-    const contentValidation = validateChatMessage(message.content)
-    if (!contentValidation.isValid) {
-      return {
-        isValid: false,
-        error: `Message ${i + 1}: ${contentValidation.error}`,
-      }
-    }
-
-    sanitizedMessages.push({
-      role: message.role as "user" | "assistant" | "system" | "tool",
-      content: contentValidation.sanitizedValue!,
-    })
+    sanitizedMessages.push(messageValidation.sanitizedMessage!)
   }
 
   // Get the last user message for processing
@@ -254,12 +271,20 @@ export async function POST(request: NextRequest) {
     const rawQuery = validation.rawQuery!
     const sanitizedMessages = validation.sanitizedMessages!
 
-    // For intent detection, use the original query (without apostrophe sanitization)
-    const queryForIntentDetection = messages[messages.length - 1]?.content || ""
+    // Intent detection - disabled by default for performance
+    // Set ENABLE_INTENT_DETECTION=true to re-enable if needed
+    const enableIntentDetection = process.env.ENABLE_INTENT_DETECTION === "true"
+    let userIntent: UserIntent = "general"
 
-    // Detect intent
-    const userIntent: UserIntent = detectUserIntent(queryForIntentDetection)
-    console.log("Detected intent:", userIntent)
+    if (enableIntentDetection) {
+      // For intent detection, use the original query (without apostrophe sanitization)
+      const queryForIntentDetection =
+        messages[messages.length - 1]?.content || ""
+      userIntent = detectUserIntent(queryForIntentDetection)
+      if (process.env.NODE_ENV === "development") {
+        console.log("Detected intent:", userIntent)
+      }
+    }
 
     // Create TransformStream and send progress immediately
     const { readable, writable } = new TransformStream()
@@ -285,17 +310,7 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // Add security headers to streaming response
-      response.headers.set(
-        "Content-Security-Policy",
-        "default-src 'none'; script-src 'none'; style-src 'none'; img-src 'none'; font-src 'none'; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
-      )
-      response.headers.set("X-Content-Type-Options", "nosniff")
-      response.headers.set("X-Frame-Options", "DENY")
-      response.headers.set("X-XSS-Protection", "1; mode=block")
-      response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
-
-      return response
+      return setSecurityHeaders(response)
     }
 
     // Process chat in background
