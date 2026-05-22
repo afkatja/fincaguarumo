@@ -1,60 +1,95 @@
+import { NextRequest } from "next/server"
+import { POST as cleanupHandler } from "../../app/api/cleanup/route"
+import { POST as forceDeleteHandler } from "../../app/api/force-delete/route"
+import { POST as bookingsHandler } from "../../app/api/bookings/route"
+import { validateChatMessage, validateBookingForm } from "../input-validation"
+import { bookingsRateLimiter } from "../rate-limiting/redis-rate-limit"
+
 describe("AC7: Security and Ops", () => {
   describe("Protected Cleanup Endpoints", () => {
-    test("should reject requests without admin secret header", () => {
-      // Mock request headers
-      const headers = new Map()
-      headers.set("content-type", "application/json")
+    test("should reject requests without admin secret header", async () => {
+      expect.assertions(2)
 
-      // Simulate the security check logic
-      const adminSecret = headers.get("x-admin-secret")
-      const expectedSecret = process.env.ADMIN_SECRET
+      // Create mock request without admin secret header
+      const request = new NextRequest("http://localhost/api/cleanup", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+      })
 
-      if (!adminSecret || adminSecret !== expectedSecret) {
-        const response = {
-          status: 401,
-          json: () => ({ error: "Unauthorized" }),
-        }
-        expect(response.status).toBe(401)
-        expect(response.json().error).toContain("Unauthorized")
-      }
+      // Call the actual cleanup handler
+      const response = await cleanupHandler(request)
+
+      // Assert on the actual Response returned
+      expect(response.status).toBe(401)
+      const responseBody = await response.json()
+      expect(responseBody.error).toContain("Unauthorized")
     })
 
-    test("should accept requests with valid admin secret header", () => {
-      // Mock request headers with valid secret
-      const headers = new Map()
-      headers.set("x-admin-secret", process.env.ADMIN_SECRET || "test-secret")
+    test("should accept requests with valid admin secret header", async () => {
+      expect.assertions(2)
 
-      // Simulate the security check logic
-      const adminSecret = headers.get("x-admin-secret")
-      const expectedSecret = process.env.ADMIN_SECRET
+      // Create mock request with valid admin secret header
+      const request = new NextRequest("http://localhost/api/cleanup", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-secret": process.env.ADMIN_SECRET || "test-secret",
+        },
+      })
 
-      // Should not reject with valid secret
-      expect(adminSecret).toBe(expectedSecret)
-      expect(adminSecret).toBeTruthy()
+      // Call the actual cleanup handler
+      const response = await cleanupHandler(request)
+
+      // Assert on the actual Response returned
+      expect(response.status).toBe(200)
+      const responseBody = await response.json()
+      expect(responseBody.success).toBe(true)
     })
 
-    test("should validate document ID in force-delete requests", () => {
-      const requestBody = { docId: "" } // Empty docId
+    test("should validate document ID in force-delete requests", async () => {
+      expect.assertions(2)
 
-      // Simulate validation logic
-      if (!requestBody.docId) {
-        const response = {
-          status: 400,
-          json: () => ({ error: "Document ID is required" }),
-        }
-        expect(response.status).toBe(400)
-        expect(response.json().error).toContain("Document ID is required")
-      }
+      // Create mock request with empty docId and valid admin secret
+      const request = new NextRequest("http://localhost/api/force-delete", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-secret": process.env.ADMIN_SECRET || "test-secret",
+        },
+        body: JSON.stringify({ docId: "" }), // Empty docId
+      })
+
+      // Call the actual force-delete handler
+      const response = await forceDeleteHandler(request)
+
+      // Assert on the actual Response returned
+      expect(response.status).toBe(400)
+      const responseBody = await response.json()
+      expect(responseBody.error).toContain("Document ID is required")
     })
 
-    test("should allow valid document ID in force-delete requests", () => {
-      const requestBody = { docId: "valid-doc-123" }
+    test("should allow valid document ID in force-delete requests", async () => {
+      expect.assertions(2)
 
-      // Simulate validation logic
-      expect(requestBody.docId).toBeTruthy()
+      // Create mock request with valid docId and admin secret
+      const request = new NextRequest("http://localhost/api/force-delete", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-secret": process.env.ADMIN_SECRET || "test-secret",
+        },
+        body: JSON.stringify({ docId: "valid-doc-123" }),
+      })
 
-      // Should proceed to actual deletion logic
-      expect(requestBody.docId).toBe("valid-doc-123")
+      // Call the actual force-delete handler
+      const response = await forceDeleteHandler(request)
+
+      // Assert on the actual Response returned
+      expect(response.status).toBe(200)
+      const responseBody = await response.json()
+      expect(responseBody.success).toBe(true)
     })
 
     test("should handle different admin secret values", () => {
@@ -88,83 +123,166 @@ describe("AC7: Security and Ops", () => {
 
   describe("Input Validation", () => {
     test("should validate and sanitize chat input", async () => {
-      // This would be tested in the actual chat endpoint
-      const maliciousInput = "<script>alert('xss')</script>"
-      const sanitizedInput = "&lt;script&gt;alert('xss')&lt;/script&gt;"
+      expect.assertions(3)
 
-      expect(sanitizedInput).not.toContain("<script>")
-      expect(sanitizedInput).not.toContain("</script>")
+      // Test with malicious input containing script tags
+      const maliciousInput = "<script>alert('xss')</script>"
+
+      // Call the actual validation function
+      const result = validateChatMessage(maliciousInput)
+
+      // Should be valid after sanitization
+      expect(result.isValid).toBe(true)
+
+      // Sanitized output should not contain malicious content
+      expect(result.sanitizedValue).not.toContain("<script>")
+      expect(result.sanitizedValue).not.toContain("</script>")
     })
 
     test("should validate booking data structure", async () => {
+      expect.assertions(2)
+
       const validBookingData = {
-        name: "John Doe",
+        guestName: "John Doe",
         email: "john@example.com",
-        startDate: "2024-07-01",
-        endDate: "2024-07-05",
-        guests: 2,
-        propertyId: "villa-bruno",
+        phone: "+1234567890",
+        source: "website",
+        bookingType: "tour",
+        summary: "Test booking",
+        description: "Test description",
+        uid: "test-uid-123",
       }
 
-      // Should have proper validation
-      expect(validBookingData.name).toBeTruthy()
-      expect(validBookingData.email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
-      expect(validBookingData.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-      expect(validBookingData.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-      expect(validBookingData.guests).toBeGreaterThan(0)
-      expect(validBookingData.propertyId).toBeTruthy()
+      // Call the actual validation function
+      const result = validateBookingForm(validBookingData)
+
+      // Should be valid
+      expect(result.isValid).toBe(true)
+
+      // Should return sanitized data
+      expect(result.sanitizedValue).toBeDefined()
+      if (result.sanitizedValue) {
+        expect(result.sanitizedValue.guestName).toBe("John Doe")
+        expect(result.sanitizedValue.email).toBe("john@example.com")
+      }
     })
 
     test("should reject malformed booking data", async () => {
+      expect.assertions(2)
+
       const invalidBookingData = {
-        name: "",
-        email: "invalid-email",
-        startDate: "invalid-date",
-        endDate: "",
-        guests: -1,
-        propertyId: "",
+        guestName: "", // Empty name
+        email: "invalid-email", // Invalid email format
+        phone: "invalid-phone", // Invalid phone format
+        source: "",
+        bookingType: "",
+        summary: "",
+        description: "",
+        uid: "", // Empty UID (required)
       }
 
-      // Should fail validation
-      expect(invalidBookingData.name).toBe("")
-      expect(invalidBookingData.email).not.toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
-      expect(invalidBookingData.startDate).not.toMatch(/^\d{4}-\d{2}-\d{2}$/)
-      expect(invalidBookingData.guests).toBeLessThanOrEqual(0)
+      // Call the actual validation function
+      const result = validateBookingForm(invalidBookingData)
+
+      // Should be invalid
+      expect(result.isValid).toBe(false)
+
+      // Should have error message
+      expect(result.error).toBeDefined()
+      expect(result.error).toContain("Guest name")
     })
   })
 
   describe("Rate Limiting", () => {
-    test("should implement rate limiting on chat endpoint", async () => {
-      // Mock multiple rapid requests from same IP
-      const requests = Array.from({ length: 20 }, (_, i) => ({
-        url: "http://localhost:3000/api/chat",
-        method: "POST",
-        headers: {
-          "x-forwarded-for": "192.168.1.1",
-        },
-        body: JSON.stringify({
-          message: `test message ${i}`,
-          context: { propertyId: "villa-bruno" },
-        }),
-      }))
+    test("should implement rate limiting on bookings endpoint", async () => {
+      expect.assertions(2)
 
-      // In actual implementation, should rate limit after certain threshold
-      const rateLimitThreshold = 10
-      expect(requests.length).toBeGreaterThan(rateLimitThreshold)
+      const testIP = "192.168.1.1"
+
+      // Mock the rate limiter to simulate exceeding the limit
+      const mockCheckLimit = jest
+        .fn()
+        .mockResolvedValueOnce({ allowed: true, resetTime: Date.now() + 60000 })
+        .mockResolvedValueOnce({ allowed: true, resetTime: Date.now() + 60000 })
+        .mockResolvedValue({ allowed: false, resetTime: Date.now() + 60000 })
+
+      // Replace the checkLimit method temporarily
+      const originalCheckLimit = bookingsRateLimiter.checkLimit
+      bookingsRateLimiter.checkLimit = mockCheckLimit
+
+      try {
+        // Create a mock request for bookings endpoint
+        const request = new NextRequest("http://localhost/api/bookings", {
+          method: "POST",
+          headers: {
+            "x-forwarded-for": testIP,
+            authorization: "Bearer mock-token",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            guestName: "Test User",
+            email: "test@example.com",
+            uid: "test-uid-123",
+          }),
+        })
+
+        // Call the bookings handler - should be rate limited on third call
+        const response = await bookingsHandler(request)
+
+        // Should return 429 status when rate limited
+        expect(response.status).toBe(429)
+
+        const responseBody = await response.json()
+        expect(responseBody.error).toContain("Too many requests")
+      } finally {
+        // Restore original method
+        bookingsRateLimiter.checkLimit = originalCheckLimit
+      }
     })
 
     test("should allow burst requests within limits", async () => {
-      const requests = Array.from({ length: 5 }, (_, i) => ({
-        url: "http://localhost:3000/api/chat",
-        method: "POST",
-        body: JSON.stringify({
-          message: `test message ${i}`,
-          context: { propertyId: "villa-bruno" },
-        }),
-      }))
+      expect.assertions(2)
 
-      // Should allow reasonable burst of requests
-      expect(requests.length).toBeLessThanOrEqual(10)
+      const testIP = "192.168.1.2"
+
+      // Mock the rate limiter to allow requests within limits
+      const mockCheckLimit = jest.fn().mockResolvedValue({
+        allowed: true,
+        resetTime: Date.now() + 60000,
+      })
+
+      // Replace the checkLimit method temporarily
+      const originalCheckLimit = bookingsRateLimiter.checkLimit
+      bookingsRateLimiter.checkLimit = mockCheckLimit
+
+      try {
+        // Create a mock request for bookings endpoint
+        const request = new NextRequest("http://localhost/api/bookings", {
+          method: "POST",
+          headers: {
+            "x-forwarded-for": testIP,
+            authorization: "Bearer mock-token",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            guestName: "Test User",
+            email: "test@example.com",
+            uid: "test-uid-123",
+          }),
+        })
+
+        // Call the bookings handler - should be allowed
+        const response = await bookingsHandler(request)
+
+        // Should return 200 status when within rate limits
+        expect(response.status).toBe(200)
+
+        const responseBody = await response.json()
+        expect(responseBody).toBeDefined()
+      } finally {
+        // Restore original method
+        bookingsRateLimiter.checkLimit = originalCheckLimit
+      }
     })
   })
 
@@ -173,24 +291,14 @@ describe("AC7: Security and Ops", () => {
       const requiredVars = [
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY",
-        "SUPABASE_URL",
-        "SUPABASE_ANON_KEY",
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
-        "RESEND_API_KEY",
       ]
 
       requiredVars.forEach(varName => {
         expect(process.env[varName]).toBeDefined()
-      })
-    })
-
-    test("should have fallback for optional variables", () => {
-      const optionalVars = ["OLLAMA_BASE_URL"]
-
-      optionalVars.forEach(varName => {
-        // Optional vars can be undefined
-        expect(true).toBe(true) // Placeholder test
       })
     })
   })
@@ -242,46 +350,6 @@ describe("AC7: Security and Ops", () => {
 
       expect(sanitizedInput).not.toContain("<script>")
       expect(sanitizedInput).not.toContain("document.location")
-    })
-  })
-
-  describe("CSRF Protection", () => {
-    test("should validate CSRF tokens for state-changing operations", async () => {
-      // Booking creation should require CSRF protection
-      const bookingRequest = {
-        url: "http://localhost:3000/api/bookings",
-        method: "POST",
-        headers: new Map([
-          ["content-type", "application/json"],
-          // Missing CSRF token
-        ]),
-        body: JSON.stringify({
-          name: "John Doe",
-          email: "john@example.com",
-        }),
-      }
-
-      // In actual implementation, should validate CSRF token
-      expect(bookingRequest.headers.get("x-csrf-token")).toBeUndefined()
-    })
-
-    test("should allow requests with valid CSRF tokens", async () => {
-      const validCsrfToken = "valid-csrf-token-123"
-
-      const bookingRequest = {
-        url: "http://localhost:3000/api/bookings",
-        method: "POST",
-        headers: new Map([
-          ["content-type", "application/json"],
-          ["x-csrf-token", validCsrfToken],
-        ]),
-        body: JSON.stringify({
-          name: "John Doe",
-          email: "john@example.com",
-        }),
-      }
-
-      expect(bookingRequest.headers.get("x-csrf-token")).toBe(validCsrfToken)
     })
   })
 })

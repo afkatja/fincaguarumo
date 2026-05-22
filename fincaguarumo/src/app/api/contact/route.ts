@@ -7,11 +7,11 @@ const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_API_KEY || "",
 })
 
-function getClientIP(request: NextRequest): string {
+function getClientIP(request: NextRequest): string | null {
   const forwarded = request.headers.get("x-forwarded-for")
   const real = request.headers.get("x-real-ip")
 
-  // Only trust x-forwarded-for when running behind a trusted proxy
+  // Only trust headers when running behind a trusted proxy
   const isTrustedProxy =
     process.env.VERCEL === "1" ||
     process.env.NETLIFY === "true" ||
@@ -21,15 +21,35 @@ function getClientIP(request: NextRequest): string {
     return forwarded.split(",")[0].trim()
   }
 
-  // Fall back to x-real-ip or unknown
-  return real || "unknown"
+  if (isTrustedProxy && real) {
+    return real
+  }
+
+  // Return unique request ID when not behind trusted proxy
+  // Check for existing request ID header first
+  const requestId = request.headers.get("x-request-id")
+  if (requestId) {
+    return requestId
+  }
+
+  // Generate a unique request ID if none exists
+  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 }
 
 async function checkRateLimit(
-  ip: string,
+  identifier: string | null,
 ): Promise<{ allowed: boolean; resetTime: number }> {
+  // Skip rate limiting if no valid identifier (e.g., not behind trusted proxy)
+  if (!identifier || identifier.startsWith("req_")) {
+    console.log("Skipping rate limiting - no valid IP identifier")
+    return {
+      allowed: true,
+      resetTime: Date.now() + 60000,
+    }
+  }
+
   try {
-    const result = await contactRateLimiter.checkLimit(ip)
+    const result = await contactRateLimiter.checkLimit(identifier)
     return {
       allowed: result.allowed,
       resetTime: result.resetTime,
@@ -67,7 +87,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { name, email, message } = await request.json()
+    // Parse JSON body with proper error handling
+    let name, email, message
+    try {
+      const body = await request.json()
+      ;({ name, email, message } = body)
+    } catch (parseError) {
+      if (parseError instanceof SyntaxError) {
+        return NextResponse.json(
+          { error: "Invalid JSON body" },
+          { status: 400 },
+        )
+      }
+      throw parseError // Re-throw other unexpected errors
+    }
 
     // Validate and sanitize input
     const validation = validateContactForm({ name, email, message })

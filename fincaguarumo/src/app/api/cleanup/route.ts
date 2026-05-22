@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const docId = new URLSearchParams(request.url).get("docId")
+  const docId = new URL(request.url).searchParams.get("docId")
   if (docId) {
     await forceDeleteDocumentById(docId)
     return NextResponse.json({ success: true })

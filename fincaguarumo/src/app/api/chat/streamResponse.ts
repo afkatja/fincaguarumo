@@ -238,6 +238,30 @@ export const streamResponseWithData = async ({
     const relevantTools = filterToolsByIntent(detectedIntent)
     console.log("Using filtered tools:", Object.keys(relevantTools))
 
+    // Create AbortController for timeout handling
+    const controller = new AbortController()
+    let isClosed = false
+
+    // Helper to ensure writer is only closed once
+    const closeOnce = async () => {
+      if (isClosed) return
+      isClosed = true
+      try {
+        await writer.close()
+        console.log("🔒 Stream writer closed successfully")
+      } catch (closeError) {
+        // Swallow InvalidStateError and other close errors
+        if (
+          !(
+            closeError instanceof Error &&
+            closeError.message.includes("InvalidStateError")
+          )
+        ) {
+          console.error("❌ Unexpected error closing stream:", closeError)
+        }
+      }
+    }
+
     let result
     console.log(
       "🤖 Starting AI chat stream creation with tools:",
@@ -273,23 +297,39 @@ export const streamResponseWithData = async ({
           "I'm having trouble generating a response right now. Please try again in a moment or contact our support team for assistance.",
       })
       await writer.write(new TextEncoder().encode(`0:${errorPayload}\n`))
-      await writer.close()
+      await closeOnce()
       return
     }
 
     const response = result.toTextStreamResponse()
     const reader = response.body?.getReader() ?? null
 
+    // Process the stream and send AI chunks immediately
+
+    // Start stream processing in background with timeout
     console.log("⏰ Setting up 30-second timeout for stream processing")
     const streamTimeout = setTimeout(async () => {
       console.error("⏰ Stream processing timeout - no response received")
       try {
+        // Abort the upstream stream
+        controller.abort()
+
+        // Cancel the reader if available
+        if (reader) {
+          try {
+            await reader.cancel()
+            console.log("📖 Reader cancelled due to timeout")
+          } catch (cancelError) {
+            console.error("❌ Error cancelling reader:", cancelError)
+          }
+        }
+
         const timeoutPayload = JSON.stringify({
           type: "progress",
           message: "Request is taking longer than expected. Please try again.",
         })
         await writer.write(new TextEncoder().encode(`0:${timeoutPayload}\n`))
-        await writer.close()
+        await closeOnce()
         console.log("🔒 Stream closed due to timeout")
       } catch (closeError) {
         console.error("❌ Error closing stream after timeout:", closeError)
@@ -328,9 +368,15 @@ export const streamResponseWithData = async ({
     }
   } catch (error) {
     console.error("Chat API error:", error)
-    return new Response(
-      JSON.stringify({ error: "Failed to process chat request" }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    )
+    try {
+      const errorPayload = JSON.stringify({
+        type: "error",
+        message: "Failed to process chat request",
+      })
+      await writer.write(new TextEncoder().encode(`0:${errorPayload}\n`))
+      await writer.close()
+    } catch (writeError) {
+      console.error("Failed to write error to stream:", writeError)
+    }
   }
 }
