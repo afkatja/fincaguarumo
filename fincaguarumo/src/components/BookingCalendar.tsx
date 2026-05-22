@@ -10,6 +10,7 @@ const calendarRequestCache = {
   lastFetch: 0,
   cooldown: 30000, // 30 seconds cooldown
   cachedData: null as any,
+  failed: false,
 }
 
 const BookingCalendar = ({
@@ -37,6 +38,7 @@ const BookingCalendar = ({
   const componentId = useRef(
     `calendar-${Math.random().toString(36).substr(2, 9)}`,
   )
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Update parent component when loading state changes
   useEffect(() => {
@@ -64,18 +66,49 @@ const BookingCalendar = ({
         console.log(
           `[${componentId.current}] Calendar request already in progress, waiting...`,
         )
+
+        // Clear any existing interval
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current)
+        }
+
+        // Set timeout to prevent infinite polling (10 seconds max)
+        const timeoutId = setTimeout(() => {
+          console.warn(
+            `[${componentId.current}] Calendar request timeout, giving up`,
+          )
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current)
+            pollIntervalRef.current = null
+          }
+          setBlockedDates([])
+          setLoading(false)
+        }, 10000)
+
         // Wait for the existing request to complete
-        const checkInterval = setInterval(() => {
-          if (
-            !calendarRequestCache.inProgress &&
-            calendarRequestCache.cachedData
-          ) {
-            clearInterval(checkInterval)
-            const blockedDatesArray = (
-              calendarRequestCache.cachedData.blockedDates || []
-            ).map((date: string) => new Date(date))
-            setBlockedDates(blockedDatesArray)
-            setLoading(false)
+        pollIntervalRef.current = setInterval(() => {
+          if (!calendarRequestCache.inProgress) {
+            // Clear timeout and interval
+            clearTimeout(timeoutId)
+            if (pollIntervalRef.current) {
+              clearInterval(pollIntervalRef.current)
+              pollIntervalRef.current = null
+            }
+
+            // Handle success or failure
+            if (calendarRequestCache.cachedData) {
+              const blockedDatesArray = (
+                calendarRequestCache.cachedData.blockedDates || []
+              ).map((date: string) => new Date(date))
+              setBlockedDates(blockedDatesArray)
+              setLoading(false)
+            } else if (calendarRequestCache.failed) {
+              console.warn(
+                `[${componentId.current}] Calendar request failed, using empty dates`,
+              )
+              setBlockedDates([])
+              setLoading(false)
+            }
           }
         }, 100)
         return
@@ -106,12 +139,18 @@ const BookingCalendar = ({
 
         if (!data.ok) {
           console.error("Error fetching calendar availability:", json.error)
+          // Cache empty data and set failed flag
+          calendarRequestCache.cachedData = { blockedDates: [] }
+          calendarRequestCache.failed = true
+          calendarRequestCache.inProgress = false
           setBlockedDates([])
+          setLoading(false)
           return
         }
 
-        // Cache the response
+        // Cache the response and clear failed flag
         calendarRequestCache.cachedData = json
+        calendarRequestCache.failed = false
         calendarRequestCache.lastFetch = now
         calendarRequestCache.inProgress = false
         console.log(
@@ -128,6 +167,9 @@ const BookingCalendar = ({
           `[${componentId.current}] Error fetching calendar availability:`,
           error,
         )
+        // Cache empty data and set failed flag
+        calendarRequestCache.cachedData = { blockedDates: [] }
+        calendarRequestCache.failed = true
         setBlockedDates([])
       } finally {
         setLoading(false)
@@ -137,6 +179,16 @@ const BookingCalendar = ({
 
     fetchData()
   }, []) // Remove blockedDates dependency to prevent re-fetches
+
+  // Cleanup intervals on component unmount
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+        pollIntervalRef.current = null
+      }
+    }
+  }, [])
 
   return (
     <div data-testid="booking-calendar">

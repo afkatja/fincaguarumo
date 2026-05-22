@@ -41,10 +41,12 @@ export const streamResponseWithData = async ({
     let ragContext = ""
     console.log("🔍 Starting RAG context building for query:", userQuery)
 
-    // TEMPORARY DEBUG: Bypass RAG to test AI stream
-    const bypassRAG = userQuery.includes("test") || userQuery.includes("bypass")
+    // DEBUG: Bypass RAG only when explicitly enabled via environment flag
+    const bypassRAG = process.env.DEBUG_BYPASS_RAG === "true"
     if (bypassRAG) {
-      console.log("🔄 Bypassing RAG context for testing")
+      console.warn(
+        "⚠️ RAG bypassed via DEBUG_BYPASS_RAG environment flag - RAG was skipped",
+      )
       ragContext = ""
     } else {
       try {
@@ -147,6 +149,30 @@ Use this preloaded data instead of calling tools for basic property information.
     const relevantTools = filterToolsByIntent(detectedIntent)
     console.log("Using filtered tools:", Object.keys(relevantTools))
 
+    // Create AbortController for timeout handling
+    const controller = new AbortController()
+    let isClosed = false
+
+    // Helper to ensure writer is only closed once
+    const closeOnce = async () => {
+      if (isClosed) return
+      isClosed = true
+      try {
+        await writer.close()
+        console.log("🔒 Stream writer closed successfully")
+      } catch (closeError) {
+        // Swallow InvalidStateError and other close errors
+        if (
+          !(
+            closeError instanceof Error &&
+            closeError.message.includes("InvalidStateError")
+          )
+        ) {
+          console.error("❌ Unexpected error closing stream:", closeError)
+        }
+      }
+    }
+
     let result
     console.log(
       "🤖 Starting AI chat stream creation with tools:",
@@ -169,7 +195,7 @@ Use this preloaded data instead of calling tools for basic property information.
           "I'm having trouble generating a response. Please try again in a moment.",
       })
       await writer.write(new TextEncoder().encode(`0:${errorPayload}\n`))
-      await writer.close()
+      await closeOnce()
       return
     }
 
@@ -215,8 +241,9 @@ Use this preloaded data instead of calling tools for basic property information.
           await writer.write(new TextEncoder().encode(`0:${errorPayload}\n`))
         } finally {
           console.log("🔒 Closing writer after stream processing")
-          // Only close writer after AI stream is completely done
-          await writer.close()
+          // Clear timeout and close writer safely
+          clearTimeout(streamTimeout)
+          await closeOnce()
         }
       } else {
         console.error("❌ No reader available from AI response")
@@ -228,12 +255,25 @@ Use this preloaded data instead of calling tools for basic property information.
     const streamTimeout = setTimeout(async () => {
       console.error("⏰ Stream processing timeout - no response received")
       try {
+        // Abort the upstream stream
+        controller.abort()
+
+        // Cancel the reader if available
+        if (reader) {
+          try {
+            await reader.cancel()
+            console.log("📖 Reader cancelled due to timeout")
+          } catch (cancelError) {
+            console.error("❌ Error cancelling reader:", cancelError)
+          }
+        }
+
         const timeoutPayload = JSON.stringify({
           type: "progress",
           message: "Request is taking longer than expected. Please try again.",
         })
         await writer.write(new TextEncoder().encode(`0:${timeoutPayload}\n`))
-        await writer.close()
+        await closeOnce()
         console.log("🔒 Stream closed due to timeout")
       } catch (closeError) {
         console.error("❌ Error closing stream after timeout:", closeError)
@@ -241,7 +281,7 @@ Use this preloaded data instead of calling tools for basic property information.
     }, 30000) // 30 second timeout
 
     console.log("🚀 Starting background stream processing")
-    processStream()
+    const streamPromise = processStream()
       .catch(error => {
         console.error("❌ Background stream processing error:", error)
       })
@@ -249,8 +289,14 @@ Use this preloaded data instead of calling tools for basic property information.
         console.log(
           "✅ Background stream processing completed, clearing timeout",
         )
-        clearTimeout(streamTimeout)
+        // Timeout is already cleared in closeOnce, but clear here as backup
+        if (!isClosed) {
+          clearTimeout(streamTimeout)
+        }
       })
+
+    // Wait for stream processing to complete before extracting results
+    await streamPromise
 
     // Extract tool outputs from the result properly
     try {
@@ -308,9 +354,15 @@ Use this preloaded data instead of calling tools for basic property information.
     }
   } catch (error) {
     console.error("Chat API error:", error)
-    return new Response(
-      JSON.stringify({ error: "Failed to process chat request" }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    )
+    try {
+      const errorPayload = JSON.stringify({
+        type: "error",
+        message: "Failed to process chat request",
+      })
+      await writer.write(new TextEncoder().encode(`0:${errorPayload}\n`))
+      await writer.close()
+    } catch (writeError) {
+      console.error("Failed to write error to stream:", writeError)
+    }
   }
 }

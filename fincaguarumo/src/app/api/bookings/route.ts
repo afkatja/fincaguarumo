@@ -37,8 +37,12 @@ function getClientIP(request: NextRequest): string {
     return forwarded.split(",")[0].trim()
   }
 
-  // Fall back to x-real-ip or unknown
-  return real || "unknown"
+  if (isTrustedProxy && real) {
+    return real
+  }
+
+  // Return unknown when not behind trusted proxy or headers missing
+  return "unknown"
 }
 
 async function checkRateLimit(
@@ -159,11 +163,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Add optional fields if they might exist
-      if (bookingData.uid) {
-        availabilityRecord.booking_uid = bookingData.uid
+      if (sanitizedData.uid) {
+        availabilityRecord.booking_uid = sanitizedData.uid
       }
-      if (bookingData.guestName) {
-        availabilityRecord.reason = `Booked via ${bookingData.source || "Direct"} - ${bookingData.guestName}`
+      if (sanitizedData.guestName) {
+        availabilityRecord.reason = `Booked via ${sanitizedData.source || "Direct"} - ${sanitizedData.guestName}`
       }
 
       const { error: availabilityError } = await supabase

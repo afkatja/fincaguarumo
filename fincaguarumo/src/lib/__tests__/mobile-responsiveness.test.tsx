@@ -118,7 +118,7 @@ describe("AC5: Mobile Experience", () => {
       expect(button).toBeInTheDocument() // Just check it renders
     })
 
-    test("should handle swipe gestures for sidebar on mobile", () => {
+    test("should toggle sidebar chat on mobile with button click", () => {
       mockViewport(375, 667)
 
       render(<SidebarChat />)
@@ -138,7 +138,7 @@ describe("AC5: Mobile Experience", () => {
       expect(sidebar).toHaveClass("w-96", "max-w-[calc(100vw-2rem)]")
     })
 
-    test("should prevent zoom on input focus (mobile Safari)", () => {
+    test("should prevent zoom on textarea focus (mobile Safari)", () => {
       mockViewport(375, 667)
 
       render(
@@ -147,10 +147,15 @@ describe("AC5: Mobile Experience", () => {
         />,
       )
 
-      const input = screen.getByPlaceholderText(/ask about booking\.\.\./i)
+      const textarea = screen.getByPlaceholderText(/ask about booking\.\.\./i)
 
-      // Check if input renders and has basic styling
-      expect(input).toBeInTheDocument()
+      // Check if textarea renders and has proper font-size to prevent zoom
+      expect(textarea).toBeInTheDocument()
+
+      // Check font-size is at least 16px to prevent zoom on mobile Safari
+      const computedStyles = window.getComputedStyle(textarea)
+      const fontSize = computedStyles.fontSize
+      expect(fontSize).toBe("16px")
     })
   })
 

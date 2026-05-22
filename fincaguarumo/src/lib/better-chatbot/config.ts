@@ -89,7 +89,7 @@ function createDateRegexForPattern(pattern: string): RegExp {
     .replace(/TEMP_YEAR/g, "\\d{4}")
     .replace(
       /TEMP_MONTH_FULL/g,
-      "(January|February|March|April|May|June|July|August|September|October|November|December|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december|январь|февраль|март|апрель|май|июнь|июль|август|сентябрь|октябрь|ноябрь|декабрь|Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezemer)",
+      "(January|February|March|April|May|June|July|August|September|October|November|December|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december|январь|февраль|март|апрель|май|июнь|июль|август|сентябрь|октябрь|ноябрь|декабрь|Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember)",
     )
     .replace(
       /TEMP_MONTH_SHORT/g,
@@ -182,40 +182,73 @@ async function getCachedAvailability(
 
   // Fetch fresh data
   try {
-    const siteUrl =
-      process.env.NODE_ENV === "production"
-        ? process.env.NEXT_PUBLIC_SITE_URL || "https://fincaguarumo.local:3000"
-        : "https://localhost:3000"
+    // Build site URL with proper production fallbacks
+    let siteUrl: string
+    if (process.env.NODE_ENV === "production") {
+      if (process.env.NEXT_PUBLIC_SITE_URL) {
+        siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+      } else if (process.env.VERCEL_URL) {
+        siteUrl = `https://${process.env.VERCEL_URL}`
+      } else {
+        throw new Error(
+          "Production environment requires NEXT_PUBLIC_SITE_URL or VERCEL_URL to be set",
+        )
+      }
+    } else {
+      siteUrl = "http://localhost:3000"
+    }
 
     console.log("Fetching fresh availability data for:", cacheKey)
-    const response = await fetch(`${siteUrl}/api/availability`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ checkIn, checkOut }),
-    })
 
-    if (!response.ok) {
-      throw new Error(
-        `Availability API returned ${response.status}: ${response.statusText}`,
-      )
-    }
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+    }, 8000) // 8 second timeout
 
-    const data = await response.json()
+    try {
+      const response = await fetch(`${siteUrl}/api/availability`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ checkIn, checkOut }),
+        signal: controller.signal,
+      })
 
-    // Cache the result
-    availabilityCache.set(cacheKey, { data, timestamp: Date.now() })
+      // Clear timeout if fetch completes
+      clearTimeout(timeoutId)
 
-    // Clean up old cache entries periodically
-    if (availabilityCache.size > 50) {
-      const now = Date.now()
-      for (const [key, value] of availabilityCache.entries()) {
-        if (now - value.timestamp > CACHE_DURATION) {
-          availabilityCache.delete(key)
+      if (!response.ok) {
+        throw new Error(
+          `Availability API returned ${response.status}: ${response.statusText}`,
+        )
+      }
+
+      const data = await response.json()
+
+      // Cache the result
+      availabilityCache.set(cacheKey, { data, timestamp: Date.now() })
+
+      // Clean up old cache entries periodically
+      if (availabilityCache.size > 50) {
+        const now = Date.now()
+        for (const [key, value] of availabilityCache.entries()) {
+          if (now - value.timestamp > CACHE_DURATION) {
+            availabilityCache.delete(key)
+          }
         }
       }
-    }
 
-    return data
+      return data
+    } catch (error) {
+      // Clear timeout on any error
+      clearTimeout(timeoutId)
+
+      // Re-throw AbortError to be caught by outer catch
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("Request timeout: Failed to check availability")
+      }
+      throw error
+    }
   } catch (error) {
     console.error("Error fetching availability:", error)
     return { error: "Failed to check availability", isAvailable: false }
@@ -585,11 +618,21 @@ export const bookingTools = {
     }),
     execute: async ({ from, to, limit }) => {
       try {
-        const siteUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ||
-          (process.env.VERCEL_URL
-            ? `https://${process.env.VERCEL_URL}`
-            : "http://localhost:3000")
+        // Build site URL with proper production fallbacks
+        let siteUrl: string
+        if (process.env.NODE_ENV === "production") {
+          if (process.env.NEXT_PUBLIC_SITE_URL) {
+            siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+          } else if (process.env.VERCEL_URL) {
+            siteUrl = `https://${process.env.VERCEL_URL}`
+          } else {
+            throw new Error(
+              "Production environment requires NEXT_PUBLIC_SITE_URL or VERCEL_URL to be set",
+            )
+          }
+        } else {
+          siteUrl = "http://localhost:3000"
+        }
 
         const params = new URLSearchParams()
         if (from) params.append("from", from)
@@ -620,11 +663,21 @@ export const bookingTools = {
     }),
     execute: async ({ checkIn, checkOut, guests, name, email, phone }) => {
       try {
-        const siteUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ||
-          (process.env.VERCEL_URL
-            ? `https://${process.env.VERCEL_URL}`
-            : "http://localhost:3000")
+        // Build site URL with proper production fallbacks
+        let siteUrl: string
+        if (process.env.NODE_ENV === "production") {
+          if (process.env.NEXT_PUBLIC_SITE_URL) {
+            siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+          } else if (process.env.VERCEL_URL) {
+            siteUrl = `https://${process.env.VERCEL_URL}`
+          } else {
+            throw new Error(
+              "Production environment requires NEXT_PUBLIC_SITE_URL or VERCEL_URL to be set",
+            )
+          }
+        } else {
+          siteUrl = "http://localhost:3000"
+        }
 
         const response = await fetch(`${siteUrl}/api/bookings`, {
           method: "POST",
@@ -824,25 +877,25 @@ export async function createChatStream({
     const finalSystemPrompt =
       systemPrompt || (await getDynamicSystemPrompt(detectedLanguage))
 
-    // Validate message alternation
+    // Validate message alternation and preserve conversation context
     // The API expects: system → user → assistant → user → assistant...
-    // We need to ensure proper alternation by rebuilding the sequence
+    // Preserve all messages to maintain full conversation history
     const validMessages: { role: string; content: string }[] = []
 
-    // Start with the first user message, then alternate properly
-    let lastRole = "system" // We'll add system message separately
-
     for (const msg of messages) {
-      // Skip assistant messages and tool messages - we'll regenerate assistant responses
-      if (msg.role === "assistant" || msg.role === "tool") {
-        continue
+      // Include all message types to preserve conversation context
+      // Ensure proper role filtering for API compatibility
+      if (
+        msg.role === "user" ||
+        msg.role === "assistant" ||
+        msg.role === "tool"
+      ) {
+        validMessages.push({
+          role: msg.role,
+          content: msg.content || "",
+        })
       }
-
-      // Only add user messages to maintain proper alternation
-      if (msg.role === "user") {
-        validMessages.push(msg)
-        lastRole = "user"
-      }
+      // Skip system messages here as we add them separately
     }
 
     const allMessages: any = [
