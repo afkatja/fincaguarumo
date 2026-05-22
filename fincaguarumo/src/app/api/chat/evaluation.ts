@@ -1,6 +1,7 @@
 import { introspectionModeEvaluation } from "../../../lib/better-chatbot/config"
 import { ChatMessage, ToolOutput, EvaluationResult } from "../../../types"
 import { ChatContext as ContextAwareChatContext } from "../../../lib/better-chatbot/context-aware"
+import { isChatbotEnabled } from "../../../lib/featureFlags"
 
 // Simplified critical flow detection - only evaluate booking and payment related queries
 export function isCriticalFlow(userQuery: string): boolean {
@@ -48,6 +49,11 @@ export async function performBackgroundEvaluation(
   userQuery?: string,
 ) {
   try {
+    // Check if chatbot feature is enabled
+    if (!isChatbotEnabled()) {
+      console.log("Chatbot feature is disabled - skipping evaluation")
+      return
+    }
     // Skip evaluation for simple responses
     if (fullResponse.length < 50 || !fullResponse.includes("Villa")) {
       console.log("Skipping evaluation for simple/short response")

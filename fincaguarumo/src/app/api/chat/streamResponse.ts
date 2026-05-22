@@ -11,6 +11,7 @@ import { isCriticalFlow, performBackgroundEvaluation } from "./evaluation"
 import { detectUserIntent, UserIntent } from "../../../lib/intent-detection"
 import { ChatMessage, ToolOutput } from "../../../types"
 import { ChatContext as ContextAwareChatContext } from "../../../lib/better-chatbot/context-aware"
+import { isChatbotEnabled } from "../../../lib/featureFlags"
 
 function isMeaningfulRAGContext(ragContext: string): boolean {
   return (
@@ -218,6 +219,16 @@ export const streamResponseWithData = async ({
   userIntent?: UserIntent
 }) => {
   try {
+    // Check if chatbot feature is enabled
+    if (!isChatbotEnabled()) {
+      const errorPayload = JSON.stringify({
+        type: "error",
+        message: "Chatbot feature is not available",
+      })
+      await writer.write(new TextEncoder().encode(`0:${errorPayload}\n`))
+      await writer.close()
+      return
+    }
     const detectedIntent: UserIntent = userIntent || detectUserIntent(userQuery)
     console.log("Using intent for tool filtering:", detectedIntent)
 

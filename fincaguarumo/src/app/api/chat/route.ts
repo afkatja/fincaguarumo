@@ -12,6 +12,7 @@ import {
   validateInput,
   INPUT_LIMITS,
 } from "../../../lib/input-validation"
+import { isChatbotEnabled } from "../../../lib/featureFlags"
 
 interface ChatRequest {
   messages: Array<{ role: string; content: string }>
@@ -245,6 +246,14 @@ function validateChatRequest(body: ChatRequest): {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if chatbot feature is enabled
+    if (!isChatbotEnabled()) {
+      return createErrorResponse(
+        "Chatbot feature is not available",
+        503, // Service Unavailable
+      )
+    }
+
     // Rate limiting
     const clientIP = getClientIP(request)
     if (!checkRateLimit(clientIP)) {

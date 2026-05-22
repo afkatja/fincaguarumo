@@ -4,8 +4,14 @@ import { useState } from "react"
 import { useBookingCore } from "../../app/providers/BookingCoreProvider"
 import { usePageContext } from "../../hooks/usePageContext"
 import ChatInterface from "./ChatInterface"
+import { isChatbotEnabled } from "../../lib/featureFlags"
 
 export default function FloatingChatButton() {
+  // Check if chatbot feature is enabled
+  if (!isChatbotEnabled()) {
+    return null
+  }
+
   const [isOpen, setIsOpen] = useState(false)
   const { state } = useBookingCore()
   const bookingData = {

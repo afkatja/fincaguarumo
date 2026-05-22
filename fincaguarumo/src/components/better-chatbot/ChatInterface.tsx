@@ -22,6 +22,7 @@ import { INPUT_LIMITS } from "@/lib/input-validation"
 import Textarea from "../Textarea"
 import { Button } from "../ui/button"
 import { useBookingCore } from "../../app/providers/BookingCoreProvider"
+import { isChatbotEnabled } from "../../lib/featureFlags"
 
 // Extract relevant context from previous user messages
 function extractUserContext(previousMessages: Message[]) {
@@ -110,6 +111,11 @@ export default function ChatInterface({
   initialMessage,
   context,
 }: ChatInterfaceProps) {
+  // Check if chatbot feature is enabled
+  if (!isChatbotEnabled()) {
+    return null
+  }
+
   const { locale } = useParams()
   const t = useTranslations("bookingChat")
   const tGreetings = useTranslations("greetings")

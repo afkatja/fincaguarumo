@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { DialogFooter } from "@/components/ui/dialog"
 import VillaPriceCalculation from "@/components/VillaPriceCalculation"
@@ -25,7 +26,17 @@ import AvailabilityPreview from "./AvailabilityPreview"
 import { useBookingCore } from "@/app/providers/BookingCoreProvider"
 import Loading from "../../app/[locale]/loading"
 import { formatCurrency } from "../../lib/currency"
-import { EmbeddedChat } from "../better-chatbot"
+import { isChatbotEnabled } from "../../lib/featureFlags"
+
+// Dynamically import chatbot components to prevent loading when feature is disabled
+const EmbeddedChat = dynamic(
+  () =>
+    import("../better-chatbot").then(mod => ({ default: mod.EmbeddedChat })),
+  {
+    loading: () => null, // Show nothing while loading
+    ssr: false, // Prevent server-side rendering
+  },
+)
 
 interface ProgressiveBookingFormProps {
   onSubmit: (bookingData: BookingData) => void
@@ -602,28 +613,30 @@ export default function ProgressiveBookingForm({
           </div>
         </DialogFooter>
       </form>
-      <div className="mt-4 pt-4 border-t">
-        <EmbeddedChat
-          key={`chat-${currentStep}`}
-          className="max-h-104"
-          initialMessage={
-            currentStep === "dates"
-              ? t("chatHelpDates", {
-                  defaultValue:
-                    "Need help selecting dates? I'm here to assist you!",
-                })
-              : currentStep === "personal"
-                ? t("chatHelpPersonal", {
+      {isChatbotEnabled() && (
+        <div className="mt-4 pt-4 border-t">
+          <EmbeddedChat
+            key={`chat-${currentStep}`}
+            className="max-h-104"
+            initialMessage={
+              currentStep === "dates"
+                ? t("chatHelpDates", {
                     defaultValue:
-                      "Need help with your personal details? I'm here to assist you!",
+                      "Need help selecting dates? I'm here to assist you!",
                   })
-                : t("chatHelpPayment", {
-                    defaultValue:
-                      "Need help with payment? I'm here to assist you!",
-                  })
-          }
-        />
-      </div>
+                : currentStep === "personal"
+                  ? t("chatHelpPersonal", {
+                      defaultValue:
+                        "Need help with your personal details? I'm here to assist you!",
+                    })
+                  : t("chatHelpPayment", {
+                      defaultValue:
+                        "Need help with payment? I'm here to assist you!",
+                    })
+            }
+          />
+        </div>
+      )}
     </>
   )
 }

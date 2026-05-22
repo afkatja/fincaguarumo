@@ -7,6 +7,7 @@ import { cn } from "../../lib/utils"
 import ChatInterface from "./ChatInterface"
 import { Button } from "../ui/button"
 import { MessageCircle } from "lucide-react"
+import { isChatbotEnabled } from "../../lib/featureFlags"
 
 interface SidebarChatProps {
   className?: string
@@ -19,6 +20,11 @@ export default function SidebarChat({
   initialMessage,
   propertyTitle,
 }: SidebarChatProps) {
+  // Check if chatbot feature is enabled
+  if (!isChatbotEnabled()) {
+    return null
+  }
+
   const [isOpen, setIsOpen] = useState(false)
   const { state } = useBookingCore()
   const bookingData = {

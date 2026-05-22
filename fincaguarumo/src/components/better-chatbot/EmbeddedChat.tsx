@@ -3,6 +3,7 @@
 import { useBookingCore } from "../../app/providers/BookingCoreProvider"
 import { usePageContext } from "../../hooks/usePageContext"
 import ChatInterface from "./ChatInterface"
+import { isChatbotEnabled } from "../../lib/featureFlags"
 
 interface EmbeddedChatProps {
   className?: string
@@ -19,6 +20,11 @@ export default function EmbeddedChat({
   initialMessage,
   context,
 }: EmbeddedChatProps) {
+  // Check if chatbot feature is enabled
+  if (!isChatbotEnabled()) {
+    return null
+  }
+
   const { state } = useBookingCore()
   const bookingData = {
     source: state.data.source,
