@@ -50,6 +50,13 @@ export const faqType = defineType({
       },
     }),
     defineField({
+      name: "lastModified",
+      title: "Last Modified",
+      type: "datetime",
+      description: "When this FAQ was last updated",
+      initialValue: new Date().toISOString(),
+    }),
+    defineField({
       name: "displayOrder",
       title: "Display Order",
       type: "number",

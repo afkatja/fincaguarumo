@@ -27,6 +27,7 @@ export interface FAQType {
   question: string
   answer: string
   keywords: string[]
+  lastModified: string
   showOnVillaBruno: boolean
   category: {
     title: string

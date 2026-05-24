@@ -6,9 +6,10 @@ import { FAQType } from "@/types"
 import FAQCategories from "@/components/FAQ"
 import { getTranslations } from "next-intl/server"
 
-const jsonLd = (faqs: FAQType[]) => ({
+const jsonLd = (faqs: FAQType[], lastModified?: string) => ({
   "@context": "https://schema.org",
   "@type": "FAQPage",
+  dateModified: lastModified ?? new Date().toISOString().split("T")[0],
   mainEntity: faqs.map(faq => ({
     "@type": "Question",
     name: faq.question,
@@ -16,7 +17,6 @@ const jsonLd = (faqs: FAQType[]) => ({
       "@type": "Answer",
       text: faq.answer,
     },
-    keywords: faq.keywords?.join(", "),
   })),
 })
 
@@ -25,7 +25,7 @@ const FAQpage = async ({ params }: { params: any }) => {
   const faqs: FAQType[] = await sanityFetch({
     query: FAQ_QUERY,
     params: { language: locale },
-    revalidate: 0,
+    revalidate: 3600,
   })
   const t = await getTranslations("faq")
   if (!faqs) return NotFound()
@@ -40,7 +40,10 @@ const FAQpage = async ({ params }: { params: any }) => {
         <FAQCategories faqs={faqs} />
       </div>
       <script type="application/ld+json">
-        {JSON.stringify(jsonLd(faqs)).replace(/</g, "\\u003c")}
+        {JSON.stringify(jsonLd(faqs, faqs[0]?.lastModified)).replace(
+          /</g,
+          "\\u003c",
+        )}
       </script>
     </Layout>
   )

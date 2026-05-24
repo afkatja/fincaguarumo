@@ -1,7 +1,7 @@
 import { groq } from "next-sanity"
 
 // Reusable image projection fragments (explicit crop/hotspot for urlFor)
-const imageWithMetadata = groq`...select(
+const imageWithMetadata = `...select(
   _type == "imageWithMetadata" || _type == "image" => {
     ...,
     crop,
@@ -38,7 +38,7 @@ const mainImageWithDimensions = groq`{
     dimensions
   }
 }`
-const imageMetadataOnly = groq`...,
+const imageMetadataOnly = `...,
   crop,
   hotspot,
   "metadata": asset->metadata`

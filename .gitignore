@@ -134,3 +134,4 @@ dist
 .DS_Store
 fincaguarumo/client_secret_*.apps.googleusercontent.com.json
 fincaguarumo/*-service-account-key.json
+fincaguarumo/.env.backup
