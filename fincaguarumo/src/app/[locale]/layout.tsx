@@ -23,6 +23,7 @@ import Header from "../../components/header"
 import { cn } from "../../lib/utils"
 import { jsonLd, orgSchema } from "../../lib/villa-json-ld"
 import BookingDialog from "./(pages)/BookingDialog"
+import { SidebarChat } from "../../components/better-chatbot"
 
 export { generateMetadata }
 
@@ -111,6 +112,7 @@ export default async function Layout({
                   </DialogProvider>
                 </ConditionalVillaBookingProvider>
               </BookingCoreProvider>
+              <SidebarChat className="fixed right-5 bottom-5 z-50" />
             </div>
           </TransitionProvider>
           <Footer />
