@@ -1,7 +1,7 @@
 import { groq } from "next-sanity"
 
 // Reusable image projection fragments (explicit crop/hotspot for urlFor)
-const imageWithMetadata = groq`...select(
+const imageWithMetadata = `...select(
   _type == "imageWithMetadata" || _type == "image" => {
     ...,
     crop,
@@ -38,7 +38,7 @@ const mainImageWithDimensions = groq`{
     dimensions
   }
 }`
-const imageMetadataOnly = groq`...,
+const imageMetadataOnly = `...,
   crop,
   hotspot,
   "metadata": asset->metadata`
@@ -76,7 +76,7 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
   slideshow->{
     "images": images[]${galleryImageProjection}
   },
-  price, faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} },
+  price, faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },
   "translations": coalesce(
     *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{
       ...(value->{
@@ -91,7 +91,7 @@ export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && la
         },
         showBookingOptions,
         showBookingDialog,
-        faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} }
+        faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} }
       })
     },
     []
@@ -177,7 +177,7 @@ export const PAGE_QUERY = groq`
       "images": images[]${galleryImageProjection} 
     }, 
     price,
-    faq[]->{question, answer, slug},
+    faq[]->{question, answerFormat, answer, answerBlockContent, slug},
     "translations": *[
       _type == "translation.metadata" &&
       ^._id in translations[].value._ref
@@ -192,7 +192,7 @@ export const PAGE_QUERY = groq`
           ${imageWithMetadata}
         },
         isPublished,
-        faq[]->{ question, answer, slug },
+        faq[]->{ question, answerFormat, answer, answerBlockContent, slug },
       })
     }
   }
@@ -422,14 +422,14 @@ export const GALLERY_QUERY = groq`
 
 export const FAQ_QUERY = groq`
   *[_type == 'faq' && language == $language] | order(displayOrder asc) {
-    category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug, language,
+    category->{title, slug, language}, question, answerFormat, answer, answerBlockContent, keywords, showOnVillaBruno, slug, language,
     "translations": *[
       _type == "translation.metadata" &&
       ^._id in translations[].value._ref
     ][0].translations[]{
       ...(value->{
         language,
-        category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug
+        category->{title, slug, language}, question, answerFormat, answer, answerBlockContent, keywords, showOnVillaBruno, slug
       })
     }
   }
@@ -470,7 +470,7 @@ export const ACCOMMODATION_QUERY = groq`
     slideshow->{
       "images": images[]${galleryImageProjection}
     },
-    faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} }, 
+    faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} }, 
     capacity, 
     bedrooms, 
     bathrooms, 
@@ -516,7 +516,7 @@ export const ACCOMMODATION_QUERY = groq`
           },
           showBookingOptions,
           showBookingDialog,
-          faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} },
+          faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },
           capacity, 
           bedrooms, 
           bathrooms, 

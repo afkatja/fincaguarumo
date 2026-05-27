@@ -5,18 +5,24 @@ import NotFound from "../../not-found"
 import { FAQType } from "@/types"
 import FAQCategories from "@/components/FAQ"
 import { getTranslations } from "next-intl/server"
+import { portableTextToPlain } from "@/sanity/lib/portableTextHelper"
 
-const jsonLd = (faqs: FAQType[]) => ({
+const getFAQAnswerText = (faq: FAQType) =>
+  faq.answerBlockContent?.length
+    ? portableTextToPlain(faq.answerBlockContent)
+    : (faq.answer ?? "")
+
+const jsonLd = (faqs: FAQType[], lastModified?: string) => ({
   "@context": "https://schema.org",
   "@type": "FAQPage",
+  dateModified: lastModified ?? new Date().toISOString().split("T")[0],
   mainEntity: faqs.map(faq => ({
     "@type": "Question",
     name: faq.question,
     acceptedAnswer: {
       "@type": "Answer",
-      text: faq.answer,
+      text: getFAQAnswerText(faq),
     },
-    keywords: faq.keywords?.join(", "),
   })),
 })
 
@@ -25,7 +31,7 @@ const FAQpage = async ({ params }: { params: any }) => {
   const faqs: FAQType[] = await sanityFetch({
     query: FAQ_QUERY,
     params: { language: locale },
-    revalidate: 0,
+    revalidate: 3600,
   })
   const t = await getTranslations("faq")
   if (!faqs) return NotFound()
@@ -40,7 +46,10 @@ const FAQpage = async ({ params }: { params: any }) => {
         <FAQCategories faqs={faqs} />
       </div>
       <script type="application/ld+json">
-        {JSON.stringify(jsonLd(faqs)).replace(/</g, "\\u003c")}
+        {JSON.stringify(jsonLd(faqs, faqs[0]?.lastModified)).replace(
+          /</g,
+          "\\u003c",
+        )}
       </script>
     </Layout>
   )

@@ -66,6 +66,40 @@ const getTranslationItems = (
     )
 }
 
+const getLanguageItems = (
+  S: StructureBuilder,
+  schemaType: string,
+  title: string,
+) => {
+  return S.list()
+    .title(title)
+    .items(
+      i18n.languages.map(lang => {
+        const defaultLanguageFilter = lang.isDefault
+          ? " || !defined(language)"
+          : ""
+
+        return S.listItem()
+          .id(`${schemaType}-${lang.id}`)
+          .title(lang.title)
+          .schemaType(schemaType)
+          .child(
+            S.documentList()
+              .title(`${title} - ${lang.title}`)
+              .schemaType(schemaType)
+              .filter(
+                `_type == $type && (language == $lang${defaultLanguageFilter})`,
+              )
+              .params({ type: schemaType, lang: lang.id })
+              .apiVersion("v2025-02-19")
+              .initialValueTemplates([
+                S.initialValueTemplateItem(`${schemaType}-${lang.id}`),
+              ]),
+          )
+      }),
+    )
+}
+
 export const structure: StructureResolver = S => {
   const list = S.list()
     .title("Content")
@@ -76,30 +110,20 @@ export const structure: StructureResolver = S => {
         .child(getTranslationItems(S, "home", "Home", "standalone")),
       S.listItem()
         .title("Pages")
-        .child(getTranslationItems(S, "page", "Pages", "metadata")),
+        .child(getLanguageItems(S, "page", "Pages")),
       S.listItem()
         .title("Accommodations")
-        .child(
-          getTranslationItems(S, "accommodation", "Accommodations", "metadata"),
-        ),
+        .child(getLanguageItems(S, "accommodation", "Accommodations")),
       S.listItem()
         .title("Tours")
-        .child(getTranslationItems(S, "tour", "Tours", "metadata")),
+        .child(getLanguageItems(S, "tour", "Tours")),
       S.listItem()
         .title("Posts")
-        .child(
-          S.documentList()
-            .title("Posts")
-            .schemaType("post")
-            .filter(
-              '_type == "post" && (language == "en" || !defined(language))',
-            )
-            .apiVersion("v2025-02-19"),
-        ),
+        .child(getLanguageItems(S, "post", "Posts")),
 
       S.listItem()
         .title("FAQ")
-        .child(getTranslationItems(S, "faq", "FAQ", "metadata")),
+        .child(getLanguageItems(S, "faq", "FAQ")),
 
       S.divider(),
       // Booking and Property Management
@@ -210,9 +234,7 @@ export const structure: StructureResolver = S => {
       S.listItem()
         .title("FAQ Categories")
         .schemaType("faqCategory")
-        .child(
-          getTranslationItems(S, "faqCategory", "FAQ categories", "metadata"),
-        ),
+        .child(getLanguageItems(S, "faqCategory", "FAQ categories")),
       S.listItem()
         .title("Authors")
         .schemaType("author")
