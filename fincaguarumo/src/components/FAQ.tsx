@@ -2,6 +2,8 @@
 import React, { useState } from "react"
 import { FAQType } from "../types"
 import { ChevronDown, ChevronUp } from "lucide-react"
+import { PortableText } from "next-sanity"
+import { portableTextComponents } from "./RichText"
 
 /**
  * Renders grouped FAQ categories.
@@ -15,12 +17,16 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
     acc[key].push(item)
     return acc
   }, {})
+  console.log(
+    faqs.map(i => i.category.title),
+    grouped,
+  )
 
   const [openKey, setOpenKey] = useState<string | null>(null)
 
   const getCategoryTitle = (key: string) => {
     const faqWithCategory = faqs.find(
-      faq => faq.category?.slug?.current === key
+      faq => faq.category?.slug?.current === key,
     )
     return faqWithCategory?.category?.title || key
   }
@@ -64,7 +70,16 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
                           {faq.question}
                         </dt>
                         <dd className="text-zinc-800 mt-1 pl-0">
-                          {faq.answer}
+                          {faq.answerBlockContent?.length ? (
+                            <div className="prose prose-zinc max-w-none">
+                              <PortableText
+                                value={faq.answerBlockContent}
+                                components={portableTextComponents}
+                              />
+                            </div>
+                          ) : (
+                            faq.answer
+                          )}
                         </dd>
                       </dl>
                     </li>

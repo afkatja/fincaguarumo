@@ -33,11 +33,31 @@ export const faqType = defineType({
       validation: Rule => Rule.required().max(200),
     }),
     defineField({
+      name: "answerFormat",
+      title: "Answer format",
+      type: "string",
+      initialValue: "text",
+      options: {
+        list: [
+          { title: "Plain text", value: "text" },
+          { title: "Rich text", value: "blockContent" },
+        ],
+        layout: "radio",
+      },
+    }),
+    defineField({
       name: "answer",
-      title: "Answer",
+      title: "Plain text answer",
       type: "text",
       rows: 4,
-      validation: Rule => Rule.required().max(500),
+      hidden: ({ parent }) => parent?.answerFormat === "blockContent",
+      validation: Rule => Rule.max(500),
+    }),
+    defineField({
+      name: "answerBlockContent",
+      title: "Rich text answer",
+      type: "blockContent",
+      hidden: ({ parent }) => parent?.answerFormat !== "blockContent",
     }),
     defineField({
       name: "keywords",
@@ -114,6 +134,18 @@ export const faqType = defineType({
       description: "Primary intent category for this FAQ",
     }),
   ],
+  validation: Rule =>
+    Rule.custom(faq => {
+      const hasPlainAnswer =
+        typeof faq?.answer === "string" && faq.answer.trim().length > 0
+      const hasRichAnswer =
+        Array.isArray(faq?.answerBlockContent) &&
+        faq.answerBlockContent.length > 0
+
+      return hasPlainAnswer || hasRichAnswer
+        ? true
+        : "Add either a plain text answer or a rich text answer"
+    }),
   preview: {
     select: {
       title: "question",

@@ -5,6 +5,12 @@ import NotFound from "../../not-found"
 import { FAQType } from "@/types"
 import FAQCategories from "@/components/FAQ"
 import { getTranslations } from "next-intl/server"
+import { portableTextToPlain } from "@/sanity/lib/portableTextHelper"
+
+const getFAQAnswerText = (faq: FAQType) =>
+  faq.answerBlockContent?.length
+    ? portableTextToPlain(faq.answerBlockContent)
+    : (faq.answer ?? "")
 
 const jsonLd = (faqs: FAQType[], lastModified?: string) => ({
   "@context": "https://schema.org",
@@ -15,7 +21,7 @@ const jsonLd = (faqs: FAQType[], lastModified?: string) => ({
     name: faq.question,
     acceptedAnswer: {
       "@type": "Answer",
-      text: faq.answer,
+      text: getFAQAnswerText(faq),
     },
   })),
 })
