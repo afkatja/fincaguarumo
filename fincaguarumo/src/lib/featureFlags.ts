@@ -52,9 +52,17 @@ async function fetchFeatureFlag(
 
   const configPromise = (async () => {
     try {
-      const response = await fetch(
-        `/api/config?flag=${encodeURIComponent(flag.configKey)}`,
-      )
+      const configPath = `/api/config?flag=${encodeURIComponent(flag.configKey)}`
+      const configOrigin =
+        process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL
+      const configUrl =
+        typeof window === "undefined"
+          ? configOrigin && new URL(configPath, configOrigin).toString()
+          : configPath
+
+      if (!configUrl) return undefined
+
+      const response = await fetch(configUrl)
 
       if (!response.ok) return undefined
 
