@@ -17,6 +17,11 @@ export const postType = defineType({
       type: "string",
     }),
     defineField({
+      name: "tldr",
+      title: "Short description",
+      type: "string",
+    }),
+    defineField({
       name: "slug",
       type: "slug",
       options: {
@@ -90,6 +95,11 @@ export const postType = defineType({
       name: "isPublished",
       type: "boolean",
       initialValue: true,
+    }),
+    defineField({
+      name: "faq",
+      type: "array",
+      of: [{ type: "reference", to: { type: "faq" } }],
     }),
   ],
   initialValue: {

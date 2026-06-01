@@ -105,10 +105,21 @@ export const portableTextComponents: Partial<PortableTextReactComponents> = {
       // Build path based on content type
       // For 'page' type, use the slug directly (already the default)
       let href = value.reference.slug.current
-      if (value.reference._type === "post") {
-        href = `/blog/${value.reference.slug.current}`
-      } else if (value.reference._type === "tour") {
-        href = `/tours/${value.reference.slug.current}`
+      switch (value.reference._type) {
+        case "post":
+          href = `/blog/${value.reference.slug.current}`
+          break
+        case "tour":
+          href = `/tours/${value.reference.slug.current}`
+          break
+        case "page":
+          href = `/${value.reference.slug.current}`
+          break
+        case "faq":
+          href = `/faq#${value.reference.slug.current}`
+          break
+        default:
+          break
       }
 
       return (
