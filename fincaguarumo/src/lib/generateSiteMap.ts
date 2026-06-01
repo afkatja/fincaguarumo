@@ -25,7 +25,7 @@ const fetchContent = async (): Promise<{
     sanityFetch({ query: ALL_PAGES_QUERY }) as Promise<SanityDocument[]>,
     sanityFetch({
       query: ACCOMMODATION_QUERY,
-      params: { language: "en" },
+      params: { language: "en", slug: "villa-bruno" },
     }) as Promise<SanityDocument>,
   ])
 
