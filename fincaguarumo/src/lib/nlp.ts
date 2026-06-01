@@ -507,7 +507,14 @@ function calculateAspectSentiment(sentence: string, aspect: Aspect): number {
   for (let i = 0; i < words.length; i++) {
     const word = words[i]
     const nearby = words.slice(Math.max(0, i - 3), i + 4)
-    const touchesAspect = nearby.some(candidate => synonyms.has(candidate))
+    const nearbyText = nearby.join(" ")
+    const nearbyStemmed = stemPhrase(nearbyText)
+    const touchesAspect = Array.from(synonyms).some(synonym =>
+      synonym.includes(" ")
+        ? nearbyText.includes(synonym) || nearbyStemmed.includes(synonym)
+        : nearby.includes(synonym) ||
+          nearbyStemmed.split(" ").includes(synonym),
+    )
     if (!touchesAspect) continue
 
     let polarity = 0
@@ -653,6 +660,7 @@ export function processReviewsForAspects(
   return (
     Object.entries(allAspects) as Array<[Aspect, (typeof allAspects)[Aspect]]>
   )
+    .filter(([, data]) => data.mentionCount > 0)
     .map(([aspect, data]) => {
       const denominator = data.weightedMentionSum || data.mentionCount || 1
       const averageSentiment = data.sentimentSum / denominator
