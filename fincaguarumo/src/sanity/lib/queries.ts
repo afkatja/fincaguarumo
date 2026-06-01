@@ -122,6 +122,21 @@ export const POST_QUERY = groq`*[_type == "post" && slug.current == $slug && (la
   title, 
   description,
   publishedAt,
+  tldr,
+  "faq":coalesce(faq[]->{
+    question,
+    answerFormat,
+    answer,
+    answerBlockContent,
+    slug,
+    keywords,
+    showOnVillaBruno,
+    category->{
+      title,
+      slug,
+      language
+    }
+  }, []),
   body[]{
     ...,
     ${imageWithMetadata},
