@@ -29,7 +29,9 @@ export const GuestLikesSummary = () => {
 
   // Call API to process reviews server-side
   const { data: processedData, error } = useSWR(
-    reviewsForProcessing.length > 0 ? "/api/process-reviews" : null,
+    reviewsForProcessing.length > 0
+      ? ["/api/process-reviews", JSON.stringify(reviewsForProcessing)]
+      : null,
     async () => {
       const response = await fetch("/api/process-reviews", {
         method: "POST",

@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     if (!Array.isArray(reviews)) {
       return NextResponse.json(
         { error: "reviews must be an array" },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error processing reviews:", error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to process reviews" },
-      { status: 500 }
+      { error: "Failed to process reviews" },
+      { status: 500 },
     )
   }
 }

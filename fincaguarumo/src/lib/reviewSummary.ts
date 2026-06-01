@@ -56,7 +56,7 @@ export function generateReviewSummary(
   // Fourth aspect (if exists)
   if (topAspects.length >= 4) {
     const fourth = topAspects[3]
-    summaryParts.push(`A smaller but recurring theme is value for money.`)
+    summaryParts.push(`A smaller but recurring theme is ${fourth.aspect}.`)
   }
 
   return summaryParts.join(" ")
