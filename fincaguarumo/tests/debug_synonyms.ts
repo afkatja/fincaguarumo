@@ -1,4 +1,4 @@
-import { normalizeToStemmedTokens } from "./src/lib/nlp"
+import { normalizeToStemmedTokens } from "../src/lib/nlp"
 
 // Check what our normalized synonyms look like
 console.log("Testing normalizeToStemmedTokens on synonym phrases:")

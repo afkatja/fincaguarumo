@@ -3,7 +3,7 @@ import {
   mapToAspects,
   extractNounPhrases,
   processReviewsForAspects,
-} from "./src/lib/nlp"
+} from "../src/lib/nlp"
 
 // Test the normalize function
 console.log("Testing normalizeReviewText:")
