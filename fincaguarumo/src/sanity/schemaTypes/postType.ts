@@ -19,7 +19,7 @@ export const postType = defineType({
     defineField({
       name: "tldr",
       title: "Short description",
-      type: "string",
+      type: "blockContent",
     }),
     defineField({
       name: "slug",

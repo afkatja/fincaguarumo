@@ -1,5 +1,5 @@
 import type { SanityImageSource } from "@sanity/asset-utils"
-import type { PortableTextBlock } from "@portabletext/types"
+import type { BlockContent } from "../sanity.types"
 import {
   normalizeToNoon,
   parsePropertyDate,
@@ -26,16 +26,16 @@ export type { SanityImageObject }
 export interface FAQType {
   slug: { current: string }
   question: string
-  answerFormat?: "text" | "blockContent"
-  answer?: string
-  answerBlockContent?: PortableTextBlock[]
-  keywords: string[]
-  lastModified: string
-  showOnVillaBruno: boolean
+  answerFormat?: "text" | "blockContent" | null
+  answer?: string | null
+  answerBlockContent?: BlockContent | null
+  keywords: string[] | null
+  lastModified?: string
+  showOnVillaBruno: boolean | null
   category: {
     title: string
     slug: { current: string }
-    language: string
+    language: string | null
   }
 }
 

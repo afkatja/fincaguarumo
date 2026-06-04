@@ -302,6 +302,9 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
                         className="scroll-mt-28 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
                       >
                         <div className="prose prose-zinc mt-4 max-w-none">
+                          <h4 className="text-md font-semibold text-zinc-900">
+                            {faq.question}
+                          </h4>
                           {faq.answerBlockContent?.length ? (
                             <>
                               {isExpanded ? (
