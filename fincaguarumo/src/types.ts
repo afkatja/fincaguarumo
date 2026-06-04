@@ -1,5 +1,4 @@
 import type { SanityImageSource } from "@sanity/asset-utils"
-import type { PortableTextBlock } from "@portabletext/types"
 import type { BlockContent } from "../sanity.types"
 import {
   normalizeToNoon,
