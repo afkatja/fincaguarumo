@@ -42,6 +42,7 @@ const AccommodationClientPage = ({
   const { setBookingType, setBasicDetails } = useBookingCore()
   const t = useTranslations("booking")
   const tPage = useTranslations("page")
+  const r = useTranslations("reviews")
 
   const googleMapsKey = process.env.NEXT_PUBLIC_GMAPS_API_KEY as string
 
@@ -100,6 +101,14 @@ const AccommodationClientPage = ({
               // onLoad={() => console.log("Maps API has loaded.")}
             >
               <PlaceProvider placeId={placeId}>
+                <Title
+                  title={r("whatGuestsLoveMost")}
+                  Heading="h2"
+                  titleClassName="text-3xl font-bold text-guarumo-primary dark:text-zinc-50 my-5 text-center"
+                  icon={{
+                    iconClassName: "fill-guarumo-primary dark:fill-zinc-50",
+                  }}
+                />
                 <ReviewSummary
                   highlightFeatures={content.highlightFeatures}
                   readMoreSection="reviews"
