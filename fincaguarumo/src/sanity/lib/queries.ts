@@ -379,16 +379,17 @@ export const HOME_QUERY = groq`
       ...,
       ${imageWithMetadata},
       markDefs[] {
-      ...,
-      _type == "internalLink" => {
         ...,
-        "reference": {
-          "slug": reference->slug,
-          "_type": reference->_type
+        _type == "internalLink" => {
+          ...,
+          "reference": {
+            "slug": reference->slug,
+            "_type": reference->_type
+          }
         }
       }
-    }
     },
+    locationDetails,
     'translations': *[
       _type == "translation.metadata" &&
       ^._id in translations[].value._ref
@@ -422,7 +423,8 @@ export const HOME_QUERY = groq`
               "slug": @.reference-> slug
             }
           }
-        }
+        },
+        locationDetails
       })
     }
   }

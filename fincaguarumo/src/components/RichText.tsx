@@ -167,8 +167,7 @@ const RichText = ({
   if (!body) return null
 
   const wrapperClassName = `
-    prose prose-lg w-11/12! mx-auto py-2 leading-relaxed 
-    ${className || ""}
+    prose prose-lg w-11/12! mx-auto py-2 leading-relaxed ${className || ""}
   `.trim()
 
   return (

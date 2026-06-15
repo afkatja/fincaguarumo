@@ -1,5 +1,5 @@
 import type { SanityImageSource } from "@sanity/asset-utils"
-import type { BlockContent } from "../sanity.types"
+import type { BlockContent, Home as HomeType } from "../sanity.types"
 import {
   normalizeToNoon,
   parsePropertyDate,
@@ -162,6 +162,19 @@ export function loadBookingDataFromLocalStorage(): BookingData | null {
     }
   }
   return null
+}
+
+export type HomeContent = {
+  hero_title: string
+  hero_slogan: string
+  hero_body?: any
+  subtitle?: string
+  featured_content_title?: string
+  featured_blog_title?: string
+  intro_body?: any
+  mediaUrl?: { url: string }
+  mediaPoster?: { url: string; metadata?: { lqip?: string } }
+  locationDetails?: HomeType["locationDetails"]
 }
 
 interface ReviewAuthor {
