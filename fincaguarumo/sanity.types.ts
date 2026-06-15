@@ -479,16 +479,21 @@ export type Home = {
     media?: unknown;
     _type: "file";
   };
-  background_media_poster?: ImageWithMetadata;
+  background_media_poster?: Array<
+    | ({
+        _key: string;
+      } & ImageWithMetadata)
+    | {
+        asset?: SanityImageAssetReference;
+        media?: unknown;
+        hotspot?: SanityImageHotspot;
+        crop?: SanityImageCrop;
+        _type: "image";
+        _key: string;
+      }
+  >;
   featured_content_title?: string;
   featured_blog_title?: string;
-  propertyOverview?: string;
-  keyFeatures?: Array<string>;
-  capacity?: {
-    maxGuests: number;
-    bedrooms: number;
-    bathrooms: number;
-  };
   locationDetails?: {
     address?: string;
     region?: string;
@@ -498,6 +503,22 @@ export type Home = {
       lng?: number;
     };
   };
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+};
+
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x: number;
+  y: number;
+  height: number;
+  width: number;
 };
 
 export type GalleryReference = {
@@ -617,22 +638,6 @@ export type Author = {
     _type: "block";
     _key: string;
   }>;
-};
-
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-};
-
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x: number;
-  y: number;
-  height: number;
-  width: number;
 };
 
 export type Tour = {
@@ -990,14 +995,14 @@ export type AllSanitySchemaTypes =
   | InternationalizedArrayReferenceValue
   | SanityFileAssetReference
   | Home
+  | SanityImageCrop
+  | SanityImageHotspot
   | GalleryReference
   | CategoryReference
   | Page
   | AuthorReference
   | Post
   | Author
-  | SanityImageCrop
-  | SanityImageHotspot
   | Tour
   | Faq
   | PricingRulesReference
@@ -2920,7 +2925,7 @@ export type ABOUT_QUERY_RESULT = {
 
 // Source: src/sanity/lib/queries.ts
 // Variable: HOME_QUERY
-// Query: *[_type=='home' && language == $language][0] {    hero_title,    hero_slogan,    hero_body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })    },    subtitle,    language,    featured_content_title,    featured_blog_title,    slug,    'mediaUrl': background_media.asset->{url},    'mediaPoster': background_media_poster.asset->{      url,      metadata {        lqip      }    },    intro_body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),      markDefs[] {      ...,      _type == "internalLink" => {        ...,        "reference": {          "slug": reference->slug,          "_type": reference->_type        }      }    }    },    'translations': *[      _type == "translation.metadata" &&      ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        hero_title,        hero_slogan,        hero_body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })        },        subtitle,        language,        featured_content_title,        featured_blog_title,        slug,        'mediaUrl': background_media.asset->{url},        'mediaPoster': background_media_poster.asset->{          url,          metadata {            lqip          }        },        intro_body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),          markDefs[] {            ...,            _type == "internalLink" => {              ...,              "slug": @.reference-> slug            }          }        }      })    }  }
+// Query: *[_type=='home' && language == $language][0] {    hero_title,    hero_slogan,    hero_body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })    },    subtitle,    language,    featured_content_title,    featured_blog_title,    slug,    'mediaUrl': background_media.asset->{url},    'mediaPoster': background_media_poster.asset->{      url,      metadata {        lqip      }    },    intro_body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),      markDefs[] {        ...,        _type == "internalLink" => {          ...,          "reference": {            "slug": reference->slug,            "_type": reference->_type          }        }      }    },    locationDetails,    'translations': *[      _type == "translation.metadata" &&      ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        hero_title,        hero_slogan,        hero_body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })        },        subtitle,        language,        featured_content_title,        featured_blog_title,        slug,        'mediaUrl': background_media.asset->{url},        'mediaPoster': background_media_poster.asset->{          url,          metadata {            lqip          }        },        intro_body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),          markDefs[] {            ...,            _type == "internalLink" => {              ...,              "slug": @.reference-> slug            }          }        },        locationDetails      })    }  }
 export type HOME_QUERY_RESULT = {
   hero_title: string | null;
   hero_slogan: string | null;
@@ -3018,12 +3023,7 @@ export type HOME_QUERY_RESULT = {
   mediaUrl: {
     url: string | null;
   } | null;
-  mediaPoster: {
-    url: string | null;
-    metadata: {
-      lqip: string | null;
-    } | null;
-  } | null;
+  mediaPoster: null;
   intro_body: Array<
     | {
         children?: Array<{
@@ -3116,6 +3116,15 @@ export type HOME_QUERY_RESULT = {
         markDefs: null;
       }
   > | null;
+  locationDetails: {
+    address?: string;
+    region?: string;
+    country?: string;
+    coordinates?: {
+      lat?: number;
+      lng?: number;
+    };
+  } | null;
   translations: Array<
     | {}
     | {
@@ -3130,6 +3139,7 @@ export type HOME_QUERY_RESULT = {
         mediaUrl: null;
         mediaPoster: null;
         intro_body: null;
+        locationDetails: null;
       }
     | {
         hero_title: null;
@@ -3143,6 +3153,7 @@ export type HOME_QUERY_RESULT = {
         mediaUrl: null;
         mediaPoster: null;
         intro_body: null;
+        locationDetails: null;
       }
     | {
         hero_title: string | null;
@@ -3241,12 +3252,7 @@ export type HOME_QUERY_RESULT = {
         mediaUrl: {
           url: string | null;
         } | null;
-        mediaPoster: {
-          url: string | null;
-          metadata: {
-            lqip: string | null;
-          } | null;
-        } | null;
+        mediaPoster: null;
         intro_body: Array<
           | {
               children?: Array<{
@@ -3336,6 +3342,15 @@ export type HOME_QUERY_RESULT = {
               markDefs: null;
             }
         > | null;
+        locationDetails: {
+          address?: string;
+          region?: string;
+          country?: string;
+          coordinates?: {
+            lat?: number;
+            lng?: number;
+          };
+        } | null;
       }
   > | null;
 } | null;
@@ -3811,11 +3826,7 @@ export type ACCOMMODATION_QUERY_RESULT = {
             showBookingOptions: null;
             showBookingDialog: null;
             faq: null;
-            capacity: {
-              maxGuests: number;
-              bedrooms: number;
-              bathrooms: number;
-            } | null;
+            capacity: null;
             bedrooms: null;
             bathrooms: null;
             propertyType: null;
@@ -4336,7 +4347,7 @@ declare module "@sanity/client" {
     "*[_type == 'dialog'][0] {\n  _id,\n  'cta': \"CTA_button\",\n  'date': \"Date_label\",\n  'selectDate': \"Select_date\",\n  'guests': \"Guests_label\",\n  'adults': \"Adults_label\",\n  'adult': \"Adult_label\",\n  'child': \"Child_label\",\n  'other': \"Other_label\",\n  'paymentMethod': \"Payment_method_label\",\n  'creditCard': \"Credit_card_label\",\n  'paypal': \"Paypal_label\",\n  'people': \"People_label\",\n  'person': \"Person_label\",\n  'total': \"Total_label\",\n  'ok': \"OK_button_label\",\n  'cancel': \"Cancel_button_label\",\n}\n": DIALOG_QUERY_RESULT;
     '\n*[_type == \'tour\' && slug.current == $slug && language == $language][0]{\n  _id,\n  language,\n  title,\n  slug,\n  description,\n  mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n},\n  isPublished,\n  slideshow->{ "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n} },\n  "price": coalesce(price, 0),\n  location,\n  geo,\n  duration,\n  body[]{\n    ...,\n    ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n  },\n    "translations": *[\n      _type == "translation.metadata" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug,\n        description,\n        body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n      })\n    }\n}\n': TOUR_QUERY_RESULT;
     '\n  *[_type == \'page\' && slug.current == \'about\' && language == $language][0] {\n    title, description, mainImage, body[] {\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n      markDefs[] {\n      ...,\n      _type == "internalLink" => {\n        ...,\n        "reference": {\n          "slug": reference->slug,\n          "_type": reference->_type\n        }\n      }\n    }\n    }, language,\n    "translations": *[\n      _type == "translation.metadata" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n  }\n': ABOUT_QUERY_RESULT;
-    '\n  *[_type==\'home\' && language == $language][0] {\n    hero_title,\n    hero_slogan,\n    hero_body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n    },\n    subtitle,\n    language,\n    featured_content_title,\n    featured_blog_title,\n    slug,\n    \'mediaUrl\': background_media.asset->{url},\n    \'mediaPoster\': background_media_poster.asset->{\n      url,\n      metadata {\n        lqip\n      }\n    },\n    intro_body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n      markDefs[] {\n      ...,\n      _type == "internalLink" => {\n        ...,\n        "reference": {\n          "slug": reference->slug,\n          "_type": reference->_type\n        }\n      }\n    }\n    },\n    \'translations\': *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        hero_title,\n        hero_slogan,\n        hero_body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n        subtitle,\n        language,\n        featured_content_title,\n        featured_blog_title,\n        slug,\n        \'mediaUrl\': background_media.asset->{url},\n        \'mediaPoster\': background_media_poster.asset->{\n          url,\n          metadata {\n            lqip\n          }\n        },\n        intro_body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n          markDefs[] {\n            ...,\n            _type == "internalLink" => {\n              ...,\n              "slug": @.reference-> slug\n            }\n          }\n        }\n      })\n    }\n  }\n': HOME_QUERY_RESULT;
+    '\n  *[_type==\'home\' && language == $language][0] {\n    hero_title,\n    hero_slogan,\n    hero_body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n    },\n    subtitle,\n    language,\n    featured_content_title,\n    featured_blog_title,\n    slug,\n    \'mediaUrl\': background_media.asset->{url},\n    \'mediaPoster\': background_media_poster.asset->{\n      url,\n      metadata {\n        lqip\n      }\n    },\n    intro_body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n      markDefs[] {\n        ...,\n        _type == "internalLink" => {\n          ...,\n          "reference": {\n            "slug": reference->slug,\n            "_type": reference->_type\n          }\n        }\n      }\n    },\n    locationDetails,\n    \'translations\': *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        hero_title,\n        hero_slogan,\n        hero_body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n        subtitle,\n        language,\n        featured_content_title,\n        featured_blog_title,\n        slug,\n        \'mediaUrl\': background_media.asset->{url},\n        \'mediaPoster\': background_media_poster.asset->{\n          url,\n          metadata {\n            lqip\n          }\n        },\n        intro_body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n          markDefs[] {\n            ...,\n            _type == "internalLink" => {\n              ...,\n              "slug": @.reference-> slug\n            }\n          }\n        },\n        locationDetails\n      })\n    }\n  }\n': HOME_QUERY_RESULT;
     '\n  *[_type == \'gallery\' && $category in categories[] -> title][0] {\n    title,\n    "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n}\n  }\n': GALLERY_QUERY_RESULT;
     '\n  *[_type == \'faq\' && language == $language] | order(displayOrder asc) {\n    category->{title, slug, language}, question, answerFormat, answer, answerBlockContent, keywords, showOnVillaBruno, slug, language,\n    "translations": *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        category->{title, slug, language}, question, answerFormat, answer, answerBlockContent, keywords, showOnVillaBruno, slug\n      })\n    }\n  }\n': FAQ_QUERY_RESULT;
     '*[\n  _type == "booking" &&\n  dateTime(checkOut) > dateTime(now()) &&\n  !(_id in path("drafts.**"))\n][]{\n  uid, checkIn, checkOut, guestName, source, email, phone, guests, totalPrice, currency, syncedAt\n}': BOOKINGS_QUERY_RESULT;

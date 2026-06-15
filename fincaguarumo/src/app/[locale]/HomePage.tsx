@@ -10,6 +10,7 @@ import FeaturedContentLoader from "./FeaturedContentLoader"
 import LazyLoad from "../../components/LazyLoad"
 import Loading from "./(pages)/loading"
 import { useDialog } from "@/app/providers/DialogProvider"
+import { HomeContent } from "../../types"
 
 const HomeMap = dynamic(() => import("../../components/HomeMap"), {
   ssr: false,
@@ -18,7 +19,13 @@ const HomeMap = dynamic(() => import("../../components/HomeMap"), {
 
 const VideoOpenZip = dynamic(() => import("../../components/VideoOpenZip"))
 
-const HomePage = ({ locale, content }: { locale: string; content: any }) => {
+const HomePage = ({
+  locale,
+  content,
+}: {
+  locale: string
+  content: HomeContent
+}) => {
   const { isBookingDialogOpen } = useDialog()
   return (
     <>
@@ -58,7 +65,7 @@ const HomePage = ({ locale, content }: { locale: string; content: any }) => {
               >
                 <RichText
                   body={content?.hero_body}
-                  className="mx-auto text-zinc-50! mt-5 opacity-0 transition-opacity animation-duration-700 animation-delay-3500 animate-fade line-clamp-3 md:line-clamp-none"
+                  className="mx-auto text-zinc-50! mt-5 opacity-0 transition-opacity animation-duration-700 animation-delay-3500 animate-fade line-clamp-3 md:line-clamp-none prose prose-xl"
                 />
               </FadeInObserver>
             </div>
@@ -76,20 +83,20 @@ const HomePage = ({ locale, content }: { locale: string; content: any }) => {
             className="fade-in"
           >
             {content?.intro_body ? (
-              <div id="intro" className="prose prose-lg w-11/12 mx-auto">
+              <div id="intro">
                 <RichText body={content?.intro_body} className="mx-0" />
               </div>
             ) : null}
           </FadeInObserver>
-          {process.env.NODE_ENV === "production" && (
-            <LazyLoad
-              threshold={0.1}
-              rootMargin="0px 0px -50px 0px"
-              className="fade-in"
-            >
-              <HomeMap />
-            </LazyLoad>
-          )}
+          {/* {process.env.NODE_ENV === "production" && ( */}
+          <LazyLoad
+            threshold={0.1}
+            rootMargin="0px 0px -50px 0px"
+            className="fade-in"
+          >
+            <HomeMap />
+          </LazyLoad>
+          {/* )} */}
 
           <FeaturedContentLoader locale={locale} />
         </div>
