@@ -189,13 +189,12 @@ export const ReviewSummary = ({
     (showGuestLikes &&
       ((highlightFeatures && highlightFeatures.length > 0) ||
         (useAIProcessing
-          ? processedAspects.length > 0
+          ? processedAspects.length > 0 || (summaryText?.length ?? 0) > 0
           : summaryStats.commonThemes.length > 0) ||
         (showRecentComments && summaryStats.recentReviews.length > 0))) ||
     (showRecentComments && summaryStats.recentReviews.length > 0)
 
   if (!hasLeftColumn && !hasRightColumn) return null
-  console.log({ summaryStats, processedAspects })
 
   return (
     <div className="flex flex-wrap">
