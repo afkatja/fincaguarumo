@@ -4,23 +4,23 @@ import ClientPage from "./ClientPage"
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
-  name: "Guest Reviews and Testimonials for Villa Bruno - Finca Guarumo",
+  name: "Guest Reviews and Testimonials for Villa Bruno at Finca Guarumo",
   description:
     "Read all reviews from guests who have stayed at Villa Bruno in Costa Rica.",
   url: "https://fincaguarumo.com/reviews",
 
   about: {
-    "@type": "LodgingBusiness", // Use the type that fixed your main page error
-    "@id": "https://fincaguarumo.com/villa-bruno#unit", // Use the same @id as the main page
-    name: "Villa Bruno - Finca Guarumo",
+    "@type": "LodgingBusiness",
+    "@id": "https://fincaguarumo.com/villa-bruno#about",
+    name: "Villa Bruno at Finca Guarumo",
   },
 
   aggregateRating: {
     "@type": "AggregateRating",
     ratingValue: 5,
-    reviewCount: 11,
+    reviewCount: 25,
     bestRating: 5,
-    worstRating: 1,
+    worstRating: 4,
   },
 }
 
