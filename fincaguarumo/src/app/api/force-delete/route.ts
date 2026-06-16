@@ -3,12 +3,20 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
+    // Check for admin secret header
+    const adminSecret = request.headers.get("x-admin-secret")
+    const expectedSecret = process.env.ADMIN_SECRET
+
+    if (!adminSecret || adminSecret !== expectedSecret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { docId } = await request.json()
 
     if (!docId) {
       return NextResponse.json(
         { error: "Document ID is required" },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -23,7 +31,7 @@ export async function POST(request: NextRequest) {
     console.error("Force delete failed:", error)
     return NextResponse.json(
       { error: error.message || "Force delete failed" },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

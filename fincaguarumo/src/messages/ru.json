@@ -59,6 +59,8 @@
     "phoneLabel": "Ваш номер телефона *",
     "priceLabel": "Цена за",
     "rateLabel": "Цена",
+    "priceFrom": "Цена от {price} для {guests} {guestsLabel}",
+    "priceFromShort": "для {guests} {guestsLabel}",
     "reserveButton": "Резервировать",
     "selectDate": "Выберите дату",
     "rateVATlabel": "Цена (в том числе 13% НДС)",
@@ -66,6 +68,15 @@
     "discount10": "Скидка (10% за пребывание от 7+ ночей)",
     "discount20": "Скидка (20% за пребывание от 28+ ночей)",
     "checkinDate": "Дата заезда",
+    "selectDates": "Выберите даты для проверки доступности",
+    "selectCheckInFirst": "Пожалуйста, сначала выберите дату заезда",
+    "priceSummary": "Сводка цен",
+    "vatLabel": "НДС 13%",
+    "totalWithoutVat": "Цена (без НДС) x {guests} {guestsLabel} x {nights}",
+    "totalVat": "НДС x {guests} {guestsLabel} x {nights}",
+    "totalWithVat": "Цена (с НДС) x {guests} {guestsLabel} x {nights}",
+    "totalDisplayedVilla": "Итого за {nights} ночей",
+    "totalDisplayedTour": "Итого для {guests} {guestsLabel}",
     "back": "Назад",
     "next": "Следующий",
     "submitButton": "Отправить бронирование",
@@ -88,6 +99,14 @@
   "page": {
     "moreFAQ": "Еще вопросы",
     "FAQ": "Часто задаваемые вопросы",
+    "quickInfo": "Быстрая информация",
+    "reviews": "Отзывы",
+    "about": "О нас",
+    "details": "Детали",
+    "allReviews": "Все отзывы",
+    "moreReviews": "Больше отзывов",
+    "more": "Больше",
+    "less": "Меньше",
     "greetings": {
       "homepage": "Добро пожаловать на виллу Бруно! Чем я могу помочь вам сегодня?",
       "stay": "Привет! Я здесь, чтобы помочь вам забронировать {propertyTitle}. Что бы вы хотели знать?",
@@ -112,11 +131,17 @@
     "sendMessage": "Отправить сообщение"
   },
   "bookingChat": {
+    "title": "Ассистент бронирования Виллы Бруно",
     "initialMessage": "Привет! Как я могу помочь вам забронировать виллу Бруно сегодня?",
     "errorMessage": "Извините, я столкнулся с ошибкой. Пожалуйста, попробуйте еще раз.",
     "inputPlaceholder": "Спросите о бронировании...",
-    "sendButton": "Отправлять",
-    "title": "Вилла Бруно Помощник по бронированию"
+    "sendButton": "Отправить",
+    "keyboardShortcut": "{shortcut}+Enter для отправки",
+    "closeChat": "Закрыть чат",
+    "expandChat": "Развернуть чат",
+    "collapseChat": "Свернуть чат",
+    "openChat": "Открыть чат",
+    "readyToBook": "Готовы забронировать? Ответьте вашими датами и количеством гостей."
   },
   "greetings": {
     "homepage": "Добро пожаловать в Виллу Бруно! Чем я могу помочь вам сегодня?",
@@ -140,7 +165,11 @@
     "continueReading": "Продолжайте читать, чтобы узнать больше об этой уникальной эковилле...",
     "readMore": "Читать далее"
   },
+  "faq": {
+    "title": "Часто задаваемые вопросы"
+  },
   "reviews": {
+    "title": "Отзывы гостей",
     "wildlifeNature": "Дикая природа и природа",
     "ecoFriendly": "Экологичный",
     "peacefulSetting": "Спокойная обстановка",
