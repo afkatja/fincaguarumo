@@ -1,10 +1,10 @@
 "use client"
-import React from "react"
 
 import { APIProvider } from "@vis.gl/react-google-maps"
 import { PlaceProvider } from "../../../providers/PlaceProvider"
 import { PlaceReviews } from "../../../../components/PlaceReviews"
 import { placeId } from "../../../../../data/geo"
+import GuestLikesSummary from "../../../../components/GuestLikesSummary"
 
 const ClientPage = () => {
   return (
@@ -13,6 +13,8 @@ const ClientPage = () => {
       // onLoad={() => console.log("Maps API has loaded.")}
     >
       <PlaceProvider placeId={placeId}>
+        <GuestLikesSummary />
+
         <PlaceReviews showMoreLink={false} />
       </PlaceProvider>
     </APIProvider>

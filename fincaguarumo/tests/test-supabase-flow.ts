@@ -6,8 +6,8 @@
  */
 
 import { createClient } from "@supabase/supabase-js"
-import { parsePropertyDate } from "./src/lib/dateUtils"
-import type { BookingType } from "./src/types"
+import { parsePropertyDate } from "../src/lib/dateUtils"
+import type { BookingType } from "../src/types"
 
 // Test data matching the webhook structure
 const testMetadata = {
