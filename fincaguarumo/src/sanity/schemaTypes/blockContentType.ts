@@ -1,5 +1,6 @@
 import { defineType, defineArrayMember } from "sanity"
 import { BookIcon, ImageIcon, LinkIcon } from "@sanity/icons"
+import { ExternalLinkIcon } from "lucide-react"
 
 /**
  * This is the schema type for block content used in the post document type
@@ -46,6 +47,7 @@ export const blockContentType = defineType({
             title: "URL",
             name: "link",
             type: "object",
+            icon: ExternalLinkIcon,
             fields: [
               {
                 title: "URL",
@@ -69,7 +71,13 @@ export const blockContentType = defineType({
                 name: "reference",
                 type: "reference",
                 title: "Reference",
-                to: [{ type: "post" }, { type: "page" }, { type: "tour" }],
+                to: [
+                  { type: "post" },
+                  { type: "page" },
+                  { type: "tour" },
+                  { type: "faq" },
+                  { type: "accommodation" },
+                ],
               },
             ],
           },

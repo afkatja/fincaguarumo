@@ -1,6 +1,7 @@
 import { SanityDocument } from "next-sanity"
 import { sanityFetch } from "../sanity/lib/client"
 import {
+  ACCOMMODATION_QUERY,
   ALL_PAGES_QUERY,
   POSTS_QUERY,
   TOURS_QUERY,
@@ -14,16 +15,21 @@ const fetchContent = async (): Promise<{
   posts: SanityDocument[]
   tours: SanityDocument[]
   pages: SanityDocument[]
+  accommodation: SanityDocument
 }> => {
-  const [posts, tours, pages] = await Promise.all([
+  const [posts, tours, pages, accommodation] = await Promise.all([
     sanityFetch({ query: POSTS_QUERY }) as Promise<SanityDocument[]>,
     sanityFetch({ query: TOURS_QUERY, params: { language: "en" } }) as Promise<
       SanityDocument[]
     >,
     sanityFetch({ query: ALL_PAGES_QUERY }) as Promise<SanityDocument[]>,
+    sanityFetch({
+      query: ACCOMMODATION_QUERY,
+      params: { language: "en", slug: "villa-bruno" },
+    }) as Promise<SanityDocument>,
   ])
 
-  return { posts, tours, pages }
+  return { posts, tours, pages, accommodation }
 }
 
 export const generateSitemap = async () => {

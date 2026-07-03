@@ -43,7 +43,14 @@ export const homeType = defineType({
     }),
     defineField({
       name: "background_media_poster",
-      type: "imageWithMetadata",
+      type: "array",
+      of: [
+        { type: "imageWithMetadata", title: "Image with metadata" },
+        { type: "image" },
+      ],
+      options: {
+        layout: "grid",
+      },
       title: "Video poster",
     }),
     defineField({
@@ -54,48 +61,7 @@ export const homeType = defineType({
       name: "featured_blog_title",
       type: "string",
     }),
-    defineField({
-      name: "propertyOverview",
-      title: "Property Overview",
-      type: "text",
-      rows: 4,
-      description: "Comprehensive description of Villa Bruno",
-    }),
-    defineField({
-      name: "keyFeatures",
-      title: "Key Features",
-      type: "array",
-      of: [{ type: "string" }],
-      description: "Main selling points of the property",
-      options: {
-        layout: "tags",
-      },
-    }),
-    defineField({
-      name: "capacity",
-      title: "Property Capacity",
-      type: "object",
-      fields: [
-        defineField({
-          name: "maxGuests",
-          title: "Maximum Guests",
-          type: "number",
-          validation: Rule => Rule.required().min(1),
-        }),
-        defineField({
-          name: "bedrooms",
-          title: "Bedrooms",
-          type: "number",
-          validation: Rule => Rule.required().min(0),
-        }),
-        defineField({
-          name: "bathrooms",
-          title: "Bathrooms",
-          type: "number",
-          validation: Rule => Rule.required().min(0),
-        }),
-      ],
-    }),
+
     defineField({
       name: "locationDetails",
       title: "Location Details",

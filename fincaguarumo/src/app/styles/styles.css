@@ -1,5 +1,5 @@
-@import './header.css';
-@import './parallax.css';
+@import "./header.css";
+@import "./parallax.css";
 
 html {
   scroll-behavior: smooth !important;
@@ -177,6 +177,8 @@ h6,
   text-decoration: none;
   font-weight: 600;
   display: inline-flex;
+  line-height: 1;
+  align-items: baseline;
 }
 
 .fancy-underline::after,
