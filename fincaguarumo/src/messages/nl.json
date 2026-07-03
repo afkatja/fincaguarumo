@@ -59,6 +59,8 @@
     "phoneLabel": "Je telefoonnummer *",
     "priceLabel": "Prijs voor",
     "rateLabel": "Prijs",
+    "priceFrom": "Prijs vanaf {price} voor {guests} {guestsLabel}",
+    "priceFromShort": "voor {guests} {guestsLabel}",
     "reserveButton": "Boek nu",
     "selectDate": "Selecteer datum",
     "rateVATlabel": "Prijs (incl. 13% btw)",
@@ -66,7 +68,16 @@
     "discount10": "Korting (10% voor verblijven van 7+ nachten)",
     "discount20": "Korting (20% voor verblijven van 28+ nachten)",
     "checkinDate": "Datum van inchecken",
-    "back": "Rug",
+    "selectDates": "Selecteer datums om beschikbaarheid te controleren",
+    "selectCheckInFirst": "Selecteer eerst een incheckdatum",
+    "priceSummary": "Prijsoverzicht",
+    "vatLabel": "BTW 13%",
+    "totalWithoutVat": "Prijs (excl BTW) x {guests} {guestsLabel} x {nights}",
+    "totalVat": "BTW x {guests} {guestsLabel} x {nights}",
+    "totalWithVat": "Prijs (incl BTW) x {guests} {guestsLabel} x {nights}",
+    "totalDisplayedVilla": "Totaal voor {nights} nachten",
+    "totalDisplayedTour": "Totaal voor {guests} {guestsLabel}",
+    "back": "Terug",
     "next": "Volgende",
     "submitButton": "Boeking indienen",
     "available": "Beschikbaar",
@@ -88,6 +99,14 @@
   "page": {
     "moreFAQ": "Meer veelgestelde vragen",
     "FAQ": "FAQ",
+    "quickInfo": "Snelle info",
+    "reviews": "Reviews",
+    "about": "Over",
+    "details": "Details",
+    "allReviews": "Alle reviews",
+    "moreReviews": "Meer reviews",
+    "more": "Meer",
+    "less": "Minder",
     "greetings": {
       "homepage": "Welkom bij Villa Bruno! Hoe kan ik je vandaag helpen?",
       "stay": "Hoi! Ik ben hier om u te helpen bij het boeken van {propertyTitle}. Wat zou je willen weten?",
@@ -112,11 +131,17 @@
     "sendMessage": "Bericht verzenden"
   },
   "bookingChat": {
+    "title": "Villa Bruno Boekingsassistent",
     "initialMessage": "Hallo! Hoe kan ik u helpen Villa Bruno vandaag nog te boeken?",
     "errorMessage": "Sorry, ik heb een fout aangetroffen. Probeer het opnieuw.",
     "inputPlaceholder": "Vraag naar boeking...",
-    "sendButton": "Versturen",
-    "title": "Villa Bruno Boekingsassistent"
+    "sendButton": "Verzenden",
+    "keyboardShortcut": "{shortcut}+Enter om te verzenden",
+    "closeChat": "Chat sluiten",
+    "expandChat": "Chat uitvouwen",
+    "collapseChat": "Chat inklappen",
+    "openChat": "Chat openen",
+    "readyToBook": "Klaar om te boeken? Reageer met uw data en het aantal gasten."
   },
   "greetings": {
     "homepage": "Welkom bij Villa Bruno! Hoe kan ik u vandaag helpen?",
@@ -140,7 +165,11 @@
     "continueReading": "Lees verder voor meer informatie over deze unieke eco-villa-ervaring...",
     "readMore": "Lees meer"
   },
+  "faq": {
+    "title": "Veelgestelde vragen"
+  },
   "reviews": {
+    "title": "Gastenreviews",
     "wildlifeNature": "Dieren in het wild en natuur",
     "ecoFriendly": "Milieuvriendelijk",
     "peacefulSetting": "Vreedzame omgeving",

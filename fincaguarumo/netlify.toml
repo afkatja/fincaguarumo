@@ -6,6 +6,10 @@
   # Production environment variables for RAG
   # Set these in Netlify dashboard for production
   NODE_VERSION = "20"
+  
+  # Chatbot feature flag - set to "true" to enable chatbot functionality
+  # Default is "false" (disabled) for production
+  # NEXT_PUBLIC_CHATBOT_ENABLED = "false"
 
 # Production headers for SSE
 [[headers]]

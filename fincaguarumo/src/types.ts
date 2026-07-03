@@ -243,3 +243,32 @@ export type IDialog = {
   ok?: IField[]
   cancel?: IField[]
 }
+
+// Chat-related types for better type safety
+export interface ChatMessage {
+  role: "user" | "assistant" | "system" | "tool"
+  content: string
+  toolInvocations?: ToolInvocation[]
+}
+
+export interface ToolInvocation {
+  toolCallId: string
+  toolName: string
+  args: Record<string, any>
+}
+
+export interface ToolOutput {
+  toolName: string
+  args: Record<string, any>
+  result: any
+}
+
+// ChatContext is imported from lib/better-chatbot/context-aware.ts to avoid duplication
+
+export interface EvaluationResult {
+  score: number
+  isAccurate: boolean
+  isRelevant: boolean
+  hallucinations: string[]
+  reasoning?: string
+}

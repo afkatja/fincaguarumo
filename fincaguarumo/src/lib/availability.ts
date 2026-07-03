@@ -176,6 +176,8 @@ export async function triggeriCalSync(request?: Request): Promise<void> {
     return
   }
 
+  console.log("Starting iCal sync...")
+
   try {
     // Determine site URL based on environment and request
     let siteUrl: string

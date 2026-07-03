@@ -1,12 +1,14 @@
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminAuth, verifyUserAuth } from "@/lib/auth"
+import { validateBookingForm } from "@/lib/input-validation"
+import { bookingsRateLimiter } from "@/lib/rate-limiting/redis-rate-limit"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Helper function to create authenticated Supabase client
-function createAuthenticatedSupabaseClient(request: Request) {
+function createAuthenticatedSupabaseClient(request: NextRequest) {
   const authHeader = request.headers.get("authorization")
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     throw new Error("Missing or invalid authorization header")
@@ -21,13 +23,75 @@ function createAuthenticatedSupabaseClient(request: Request) {
   })
 }
 
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for")
+  const real = request.headers.get("x-real-ip")
+
+  // Only trust x-forwarded-for when running behind a trusted proxy
+  const isTrustedProxy =
+    process.env.VERCEL === "1" ||
+    process.env.NETLIFY === "true" ||
+    process.env.TRUSTED_PROXY === "true"
+
+  if (isTrustedProxy && forwarded) {
+    return forwarded.split(",")[0].trim()
+  }
+
+  if (isTrustedProxy && real) {
+    return real
+  }
+
+  // Return unknown when not behind trusted proxy or headers missing
+  return "unknown"
+}
+
+async function checkRateLimit(
+  ip: string,
+): Promise<{ allowed: boolean; resetTime: number }> {
+  try {
+    const result = await bookingsRateLimiter.checkLimit(ip)
+    return {
+      allowed: result.allowed,
+      resetTime: result.resetTime,
+    }
+  } catch (error) {
+    console.error("Rate limiting error:", error)
+    // Fail open: allow request if rate limiting fails
+    return {
+      allowed: true,
+      resetTime: Date.now() + 60000,
+    }
+  }
+}
+
 /**
  * POST: Create a new booking
  * Also updates the availability table to mark dates as unavailable
  * Requires authentication and authorization
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Rate limiting with Redis-based distributed rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = await checkRateLimit(clientIP)
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+            "Retry-After": Math.ceil(
+              (rateLimitResult.resetTime - Date.now()) / 1000,
+            ).toString(),
+          },
+        },
+      )
+    }
+
     // Verify user authentication
     const authUser = await verifyUserAuth(request)
 
@@ -36,8 +100,19 @@ export async function POST(request: Request) {
 
     const bookingData = await request.json()
 
+    // Validate and sanitize booking data
+    const validation = validateBookingForm(bookingData)
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { error: "Invalid booking data", details: validation.error },
+        { status: 400 },
+      )
+    }
+
+    const sanitizedData = validation.sanitizedValue!
+
     // Authorization: Users can only create bookings for themselves, admins can create for anyone
-    if (!authUser.is_admin && bookingData.uid !== authUser.id) {
+    if (!authUser.is_admin && sanitizedData.uid !== authUser.id) {
       const error = new Error("You can only create bookings for yourself")
       ;(error as any).status = 403
       throw error
@@ -48,13 +123,13 @@ export async function POST(request: Request) {
     const bookingRecord: any = {
       check_in: bookingData.checkIn,
       check_out: bookingData.checkOut,
-      guest_name: bookingData.guestName,
-      email: bookingData.email || null,
-      phone: bookingData.phone || null,
-      source: bookingData.source || "Direct",
-      uid: bookingData.uid,
+      guest_name: sanitizedData.guestName,
+      email: sanitizedData.email || null,
+      phone: sanitizedData.phone || null,
+      source: sanitizedData.source || "Direct",
+      uid: sanitizedData.uid,
       guests: bookingData.guests || 1,
-      booking_type: bookingData.bookingType || "villa",
+      booking_type: sanitizedData.bookingType || "villa",
       total_price: bookingData.totalPrice || 0,
       currency: bookingData.currency || "usd",
     }
@@ -88,11 +163,11 @@ export async function POST(request: Request) {
       }
 
       // Add optional fields if they might exist
-      if (bookingData.uid) {
-        availabilityRecord.booking_uid = bookingData.uid
+      if (sanitizedData.uid) {
+        availabilityRecord.booking_uid = sanitizedData.uid
       }
-      if (bookingData.guestName) {
-        availabilityRecord.reason = `Booked via ${bookingData.source || "Direct"} - ${bookingData.guestName}`
+      if (sanitizedData.guestName) {
+        availabilityRecord.reason = `Booked via ${sanitizedData.source || "Direct"} - ${sanitizedData.guestName}`
       }
 
       const { error: availabilityError } = await supabase
@@ -134,8 +209,29 @@ export async function POST(request: Request) {
  * Supports filtering by date range and source
  * Requires admin authentication to prevent PII exposure
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    // Rate limiting with Redis-based distributed rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = await checkRateLimit(clientIP)
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+            "Retry-After": Math.ceil(
+              (rateLimitResult.resetTime - Date.now()) / 1000,
+            ).toString(),
+          },
+        },
+      )
+    }
+
     // Verify admin authentication before accessing booking data
     await verifyAdminAuth(request)
 
@@ -227,8 +323,29 @@ export async function GET(request: Request) {
  * PUT: Update an existing booking
  * Requires authentication and authorization
  */
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
+    // Rate limiting with Redis-based distributed rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = await checkRateLimit(clientIP)
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+            "Retry-After": Math.ceil(
+              (rateLimitResult.resetTime - Date.now()) / 1000,
+            ).toString(),
+          },
+        },
+      )
+    }
+
     // Verify user authentication
     const authUser = await verifyUserAuth(request)
 
@@ -315,8 +432,29 @@ export async function PUT(request: Request) {
  * Also removes the corresponding availability entry
  * Requires authentication and authorization
  */
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    // Rate limiting with Redis-based distributed rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = await checkRateLimit(clientIP)
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+            "Retry-After": Math.ceil(
+              (rateLimitResult.resetTime - Date.now()) / 1000,
+            ).toString(),
+          },
+        },
+      )
+    }
+
     // Verify user authentication
     const authUser = await verifyUserAuth(request)
 
