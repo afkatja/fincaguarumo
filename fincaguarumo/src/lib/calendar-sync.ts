@@ -189,9 +189,7 @@ export class CalendarSyncService {
 
     try {
       // Fetch all bookings from the existing merged endpoint
-      const response = await fetch(
-        `${siteUrl}/api/ical/merged`,
-      )
+      const response = await fetch(`${siteUrl}/api/ical/merged`)
       if (!response.ok) {
         throw new Error(`Failed to fetch bookings: ${response.statusText}`)
       }
@@ -227,8 +225,9 @@ export class CalendarSyncService {
 
   /**
    * Sync a single booking to Google Calendar with retry logic
+   * Exported for testing purposes
    */
-  private async syncBooking(
+  async syncBooking(
     booking: any,
   ): Promise<"created" | "updated" | "deleted" | "error"> {
     // Skip bookings without UIDs
@@ -344,19 +343,57 @@ export class CalendarSyncService {
           )
 
           if (!eventExists) {
-            // Event was deleted externally, create new one
-            const eventId = await googleCalendarService.createEvent(bookingData)
-            if (eventId) {
-              await this.recordSyncState(booking.uid, eventId, "success")
-              return "created"
-            } else {
+            // Event was deleted externally, try to find it by booking UID before creating new one
+            const existingEventId =
+              await googleCalendarService.findEventByBookingUid(booking.uid)
+
+            if (existingEventId) {
+              // Found the event via search, update the sync log with the correct ID
               await this.recordSyncState(
                 booking.uid,
-                null,
-                "failed",
-                "Failed to create calendar event",
+                existingEventId,
+                "success",
               )
-              return "error"
+              console.log(
+                `Recovered missing event ${existingEventId} for booking ${booking.uid} via UID search`,
+              )
+              // Now update the event
+              const success = await googleCalendarService.updateEvent(
+                existingEventId,
+                bookingData,
+              )
+              if (success) {
+                await this.recordSyncState(
+                  booking.uid,
+                  existingEventId,
+                  "success",
+                )
+                return "updated"
+              } else {
+                await this.recordSyncState(
+                  booking.uid,
+                  existingEventId,
+                  "failed",
+                  "Failed to update recovered calendar event",
+                )
+                return "error"
+              }
+            } else {
+              // Event truly doesn't exist, create new one
+              const eventId =
+                await googleCalendarService.createEvent(bookingData)
+              if (eventId) {
+                await this.recordSyncState(booking.uid, eventId, "success")
+                return "created"
+              } else {
+                await this.recordSyncState(
+                  booking.uid,
+                  null,
+                  "failed",
+                  "Failed to create calendar event",
+                )
+                return "error"
+              }
             }
           } else {
             // Update existing event

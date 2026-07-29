@@ -391,4 +391,96 @@ describe("Calendar Sync Service", () => {
       expect(result.skipped).toBe(1) // booking-1 already synced
     })
   })
+
+  describe("Idempotent Sync Behavior", () => {
+    it("should sync same booking twice: createEvent ×1, updateEvent ×1", async () => {
+      const { googleCalendarService } = require("../google-calendar")
+      const booking = mockBookings[0]
+
+      // First sync: no existing log, should create
+      googleCalendarService.getSyncLog.mockResolvedValue(null)
+      googleCalendarService.createEvent.mockResolvedValue("event-123")
+
+      const firstResult = await calendarSyncService.syncBooking(booking)
+      expect(firstResult).toBe("created")
+      expect(googleCalendarService.createEvent).toHaveBeenCalledTimes(1)
+      expect(googleCalendarService.updateEvent).toHaveBeenCalledTimes(0)
+
+      // Reset mocks for second sync
+      jest.clearAllMocks()
+
+      // Second sync: existing log with event, should update
+      googleCalendarService.getSyncLog.mockResolvedValue({
+        gcal_event_id: "event-123",
+      })
+      googleCalendarService.eventExists.mockResolvedValue(true)
+      googleCalendarService.updateEvent.mockResolvedValue(true)
+
+      const secondResult = await calendarSyncService.syncBooking(booking)
+      expect(secondResult).toBe("updated")
+      expect(googleCalendarService.createEvent).toHaveBeenCalledTimes(0)
+      expect(googleCalendarService.updateEvent).toHaveBeenCalledTimes(1)
+    })
+
+    it("should not call createEvent again on 429 error after log write", async () => {
+      const { googleCalendarService } = require("../google-calendar")
+      const booking = mockBookings[0]
+
+      // First sync succeeds with createEvent and log write
+      googleCalendarService.getSyncLog.mockResolvedValue(null)
+      googleCalendarService.createEvent.mockResolvedValue("event-123")
+
+      const firstResult = await calendarSyncService.syncBooking(booking)
+      expect(firstResult).toBe("created")
+
+      // Reset mocks
+      jest.clearAllMocks()
+
+      // Second sync: existing log, but updateEvent fails with 429
+      googleCalendarService.getSyncLog.mockResolvedValue({
+        gcal_event_id: "event-123",
+      })
+      googleCalendarService.eventExists.mockResolvedValue(true)
+
+      const retryError = new Error("Rate limit exceeded") as any
+      retryError.code = 429
+
+      googleCalendarService.updateEvent
+        .mockRejectedValueOnce(retryError)
+        .mockRejectedValueOnce(retryError)
+        .mockResolvedValueOnce(true)
+
+      const secondResult = await calendarSyncService.syncBooking(booking)
+      expect(secondResult).toBe("updated")
+
+      // Should NOT call createEvent during retry, only updateEvent
+      expect(googleCalendarService.createEvent).toHaveBeenCalledTimes(0)
+      expect(googleCalendarService.updateEvent).toHaveBeenCalledTimes(3)
+    })
+
+    it("should handle eventExists returning false with existing log (recreate behavior)", async () => {
+      const { googleCalendarService } = require("../google-calendar")
+      const booking = mockBookings[0]
+
+      // Existing log but event doesn't exist in Google Calendar
+      googleCalendarService.getSyncLog.mockResolvedValue({
+        gcal_event_id: "old-event-123",
+      })
+      googleCalendarService.eventExists.mockResolvedValue(false)
+      googleCalendarService.createEvent.mockResolvedValue("new-event-456")
+
+      const result = await calendarSyncService.syncBooking(booking)
+
+      expect(result).toBe("created")
+      expect(googleCalendarService.eventExists).toHaveBeenCalledWith(
+        "old-event-123",
+      )
+      expect(googleCalendarService.createEvent).toHaveBeenCalledTimes(1)
+      expect(googleCalendarService.createEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          uid: booking.uid,
+        }),
+      )
+    })
+  })
 })

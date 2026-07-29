@@ -65,6 +65,14 @@ As a property manager, I want confirmed bookings to automatically sync to my per
 - [ ] Only relevant fields are synced: check-in, check-out, name, email, phone, source
 - [ ] No iCal file generation needed (direct Google Calendar API integration)
 
+### AC5: Idempotent Sync
+
+- [ ] Re-running sync for an unchanged booking does not create a second Google Calendar event
+- [ ] Syncing the same booking twice results in: createEvent ×1, updateEvent ×1
+- [ ] On retry after 429 error, the system does not call createEvent again (only updateEvent)
+- [ ] When eventExists returns false with existing log, system searches Google Calendar by booking UID before creating new event
+- [ ] Missing-event recovery attempts to find existing events via UID search to prevent orphaned events
+
 ## Technical Implementation
 
 ### Components to Create/Modify

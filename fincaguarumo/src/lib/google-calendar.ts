@@ -192,6 +192,45 @@ export class GoogleCalendarService {
   }
 
   /**
+   * Search for an event by booking UID (extended property)
+   * Returns the event ID if found, null otherwise
+   */
+  async findEventByBookingUid(bookingUid: string): Promise<string | null> {
+    try {
+      const response = await this.calendar.events.list({
+        calendarId: this.calendarId,
+        q: bookingUid, // Search for the booking UID in the event
+        singleEvents: true,
+        orderBy: "startTime",
+      })
+
+      const events = response.data.items || []
+
+      // Filter events that contain the booking UID in their description or summary
+      // This is a fallback since extended properties search is not directly supported
+      for (const event of events) {
+        const description = event.description || ""
+        const summary = event.summary || ""
+
+        if (description.includes(bookingUid) || summary.includes(bookingUid)) {
+          console.log(
+            `Found existing event ${event.id} for booking ${bookingUid} via search`,
+          )
+          return event.id
+        }
+      }
+
+      return null
+    } catch (error) {
+      console.error(
+        `Failed to search for event by booking UID ${bookingUid}:`,
+        error,
+      )
+      return null
+    }
+  }
+
+  /**
    * Format booking data to Google Calendar event format
    */
   private formatBookingToEvent(booking: BookingData): CalendarEvent {
