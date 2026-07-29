@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   try {
     // Verify admin authentication
     const adminUser = await verifyAdminAuth(request)
-    console.log(`Admin ${adminUser.email} testing calendar connection`)
+    console.log(`Admin ${adminUser.id} testing calendar connection`)
 
     // Test calendar access
     const hasAccess = await googleCalendarService.testAccess()
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       status: "success",
       hasAccess,
       calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
-      testedBy: adminUser.email,
+      testedBy: adminUser.id,
     })
   } catch (error: any) {
     console.error("Admin calendar connection test error:", error)

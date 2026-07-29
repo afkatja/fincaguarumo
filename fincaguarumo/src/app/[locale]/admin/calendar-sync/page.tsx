@@ -46,8 +46,9 @@ export default function CalendarSyncPage() {
         })
 
         if (response.ok) {
-          setIsCalendarConnected(true)
-          setCalendarId(process.env.GOOGLE_CALENDAR_ID || "primary")
+          const data = await response.json()
+          setIsCalendarConnected(Boolean(data.hasAccess))
+          setCalendarId(data.calendarId || "primary")
         } else {
           setIsCalendarConnected(false)
         }

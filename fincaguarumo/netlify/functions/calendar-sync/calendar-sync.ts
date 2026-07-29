@@ -8,6 +8,9 @@ interface NetlifyEvent {
   queryStringParameters?: {
     secret?: string
   }
+  headers?: {
+    [key: string]: string
+  }
 }
 
 interface NetlifyContext {
@@ -22,7 +25,12 @@ const handler = async (event: NetlifyEvent, context: NetlifyContext) => {
     })
 
     // Validate cron secret
-    const secret = event.queryStringParameters?.secret
+    // Check headers first (for scheduled Netlify cron triggers)
+    // Fall back to query parameters (for manual/legacy calls)
+    const headerSecret = event.headers?.["x-calendar-sync-secret"]
+    const querySecret = event.queryStringParameters?.secret
+    const secret = headerSecret || querySecret
+
     if (!CRON_SECRET) {
       console.error("CALENDAR_SYNC_SECRET environment variable is missing")
       return {

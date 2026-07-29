@@ -37,22 +37,76 @@ export interface CalendarSyncResponse {
   status: "created" | "updated" | "deleted"
 }
 
-function requireServerEnv(name: string): string {
-  const value = process.env[name]
+function requireServerEnv(name: string, publicFallback?: string): string {
+  const value =
+    process.env[name] ||
+    (publicFallback ? process.env[publicFallback] : undefined)
   if (!value) {
     console.error(
-      `[calendar-sync] Missing required environment variable: ${name}`,
+      `[calendar-sync] Missing required environment variable: ${name}${publicFallback ? ` (or ${publicFallback})` : ""}`,
     )
-    throw new Error(`${name} environment variable is required`)
+    throw new Error(
+      `${name} environment variable is required${publicFallback ? ` (or ${publicFallback})` : ""}`,
+    )
   }
   return value
 }
 
-// Initialize Supabase client (server-side env only)
-const supabaseUrl = requireServerEnv("SUPABASE_URL")
-const supabaseServiceKey = requireServerEnv("SUPABASE_SERVICE_ROLE_KEY")
-const siteUrl = requireServerEnv("SITE_URL")
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+// Lazy Supabase client initialization
+let supabase: ReturnType<typeof createClient> | null = null
+let siteUrl: string | null = null
+let overrideSupabaseClient: ReturnType<typeof createClient> | null = null
+let overrideSiteUrl: string | null = null
+
+/**
+ * Override the Supabase client for testing purposes
+ * Call this before any calendar sync operations in tests
+ */
+export function setTestSupabaseClient(client: ReturnType<typeof createClient>) {
+  overrideSupabaseClient = client
+}
+
+/**
+ * Override the site URL for testing purposes
+ */
+export function setTestSiteUrl(url: string) {
+  overrideSiteUrl = url
+}
+
+/**
+ * Reset test overrides (call this in test afterEach)
+ */
+export function resetTestOverrides() {
+  overrideSupabaseClient = null
+  overrideSiteUrl = null
+  supabase = null
+  siteUrl = null
+}
+
+function getSupabaseClient() {
+  if (overrideSupabaseClient) {
+    return overrideSupabaseClient
+  }
+  if (!supabase) {
+    const supabaseUrl = requireServerEnv(
+      "SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_URL",
+    )
+    const supabaseServiceKey = requireServerEnv("SUPABASE_SERVICE_ROLE_KEY")
+    supabase = createClient(supabaseUrl, supabaseServiceKey)
+  }
+  return supabase
+}
+
+function getSiteUrl() {
+  if (overrideSiteUrl) {
+    return overrideSiteUrl
+  }
+  if (!siteUrl) {
+    siteUrl = requireServerEnv("SITE_URL", "NEXT_PUBLIC_SITE_URL")
+  }
+  return siteUrl
+}
 
 /**
  * Convert Booking type to BookingData for Google Calendar sync
@@ -93,7 +147,7 @@ export class CalendarSyncService {
 
       try {
         // Check if already synced
-        const { data: existingSync } = await supabase
+        const { data: existingSync } = await getSupabaseClient()
           .from("gcal_sync_log")
           .select("*")
           .eq("booking_id", booking.uid || "unknown")
@@ -146,7 +200,7 @@ export class CalendarSyncService {
    */
   async getSyncLog(bookingId: string): Promise<any> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabaseClient()
         .from("gcal_sync_log")
         .select("*")
         .eq("booking_id", bookingId)
@@ -189,7 +243,7 @@ export class CalendarSyncService {
 
     try {
       // Fetch all bookings from the existing merged endpoint
-      const response = await fetch(`${siteUrl}/api/ical/merged`)
+      const response = await fetch(`${getSiteUrl()}/api/ical/merged`)
       if (!response.ok) {
         throw new Error(`Failed to fetch bookings: ${response.statusText}`)
       }
@@ -273,13 +327,11 @@ export class CalendarSyncService {
               return "error"
             }
           } else {
-            await this.recordSyncState(
-              booking.uid,
-              syncLog.gcal_event_id,
-              "failed",
-              "Event not found in Google Calendar for test booking",
+            await this.recordSyncState(booking.uid, null, "success")
+            console.log(
+              `Event ${syncLog.gcal_event_id} not found in Google Calendar for test booking ${booking.uid} - already deleted`,
             )
-            return "deleted" // Event already gone, treat as deleted
+            return "deleted" // Event already gone, treat as success
           }
         } else {
           // No existing event to delete, just record that we skipped this test booking
@@ -449,7 +501,7 @@ export class CalendarSyncService {
    */
   async shouldRunSync(): Promise<boolean> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabaseClient()
         .from("gcal_sync_log")
         .select("synced_at")
         .eq("status", "success")
@@ -464,11 +516,11 @@ export class CalendarSyncService {
         throw error
       }
 
-      if (!data || !data.synced_at) {
+      if (!data || !(data as any).synced_at) {
         return true // No previous sync, should run
       }
 
-      const lastSyncTime = new Date(data.synced_at)
+      const lastSyncTime = new Date((data as any).synced_at)
       const now = new Date()
       const minutesSinceLastSync =
         (now.getTime() - lastSyncTime.getTime()) / (1000 * 60)
@@ -485,7 +537,7 @@ export class CalendarSyncService {
    */
   async fetchBookingsFromAPI(): Promise<Booking[]> {
     try {
-      const response = await fetch(`${siteUrl}/api/ical/merged`, {
+      const response = await fetch(`${getSiteUrl()}/api/ical/merged`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -522,9 +574,11 @@ export class CalendarSyncService {
         synced_at: new Date().toISOString(),
       }
 
-      await supabase.from("gcal_sync_log").upsert(logEntry, {
-        onConflict: "booking_id",
-      })
+      await (getSupabaseClient() as any)
+        .from("gcal_sync_log")
+        .upsert(logEntry, {
+          onConflict: "booking_id",
+        })
     } catch (error) {
       console.error("Failed to record sync state:", error)
       throw error
@@ -562,13 +616,8 @@ export class CalendarSyncService {
             return "error"
           }
         } else {
-          await this.recordSyncState(
-            booking.uid,
-            syncLog.gcal_event_id,
-            "failed",
-            "Event not found in Google Calendar",
-          )
-          return "error"
+          await this.recordSyncState(booking.uid, null, "cancelled")
+          return "deleted" // Event already gone, treat as cancelled
         }
       } else {
         return "deleted" // No event to delete, treat as success
@@ -602,23 +651,22 @@ export class CalendarSyncService {
     // More specific cancellation patterns that are less likely to match legitimate bookings
     const cancellationPatterns = [
       // Exact status indicators
-      "\bcancelled\b",
-      "\bcanceled\b",
-      "\bdeleted\b",
+      /\bcancelled\b/i,
+      /\bcanceled\b/i,
+      /\bdeleted\b/i,
       // Cancellation-related phrases (with word boundaries)
-      "\bbooking cancelled\b",
-      "\bbooking canceled\b",
-      "\breservation cancelled\b",
-      "\breservation canceled\b",
+      /\bbooking cancelled\b/i,
+      /\bbooking canceled\b/i,
+      /\breservation cancelled\b/i,
+      /\breservation canceled\b/i,
       // Refund patterns (more specific)
-      "\brefund processed\b",
-      "\bfull refund\b",
-      "\bpartial refund\b",
+      /\brefund processed\b/i,
+      /\bfull refund\b/i,
+      /\bpartial refund\b/i,
     ]
 
     return cancellationPatterns.some(pattern => {
-      const regex = new RegExp(pattern, "i")
-      return regex.test(summary) || regex.test(description)
+      return pattern.test(summary) || pattern.test(description)
     })
   }
 
@@ -630,7 +678,7 @@ export class CalendarSyncService {
       const cutoffDate = new Date()
       cutoffDate.setDate(cutoffDate.getDate() - daysOld)
 
-      const { error } = await supabase
+      const { error } = await getSupabaseClient()
         .from("gcal_sync_log")
         .delete()
         .lt("synced_at", cutoffDate.toISOString())
@@ -656,26 +704,28 @@ export class CalendarSyncService {
   }> {
     try {
       // Get total bookings count
-      const { count: totalBookings } = await supabase
+      const { count: totalBookings } = await getSupabaseClient()
         .from("bookings")
         .select("*", { count: "exact", head: true })
 
       // Get sync logs stats
-      const { data: syncLogs } = await supabase
+      const { data: syncLogs } = await getSupabaseClient()
         .from("gcal_sync_log")
         .select("status, synced_at")
 
       const syncedBookings =
-        syncLogs?.filter(log => log.status === "success").length || 0
+        syncLogs?.filter((log: any) => log.status === "success").length || 0
       const failedSyncs =
-        syncLogs?.filter(log => log.status === "failed").length || 0
+        syncLogs?.filter((log: any) => log.status === "failed").length || 0
       const lastSyncTime =
         syncLogs && syncLogs.length > 0
-          ? syncLogs.sort(
-              (a, b) =>
-                new Date(b.synced_at).getTime() -
-                new Date(a.synced_at).getTime(),
-            )[0].synced_at
+          ? (
+              syncLogs.sort(
+                (a: any, b: any) =>
+                  new Date(b.synced_at).getTime() -
+                  new Date(a.synced_at).getTime(),
+              )[0] as any
+            ).synced_at
           : null
 
       return {
@@ -725,7 +775,7 @@ export async function syncBookingsToCalendar(
       }
 
       // Get existing sync state
-      const existingSync = await calendarSyncService.getSyncLog(
+      const existingSync = await getCalendarSyncService().getSyncLog(
         booking.uid || "unknown",
       )
 
@@ -858,7 +908,7 @@ export async function syncBookingsToCalendar(
       }
 
       // Record sync state
-      await calendarSyncService.recordSyncState(
+      await getCalendarSyncService().recordSyncState(
         booking.uid || "unknown",
         syncResult!.eventId || null,
         syncResult!.status === "deleted" ? "success" : "success",
@@ -887,4 +937,22 @@ export async function syncBookingsToCalendar(
 }
 
 // Singleton instance
-export const calendarSyncService = new CalendarSyncService()
+let calendarSyncServiceInstance: CalendarSyncService | null = null
+
+export function getCalendarSyncService(): CalendarSyncService {
+  if (!calendarSyncServiceInstance) {
+    calendarSyncServiceInstance = new CalendarSyncService()
+  }
+  return calendarSyncServiceInstance
+}
+
+/**
+ * Reset the singleton instance for testing
+ * Call this in test afterEach
+ */
+export function resetCalendarSyncService() {
+  calendarSyncServiceInstance = null
+}
+
+// Export singleton for backward compatibility
+export const calendarSyncService = getCalendarSyncService()
