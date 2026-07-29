@@ -69,15 +69,39 @@ function validateTimezone(timezone: string): boolean {
   }
 }
 
+function createGoogleAuth() {
+  const scopes = [CALENDAR_SCOPE]
+
+  if (process.env.NODE_ENV === "production") {
+    const json = process.env.GOOGLE_SERVICE_ACCOUNT_JSON
+    if (!json) {
+      throw new Error(
+        "GOOGLE_SERVICE_ACCOUNT_JSON is required in production",
+      )
+    }
+
+    const credentials = JSON.parse(json)
+    credentials.private_key = credentials.private_key.replace(/\\n/g, "\n")
+
+    return new google.auth.GoogleAuth({ scopes, credentials })
+  }
+
+  const keyFile = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE
+  if (!keyFile) {
+    throw new Error(
+      "GOOGLE_SERVICE_ACCOUNT_KEY_FILE is required for local development",
+    )
+  }
+
+  return new google.auth.GoogleAuth({ scopes, keyFile })
+}
+
 export class GoogleCalendarService {
   private calendar: any
   private calendarId: string
 
   constructor() {
-    const auth = new google.auth.GoogleAuth({
-      scopes: [CALENDAR_SCOPE],
-      keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE,
-    })
+    const auth = createGoogleAuth()
 
     this.calendar = google.calendar({ version: CALENDAR_VERSION, auth })
     this.calendarId = process.env.GOOGLE_CALENDAR_ID || DEFAULT_CALENDAR_ID

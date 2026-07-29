@@ -42,7 +42,8 @@ jest.mock("@supabase/supabase-js", () => ({
 process.env.GOOGLE_CALENDAR_ID = "test-calendar-id"
 process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = "test@example.com"
 process.env.GOOGLE_PRIVATE_KEY = "mock-private-key"
-process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE = "" // Prevent real file loading
+process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE =
+  "/tmp/test-service-account-key.json"
 
 describe("Google Calendar Service", () => {
   const mockBooking = {
@@ -55,7 +56,7 @@ describe("Google Calendar Service", () => {
 
   it("should create a calendar event with correct structure", async () => {
     // Simple test to verify createCalendarEvent works
-    const result = await createCalendarEvent(mockBooking, "checkin")
+    const result = await createCalendarEvent(mockBooking)
 
     // Just test that it returns a string (mocked response)
     expect(typeof result).toBe("string")
