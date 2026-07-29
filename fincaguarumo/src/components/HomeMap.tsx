@@ -11,15 +11,23 @@ import { useTranslations } from "next-intl"
 import { PlaceProvider } from "../app/providers/PlaceProvider"
 import { PlaceReviews } from "./PlaceReviews"
 import { coords, placeId } from "../../data/geo"
+import { ReviewSummary } from "./ReviewSummary"
+import Link from "next/link"
+import Icon from "./Icon"
+import Title from "./Title"
 
 const HomeMapContent = () => {
   const t = useTranslations("map")
   const apiIsLoaded = useApiIsLoaded()
   if (!apiIsLoaded) return null
   return (
-    <div className="max-w-240 mx-auto my-8">
-      <div className="w-11/12! mx-auto relative">
-        <h2 className="text-3xl my-5">{t("location")}</h2>
+    <div className="w-11/12 max-w-240! mx-auto my-8">
+      <div className="relative">
+        <Title
+          Heading="h2"
+          titleClassName="text-3xl my-5"
+          title={t("location")}
+        />
         <div className="h-96 mt-4">
           <Map
             mapId={process.env.NEXT_PUBLIC_GMAPS_MAP_ID as string}
@@ -51,15 +59,37 @@ const HomeMapContent = () => {
 }
 
 const HomeMap = () => {
+  const b = useTranslations("reviews")
+
   return (
     <APIProvider
       apiKey={process.env.NEXT_PUBLIC_GMAPS_API_KEY as string}
       // onLoad={() => console.log("Maps API has loaded.")}
     >
       <HomeMapContent />
-      <PlaceProvider placeId={placeId}>
-        <PlaceReviews />
-      </PlaceProvider>
+      <div className="w-11/12 max-w-240! mx-auto">
+        <PlaceProvider placeId={placeId}>
+          <Title
+            Heading="h2"
+            titleClassName="text-3xl my-5"
+            title={b("title")}
+          />
+          <ReviewSummary />
+          <div className="w-full flex justify-end">
+            <Link
+              href={`/reviews`}
+              className="w-80 inline-flex items-center justify-end h-full group no-underline mt-8 mr-4"
+            >
+              {b("readMoreReviews") || "Read more reviews"}
+              <Icon
+                icon="ArrowRight"
+                className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+                color="currentColor"
+              />
+            </Link>
+          </div>
+        </PlaceProvider>
+      </div>
     </APIProvider>
   )
 }

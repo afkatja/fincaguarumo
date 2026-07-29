@@ -37,14 +37,14 @@ const navigation = async ({ locale }: { locale: string }) => {
     {
       title: "FAQ",
       slug: { current: "faq" },
-      href: "faq",
+      href: "/faq",
       language: locale,
       isPublished: true,
     },
     {
       title: "Reviews",
       slug: { current: "reviews" },
-      href: "reviews",
+      href: "/reviews",
       language: locale,
       isPublished: true,
     },

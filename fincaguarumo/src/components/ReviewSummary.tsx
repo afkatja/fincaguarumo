@@ -21,9 +21,14 @@ interface ReviewSummaryProps {
     icon?: string
   }>
   readMoreSection?: string
+  showRating?: boolean
+  showDistribution?: boolean
+  showGuestLikes?: boolean
+  showRecentComments?: boolean
+  showReadMore?: boolean
+  useAIProcessing?: boolean
 }
 
-// Extract common themes from review texts
 const extractCommonThemes = (texts: string[], t: any): string[] => {
   const themes = [
     {
@@ -73,17 +78,48 @@ const extractCommonThemes = (texts: string[], t: any): string[] => {
 export const ReviewSummary = ({
   highlightFeatures,
   readMoreSection,
+  showRating = true,
+  showDistribution = true,
+  showGuestLikes = true,
+  showRecentComments = true,
+  showReadMore = true,
+  useAIProcessing = false,
 }: ReviewSummaryProps) => {
   const t = useTranslations("reviews")
   const { place } = usePlace()
   const { data: sanityReviews } = useSWR(REVIEWS_QUERY, clientSideFetch)
 
-  // Compute stable review array
   const stableAllReviews = React.useMemo(() => {
     return [...(place?.reviews ?? []), ...(sanityReviews ?? [])] as TReview[]
   }, [place, JSON.stringify(place?.reviews), JSON.stringify(sanityReviews)])
 
-  // Calculate summary statistics
+  const reviewsForProcessing = React.useMemo(() => {
+    return stableAllReviews.map(review => ({
+      text: review?.text || review?.reviewText || "",
+      rating: review?.rating || 0,
+      date: review?.date || new Date(),
+      platform: review?.platform || "google",
+    }))
+  }, [stableAllReviews])
+
+  const { data: processedData } = useSWR(
+    useAIProcessing && reviewsForProcessing.length > 0
+      ? ["/api/process-reviews", JSON.stringify(reviewsForProcessing)]
+      : null,
+    async () => {
+      const response = await fetch("/api/process-reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews: reviewsForProcessing }),
+      })
+      if (!response.ok) throw new Error("Failed to process reviews")
+      return response.json()
+    },
+  )
+
+  const processedAspects = processedData?.processedAspects || []
+  const summaryText = processedData?.summaryText || ""
+
   const summaryStats = React.useMemo(() => {
     if (!stableAllReviews.length) return null
 
@@ -95,7 +131,6 @@ export const ReviewSummary = ({
 
     if (!validRatings.length) return null
 
-    // Normalize all ratings to 5-star scale
     const normalizedRatings = validRatings.map(review =>
       normalizeRatingTo5Stars(review?.rating || 0, review.platform || "google"),
     )
@@ -105,7 +140,6 @@ export const ReviewSummary = ({
       normalizedRatings.length
     const roundedRating = Math.round(averageRating * 10) / 10
 
-    // Count ratings by star level
     const ratingDistribution = [5, 4, 3, 2, 1].map(stars => ({
       stars,
       count: normalizedRatings.filter(rating => rating === stars).length,
@@ -115,15 +149,16 @@ export const ReviewSummary = ({
         100,
     }))
 
-    // Extract common themes from review texts
-    const reviewTexts = stableAllReviews
-      .filter(review => {
-        const text = review?.text || review?.reviewText || ""
-        return text.length > 50
-      })
-      .map(review => (review?.text || review?.reviewText || "").toLowerCase())
-
-    const commonThemes = extractCommonThemes(reviewTexts, t)
+    let commonThemes: string[] = []
+    if (!useAIProcessing) {
+      const reviewTexts = stableAllReviews
+        .filter(review => {
+          const text = review?.text || review?.reviewText || ""
+          return text.length > 50
+        })
+        .map(review => (review?.text || review?.reviewText || "").toLowerCase())
+      commonThemes = extractCommonThemes(reviewTexts, t)
+    }
 
     return {
       totalReviews,
@@ -132,7 +167,7 @@ export const ReviewSummary = ({
       commonThemes,
       recentReviews: stableAllReviews.slice(0, 3),
     }
-  }, [stableAllReviews])
+  }, [stableAllReviews, useAIProcessing])
 
   if (!summaryStats) return null
 
@@ -149,129 +184,179 @@ export const ReviewSummary = ({
     ))
   }
 
+  const hasLeftColumn = showRating || showDistribution
+  const hasRightColumn =
+    (showGuestLikes &&
+      ((highlightFeatures && highlightFeatures.length > 0) ||
+        (useAIProcessing
+          ? processedAspects.length > 0 || (summaryText?.length ?? 0) > 0
+          : summaryStats.commonThemes.length > 0) ||
+        (showRecentComments && summaryStats.recentReviews.length > 0))) ||
+    (showRecentComments && summaryStats.recentReviews.length > 0)
+
+  if (!hasLeftColumn && !hasRightColumn) return null
+
   return (
-    <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg shadow-sm p-6 mb-6 flex flex-wrap">
-      <div className="md:grid md:grid-cols-2 gap-4">
-        <div className="md:flex flex-wrap items-start gap-4">
-          {/* Overall Rating */}
-          <div className="flex-1 flex flex-wrap gap-2">
-            <div className="flex items-center gap-1 mb-2">
-              {renderStars(summaryStats.averageRating)}
-            </div>
-            <div className="text-3xl font-bold text-guarumo-primary dark:text-zinc-50">
-              {summaryStats.averageRating}
-            </div>
-            <p className="flex-none w-full text-sm text-gray-600 dark:text-gray-400">
-              {t("basedOnReviews", { count: summaryStats.totalReviews })}
-            </p>
-          </div>
-
-          {/* Rating Distribution */}
-          <div className="space-y-2 flex-3 shrink-0 mt-4 pt-4 md:ml-6 md:pl-6 md:mt-0 md:pt-0">
-            {summaryStats.ratingDistribution.map(
-              ({ stars, count, percentage }) => (
-                <div key={stars} className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400 w-8">
-                    {stars}★
-                  </span>
-                  <div className="flex-1 bg-gray-200 dark:bg-zinc-700 rounded-full h-2">
-                    <div
-                      className="bg-yellow-400 h-2 rounded-full"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400 w-8 text-right">
-                    {count}
-                  </span>
+    <div className="flex flex-wrap">
+      <div
+        className={`${hasLeftColumn && hasRightColumn ? "md:grid md:grid-cols-2" : ""} gap-4`}
+      >
+        {hasLeftColumn && (
+          <div className="md:flex flex-wrap items-start gap-4">
+            {showRating && (
+              <div className="flex-1 flex flex-wrap gap-2">
+                <div className="flex items-center gap-1 mb-2">
+                  {renderStars(summaryStats.averageRating)}
                 </div>
-              ),
+                <div className="text-3xl font-bold text-guarumo-primary dark:text-zinc-50">
+                  {summaryStats.averageRating}
+                </div>
+                <p className="flex-none w-full text-sm text-gray-600 dark:text-gray-400">
+                  {t("basedOnReviews", { count: summaryStats.totalReviews })}
+                </p>
+              </div>
             )}
-          </div>
-        </div>
-        <div className="md:border-l border-zinc-200 dark:border-zinc-700 mt-4 pt-4 md:ml-6 md:pl-6 md:mt-0 md:pt-0">
-          {/* Combined Features & Themes */}
-          <div>
-            <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
-              {t("whatGuestsLoveMost")}
-            </h4>
-            <div className="flex flex-wrap gap-1">
-              {/* Static highlight features with icons */}
-              {highlightFeatures &&
-                highlightFeatures.length > 0 &&
-                highlightFeatures.slice(0, 4).map((feature, index) => (
-                  <Badge
-                    key={`feature-${index}`}
-                    variant="secondary"
-                    className="text-xs bg-guarumo-primary/20 text-guarumo-primary dark:text-zinc-50 border-guarumo-primary/30"
-                  >
-                    {feature.icon && (
-                      <DynamicLucideIcon
-                        icon={feature.icon}
-                        className="h-3 w-3 mr-1"
-                      />
-                    )}
-                    {feature.title}
-                  </Badge>
-                ))}
-              {/* Dynamic common themes from reviews */}
-              {summaryStats.commonThemes.map((theme, index) => (
-                <Badge
-                  key={`theme-${index}`}
-                  variant="secondary"
-                  className="text-xs bg-guarumo-accent/20 text-guarumo-accent dark:text-zinc-50 border-guarumo-accent/30"
-                >
-                  {theme}
-                </Badge>
-              ))}
-            </div>
-          </div>
 
-          {/* Recent Review Snippets */}
-          {summaryStats.recentReviews.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
-              <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">
-                {t("recentGuestComments")}
-              </h4>
-              <div className="space-y-2">
-                {summaryStats.recentReviews.slice(0, 2).map((review, index) => {
-                  const text = review?.text || review?.reviewText || ""
-                  const truncatedText =
-                    text.length > 150 ? text.substring(0, 150) + "..." : text
-                  const author =
-                    review?.authorAttribution?.displayName ||
-                    review?.author?.name ||
-                    t("guest")
-
-                  return (
-                    <div
-                      key={index}
-                      className="text-sm text-zinc-600 dark:text-zinc-400 italic"
-                    >
-                      "{truncatedText}"
-                      <span className="ml-2 font-normal not-italic">
-                        - {author}
+            {showDistribution && (
+              <div className="space-y-2 flex-3 shrink-0 mt-4 pt-4 md:ml-6 md:pl-6 md:mt-0 md:pt-0">
+                {summaryStats.ratingDistribution.map(
+                  ({ stars, count, percentage }) => (
+                    <div key={stars} className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 w-8">
+                        {stars}★
+                      </span>
+                      <div className="flex-1 bg-gray-200 dark:bg-zinc-700 rounded-full h-2">
+                        <div
+                          className="bg-yellow-400 h-2 rounded-full"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 w-8 text-right">
+                        {count}
                       </span>
                     </div>
-                  )
-                })}
+                  ),
+                )}
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
+
+        {hasRightColumn && (
+          <div
+            className={`${hasLeftColumn ? "mt-4 pt-4 md:ml-6 md:pl-6 md:mt-0 md:pt-0" : ""}`}
+          >
+            {showGuestLikes && (
+              <div>
+                {(useAIProcessing ||
+                  !!highlightFeatures?.length ||
+                  summaryStats.commonThemes.length > 0) && (
+                  <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+                    {t("whatGuestsLoveMost")}
+                  </h4>
+                )}
+
+                {useAIProcessing && summaryText && (
+                  <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed mb-4">
+                    {summaryText}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap gap-1">
+                  {highlightFeatures &&
+                    highlightFeatures.length > 0 &&
+                    highlightFeatures.slice(0, 4).map((feature, index) => (
+                      <Badge
+                        key={`feature-${index}`}
+                        variant="secondary"
+                        className="text-xs bg-guarumo-primary/20 text-guarumo-primary dark:text-zinc-50 border-guarumo-primary/30"
+                      >
+                        {feature.icon && (
+                          <DynamicLucideIcon
+                            icon={feature.icon}
+                            className="h-3 w-3 mr-1"
+                          />
+                        )}
+                        {feature.title}
+                      </Badge>
+                    ))}
+                  {useAIProcessing
+                    ? processedAspects
+                        .slice(0, 5)
+                        .map((aspect: any, index: number) => (
+                          <span
+                            key={`aspect-${index}`}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-guarumo-primary/10 text-guarumo-primary dark:bg-zinc-700 dark:text-zinc-300"
+                          >
+                            {aspect.aspect} ({Math.round(aspect.mentionCount)}{" "}
+                            mentions)
+                          </span>
+                        ))
+                    : summaryStats.commonThemes.map((theme, index) => (
+                        <Badge
+                          key={`theme-${index}`}
+                          variant="secondary"
+                          className="text-xs bg-guarumo-accent/20 text-guarumo-accent dark:text-zinc-50 border-guarumo-accent/30"
+                        >
+                          {theme}
+                        </Badge>
+                      ))}
+                </div>
+              </div>
+            )}
+
+            {showRecentComments && summaryStats.recentReviews.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
+                <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">
+                  {t("recentGuestComments")}
+                </h4>
+                <div className="space-y-2">
+                  {summaryStats.recentReviews
+                    .slice(0, 2)
+                    .map((review, index) => {
+                      const text = review?.text || review?.reviewText || ""
+                      const truncatedText =
+                        text.length > 150
+                          ? text.substring(0, 150) + "..."
+                          : text
+                      const author =
+                        review?.authorAttribution?.displayName ||
+                        review?.author?.name ||
+                        t("guest")
+
+                      return (
+                        <div
+                          key={index}
+                          className="text-sm text-zinc-600 dark:text-zinc-400 italic"
+                        >
+                          "{truncatedText}"
+                          <span className="ml-2 font-normal not-italic">
+                            - {author}
+                          </span>
+                        </div>
+                      )
+                    })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      {readMoreSection && (
-        <Button
-          variant="outline"
-          onClick={() =>
-            document
-              .getElementById(readMoreSection)
-              ?.scrollIntoView({ behavior: "smooth" })
-          }
-          className="group inline-flex max-w-3xl ml-auto mt-6"
-        >
-          {t("readMoreReviews")}
-          <ArrowDown className="w-4 h-4 stroke-guarumo-primary" />
-        </Button>
+      {readMoreSection && showReadMore && (
+        <div className="w-full flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() =>
+              document
+                .getElementById(readMoreSection)
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="group inline-flex max-w-3xl mt-6"
+          >
+            {t("readMoreReviews")}
+            <ArrowDown className="w-4 h-4 stroke-guarumo-primary" />
+          </Button>
+        </div>
       )}
     </div>
   )

@@ -13,6 +13,111 @@
  */
 
 // Source: schema.json
+export type Logistics = {
+  _id: string;
+  _type: "logistics";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title: string;
+  category:
+    | "checkin_checkout"
+    | "transportation"
+    | "local_area"
+    | "emergency"
+    | "house_rules"
+    | "services";
+  checkInTime?: string;
+  checkOutTime?: string;
+  earlyCheckIn?: boolean;
+  earlyCheckInFee?: number;
+  lateCheckOut?: boolean;
+  lateCheckOutFee?: number;
+  description: string;
+  instructions?: string;
+  contactInfo?: string;
+  address?: string;
+  distance?: string;
+  isImportant?: boolean;
+  displayOrder?: number;
+  keywords?: Array<string>;
+};
+
+export type PaymentMethods = {
+  _id: string;
+  _type: "paymentMethods";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title: string;
+  methodType:
+    | "credit_card"
+    | "debit_card"
+    | "bank_transfer"
+    | "paypal"
+    | "apple"
+    | "google";
+  processor?: string;
+  description: string;
+  processingTime?: string;
+  fees?: string;
+  supportedCards?: Array<string>;
+  instructions?: string;
+  isAvailable?: boolean;
+  isRecommended?: boolean;
+  displayOrder?: number;
+  icon?: string;
+};
+
+export type PricingRules = {
+  _id: string;
+  _type: "pricingRules";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title: string;
+  ruleType: "base_rate" | "seasonal" | "discount" | "fee" | "tax";
+  season?: "high" | "low" | "shoulder" | "all";
+  startDate?: string;
+  endDate?: string;
+  basePrice?: number;
+  percentage?: number;
+  fixedAmount?: number;
+  minimumNights?: number;
+  description: string;
+  isActive?: boolean;
+  displayOrder?: number;
+};
+
+export type Amenities = {
+  _id: string;
+  _type: "amenities";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title: string;
+  slug: Slug;
+  category:
+    | "general"
+    | "kitchen"
+    | "bathroom"
+    | "bedroom"
+    | "outdoor"
+    | "entertainment"
+    | "services"
+    | "safety";
+  description: string;
+  icon?: string;
+  image?: ImageWithMetadata;
+  isFeatured?: boolean;
+  displayOrder?: number;
+  keywords?: Array<string>;
+};
+
 export type SanityImageAssetReference = {
   _ref: string;
   _type: "reference";
@@ -28,7 +133,57 @@ export type ImageWithMetadata = {
   crop?: SanityImageCrop;
   alt?: string;
   author?: string;
-  url?: string;
+  caption?: string;
+  sourceUrl?: string;
+};
+
+export type Slug = {
+  _type: "slug";
+  current: string;
+  source?: string;
+};
+
+export type ColumnsBlock = {
+  _type: "columnsBlock";
+  columnCount?: "2" | "3";
+  content?: Array<
+    | {
+        children?: Array<{
+          marks?: Array<string>;
+          text?: string;
+          _type: "span";
+          _key: string;
+        }>;
+        style?:
+          | "normal"
+          | "h1"
+          | "h2"
+          | "h3"
+          | "h4"
+          | "h5"
+          | "h6"
+          | "blockquote";
+        listItem?: "bullet" | "number";
+        markDefs?: Array<{
+          href?: string;
+          _type: "link";
+          _key: string;
+        }>;
+        level?: number;
+        _type: "block";
+        _key: string;
+      }
+    | ({
+        _key: string;
+      } & ImageWithMetadata)
+  >;
+};
+
+export type ArtDirectedImage = {
+  _type: "artDirectedImage";
+  desktop: ImageWithMetadata;
+  tablet?: ImageWithMetadata;
+  mobile?: ImageWithMetadata;
 };
 
 export type Review = {
@@ -37,15 +192,15 @@ export type Review = {
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
-  platform?: "airbnb" | "booking";
+  platform: "airbnb" | "booking" | "google";
   author?: {
-    name?: string;
+    name: string;
     location?: string;
     photoURI?: string;
   };
-  rating?: number;
-  date?: string;
-  reviewText?: string;
+  rating: number;
+  date: string;
+  reviewText: string;
   photoUrl?: string;
 };
 
@@ -56,10 +211,16 @@ export type Booking = {
   _updatedAt: string;
   _rev: string;
   checkIn?: string;
-  checkOut?: string;
+  checkOut: string;
   guestName?: string;
-  source?: "direct" | "airbnb" | "booking" | "expedia";
-  uid?: string;
+  email?: string;
+  phone?: string;
+  guests?: number;
+  totalPrice?: number;
+  currency?: "usd" | "eur" | "crc";
+  source?: "direct" | "airbnb" | "booking" | "expedia" | "vrbo" | "yourrentals";
+  uid: string;
+  syncedAt?: string;
 };
 
 export type Dialog = {
@@ -124,6 +285,20 @@ export type TourReference = {
   [internalGroqTypeReferenceTo]?: "tour";
 };
 
+export type FaqReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "faq";
+};
+
+export type AccommodationReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "accommodation";
+};
+
 export type BlockContent = Array<
   | {
       children?: Array<{
@@ -142,7 +317,12 @@ export type BlockContent = Array<
             _key: string;
           }
         | {
-            reference?: PostReference | PageReference | TourReference;
+            reference?:
+              | PostReference
+              | PageReference
+              | TourReference
+              | FaqReference
+              | AccommodationReference;
             _type: "internalLink";
             _key: string;
           }
@@ -154,7 +334,69 @@ export type BlockContent = Array<
   | ({
       _key: string;
     } & ImageWithMetadata)
+  | ({
+      _key: string;
+    } & ColumnsBlock)
 >;
+
+export type AmenitiesReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "amenities";
+};
+
+export type Property = {
+  _id: string;
+  _type: "property";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  propertyType: "villa" | "house" | "apartment" | "cabin";
+  title: string;
+  subtitle?: string;
+  description: string;
+  capacity?: {
+    maxGuests: number;
+    bedrooms: number;
+    bathrooms: number;
+  };
+  locationDetails?: {
+    address?: string;
+    region?: string;
+    country?: string;
+    coordinates?: Geopoint;
+    proximity?: Array<string>;
+  };
+  propertyOverview?: {
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    features?: Array<string>;
+    highlights?: Array<string>;
+  };
+  amenities?: Array<
+    {
+      _key: string;
+    } & AmenitiesReference
+  >;
+  price: number;
+  images?: Array<
+    {
+      _key: string;
+    } & ImageWithMetadata
+  >;
+  mainImage?: ImageWithMetadata;
+  isPublished?: boolean;
+};
+
+export type Geopoint = {
+  _type: "geopoint";
+  lat?: number;
+  lng?: number;
+  alt?: number;
+};
 
 export type MediaTag = {
   _id: string;
@@ -163,12 +405,6 @@ export type MediaTag = {
   _updatedAt: string;
   _rev: string;
   name?: Slug;
-};
-
-export type Slug = {
-  _type: "slug";
-  current?: string;
-  source?: string;
 };
 
 export type InternationalizedArrayStringValue = {
@@ -199,13 +435,6 @@ export type HomeReference = {
   [internalGroqTypeReferenceTo]?: "home";
 };
 
-export type FaqReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "faq";
-};
-
 export type FaqCategoryReference = {
   _ref: string;
   _type: "reference";
@@ -221,36 +450,8 @@ export type InternationalizedArrayReferenceValue = {
     | TourReference
     | HomeReference
     | FaqReference
-    | FaqCategoryReference;
-};
-
-export type Faq = {
-  _id: string;
-  _type: "faq";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  title?: string;
-  language?: string;
-  category?: FaqCategoryReference;
-  question?: string;
-  answer?: string;
-  keywords?: Array<string>;
-  displayOrder?: number;
-  showOnVillaBruno?: boolean;
-  slug?: Slug;
-};
-
-export type FaqCategory = {
-  _id: string;
-  _type: "faqCategory";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  title?: string;
-  language?: string;
-  slug?: Slug;
-  displayOrder?: number;
+    | FaqCategoryReference
+    | AccommodationReference;
 };
 
 export type SanityFileAssetReference = {
@@ -278,9 +479,46 @@ export type Home = {
     media?: unknown;
     _type: "file";
   };
-  background_media_poster?: ImageWithMetadata;
+  background_media_poster?: Array<
+    | ({
+        _key: string;
+      } & ImageWithMetadata)
+    | {
+        asset?: SanityImageAssetReference;
+        media?: unknown;
+        hotspot?: SanityImageHotspot;
+        crop?: SanityImageCrop;
+        _type: "image";
+        _key: string;
+      }
+  >;
   featured_content_title?: string;
   featured_blog_title?: string;
+  locationDetails?: {
+    address?: string;
+    region?: string;
+    country?: string;
+    coordinates?: {
+      lat?: number;
+      lng?: number;
+    };
+  };
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+};
+
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x: number;
+  y: number;
+  height: number;
+  width: number;
 };
 
 export type GalleryReference = {
@@ -307,7 +545,7 @@ export type Page = {
   title?: string;
   subtitle?: string;
   description?: string;
-  slug?: Slug;
+  slug: Slug;
   mainImage?: ImageWithMetadata;
   slideshow?: GalleryReference;
   categories?: Array<
@@ -317,15 +555,12 @@ export type Page = {
   >;
   body?: BlockContent;
   isPublished?: boolean;
-  showBookingOptions?: boolean;
   showFAQ?: boolean;
   faq?: Array<
     {
       _key: string;
     } & FaqReference
   >;
-  showBookingDialog?: boolean;
-  price?: number;
   displayReviews?: boolean;
 };
 
@@ -344,7 +579,8 @@ export type Post = {
   _rev: string;
   language?: string;
   title?: string;
-  slug?: Slug;
+  tldr?: BlockContent;
+  slug: Slug;
   author?: AuthorReference;
   mainImage?: ImageWithMetadata;
   categories?: Array<
@@ -361,36 +597,11 @@ export type Post = {
     image?: ImageWithMetadata;
   };
   isPublished?: boolean;
-};
-
-export type Tour = {
-  _id: string;
-  _type: "tour";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  language?: string;
-  title?: string;
-  isFeatured?: boolean;
-  isNew?: boolean;
-  isPublished?: boolean;
-  description?: string;
-  dateAdded?: string;
-  price?: number;
-  location?: string;
-  geo?: Geopoint;
-  duration?: string;
-  slug?: Slug;
-  mainImage?: ImageWithMetadata;
-  slideshow?: GalleryReference;
-  body?: BlockContent;
-};
-
-export type Geopoint = {
-  _type: "geopoint";
-  lat?: number;
-  lng?: number;
-  alt?: number;
+  faq?: Array<
+    {
+      _key: string;
+    } & FaqReference
+  >;
 };
 
 export type Author = {
@@ -429,20 +640,206 @@ export type Author = {
   }>;
 };
 
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top?: number;
-  bottom?: number;
-  left?: number;
-  right?: number;
+export type Tour = {
+  _id: string;
+  _type: "tour";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title?: string;
+  isFeatured?: boolean;
+  isNew?: boolean;
+  isPublished?: boolean;
+  description?: string;
+  dateAdded?: string;
+  price?: number;
+  location?: string;
+  geo?: Geopoint;
+  duration?: string;
+  slug: Slug;
+  mainImage?: ImageWithMetadata;
+  slideshow?: GalleryReference;
+  body?: BlockContent;
 };
 
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x?: number;
-  y?: number;
-  height?: number;
-  width?: number;
+export type Faq = {
+  _id: string;
+  _type: "faq";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title: string;
+  language?: string;
+  category: FaqCategoryReference;
+  question: string;
+  answerFormat?: "text" | "blockContent";
+  answer?: string;
+  answerBlockContent?: BlockContent;
+  keywords?: Array<string>;
+  lastModified?: string;
+  displayOrder?: number;
+  showOnVillaBruno?: boolean;
+  slug: Slug;
+  priority?: number;
+  relatedQuestions?: Array<
+    {
+      _key: string;
+    } & FaqReference
+  >;
+  intent?:
+    | "booking"
+    | "pricing"
+    | "payment"
+    | "cancellation"
+    | "amenities"
+    | "logistics"
+    | "property_info"
+    | "local_area"
+    | "general";
+};
+
+export type PricingRulesReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "pricingRules";
+};
+
+export type PaymentMethodsReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "paymentMethods";
+};
+
+export type CancellationPoliciesReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "cancellationPolicies";
+};
+
+export type LogisticsReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "logistics";
+};
+
+export type Accommodation = {
+  _id: string;
+  _type: "accommodation";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title: string;
+  subtitle?: string;
+  description: string;
+  summary?: string;
+  slug: Slug;
+  mainImage: ImageWithMetadata;
+  slideshow?: GalleryReference;
+  categories?: Array<
+    {
+      _key: string;
+    } & CategoryReference
+  >;
+  body?: BlockContent;
+  isPublished?: boolean;
+  showBookingOptions?: boolean;
+  showFAQ?: boolean;
+  faq?: Array<
+    {
+      _key: string;
+    } & FaqReference
+  >;
+  showBookingDialog?: boolean;
+  displayReviews?: boolean;
+  amenities?: Array<
+    {
+      _key: string;
+    } & AmenitiesReference
+  >;
+  pricingRules?: Array<
+    {
+      _key: string;
+    } & PricingRulesReference
+  >;
+  paymentMethods?: Array<
+    {
+      _key: string;
+    } & PaymentMethodsReference
+  >;
+  cancellationPolicy?: CancellationPoliciesReference;
+  logistics?: Array<
+    {
+      _key: string;
+    } & LogisticsReference
+  >;
+  checkInTime?: string;
+  checkOutTime?: string;
+  capacity?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  propertyType?:
+    | "villa"
+    | "house"
+    | "apartment"
+    | "studio"
+    | "cabin"
+    | "eco-lodge";
+  location?: {
+    address?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    coordinates?: Geopoint;
+  };
+  highlightFeatures?: Array<{
+    title: string;
+    description: string;
+    icon?: string;
+    _key: string;
+  }>;
+};
+
+export type CancellationPolicies = {
+  _id: string;
+  _type: "cancellationPolicies";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title: string;
+  policyType: "flexible" | "moderate" | "strict" | "super_strict";
+  timeframes: Array<{
+    daysBeforeCheckIn: number;
+    refundPercentage: number;
+    description: string;
+    _key: string;
+  }>;
+  description: string;
+  modificationsAllowed?: boolean;
+  modificationPolicy?: string;
+  noShowPolicy: string;
+  exceptions?: Array<string>;
+  isActive?: boolean;
+  isDefault?: boolean;
+  displayOrder?: number;
+};
+
+export type FaqCategory = {
+  _id: string;
+  _type: "faqCategory";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title: string;
+  language?: string;
+  slug: Slug;
+  displayOrder?: number;
 };
 
 export type Gallery = {
@@ -458,9 +855,20 @@ export type Gallery = {
     } & CategoryReference
   >;
   images?: Array<
-    {
-      _key: string;
-    } & ImageWithMetadata
+    | ({
+        _key: string;
+      } & ImageWithMetadata)
+    | ({
+        _key: string;
+      } & ArtDirectedImage)
+    | {
+        asset?: SanityImageAssetReference;
+        media?: unknown;
+        hotspot?: SanityImageHotspot;
+        crop?: SanityImageCrop;
+        _type: "image";
+        _key: string;
+      }
   >;
 };
 
@@ -485,9 +893,9 @@ export type SanityImagePalette = {
 
 export type SanityImageDimensions = {
   _type: "sanity.imageDimensions";
-  height?: number;
-  width?: number;
-  aspectRatio?: number;
+  height: number;
+  width: number;
+  aspectRatio: number;
 };
 
 export type SanityImageMetadata = {
@@ -555,8 +963,15 @@ export type SanityImageAsset = {
 };
 
 export type AllSanitySchemaTypes =
+  | Logistics
+  | PaymentMethods
+  | PricingRules
+  | Amenities
   | SanityImageAssetReference
   | ImageWithMetadata
+  | Slug
+  | ColumnsBlock
+  | ArtDirectedImage
   | Review
   | Booking
   | Dialog
@@ -565,30 +980,38 @@ export type AllSanitySchemaTypes =
   | PostReference
   | PageReference
   | TourReference
+  | FaqReference
+  | AccommodationReference
   | BlockContent
+  | AmenitiesReference
+  | Property
+  | Geopoint
   | MediaTag
-  | Slug
   | InternationalizedArrayStringValue
   | TranslationMetadata
   | InternationalizedArrayReference
   | HomeReference
-  | FaqReference
   | FaqCategoryReference
   | InternationalizedArrayReferenceValue
-  | Faq
-  | FaqCategory
   | SanityFileAssetReference
   | Home
+  | SanityImageCrop
+  | SanityImageHotspot
   | GalleryReference
   | CategoryReference
   | Page
   | AuthorReference
   | Post
-  | Tour
-  | Geopoint
   | Author
-  | SanityImageCrop
-  | SanityImageHotspot
+  | Tour
+  | Faq
+  | PricingRulesReference
+  | PaymentMethodsReference
+  | CancellationPoliciesReference
+  | LogisticsReference
+  | Accommodation
+  | CancellationPolicies
+  | FaqCategory
   | Gallery
   | SanityImagePaletteSwatch
   | SanityImagePalette
@@ -634,7 +1057,7 @@ export type GalleryImageProjectionResult = {
 export type POSTS_QUERY_RESULT = Array<{
   _id: string;
   title: string | null;
-  slug: Slug | null;
+  slug: Slug;
   mainImage: {
     _type: "imageWithMetadata";
     asset?: SanityImageAssetReference;
@@ -643,6 +1066,8 @@ export type POSTS_QUERY_RESULT = Array<{
     crop: SanityImageCrop | null;
     alt?: string;
     author?: string;
+    caption?: string;
+    sourceUrl?: string;
     url: string | null;
     metadata: SanityImageMetadata | null;
   } | null;
@@ -657,7 +1082,7 @@ export type POSTS_QUERY_RESULT = Array<{
 export type ALL_PAGES_QUERY_RESULT = Array<{
   _id: string;
   title: string | null;
-  slug: Slug | null;
+  slug: Slug;
   subtitle: string | null;
   body: BlockContent | null;
   _createdAt: string;
@@ -667,7 +1092,7 @@ export type ALL_PAGES_QUERY_RESULT = Array<{
 
 // Source: src/sanity/lib/queries.ts
 // Variable: PAGES_QUERY
-// Query: *[_type == "page" && slug.current == $slug && language == $language][0] {  title, subtitle, description,  mainImage {  ...,  crop,  hotspot,  "metadata": asset->metadata},  body[]{    ...,    ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })  }, language, slug, isPublished, showBookingOptions, showBookingDialog,  slideshow->{    "images": images[]{  _type,  ...select(    _type == "artDirectedImage" => {      "desktop": desktop {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "tablet": tablet {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "mobile": mobile {  ...,  crop,  hotspot,  "metadata": asset->metadata}    },    _type == "imageWithMetadata" || _type == "image" =>       {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }}  )}  },  price, faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} },  "translations": coalesce(    *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{      ...(value->{        language,        title,        subtitle,        description,        slug,        body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })        },        showBookingOptions,        showBookingDialog,        faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} }      })    },    []  )}
+// Query: *[_type == "page" && slug.current == $slug && language == $language][0] {  title, subtitle, description,  mainImage {  ...,  crop,  hotspot,  "metadata": asset->metadata},  body[]{    ...,    ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })  }, language, slug, isPublished, showBookingOptions, showBookingDialog,  slideshow->{    "images": images[]{  _type,  ...select(    _type == "artDirectedImage" => {      "desktop": desktop {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "tablet": tablet {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "mobile": mobile {  ...,  crop,  hotspot,  "metadata": asset->metadata}    },    _type == "imageWithMetadata" || _type == "image" =>       {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }}  )}  },  price, faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },  "translations": coalesce(    *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{      ...(value->{        language,        title,        subtitle,        description,        slug,        body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })        },        showBookingOptions,        showBookingDialog,        faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} }      })    },    []  )}
 export type PAGES_QUERY_RESULT = {
   title: string | null;
   subtitle: string | null;
@@ -680,7 +1105,8 @@ export type PAGES_QUERY_RESULT = {
     crop: SanityImageCrop | null;
     alt?: string;
     author?: string;
-    url?: string;
+    caption?: string;
+    sourceUrl?: string;
     metadata: SanityImageMetadata | null;
   } | null;
   body: Array<
@@ -695,7 +1121,12 @@ export type PAGES_QUERY_RESULT = {
         listItem?: "bullet";
         markDefs?: Array<
           | {
-              reference?: PageReference | PostReference | TourReference;
+              reference?:
+                | AccommodationReference
+                | FaqReference
+                | PageReference
+                | PostReference
+                | TourReference;
               _type: "internalLink";
               _key: string;
             }
@@ -712,6 +1143,42 @@ export type PAGES_QUERY_RESULT = {
       }
     | {
         _key: string;
+        _type: "columnsBlock";
+        columnCount?: "2" | "3";
+        content?: Array<
+          | ({
+              _key: string;
+            } & ImageWithMetadata)
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?:
+                | "blockquote"
+                | "h1"
+                | "h2"
+                | "h3"
+                | "h4"
+                | "h5"
+                | "h6"
+                | "normal";
+              listItem?: "bullet" | "number";
+              markDefs?: Array<{
+                href?: string;
+                _type: "link";
+                _key: string;
+              }>;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+        >;
+      }
+    | {
+        _key: string;
         _type: "imageWithMetadata";
         asset?: SanityImageAssetReference;
         media?: unknown;
@@ -719,6 +1186,8 @@ export type PAGES_QUERY_RESULT = {
         crop: SanityImageCrop | null;
         alt?: string;
         author?: string;
+        caption?: string;
+        sourceUrl?: string;
         url: string | null;
         metadata: {
           lqip: string | null;
@@ -727,38 +1196,97 @@ export type PAGES_QUERY_RESULT = {
       }
   > | null;
   language: string | null;
-  slug: Slug | null;
+  slug: Slug;
   isPublished: boolean | null;
-  showBookingOptions: boolean | null;
-  showBookingDialog: boolean | null;
+  showBookingOptions: null;
+  showBookingDialog: null;
   slideshow: {
-    images: Array<{
-      _type: "imageWithMetadata";
-      _key: string;
-      asset: SanityImageAssetReference | null;
-      media?: unknown;
-      hotspot: SanityImageHotspot | null;
-      crop: SanityImageCrop | null;
-      alt: string | null;
-      author?: string;
-      url: string | null;
-      metadata: {
-        lqip: string | null;
-        dimensions: SanityImageDimensions | null;
-      } | null;
-    }> | null;
+    images: Array<
+      | {
+          _type: "image";
+          asset: SanityImageAssetReference | null;
+          media?: unknown;
+          hotspot: SanityImageHotspot | null;
+          crop: SanityImageCrop | null;
+          _key: string;
+          alt: null;
+          url: string | null;
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        }
+      | {
+          _type: "imageWithMetadata";
+          _key: string;
+          asset: SanityImageAssetReference | null;
+          media?: unknown;
+          hotspot: SanityImageHotspot | null;
+          crop: SanityImageCrop | null;
+          alt: string | null;
+          author?: string;
+          caption?: string;
+          sourceUrl?: string;
+          url: string | null;
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        }
+      | {
+          _type: "artDirectedImage";
+          desktop: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          };
+          tablet: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          } | null;
+          mobile: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          } | null;
+        }
+    > | null;
   } | null;
-  price: number | null;
+  price: null;
   faq: Array<{
-    question: string | null;
+    question: string;
+    answerFormat: "blockContent" | "text" | null;
     answer: string | null;
-    slug: Slug | null;
+    answerBlockContent: BlockContent | null;
+    slug: Slug;
     keywords: Array<string> | null;
     showOnVillaBruno: boolean | null;
     category: {
-      title: string | null;
-      slug: Slug | null;
-    } | null;
+      title: string;
+      slug: Slug;
+    };
   }> | null;
   translations: Array<never>;
 } | null;
@@ -768,7 +1296,7 @@ export type PAGES_QUERY_RESULT = {
 // Query: *[_type == 'post' && defined(slug.current) && $category in categories[]->title && language == $language] {    title,    slug,    isPublished,    mainImage {  ...,  crop,  hotspot,  "url": asset->url,  "metadata": asset->metadata},    'category': *[_type == 'category' && title == $category],    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
 export type FEATURED_POSTS_QUERY_RESULT = Array<{
   title: string | null;
-  slug: Slug | null;
+  slug: Slug;
   isPublished: boolean | null;
   mainImage: {
     _type: "imageWithMetadata";
@@ -778,6 +1306,8 @@ export type FEATURED_POSTS_QUERY_RESULT = Array<{
     crop: SanityImageCrop | null;
     alt?: string;
     author?: string;
+    caption?: string;
+    sourceUrl?: string;
     url: string | null;
     metadata: SanityImageMetadata | null;
   } | null;
@@ -794,24 +1324,46 @@ export type FEATURED_POSTS_QUERY_RESULT = Array<{
     | {}
     | {
         language: string | null;
-        title: string | null;
-        slug: null;
+        title: string;
+        slug: Slug;
       }
     | {
         language: string | null;
         title: string | null;
-        slug: Slug | null;
+        slug: Slug;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: null;
       }
   > | null;
 }>;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: POST_QUERY
-// Query: *[_type == "post" && slug.current == $slug && (language == "en" || !defined(language))][0]{  title,   description,  publishedAt,  body[]{    ...,    ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),    columnsBlock {      columnCount,      content[]{        ...,        ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })      }    }  },  mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},   openGraph {    title,    description,    url,    image {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }}  },  language, isPublished, slug}
+// Query: *[_type == "post" && slug.current == $slug && (language == "en" || !defined(language))][0]{  title,   description,  publishedAt,  tldr,  "faq":coalesce(faq[]->{    question,    answerFormat,    answer,    answerBlockContent,    slug,    keywords,    showOnVillaBruno,    category->{      title,      slug,      language    }  }, []),  body[]{    ...,    ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),    markDefs[] {        ...,        _type == "internalLink" => {          ...,          "reference": {            "slug": reference->slug,            "_type": reference->_type          }        }      },    columnsBlock {      columnCount,      content[]{        ...,        ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })      }    }  },  mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},   openGraph {    title,    description,    url,    image {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }}  },  language, isPublished, slug}
 export type POST_QUERY_RESULT = {
   title: string | null;
   description: null;
   publishedAt: string | null;
+  tldr: BlockContent | null;
+  faq:
+    | Array<{
+        question: string;
+        answerFormat: "blockContent" | "text" | null;
+        answer: string | null;
+        answerBlockContent: BlockContent | null;
+        slug: Slug;
+        keywords: Array<string> | null;
+        showOnVillaBruno: boolean | null;
+        category: {
+          title: string;
+          slug: Slug;
+          language: string | null;
+        };
+      }>
+    | Array<never>;
   body: Array<
     | {
         children?: Array<{
@@ -822,9 +1374,18 @@ export type POST_QUERY_RESULT = {
         }>;
         style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
         listItem?: "bullet";
-        markDefs?: Array<
+        markDefs: Array<
           | {
-              reference?: PageReference | PostReference | TourReference;
+              reference: {
+                slug: Slug | null;
+                _type:
+                  | "accommodation"
+                  | "faq"
+                  | "page"
+                  | "post"
+                  | "tour"
+                  | null;
+              };
               _type: "internalLink";
               _key: string;
             }
@@ -834,10 +1395,48 @@ export type POST_QUERY_RESULT = {
               _type: "link";
               _key: string;
             }
-        >;
+        > | null;
         level?: number;
         _type: "block";
         _key: string;
+        columnsBlock: null;
+      }
+    | {
+        _key: string;
+        _type: "columnsBlock";
+        columnCount?: "2" | "3";
+        content?: Array<
+          | ({
+              _key: string;
+            } & ImageWithMetadata)
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?:
+                | "blockquote"
+                | "h1"
+                | "h2"
+                | "h3"
+                | "h4"
+                | "h5"
+                | "h6"
+                | "normal";
+              listItem?: "bullet" | "number";
+              markDefs?: Array<{
+                href?: string;
+                _type: "link";
+                _key: string;
+              }>;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+        >;
+        markDefs: null;
         columnsBlock: null;
       }
     | {
@@ -849,11 +1448,14 @@ export type POST_QUERY_RESULT = {
         crop: SanityImageCrop | null;
         alt?: string;
         author?: string;
+        caption?: string;
+        sourceUrl?: string;
         url: string | null;
         metadata: {
           lqip: string | null;
           dimensions: SanityImageDimensions | null;
         } | null;
+        markDefs: null;
         columnsBlock: null;
       }
   > | null;
@@ -865,6 +1467,8 @@ export type POST_QUERY_RESULT = {
     crop: SanityImageCrop | null;
     alt: string | null;
     author?: string;
+    caption?: string;
+    sourceUrl?: string;
     url: string | null;
     metadata: {
       lqip: string | null;
@@ -883,6 +1487,8 @@ export type POST_QUERY_RESULT = {
       crop: SanityImageCrop | null;
       alt: string | null;
       author?: string;
+      caption?: string;
+      sourceUrl?: string;
       url: string | null;
       metadata: {
         lqip: string | null;
@@ -892,12 +1498,12 @@ export type POST_QUERY_RESULT = {
   } | null;
   language: string | null;
   isPublished: boolean | null;
-  slug: Slug | null;
+  slug: Slug;
 } | null;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: PAGE_QUERY
-// Query: *[_type == 'page' && slug.current == $pageName && language == $language][0] {    title,     subtitle,     description,     mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},     body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })    }, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,    slideshow->{       "images": images[]{  _type,  ...select(    _type == "artDirectedImage" => {      "desktop": desktop {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "tablet": tablet {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "mobile": mobile {  ...,  crop,  hotspot,  "metadata": asset->metadata}    },    _type == "imageWithMetadata" || _type == "image" =>       {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }}  )}     },     price,    faq[]->{question, answer, slug},    "translations": *[      _type == "translation.metadata" &&      ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        subtitle,        slug,        body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })        },        isPublished,        faq[]->{ question, answer, slug },      })    }  }
+// Query: *[_type == 'page' && slug.current == $pageName && language == $language][0] {    title,     subtitle,     description,     mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},     body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),      markDefs[] {        ...,        _type == "internalLink" => {          ...,          "reference": {            "slug": reference->slug,            "_type": reference->_type          }        }      }    }, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,    slideshow->{       "images": images[]{  _type,  ...select(    _type == "artDirectedImage" => {      "desktop": desktop {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "tablet": tablet {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "mobile": mobile {  ...,  crop,  hotspot,  "metadata": asset->metadata}    },    _type == "imageWithMetadata" || _type == "image" =>       {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }}  )}     },     price,    faq[]->{question, answerFormat, answer, answerBlockContent, slug},    "translations": *[      _type == "translation.metadata" &&      ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        subtitle,        slug,        body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })        },        isPublished,        faq[]->{ question, answerFormat, answer, answerBlockContent, slug },      })    }  }
 export type PAGE_QUERY_RESULT = {
   title: string | null;
   subtitle: string | null;
@@ -910,6 +1516,8 @@ export type PAGE_QUERY_RESULT = {
     crop: SanityImageCrop | null;
     alt: string | null;
     author?: string;
+    caption?: string;
+    sourceUrl?: string;
     url: string | null;
     metadata: {
       lqip: string | null;
@@ -926,9 +1534,18 @@ export type PAGE_QUERY_RESULT = {
         }>;
         style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
         listItem?: "bullet";
-        markDefs?: Array<
+        markDefs: Array<
           | {
-              reference?: PageReference | PostReference | TourReference;
+              reference: {
+                slug: Slug | null;
+                _type:
+                  | "accommodation"
+                  | "faq"
+                  | "page"
+                  | "post"
+                  | "tour"
+                  | null;
+              };
               _type: "internalLink";
               _key: string;
             }
@@ -938,10 +1555,47 @@ export type PAGE_QUERY_RESULT = {
               _type: "link";
               _key: string;
             }
-        >;
+        > | null;
         level?: number;
         _type: "block";
         _key: string;
+      }
+    | {
+        _key: string;
+        _type: "columnsBlock";
+        columnCount?: "2" | "3";
+        content?: Array<
+          | ({
+              _key: string;
+            } & ImageWithMetadata)
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?:
+                | "blockquote"
+                | "h1"
+                | "h2"
+                | "h3"
+                | "h4"
+                | "h5"
+                | "h6"
+                | "normal";
+              listItem?: "bullet" | "number";
+              markDefs?: Array<{
+                href?: string;
+                _type: "link";
+                _key: string;
+              }>;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+        >;
+        markDefs: null;
       }
     | {
         _key: string;
@@ -952,11 +1606,14 @@ export type PAGE_QUERY_RESULT = {
         crop: SanityImageCrop | null;
         alt?: string;
         author?: string;
+        caption?: string;
+        sourceUrl?: string;
         url: string | null;
         metadata: {
           lqip: string | null;
           dimensions: SanityImageDimensions | null;
         } | null;
+        markDefs: null;
       }
   > | null;
   language: string | null;
@@ -964,33 +1621,101 @@ export type PAGE_QUERY_RESULT = {
   categories: Array<{
     title: string | null;
   }> | null;
-  showBookingOptions: boolean | null;
-  showBookingDialog: boolean | null;
+  showBookingOptions: null;
+  showBookingDialog: null;
   slideshow: {
-    images: Array<{
-      _type: "imageWithMetadata";
-      _key: string;
-      asset: SanityImageAssetReference | null;
-      media?: unknown;
-      hotspot: SanityImageHotspot | null;
-      crop: SanityImageCrop | null;
-      alt: string | null;
-      author?: string;
-      url: string | null;
-      metadata: {
-        lqip: string | null;
-        dimensions: SanityImageDimensions | null;
-      } | null;
-    }> | null;
+    images: Array<
+      | {
+          _type: "image";
+          asset: SanityImageAssetReference | null;
+          media?: unknown;
+          hotspot: SanityImageHotspot | null;
+          crop: SanityImageCrop | null;
+          _key: string;
+          alt: null;
+          url: string | null;
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        }
+      | {
+          _type: "imageWithMetadata";
+          _key: string;
+          asset: SanityImageAssetReference | null;
+          media?: unknown;
+          hotspot: SanityImageHotspot | null;
+          crop: SanityImageCrop | null;
+          alt: string | null;
+          author?: string;
+          caption?: string;
+          sourceUrl?: string;
+          url: string | null;
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        }
+      | {
+          _type: "artDirectedImage";
+          desktop: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          };
+          tablet: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          } | null;
+          mobile: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          } | null;
+        }
+    > | null;
   } | null;
-  price: number | null;
+  price: null;
   faq: Array<{
-    question: string | null;
+    question: string;
+    answerFormat: "blockContent" | "text" | null;
     answer: string | null;
-    slug: Slug | null;
+    answerBlockContent: BlockContent | null;
+    slug: Slug;
   }> | null;
   translations: Array<
     | {}
+    | {
+        language: string | null;
+        title: string;
+        subtitle: null;
+        slug: Slug;
+        body: null;
+        isPublished: null;
+        faq: null;
+      }
     | {
         language: string | null;
         title: string | null;
@@ -1004,16 +1729,7 @@ export type PAGE_QUERY_RESULT = {
         language: string | null;
         title: string | null;
         subtitle: null;
-        slug: Slug | null;
-        body: null;
-        isPublished: null;
-        faq: null;
-      }
-    | {
-        language: string | null;
-        title: string | null;
-        subtitle: null;
-        slug: Slug | null;
+        slug: Slug;
         body: Array<
           | {
               children?: Array<{
@@ -1026,7 +1742,12 @@ export type PAGE_QUERY_RESULT = {
               listItem?: "bullet";
               markDefs?: Array<
                 | {
-                    reference?: PageReference | PostReference | TourReference;
+                    reference?:
+                      | AccommodationReference
+                      | FaqReference
+                      | PageReference
+                      | PostReference
+                      | TourReference;
                     _type: "internalLink";
                     _key: string;
                   }
@@ -1043,6 +1764,42 @@ export type PAGE_QUERY_RESULT = {
             }
           | {
               _key: string;
+              _type: "columnsBlock";
+              columnCount?: "2" | "3";
+              content?: Array<
+                | ({
+                    _key: string;
+                  } & ImageWithMetadata)
+                | {
+                    children?: Array<{
+                      marks?: Array<string>;
+                      text?: string;
+                      _type: "span";
+                      _key: string;
+                    }>;
+                    style?:
+                      | "blockquote"
+                      | "h1"
+                      | "h2"
+                      | "h3"
+                      | "h4"
+                      | "h5"
+                      | "h6"
+                      | "normal";
+                    listItem?: "bullet" | "number";
+                    markDefs?: Array<{
+                      href?: string;
+                      _type: "link";
+                      _key: string;
+                    }>;
+                    level?: number;
+                    _type: "block";
+                    _key: string;
+                  }
+              >;
+            }
+          | {
+              _key: string;
               _type: "imageWithMetadata";
               asset?: SanityImageAssetReference;
               media?: unknown;
@@ -1050,6 +1807,8 @@ export type PAGE_QUERY_RESULT = {
               crop: SanityImageCrop | null;
               alt?: string;
               author?: string;
+              caption?: string;
+              sourceUrl?: string;
               url: string | null;
               metadata: {
                 lqip: string | null;
@@ -1063,8 +1822,8 @@ export type PAGE_QUERY_RESULT = {
     | {
         language: string | null;
         title: string | null;
-        subtitle: string | null;
-        slug: Slug | null;
+        subtitle: null;
+        slug: Slug;
         body: Array<
           | {
               children?: Array<{
@@ -1077,7 +1836,12 @@ export type PAGE_QUERY_RESULT = {
               listItem?: "bullet";
               markDefs?: Array<
                 | {
-                    reference?: PageReference | PostReference | TourReference;
+                    reference?:
+                      | AccommodationReference
+                      | FaqReference
+                      | PageReference
+                      | PostReference
+                      | TourReference;
                     _type: "internalLink";
                     _key: string;
                   }
@@ -1094,6 +1858,42 @@ export type PAGE_QUERY_RESULT = {
             }
           | {
               _key: string;
+              _type: "columnsBlock";
+              columnCount?: "2" | "3";
+              content?: Array<
+                | ({
+                    _key: string;
+                  } & ImageWithMetadata)
+                | {
+                    children?: Array<{
+                      marks?: Array<string>;
+                      text?: string;
+                      _type: "span";
+                      _key: string;
+                    }>;
+                    style?:
+                      | "blockquote"
+                      | "h1"
+                      | "h2"
+                      | "h3"
+                      | "h4"
+                      | "h5"
+                      | "h6"
+                      | "normal";
+                    listItem?: "bullet" | "number";
+                    markDefs?: Array<{
+                      href?: string;
+                      _type: "link";
+                      _key: string;
+                    }>;
+                    level?: number;
+                    _type: "block";
+                    _key: string;
+                  }
+              >;
+            }
+          | {
+              _key: string;
               _type: "imageWithMetadata";
               asset?: SanityImageAssetReference;
               media?: unknown;
@@ -1101,6 +1901,8 @@ export type PAGE_QUERY_RESULT = {
               crop: SanityImageCrop | null;
               alt?: string;
               author?: string;
+              caption?: string;
+              sourceUrl?: string;
               url: string | null;
               metadata: {
                 lqip: string | null;
@@ -1110,9 +1912,211 @@ export type PAGE_QUERY_RESULT = {
         > | null;
         isPublished: boolean | null;
         faq: Array<{
-          question: string | null;
+          question: string;
+          answerFormat: "blockContent" | "text" | null;
           answer: string | null;
-          slug: Slug | null;
+          answerBlockContent: BlockContent | null;
+          slug: Slug;
+        }> | null;
+      }
+    | {
+        language: string | null;
+        title: string;
+        subtitle: string | null;
+        slug: Slug;
+        body: Array<
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+              listItem?: "bullet";
+              markDefs?: Array<
+                | {
+                    reference?:
+                      | AccommodationReference
+                      | FaqReference
+                      | PageReference
+                      | PostReference
+                      | TourReference;
+                    _type: "internalLink";
+                    _key: string;
+                  }
+                | {
+                    href?: string;
+                    blank?: boolean;
+                    _type: "link";
+                    _key: string;
+                  }
+              >;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+          | {
+              _key: string;
+              _type: "columnsBlock";
+              columnCount?: "2" | "3";
+              content?: Array<
+                | ({
+                    _key: string;
+                  } & ImageWithMetadata)
+                | {
+                    children?: Array<{
+                      marks?: Array<string>;
+                      text?: string;
+                      _type: "span";
+                      _key: string;
+                    }>;
+                    style?:
+                      | "blockquote"
+                      | "h1"
+                      | "h2"
+                      | "h3"
+                      | "h4"
+                      | "h5"
+                      | "h6"
+                      | "normal";
+                    listItem?: "bullet" | "number";
+                    markDefs?: Array<{
+                      href?: string;
+                      _type: "link";
+                      _key: string;
+                    }>;
+                    level?: number;
+                    _type: "block";
+                    _key: string;
+                  }
+              >;
+            }
+          | {
+              _key: string;
+              _type: "imageWithMetadata";
+              asset?: SanityImageAssetReference;
+              media?: unknown;
+              hotspot: SanityImageHotspot | null;
+              crop: SanityImageCrop | null;
+              alt?: string;
+              author?: string;
+              caption?: string;
+              sourceUrl?: string;
+              url: string | null;
+              metadata: {
+                lqip: string | null;
+                dimensions: SanityImageDimensions | null;
+              } | null;
+            }
+        > | null;
+        isPublished: boolean | null;
+        faq: Array<{
+          question: string;
+          answerFormat: "blockContent" | "text" | null;
+          answer: string | null;
+          answerBlockContent: BlockContent | null;
+          slug: Slug;
+        }> | null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        subtitle: string | null;
+        slug: Slug;
+        body: Array<
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+              listItem?: "bullet";
+              markDefs?: Array<
+                | {
+                    reference?:
+                      | AccommodationReference
+                      | FaqReference
+                      | PageReference
+                      | PostReference
+                      | TourReference;
+                    _type: "internalLink";
+                    _key: string;
+                  }
+                | {
+                    href?: string;
+                    blank?: boolean;
+                    _type: "link";
+                    _key: string;
+                  }
+              >;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+          | {
+              _key: string;
+              _type: "columnsBlock";
+              columnCount?: "2" | "3";
+              content?: Array<
+                | ({
+                    _key: string;
+                  } & ImageWithMetadata)
+                | {
+                    children?: Array<{
+                      marks?: Array<string>;
+                      text?: string;
+                      _type: "span";
+                      _key: string;
+                    }>;
+                    style?:
+                      | "blockquote"
+                      | "h1"
+                      | "h2"
+                      | "h3"
+                      | "h4"
+                      | "h5"
+                      | "h6"
+                      | "normal";
+                    listItem?: "bullet" | "number";
+                    markDefs?: Array<{
+                      href?: string;
+                      _type: "link";
+                      _key: string;
+                    }>;
+                    level?: number;
+                    _type: "block";
+                    _key: string;
+                  }
+              >;
+            }
+          | {
+              _key: string;
+              _type: "imageWithMetadata";
+              asset?: SanityImageAssetReference;
+              media?: unknown;
+              hotspot: SanityImageHotspot | null;
+              crop: SanityImageCrop | null;
+              alt?: string;
+              author?: string;
+              caption?: string;
+              sourceUrl?: string;
+              url: string | null;
+              metadata: {
+                lqip: string | null;
+                dimensions: SanityImageDimensions | null;
+              } | null;
+            }
+        > | null;
+        isPublished: boolean | null;
+        faq: Array<{
+          question: string;
+          answerFormat: "blockContent" | "text" | null;
+          answer: string | null;
+          answerBlockContent: BlockContent | null;
+          slug: Slug;
         }> | null;
       }
   > | null;
@@ -1120,32 +2124,63 @@ export type PAGE_QUERY_RESULT = {
 
 // Source: src/sanity/lib/queries.ts
 // Variable: NAV_QUERY
-// Query: *[_type == 'page' && language == $language && $category in categories[] -> title] {    title, slug, language, isPublished,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
-export type NAV_QUERY_RESULT = Array<{
-  title: string | null;
-  slug: Slug | null;
-  language: string | null;
-  isPublished: boolean | null;
-  translations: Array<
-    | {}
-    | {
-        language: string | null;
-        title: string | null;
-        slug: null;
-      }
-    | {
-        language: string | null;
-        title: string | null;
-        slug: Slug | null;
-      }
-  > | null;
-}>;
+// Query: *[(_type == 'page' || _type == 'accommodation') && language == $language && $category in categories[] -> title] {    title, slug, language, isPublished,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
+export type NAV_QUERY_RESULT = Array<
+  | {
+      title: string;
+      slug: Slug;
+      language: string | null;
+      isPublished: boolean | null;
+      translations: Array<
+        | {}
+        | {
+            language: string | null;
+            title: string;
+            slug: Slug;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            slug: Slug;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            slug: null;
+          }
+      > | null;
+    }
+  | {
+      title: string | null;
+      slug: Slug;
+      language: string | null;
+      isPublished: boolean | null;
+      translations: Array<
+        | {}
+        | {
+            language: string | null;
+            title: string;
+            slug: Slug;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            slug: Slug;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            slug: null;
+          }
+      > | null;
+    }
+>;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: TOURS_QUERY
 // Query: *[_type == 'tour' && defined(slug.current) && language == $language]{  slug,  title,   mainImage {  ...,  crop,  hotspot,  "url": asset->url,  "metadata": asset->metadata},  description,   dateAdded,  language,  isPublished,  _createdAt,  _updatedAt,  "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug, description      })    }}
 export type TOURS_QUERY_RESULT = Array<{
-  slug: Slug | null;
+  slug: Slug;
   title: string | null;
   mainImage: {
     _type: "imageWithMetadata";
@@ -1155,6 +2190,8 @@ export type TOURS_QUERY_RESULT = Array<{
     crop: SanityImageCrop | null;
     alt?: string;
     author?: string;
+    caption?: string;
+    sourceUrl?: string;
     url: string | null;
     metadata: SanityImageMetadata | null;
   } | null;
@@ -1168,20 +2205,32 @@ export type TOURS_QUERY_RESULT = Array<{
     | {}
     | {
         language: string | null;
+        title: string;
+        slug: Slug;
+        description: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug;
+        description: null;
+      }
+    | {
+        language: string | null;
         title: string | null;
         slug: null;
         description: null;
       }
     | {
         language: string | null;
-        title: string | null;
-        slug: Slug | null;
-        description: null;
+        title: string;
+        slug: Slug;
+        description: string;
       }
     | {
         language: string | null;
         title: string | null;
-        slug: Slug | null;
+        slug: Slug;
         description: string | null;
       }
   > | null;
@@ -1191,7 +2240,7 @@ export type TOURS_QUERY_RESULT = Array<{
 // Variable: FEATURED_TOURS_QUERY
 // Query: *[_type == 'tour' && defined(slug.current) && isFeatured && language == $language]{  slug,  title,   mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},  description, isPublished,   "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug, description      })    }}
 export type FEATURED_TOURS_QUERY_RESULT = Array<{
-  slug: Slug | null;
+  slug: Slug;
   title: string | null;
   mainImage: {
     _type: "imageWithMetadata";
@@ -1201,6 +2250,8 @@ export type FEATURED_TOURS_QUERY_RESULT = Array<{
     crop: SanityImageCrop | null;
     alt: string | null;
     author?: string;
+    caption?: string;
+    sourceUrl?: string;
     url: string | null;
     metadata: {
       lqip: string | null;
@@ -1213,20 +2264,32 @@ export type FEATURED_TOURS_QUERY_RESULT = Array<{
     | {}
     | {
         language: string | null;
+        title: string;
+        slug: Slug;
+        description: null;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: Slug;
+        description: null;
+      }
+    | {
+        language: string | null;
         title: string | null;
         slug: null;
         description: null;
       }
     | {
         language: string | null;
-        title: string | null;
-        slug: Slug | null;
-        description: null;
+        title: string;
+        slug: Slug;
+        description: string;
       }
     | {
         language: string | null;
         title: string | null;
-        slug: Slug | null;
+        slug: Slug;
         description: string | null;
       }
   > | null;
@@ -1262,7 +2325,7 @@ export type TOUR_QUERY_RESULT = {
   _id: string;
   language: string | null;
   title: string | null;
-  slug: Slug | null;
+  slug: Slug;
   description: string | null;
   mainImage: {
     _type: "imageWithMetadata";
@@ -1272,6 +2335,8 @@ export type TOUR_QUERY_RESULT = {
     crop: SanityImageCrop | null;
     alt: string | null;
     author?: string;
+    caption?: string;
+    sourceUrl?: string;
     url: string | null;
     metadata: {
       lqip: string | null;
@@ -1280,21 +2345,78 @@ export type TOUR_QUERY_RESULT = {
   } | null;
   isPublished: boolean | null;
   slideshow: {
-    images: Array<{
-      _type: "imageWithMetadata";
-      _key: string;
-      asset: SanityImageAssetReference | null;
-      media?: unknown;
-      hotspot: SanityImageHotspot | null;
-      crop: SanityImageCrop | null;
-      alt: string | null;
-      author?: string;
-      url: string | null;
-      metadata: {
-        lqip: string | null;
-        dimensions: SanityImageDimensions | null;
-      } | null;
-    }> | null;
+    images: Array<
+      | {
+          _type: "image";
+          asset: SanityImageAssetReference | null;
+          media?: unknown;
+          hotspot: SanityImageHotspot | null;
+          crop: SanityImageCrop | null;
+          _key: string;
+          alt: null;
+          url: string | null;
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        }
+      | {
+          _type: "imageWithMetadata";
+          _key: string;
+          asset: SanityImageAssetReference | null;
+          media?: unknown;
+          hotspot: SanityImageHotspot | null;
+          crop: SanityImageCrop | null;
+          alt: string | null;
+          author?: string;
+          caption?: string;
+          sourceUrl?: string;
+          url: string | null;
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        }
+      | {
+          _type: "artDirectedImage";
+          desktop: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          };
+          tablet: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          } | null;
+          mobile: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          } | null;
+        }
+    > | null;
   } | null;
   price: number | 0;
   location: string | null;
@@ -1312,7 +2434,12 @@ export type TOUR_QUERY_RESULT = {
         listItem?: "bullet";
         markDefs?: Array<
           | {
-              reference?: PageReference | PostReference | TourReference;
+              reference?:
+                | AccommodationReference
+                | FaqReference
+                | PageReference
+                | PostReference
+                | TourReference;
               _type: "internalLink";
               _key: string;
             }
@@ -1329,6 +2456,42 @@ export type TOUR_QUERY_RESULT = {
       }
     | {
         _key: string;
+        _type: "columnsBlock";
+        columnCount?: "2" | "3";
+        content?: Array<
+          | ({
+              _key: string;
+            } & ImageWithMetadata)
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?:
+                | "blockquote"
+                | "h1"
+                | "h2"
+                | "h3"
+                | "h4"
+                | "h5"
+                | "h6"
+                | "normal";
+              listItem?: "bullet" | "number";
+              markDefs?: Array<{
+                href?: string;
+                _type: "link";
+                _key: string;
+              }>;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+        >;
+      }
+    | {
+        _key: string;
         _type: "imageWithMetadata";
         asset?: SanityImageAssetReference;
         media?: unknown;
@@ -1336,6 +2499,8 @@ export type TOUR_QUERY_RESULT = {
         crop: SanityImageCrop | null;
         alt?: string;
         author?: string;
+        caption?: string;
+        sourceUrl?: string;
         url: string | null;
         metadata: {
           lqip: string | null;
@@ -1347,6 +2512,13 @@ export type TOUR_QUERY_RESULT = {
     | {}
     | {
         language: string | null;
+        title: string;
+        slug: Slug;
+        description: null;
+        body: null;
+      }
+    | {
+        language: string | null;
         title: string | null;
         slug: null;
         description: null;
@@ -1355,14 +2527,7 @@ export type TOUR_QUERY_RESULT = {
     | {
         language: string | null;
         title: string | null;
-        slug: Slug | null;
-        description: null;
-        body: null;
-      }
-    | {
-        language: string | null;
-        title: string | null;
-        slug: Slug | null;
+        slug: Slug;
         description: null;
         body: Array<
           | {
@@ -1376,7 +2541,12 @@ export type TOUR_QUERY_RESULT = {
               listItem?: "bullet";
               markDefs?: Array<
                 | {
-                    reference?: PageReference | PostReference | TourReference;
+                    reference?:
+                      | AccommodationReference
+                      | FaqReference
+                      | PageReference
+                      | PostReference
+                      | TourReference;
                     _type: "internalLink";
                     _key: string;
                   }
@@ -1393,6 +2563,42 @@ export type TOUR_QUERY_RESULT = {
             }
           | {
               _key: string;
+              _type: "columnsBlock";
+              columnCount?: "2" | "3";
+              content?: Array<
+                | ({
+                    _key: string;
+                  } & ImageWithMetadata)
+                | {
+                    children?: Array<{
+                      marks?: Array<string>;
+                      text?: string;
+                      _type: "span";
+                      _key: string;
+                    }>;
+                    style?:
+                      | "blockquote"
+                      | "h1"
+                      | "h2"
+                      | "h3"
+                      | "h4"
+                      | "h5"
+                      | "h6"
+                      | "normal";
+                    listItem?: "bullet" | "number";
+                    markDefs?: Array<{
+                      href?: string;
+                      _type: "link";
+                      _key: string;
+                    }>;
+                    level?: number;
+                    _type: "block";
+                    _key: string;
+                  }
+              >;
+            }
+          | {
+              _key: string;
               _type: "imageWithMetadata";
               asset?: SanityImageAssetReference;
               media?: unknown;
@@ -1400,6 +2606,100 @@ export type TOUR_QUERY_RESULT = {
               crop: SanityImageCrop | null;
               alt?: string;
               author?: string;
+              caption?: string;
+              sourceUrl?: string;
+              url: string | null;
+              metadata: {
+                lqip: string | null;
+                dimensions: SanityImageDimensions | null;
+              } | null;
+            }
+        > | null;
+      }
+    | {
+        language: string | null;
+        title: string;
+        slug: Slug;
+        description: string;
+        body: Array<
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+              listItem?: "bullet";
+              markDefs?: Array<
+                | {
+                    reference?:
+                      | AccommodationReference
+                      | FaqReference
+                      | PageReference
+                      | PostReference
+                      | TourReference;
+                    _type: "internalLink";
+                    _key: string;
+                  }
+                | {
+                    href?: string;
+                    blank?: boolean;
+                    _type: "link";
+                    _key: string;
+                  }
+              >;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+          | {
+              _key: string;
+              _type: "columnsBlock";
+              columnCount?: "2" | "3";
+              content?: Array<
+                | ({
+                    _key: string;
+                  } & ImageWithMetadata)
+                | {
+                    children?: Array<{
+                      marks?: Array<string>;
+                      text?: string;
+                      _type: "span";
+                      _key: string;
+                    }>;
+                    style?:
+                      | "blockquote"
+                      | "h1"
+                      | "h2"
+                      | "h3"
+                      | "h4"
+                      | "h5"
+                      | "h6"
+                      | "normal";
+                    listItem?: "bullet" | "number";
+                    markDefs?: Array<{
+                      href?: string;
+                      _type: "link";
+                      _key: string;
+                    }>;
+                    level?: number;
+                    _type: "block";
+                    _key: string;
+                  }
+              >;
+            }
+          | {
+              _key: string;
+              _type: "imageWithMetadata";
+              asset?: SanityImageAssetReference;
+              media?: unknown;
+              hotspot: SanityImageHotspot | null;
+              crop: SanityImageCrop | null;
+              alt?: string;
+              author?: string;
+              caption?: string;
+              sourceUrl?: string;
               url: string | null;
               metadata: {
                 lqip: string | null;
@@ -1411,7 +2711,7 @@ export type TOUR_QUERY_RESULT = {
     | {
         language: string | null;
         title: string | null;
-        slug: Slug | null;
+        slug: Slug;
         description: string | null;
         body: Array<
           | {
@@ -1425,7 +2725,12 @@ export type TOUR_QUERY_RESULT = {
               listItem?: "bullet";
               markDefs?: Array<
                 | {
-                    reference?: PageReference | PostReference | TourReference;
+                    reference?:
+                      | AccommodationReference
+                      | FaqReference
+                      | PageReference
+                      | PostReference
+                      | TourReference;
                     _type: "internalLink";
                     _key: string;
                   }
@@ -1442,6 +2747,42 @@ export type TOUR_QUERY_RESULT = {
             }
           | {
               _key: string;
+              _type: "columnsBlock";
+              columnCount?: "2" | "3";
+              content?: Array<
+                | ({
+                    _key: string;
+                  } & ImageWithMetadata)
+                | {
+                    children?: Array<{
+                      marks?: Array<string>;
+                      text?: string;
+                      _type: "span";
+                      _key: string;
+                    }>;
+                    style?:
+                      | "blockquote"
+                      | "h1"
+                      | "h2"
+                      | "h3"
+                      | "h4"
+                      | "h5"
+                      | "h6"
+                      | "normal";
+                    listItem?: "bullet" | "number";
+                    markDefs?: Array<{
+                      href?: string;
+                      _type: "link";
+                      _key: string;
+                    }>;
+                    level?: number;
+                    _type: "block";
+                    _key: string;
+                  }
+              >;
+            }
+          | {
+              _key: string;
               _type: "imageWithMetadata";
               asset?: SanityImageAssetReference;
               media?: unknown;
@@ -1449,6 +2790,8 @@ export type TOUR_QUERY_RESULT = {
               crop: SanityImageCrop | null;
               alt?: string;
               author?: string;
+              caption?: string;
+              sourceUrl?: string;
               url: string | null;
               metadata: {
                 lqip: string | null;
@@ -1462,31 +2805,127 @@ export type TOUR_QUERY_RESULT = {
 
 // Source: src/sanity/lib/queries.ts
 // Variable: ABOUT_QUERY
-// Query: *[_type == 'page' && slug.current == 'about' && language == $language][0] {    title, description, mainImage, body, language,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
+// Query: *[_type == 'page' && slug.current == 'about' && language == $language][0] {    title, description, mainImage, body[] {      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),      markDefs[] {      ...,      _type == "internalLink" => {        ...,        "reference": {          "slug": reference->slug,          "_type": reference->_type        }      }    }    }, language,    "translations": *[      _type == "translation.metadata" &&       ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        title,        slug      })    }  }
 export type ABOUT_QUERY_RESULT = {
   title: string | null;
   description: string | null;
   mainImage: ImageWithMetadata | null;
-  body: BlockContent | null;
+  body: Array<
+    | {
+        children?: Array<{
+          marks?: Array<string>;
+          text?: string;
+          _type: "span";
+          _key: string;
+        }>;
+        style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+        listItem?: "bullet";
+        markDefs: Array<
+          | {
+              reference: {
+                slug: Slug | null;
+                _type:
+                  | "accommodation"
+                  | "faq"
+                  | "page"
+                  | "post"
+                  | "tour"
+                  | null;
+              };
+              _type: "internalLink";
+              _key: string;
+            }
+          | {
+              href?: string;
+              blank?: boolean;
+              _type: "link";
+              _key: string;
+            }
+        > | null;
+        level?: number;
+        _type: "block";
+        _key: string;
+      }
+    | {
+        _key: string;
+        _type: "columnsBlock";
+        columnCount?: "2" | "3";
+        content?: Array<
+          | ({
+              _key: string;
+            } & ImageWithMetadata)
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?:
+                | "blockquote"
+                | "h1"
+                | "h2"
+                | "h3"
+                | "h4"
+                | "h5"
+                | "h6"
+                | "normal";
+              listItem?: "bullet" | "number";
+              markDefs?: Array<{
+                href?: string;
+                _type: "link";
+                _key: string;
+              }>;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+        >;
+        markDefs: null;
+      }
+    | {
+        _key: string;
+        _type: "imageWithMetadata";
+        asset?: SanityImageAssetReference;
+        media?: unknown;
+        hotspot: SanityImageHotspot | null;
+        crop: SanityImageCrop | null;
+        alt?: string;
+        author?: string;
+        caption?: string;
+        sourceUrl?: string;
+        url: string | null;
+        metadata: {
+          lqip: string | null;
+          dimensions: SanityImageDimensions | null;
+        } | null;
+        markDefs: null;
+      }
+  > | null;
   language: string | null;
   translations: Array<
     | {}
     | {
         language: string | null;
-        title: string | null;
-        slug: null;
+        title: string;
+        slug: Slug;
       }
     | {
         language: string | null;
         title: string | null;
-        slug: Slug | null;
+        slug: Slug;
+      }
+    | {
+        language: string | null;
+        title: string | null;
+        slug: null;
       }
   > | null;
 } | null;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: HOME_QUERY
-// Query: *[_type=='home' && language == $language][0] {    hero_title,    hero_slogan,    hero_body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })    },    subtitle,    language,    featured_content_title,    featured_blog_title,    slug,    'mediaUrl': background_media.asset->{url},    'mediaPoster': background_media_poster.asset->{      url,      metadata {        lqip      }    },    intro_body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),      markDefs[] {        ...,        _type == "internalLink" => {          ...,          "slug": @.reference-> slug        }      }    },    'translations': *[      _type == "translation.metadata" &&      ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        hero_title,        hero_slogan,        hero_body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })        },        subtitle,        language,        featured_content_title,        featured_blog_title,        slug,        'mediaUrl': background_media.asset->{url},        'mediaPoster': background_media_poster.asset->{          url,          metadata {            lqip          }        },        intro_body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),          markDefs[] {            ...,            _type == "internalLink" => {              ...,              "slug": @.reference-> slug            }          }        }      })    }  }
+// Query: *[_type=='home' && language == $language][0] {    hero_title,    hero_slogan,    hero_body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })    },    subtitle,    language,    featured_content_title,    featured_blog_title,    slug,    'mediaUrl': background_media.asset->{url},    'mediaPoster': background_media_poster.asset->{      url,      metadata {        lqip      }    },    intro_body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),      markDefs[] {        ...,        _type == "internalLink" => {          ...,          "reference": {            "slug": reference->slug,            "_type": reference->_type          }        }      }    },    locationDetails,    'translations': *[      _type == "translation.metadata" &&      ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        hero_title,        hero_slogan,        hero_body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })        },        subtitle,        language,        featured_content_title,        featured_blog_title,        slug,        'mediaUrl': background_media.asset->{url},        'mediaPoster': background_media_poster.asset->{          url,          metadata {            lqip          }        },        intro_body[]{          ...,          ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  }),          markDefs[] {            ...,            _type == "internalLink" => {              ...,              "slug": @.reference-> slug            }          }        },        locationDetails      })    }  }
 export type HOME_QUERY_RESULT = {
   hero_title: string | null;
   hero_slogan: string | null;
@@ -1502,7 +2941,12 @@ export type HOME_QUERY_RESULT = {
         listItem?: "bullet";
         markDefs?: Array<
           | {
-              reference?: PageReference | PostReference | TourReference;
+              reference?:
+                | AccommodationReference
+                | FaqReference
+                | PageReference
+                | PostReference
+                | TourReference;
               _type: "internalLink";
               _key: string;
             }
@@ -1519,6 +2963,42 @@ export type HOME_QUERY_RESULT = {
       }
     | {
         _key: string;
+        _type: "columnsBlock";
+        columnCount?: "2" | "3";
+        content?: Array<
+          | ({
+              _key: string;
+            } & ImageWithMetadata)
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?:
+                | "blockquote"
+                | "h1"
+                | "h2"
+                | "h3"
+                | "h4"
+                | "h5"
+                | "h6"
+                | "normal";
+              listItem?: "bullet" | "number";
+              markDefs?: Array<{
+                href?: string;
+                _type: "link";
+                _key: string;
+              }>;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+        >;
+      }
+    | {
+        _key: string;
         _type: "imageWithMetadata";
         asset?: SanityImageAssetReference;
         media?: unknown;
@@ -1526,6 +3006,8 @@ export type HOME_QUERY_RESULT = {
         crop: SanityImageCrop | null;
         alt?: string;
         author?: string;
+        caption?: string;
+        sourceUrl?: string;
         url: string | null;
         metadata: {
           lqip: string | null;
@@ -1541,12 +3023,7 @@ export type HOME_QUERY_RESULT = {
   mediaUrl: {
     url: string | null;
   } | null;
-  mediaPoster: {
-    url: string | null;
-    metadata: {
-      lqip: string | null;
-    } | null;
-  } | null;
+  mediaPoster: null;
   intro_body: Array<
     | {
         children?: Array<{
@@ -1559,10 +3036,18 @@ export type HOME_QUERY_RESULT = {
         listItem?: "bullet";
         markDefs: Array<
           | {
-              reference?: PageReference | PostReference | TourReference;
+              reference: {
+                slug: Slug | null;
+                _type:
+                  | "accommodation"
+                  | "faq"
+                  | "page"
+                  | "post"
+                  | "tour"
+                  | null;
+              };
               _type: "internalLink";
               _key: string;
-              slug: Slug | null;
             }
           | {
               href?: string;
@@ -1577,6 +3062,43 @@ export type HOME_QUERY_RESULT = {
       }
     | {
         _key: string;
+        _type: "columnsBlock";
+        columnCount?: "2" | "3";
+        content?: Array<
+          | ({
+              _key: string;
+            } & ImageWithMetadata)
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?:
+                | "blockquote"
+                | "h1"
+                | "h2"
+                | "h3"
+                | "h4"
+                | "h5"
+                | "h6"
+                | "normal";
+              listItem?: "bullet" | "number";
+              markDefs?: Array<{
+                href?: string;
+                _type: "link";
+                _key: string;
+              }>;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+        >;
+        markDefs: null;
+      }
+    | {
+        _key: string;
         _type: "imageWithMetadata";
         asset?: SanityImageAssetReference;
         media?: unknown;
@@ -1584,6 +3106,8 @@ export type HOME_QUERY_RESULT = {
         crop: SanityImageCrop | null;
         alt?: string;
         author?: string;
+        caption?: string;
+        sourceUrl?: string;
         url: string | null;
         metadata: {
           lqip: string | null;
@@ -1592,6 +3116,15 @@ export type HOME_QUERY_RESULT = {
         markDefs: null;
       }
   > | null;
+  locationDetails: {
+    address?: string;
+    region?: string;
+    country?: string;
+    coordinates?: {
+      lat?: number;
+      lng?: number;
+    };
+  } | null;
   translations: Array<
     | {}
     | {
@@ -1602,10 +3135,11 @@ export type HOME_QUERY_RESULT = {
         language: string | null;
         featured_content_title: null;
         featured_blog_title: null;
-        slug: Slug | null;
+        slug: Slug;
         mediaUrl: null;
         mediaPoster: null;
         intro_body: null;
+        locationDetails: null;
       }
     | {
         hero_title: null;
@@ -1615,10 +3149,11 @@ export type HOME_QUERY_RESULT = {
         language: string | null;
         featured_content_title: null;
         featured_blog_title: null;
-        slug: Slug | null;
+        slug: Slug;
         mediaUrl: null;
         mediaPoster: null;
         intro_body: null;
+        locationDetails: null;
       }
     | {
         hero_title: string | null;
@@ -1635,7 +3170,12 @@ export type HOME_QUERY_RESULT = {
               listItem?: "bullet";
               markDefs?: Array<
                 | {
-                    reference?: PageReference | PostReference | TourReference;
+                    reference?:
+                      | AccommodationReference
+                      | FaqReference
+                      | PageReference
+                      | PostReference
+                      | TourReference;
                     _type: "internalLink";
                     _key: string;
                   }
@@ -1652,6 +3192,42 @@ export type HOME_QUERY_RESULT = {
             }
           | {
               _key: string;
+              _type: "columnsBlock";
+              columnCount?: "2" | "3";
+              content?: Array<
+                | ({
+                    _key: string;
+                  } & ImageWithMetadata)
+                | {
+                    children?: Array<{
+                      marks?: Array<string>;
+                      text?: string;
+                      _type: "span";
+                      _key: string;
+                    }>;
+                    style?:
+                      | "blockquote"
+                      | "h1"
+                      | "h2"
+                      | "h3"
+                      | "h4"
+                      | "h5"
+                      | "h6"
+                      | "normal";
+                    listItem?: "bullet" | "number";
+                    markDefs?: Array<{
+                      href?: string;
+                      _type: "link";
+                      _key: string;
+                    }>;
+                    level?: number;
+                    _type: "block";
+                    _key: string;
+                  }
+              >;
+            }
+          | {
+              _key: string;
               _type: "imageWithMetadata";
               asset?: SanityImageAssetReference;
               media?: unknown;
@@ -1659,6 +3235,8 @@ export type HOME_QUERY_RESULT = {
               crop: SanityImageCrop | null;
               alt?: string;
               author?: string;
+              caption?: string;
+              sourceUrl?: string;
               url: string | null;
               metadata: {
                 lqip: string | null;
@@ -1674,12 +3252,7 @@ export type HOME_QUERY_RESULT = {
         mediaUrl: {
           url: string | null;
         } | null;
-        mediaPoster: {
-          url: string | null;
-          metadata: {
-            lqip: string | null;
-          } | null;
-        } | null;
+        mediaPoster: null;
         intro_body: Array<
           | {
               children?: Array<{
@@ -1692,7 +3265,12 @@ export type HOME_QUERY_RESULT = {
               listItem?: "bullet";
               markDefs: Array<
                 | {
-                    reference?: PageReference | PostReference | TourReference;
+                    reference?:
+                      | AccommodationReference
+                      | FaqReference
+                      | PageReference
+                      | PostReference
+                      | TourReference;
                     _type: "internalLink";
                     _key: string;
                     slug: Slug | null;
@@ -1710,6 +3288,43 @@ export type HOME_QUERY_RESULT = {
             }
           | {
               _key: string;
+              _type: "columnsBlock";
+              columnCount?: "2" | "3";
+              content?: Array<
+                | ({
+                    _key: string;
+                  } & ImageWithMetadata)
+                | {
+                    children?: Array<{
+                      marks?: Array<string>;
+                      text?: string;
+                      _type: "span";
+                      _key: string;
+                    }>;
+                    style?:
+                      | "blockquote"
+                      | "h1"
+                      | "h2"
+                      | "h3"
+                      | "h4"
+                      | "h5"
+                      | "h6"
+                      | "normal";
+                    listItem?: "bullet" | "number";
+                    markDefs?: Array<{
+                      href?: string;
+                      _type: "link";
+                      _key: string;
+                    }>;
+                    level?: number;
+                    _type: "block";
+                    _key: string;
+                  }
+              >;
+              markDefs: null;
+            }
+          | {
+              _key: string;
               _type: "imageWithMetadata";
               asset?: SanityImageAssetReference;
               media?: unknown;
@@ -1717,6 +3332,8 @@ export type HOME_QUERY_RESULT = {
               crop: SanityImageCrop | null;
               alt?: string;
               author?: string;
+              caption?: string;
+              sourceUrl?: string;
               url: string | null;
               metadata: {
                 lqip: string | null;
@@ -1725,6 +3342,15 @@ export type HOME_QUERY_RESULT = {
               markDefs: null;
             }
         > | null;
+        locationDetails: {
+          address?: string;
+          region?: string;
+          country?: string;
+          coordinates?: {
+            lat?: number;
+            lng?: number;
+          };
+        } | null;
       }
   > | null;
 } | null;
@@ -1734,37 +3360,96 @@ export type HOME_QUERY_RESULT = {
 // Query: *[_type == 'gallery' && $category in categories[] -> title][0] {    title,    "images": images[]{  _type,  ...select(    _type == "artDirectedImage" => {      "desktop": desktop {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "tablet": tablet {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "mobile": mobile {  ...,  crop,  hotspot,  "metadata": asset->metadata}    },    _type == "imageWithMetadata" || _type == "image" =>       {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }}  )}  }
 export type GALLERY_QUERY_RESULT = {
   title: string | null;
-  images: Array<{
-    _type: "imageWithMetadata";
-    _key: string;
-    asset: SanityImageAssetReference | null;
-    media?: unknown;
-    hotspot: SanityImageHotspot | null;
-    crop: SanityImageCrop | null;
-    alt: string | null;
-    author?: string;
-    url: string | null;
-    metadata: {
-      lqip: string | null;
-      dimensions: SanityImageDimensions | null;
-    } | null;
-  }> | null;
+  images: Array<
+    | {
+        _type: "image";
+        asset: SanityImageAssetReference | null;
+        media?: unknown;
+        hotspot: SanityImageHotspot | null;
+        crop: SanityImageCrop | null;
+        _key: string;
+        alt: null;
+        url: string | null;
+        metadata: {
+          lqip: string | null;
+          dimensions: SanityImageDimensions | null;
+        } | null;
+      }
+    | {
+        _type: "imageWithMetadata";
+        _key: string;
+        asset: SanityImageAssetReference | null;
+        media?: unknown;
+        hotspot: SanityImageHotspot | null;
+        crop: SanityImageCrop | null;
+        alt: string | null;
+        author?: string;
+        caption?: string;
+        sourceUrl?: string;
+        url: string | null;
+        metadata: {
+          lqip: string | null;
+          dimensions: SanityImageDimensions | null;
+        } | null;
+      }
+    | {
+        _type: "artDirectedImage";
+        desktop: {
+          _type: "imageWithMetadata";
+          asset?: SanityImageAssetReference;
+          media?: unknown;
+          hotspot: SanityImageHotspot | null;
+          crop: SanityImageCrop | null;
+          alt?: string;
+          author?: string;
+          caption?: string;
+          sourceUrl?: string;
+          metadata: SanityImageMetadata | null;
+        };
+        tablet: {
+          _type: "imageWithMetadata";
+          asset?: SanityImageAssetReference;
+          media?: unknown;
+          hotspot: SanityImageHotspot | null;
+          crop: SanityImageCrop | null;
+          alt?: string;
+          author?: string;
+          caption?: string;
+          sourceUrl?: string;
+          metadata: SanityImageMetadata | null;
+        } | null;
+        mobile: {
+          _type: "imageWithMetadata";
+          asset?: SanityImageAssetReference;
+          media?: unknown;
+          hotspot: SanityImageHotspot | null;
+          crop: SanityImageCrop | null;
+          alt?: string;
+          author?: string;
+          caption?: string;
+          sourceUrl?: string;
+          metadata: SanityImageMetadata | null;
+        } | null;
+      }
+  > | null;
 } | null;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: FAQ_QUERY
-// Query: *[_type == 'faq' && language == $language] | order(displayOrder asc) {    category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug, language,    "translations": *[      _type == "translation.metadata" &&      ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug      })    }  }
+// Query: *[_type == 'faq' && language == $language] | order(displayOrder asc) {    category->{title, slug, language}, question, answerFormat, answer, answerBlockContent, keywords, showOnVillaBruno, slug, language,    "translations": *[      _type == "translation.metadata" &&      ^._id in translations[].value._ref    ][0].translations[]{      ...(value->{        language,        category->{title, slug, language}, question, answerFormat, answer, answerBlockContent, keywords, showOnVillaBruno, slug      })    }  }
 export type FAQ_QUERY_RESULT = Array<{
   category: {
-    title: string | null;
-    slug: Slug | null;
+    title: string;
+    slug: Slug;
     language: string | null;
-  } | null;
-  question: string | null;
+  };
+  question: string;
+  answerFormat: "blockContent" | "text" | null;
   answer: string | null;
+  answerBlockContent: BlockContent | null;
   keywords: Array<string> | null;
   showOnVillaBruno: boolean | null;
-  slug: Slug | null;
+  slug: Slug;
   language: string | null;
   translations: Array<
     | {}
@@ -1772,62 +3457,874 @@ export type FAQ_QUERY_RESULT = Array<{
         language: string | null;
         category: null;
         question: null;
+        answerFormat: null;
         answer: null;
+        answerBlockContent: null;
+        keywords: null;
+        showOnVillaBruno: null;
+        slug: Slug;
+      }
+    | {
+        language: string | null;
+        category: null;
+        question: null;
+        answerFormat: null;
+        answer: null;
+        answerBlockContent: null;
         keywords: null;
         showOnVillaBruno: null;
         slug: null;
       }
     | {
         language: string | null;
-        category: null;
-        question: null;
-        answer: null;
-        keywords: null;
-        showOnVillaBruno: null;
-        slug: Slug | null;
-      }
-    | {
-        language: string | null;
         category: {
-          title: string | null;
-          slug: Slug | null;
+          title: string;
+          slug: Slug;
           language: string | null;
-        } | null;
-        question: string | null;
+        };
+        question: string;
+        answerFormat: "blockContent" | "text" | null;
         answer: string | null;
+        answerBlockContent: BlockContent | null;
         keywords: Array<string> | null;
         showOnVillaBruno: boolean | null;
-        slug: Slug | null;
+        slug: Slug;
       }
   > | null;
 }>;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: BOOKINGS_QUERY
-// Query: *[  _type == "booking" &&  dateTime(checkOut) > dateTime(now()) &&  !(_id in path("drafts.**"))]{  uid, checkIn, checkOut, guestName, source}
+// Query: *[  _type == "booking" &&  dateTime(checkOut) > dateTime(now()) &&  !(_id in path("drafts.**"))][]{  uid, checkIn, checkOut, guestName, source, email, phone, guests, totalPrice, currency, syncedAt}
 export type BOOKINGS_QUERY_RESULT = Array<{
-  uid: string | null;
+  uid: string;
   checkIn: string | null;
-  checkOut: string | null;
+  checkOut: string;
   guestName: string | null;
-  source: "airbnb" | "booking" | "direct" | "expedia" | null;
+  source:
+    | "airbnb"
+    | "booking"
+    | "direct"
+    | "expedia"
+    | "vrbo"
+    | "yourrentals"
+    | null;
+  email: string | null;
+  phone: string | null;
+  guests: number | null;
+  totalPrice: number | null;
+  currency: "crc" | "eur" | "usd" | null;
+  syncedAt: string | null;
 }>;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: REVIEWS_QUERY
-// Query: *[_type == "review"] | order(date desc){  _id,  platform,  author,  rating,  date,  reviewText,  photoUrl}
+// Query: *[_type == "review"][] | order(date desc){  _id,  platform,  author,  rating,  date,  reviewText,  photoUrl}
 export type REVIEWS_QUERY_RESULT = Array<{
   _id: string;
-  platform: "airbnb" | "booking" | null;
+  platform: "airbnb" | "booking" | "google";
   author: {
-    name?: string;
+    name: string;
     location?: string;
     photoURI?: string;
   } | null;
-  rating: number | null;
-  date: string | null;
-  reviewText: string | null;
+  rating: number;
+  date: string;
+  reviewText: string;
   photoUrl: string | null;
+}>;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: ACCOMMODATION_QUERY
+// Query: *[_type == "accommodation" && slug.current == $slug && language == $language][0] {    title, subtitle, description,    summary,    mainImage {  ...,  crop,  hotspot,  "metadata": asset->metadata},    body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })    },     language,     slug,     isPublished,     showBookingOptions,     showBookingDialog,    slideshow->{      "images": images[]{  _type,  ...select(    _type == "artDirectedImage" => {      "desktop": desktop {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "tablet": tablet {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "mobile": mobile {  ...,  crop,  hotspot,  "metadata": asset->metadata}    },    _type == "imageWithMetadata" || _type == "image" =>       {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }}  )}    },    faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },     capacity,     bedrooms,     bathrooms,     propertyType,     location,     highlightFeatures,    checkInTime,     checkOutTime,    amenities[]->{ title, description, icon },    'pricingRules': *[      _type == "accommodation" &&      language == "en" &&      slug.current == ^.slug.current      ][0].pricingRules[]-> {         title,         description,         ruleType,        season,        startDate,        endDate,        basePrice,        percentage,        fixedAmount,        minimumNights,        isActive,        displayOrder,        language    },    paymentMethods[]->{ title, description, type },    cancellationPolicy->{ title, description, rules },    logistics[]->{ title, description, type },    "translations": coalesce(      *[_type == "translation.metadata" && ^._id in translations[].value._ref][0].translations[]{        ...(value->{          language,          title,          subtitle,          description,          slug,          body[]{            ...,            ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })          },          showBookingOptions,          showBookingDialog,          faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },          capacity,           bedrooms,           bathrooms,           propertyType,           location,           highlightFeatures,          checkInTime,           checkOutTime        })      },      []    )  }
+export type ACCOMMODATION_QUERY_RESULT = {
+  title: string;
+  subtitle: string | null;
+  description: string;
+  summary: string | null;
+  mainImage: {
+    _type: "imageWithMetadata";
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot: SanityImageHotspot | null;
+    crop: SanityImageCrop | null;
+    alt?: string;
+    author?: string;
+    caption?: string;
+    sourceUrl?: string;
+    metadata: SanityImageMetadata | null;
+  };
+  body: Array<
+    | {
+        children?: Array<{
+          marks?: Array<string>;
+          text?: string;
+          _type: "span";
+          _key: string;
+        }>;
+        style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+        listItem?: "bullet";
+        markDefs?: Array<
+          | {
+              reference?:
+                | AccommodationReference
+                | FaqReference
+                | PageReference
+                | PostReference
+                | TourReference;
+              _type: "internalLink";
+              _key: string;
+            }
+          | {
+              href?: string;
+              blank?: boolean;
+              _type: "link";
+              _key: string;
+            }
+        >;
+        level?: number;
+        _type: "block";
+        _key: string;
+      }
+    | {
+        _key: string;
+        _type: "columnsBlock";
+        columnCount?: "2" | "3";
+        content?: Array<
+          | ({
+              _key: string;
+            } & ImageWithMetadata)
+          | {
+              children?: Array<{
+                marks?: Array<string>;
+                text?: string;
+                _type: "span";
+                _key: string;
+              }>;
+              style?:
+                | "blockquote"
+                | "h1"
+                | "h2"
+                | "h3"
+                | "h4"
+                | "h5"
+                | "h6"
+                | "normal";
+              listItem?: "bullet" | "number";
+              markDefs?: Array<{
+                href?: string;
+                _type: "link";
+                _key: string;
+              }>;
+              level?: number;
+              _type: "block";
+              _key: string;
+            }
+        >;
+      }
+    | {
+        _key: string;
+        _type: "imageWithMetadata";
+        asset?: SanityImageAssetReference;
+        media?: unknown;
+        hotspot: SanityImageHotspot | null;
+        crop: SanityImageCrop | null;
+        alt?: string;
+        author?: string;
+        caption?: string;
+        sourceUrl?: string;
+        url: string | null;
+        metadata: {
+          lqip: string | null;
+          dimensions: SanityImageDimensions | null;
+        } | null;
+      }
+  > | null;
+  language: string | null;
+  slug: Slug;
+  isPublished: boolean | null;
+  showBookingOptions: boolean | null;
+  showBookingDialog: boolean | null;
+  slideshow: {
+    images: Array<
+      | {
+          _type: "image";
+          asset: SanityImageAssetReference | null;
+          media?: unknown;
+          hotspot: SanityImageHotspot | null;
+          crop: SanityImageCrop | null;
+          _key: string;
+          alt: null;
+          url: string | null;
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        }
+      | {
+          _type: "imageWithMetadata";
+          _key: string;
+          asset: SanityImageAssetReference | null;
+          media?: unknown;
+          hotspot: SanityImageHotspot | null;
+          crop: SanityImageCrop | null;
+          alt: string | null;
+          author?: string;
+          caption?: string;
+          sourceUrl?: string;
+          url: string | null;
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        }
+      | {
+          _type: "artDirectedImage";
+          desktop: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          };
+          tablet: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          } | null;
+          mobile: {
+            _type: "imageWithMetadata";
+            asset?: SanityImageAssetReference;
+            media?: unknown;
+            hotspot: SanityImageHotspot | null;
+            crop: SanityImageCrop | null;
+            alt?: string;
+            author?: string;
+            caption?: string;
+            sourceUrl?: string;
+            metadata: SanityImageMetadata | null;
+          } | null;
+        }
+    > | null;
+  } | null;
+  faq: Array<{
+    question: string;
+    answerFormat: "blockContent" | "text" | null;
+    answer: string | null;
+    answerBlockContent: BlockContent | null;
+    slug: Slug;
+    keywords: Array<string> | null;
+    showOnVillaBruno: boolean | null;
+    category: {
+      title: string;
+      slug: Slug;
+    };
+  }> | null;
+  capacity: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  propertyType:
+    | "apartment"
+    | "cabin"
+    | "eco-lodge"
+    | "house"
+    | "studio"
+    | "villa"
+    | null;
+  location: {
+    address?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    coordinates?: Geopoint;
+  } | null;
+  highlightFeatures: Array<{
+    title: string;
+    description: string;
+    icon?: string;
+    _key: string;
+  }> | null;
+  checkInTime: string | null;
+  checkOutTime: string | null;
+  amenities: Array<{
+    title: string;
+    description: string;
+    icon: string | null;
+  }> | null;
+  pricingRules: Array<{
+    title: string;
+    description: string;
+    ruleType: "base_rate" | "discount" | "fee" | "seasonal" | "tax";
+    season: "all" | "high" | "low" | "shoulder" | null;
+    startDate: string | null;
+    endDate: string | null;
+    basePrice: number | null;
+    percentage: number | null;
+    fixedAmount: number | null;
+    minimumNights: number | null;
+    isActive: boolean | null;
+    displayOrder: number | null;
+    language: string | null;
+  }> | null;
+  paymentMethods: Array<{
+    title: string;
+    description: string;
+    type: null;
+  }> | null;
+  cancellationPolicy: {
+    title: string;
+    description: string;
+    rules: null;
+  } | null;
+  logistics: Array<{
+    title: string;
+    description: string;
+    type: null;
+  }> | null;
+  translations:
+    | Array<never>
+    | Array<
+        | {}
+        | {
+            language: string | null;
+            title: string;
+            subtitle: null;
+            description: null;
+            slug: Slug;
+            body: null;
+            showBookingOptions: null;
+            showBookingDialog: null;
+            faq: null;
+            capacity: null;
+            bedrooms: null;
+            bathrooms: null;
+            propertyType: null;
+            location: null;
+            highlightFeatures: null;
+            checkInTime: null;
+            checkOutTime: null;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            subtitle: string | null;
+            description: null;
+            slug: null;
+            body: null;
+            showBookingOptions: null;
+            showBookingDialog: null;
+            faq: null;
+            capacity: null;
+            bedrooms: null;
+            bathrooms: null;
+            propertyType: null;
+            location: null;
+            highlightFeatures: null;
+            checkInTime: null;
+            checkOutTime: null;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            subtitle: null;
+            description: null;
+            slug: Slug;
+            body: Array<
+              | {
+                  children?: Array<{
+                    marks?: Array<string>;
+                    text?: string;
+                    _type: "span";
+                    _key: string;
+                  }>;
+                  style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+                  listItem?: "bullet";
+                  markDefs?: Array<
+                    | {
+                        reference?:
+                          | AccommodationReference
+                          | FaqReference
+                          | PageReference
+                          | PostReference
+                          | TourReference;
+                        _type: "internalLink";
+                        _key: string;
+                      }
+                    | {
+                        href?: string;
+                        blank?: boolean;
+                        _type: "link";
+                        _key: string;
+                      }
+                  >;
+                  level?: number;
+                  _type: "block";
+                  _key: string;
+                }
+              | {
+                  _key: string;
+                  _type: "columnsBlock";
+                  columnCount?: "2" | "3";
+                  content?: Array<
+                    | ({
+                        _key: string;
+                      } & ImageWithMetadata)
+                    | {
+                        children?: Array<{
+                          marks?: Array<string>;
+                          text?: string;
+                          _type: "span";
+                          _key: string;
+                        }>;
+                        style?:
+                          | "blockquote"
+                          | "h1"
+                          | "h2"
+                          | "h3"
+                          | "h4"
+                          | "h5"
+                          | "h6"
+                          | "normal";
+                        listItem?: "bullet" | "number";
+                        markDefs?: Array<{
+                          href?: string;
+                          _type: "link";
+                          _key: string;
+                        }>;
+                        level?: number;
+                        _type: "block";
+                        _key: string;
+                      }
+                  >;
+                }
+              | {
+                  _key: string;
+                  _type: "imageWithMetadata";
+                  asset?: SanityImageAssetReference;
+                  media?: unknown;
+                  hotspot: SanityImageHotspot | null;
+                  crop: SanityImageCrop | null;
+                  alt?: string;
+                  author?: string;
+                  caption?: string;
+                  sourceUrl?: string;
+                  url: string | null;
+                  metadata: {
+                    lqip: string | null;
+                    dimensions: SanityImageDimensions | null;
+                  } | null;
+                }
+            > | null;
+            showBookingOptions: null;
+            showBookingDialog: null;
+            faq: Array<{
+              question: string;
+              answerFormat: "blockContent" | "text" | null;
+              answer: string | null;
+              answerBlockContent: BlockContent | null;
+              slug: Slug;
+              keywords: Array<string> | null;
+              showOnVillaBruno: boolean | null;
+              category: {
+                title: string;
+                slug: Slug;
+              };
+            }> | null;
+            capacity: null;
+            bedrooms: null;
+            bathrooms: null;
+            propertyType: null;
+            location: null;
+            highlightFeatures: null;
+            checkInTime: null;
+            checkOutTime: null;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            subtitle: null;
+            description: string | null;
+            slug: Slug;
+            body: Array<
+              | {
+                  children?: Array<{
+                    marks?: Array<string>;
+                    text?: string;
+                    _type: "span";
+                    _key: string;
+                  }>;
+                  style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+                  listItem?: "bullet";
+                  markDefs?: Array<
+                    | {
+                        reference?:
+                          | AccommodationReference
+                          | FaqReference
+                          | PageReference
+                          | PostReference
+                          | TourReference;
+                        _type: "internalLink";
+                        _key: string;
+                      }
+                    | {
+                        href?: string;
+                        blank?: boolean;
+                        _type: "link";
+                        _key: string;
+                      }
+                  >;
+                  level?: number;
+                  _type: "block";
+                  _key: string;
+                }
+              | {
+                  _key: string;
+                  _type: "columnsBlock";
+                  columnCount?: "2" | "3";
+                  content?: Array<
+                    | ({
+                        _key: string;
+                      } & ImageWithMetadata)
+                    | {
+                        children?: Array<{
+                          marks?: Array<string>;
+                          text?: string;
+                          _type: "span";
+                          _key: string;
+                        }>;
+                        style?:
+                          | "blockquote"
+                          | "h1"
+                          | "h2"
+                          | "h3"
+                          | "h4"
+                          | "h5"
+                          | "h6"
+                          | "normal";
+                        listItem?: "bullet" | "number";
+                        markDefs?: Array<{
+                          href?: string;
+                          _type: "link";
+                          _key: string;
+                        }>;
+                        level?: number;
+                        _type: "block";
+                        _key: string;
+                      }
+                  >;
+                }
+              | {
+                  _key: string;
+                  _type: "imageWithMetadata";
+                  asset?: SanityImageAssetReference;
+                  media?: unknown;
+                  hotspot: SanityImageHotspot | null;
+                  crop: SanityImageCrop | null;
+                  alt?: string;
+                  author?: string;
+                  caption?: string;
+                  sourceUrl?: string;
+                  url: string | null;
+                  metadata: {
+                    lqip: string | null;
+                    dimensions: SanityImageDimensions | null;
+                  } | null;
+                }
+            > | null;
+            showBookingOptions: null;
+            showBookingDialog: null;
+            faq: null;
+            capacity: null;
+            bedrooms: null;
+            bathrooms: null;
+            propertyType: null;
+            location: string | null;
+            highlightFeatures: null;
+            checkInTime: null;
+            checkOutTime: null;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            subtitle: string | null;
+            description: string | null;
+            slug: Slug;
+            body: Array<
+              | {
+                  children?: Array<{
+                    marks?: Array<string>;
+                    text?: string;
+                    _type: "span";
+                    _key: string;
+                  }>;
+                  style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+                  listItem?: "bullet";
+                  markDefs?: Array<
+                    | {
+                        reference?:
+                          | AccommodationReference
+                          | FaqReference
+                          | PageReference
+                          | PostReference
+                          | TourReference;
+                        _type: "internalLink";
+                        _key: string;
+                      }
+                    | {
+                        href?: string;
+                        blank?: boolean;
+                        _type: "link";
+                        _key: string;
+                      }
+                  >;
+                  level?: number;
+                  _type: "block";
+                  _key: string;
+                }
+              | {
+                  _key: string;
+                  _type: "columnsBlock";
+                  columnCount?: "2" | "3";
+                  content?: Array<
+                    | ({
+                        _key: string;
+                      } & ImageWithMetadata)
+                    | {
+                        children?: Array<{
+                          marks?: Array<string>;
+                          text?: string;
+                          _type: "span";
+                          _key: string;
+                        }>;
+                        style?:
+                          | "blockquote"
+                          | "h1"
+                          | "h2"
+                          | "h3"
+                          | "h4"
+                          | "h5"
+                          | "h6"
+                          | "normal";
+                        listItem?: "bullet" | "number";
+                        markDefs?: Array<{
+                          href?: string;
+                          _type: "link";
+                          _key: string;
+                        }>;
+                        level?: number;
+                        _type: "block";
+                        _key: string;
+                      }
+                  >;
+                }
+              | {
+                  _key: string;
+                  _type: "imageWithMetadata";
+                  asset?: SanityImageAssetReference;
+                  media?: unknown;
+                  hotspot: SanityImageHotspot | null;
+                  crop: SanityImageCrop | null;
+                  alt?: string;
+                  author?: string;
+                  caption?: string;
+                  sourceUrl?: string;
+                  url: string | null;
+                  metadata: {
+                    lqip: string | null;
+                    dimensions: SanityImageDimensions | null;
+                  } | null;
+                }
+            > | null;
+            showBookingOptions: null;
+            showBookingDialog: null;
+            faq: Array<{
+              question: string;
+              answerFormat: "blockContent" | "text" | null;
+              answer: string | null;
+              answerBlockContent: BlockContent | null;
+              slug: Slug;
+              keywords: Array<string> | null;
+              showOnVillaBruno: boolean | null;
+              category: {
+                title: string;
+                slug: Slug;
+              };
+            }> | null;
+            capacity: null;
+            bedrooms: null;
+            bathrooms: null;
+            propertyType: null;
+            location: null;
+            highlightFeatures: null;
+            checkInTime: null;
+            checkOutTime: null;
+          }
+        | {
+            language: string | null;
+            title: string;
+            subtitle: string | null;
+            description: string;
+            slug: Slug;
+            body: Array<
+              | {
+                  children?: Array<{
+                    marks?: Array<string>;
+                    text?: string;
+                    _type: "span";
+                    _key: string;
+                  }>;
+                  style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+                  listItem?: "bullet";
+                  markDefs?: Array<
+                    | {
+                        reference?:
+                          | AccommodationReference
+                          | FaqReference
+                          | PageReference
+                          | PostReference
+                          | TourReference;
+                        _type: "internalLink";
+                        _key: string;
+                      }
+                    | {
+                        href?: string;
+                        blank?: boolean;
+                        _type: "link";
+                        _key: string;
+                      }
+                  >;
+                  level?: number;
+                  _type: "block";
+                  _key: string;
+                }
+              | {
+                  _key: string;
+                  _type: "columnsBlock";
+                  columnCount?: "2" | "3";
+                  content?: Array<
+                    | ({
+                        _key: string;
+                      } & ImageWithMetadata)
+                    | {
+                        children?: Array<{
+                          marks?: Array<string>;
+                          text?: string;
+                          _type: "span";
+                          _key: string;
+                        }>;
+                        style?:
+                          | "blockquote"
+                          | "h1"
+                          | "h2"
+                          | "h3"
+                          | "h4"
+                          | "h5"
+                          | "h6"
+                          | "normal";
+                        listItem?: "bullet" | "number";
+                        markDefs?: Array<{
+                          href?: string;
+                          _type: "link";
+                          _key: string;
+                        }>;
+                        level?: number;
+                        _type: "block";
+                        _key: string;
+                      }
+                  >;
+                }
+              | {
+                  _key: string;
+                  _type: "imageWithMetadata";
+                  asset?: SanityImageAssetReference;
+                  media?: unknown;
+                  hotspot: SanityImageHotspot | null;
+                  crop: SanityImageCrop | null;
+                  alt?: string;
+                  author?: string;
+                  caption?: string;
+                  sourceUrl?: string;
+                  url: string | null;
+                  metadata: {
+                    lqip: string | null;
+                    dimensions: SanityImageDimensions | null;
+                  } | null;
+                }
+            > | null;
+            showBookingOptions: boolean | null;
+            showBookingDialog: boolean | null;
+            faq: Array<{
+              question: string;
+              answerFormat: "blockContent" | "text" | null;
+              answer: string | null;
+              answerBlockContent: BlockContent | null;
+              slug: Slug;
+              keywords: Array<string> | null;
+              showOnVillaBruno: boolean | null;
+              category: {
+                title: string;
+                slug: Slug;
+              };
+            }> | null;
+            capacity: number | null;
+            bedrooms: number | null;
+            bathrooms: number | null;
+            propertyType:
+              | "apartment"
+              | "cabin"
+              | "eco-lodge"
+              | "house"
+              | "studio"
+              | "villa"
+              | null;
+            location: {
+              address?: string;
+              city?: string;
+              region?: string;
+              country?: string;
+              coordinates?: Geopoint;
+            } | null;
+            highlightFeatures: Array<{
+              title: string;
+              description: string;
+              icon?: string;
+              _key: string;
+            }> | null;
+            checkInTime: string | null;
+            checkOutTime: string | null;
+          }
+      >;
+} | null;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: PRICING_RULES_QUERY
+// Query: *[_type == 'pricingRules' && _id in $rulesIds][] {       title,       description,       ruleType,      season,      startDate,      endDate,      basePrice,      percentage,      fixedAmount,      minimumNights,      isActive,      displayOrder,      language    }
+export type PRICING_RULES_QUERY_RESULT = Array<{
+  title: string;
+  description: string;
+  ruleType: "base_rate" | "discount" | "fee" | "seasonal" | "tax";
+  season: "all" | "high" | "low" | "shoulder" | null;
+  startDate: string | null;
+  endDate: string | null;
+  basePrice: number | null;
+  percentage: number | null;
+  fixedAmount: number | null;
+  minimumNights: number | null;
+  isActive: boolean | null;
+  displayOrder: number | null;
+  language: string | null;
 }>;
 
 // Query TypeMap
@@ -1840,20 +4337,22 @@ declare module "@sanity/client" {
     '{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n}': GalleryImageProjectionResult;
     '*[_type == "post" && defined(slug.current) && (language == "en" || !defined(language))][0...32]{\n  _id, title, slug, \n  mainImage {\n  ...,\n  crop,\n  hotspot,\n  "url": asset->url,\n  "metadata": asset->metadata\n},\n  _createdAt, _updatedAt, isPublished\n}': POSTS_QUERY_RESULT;
     '*[_type == "page" && defined(slug.current)][]{\n  _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished\n}': ALL_PAGES_QUERY_RESULT;
-    '*[_type == "page" && slug.current == $slug && language == $language][0] {\n  title, subtitle, description,\n  mainImage {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n  body[]{\n    ...,\n    ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n  }, language, slug, isPublished, showBookingOptions, showBookingDialog,\n  slideshow->{\n    "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n}\n  },\n  price, faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} },\n  "translations": coalesce(\n    *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        subtitle,\n        description,\n        slug,\n        body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n        showBookingOptions,\n        showBookingDialog,\n        faq[]->{ question, answer, slug, keywords, showOnVillaBruno, category->{title, slug} }\n      })\n    },\n    []\n  )\n}': PAGES_QUERY_RESULT;
+    '*[_type == "page" && slug.current == $slug && language == $language][0] {\n  title, subtitle, description,\n  mainImage {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n  body[]{\n    ...,\n    ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n  }, language, slug, isPublished, showBookingOptions, showBookingDialog,\n  slideshow->{\n    "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n}\n  },\n  price, faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },\n  "translations": coalesce(\n    *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        subtitle,\n        description,\n        slug,\n        body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n        showBookingOptions,\n        showBookingDialog,\n        faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} }\n      })\n    },\n    []\n  )\n}': PAGES_QUERY_RESULT;
     '\n  *[_type == \'post\' && defined(slug.current) && $category in categories[]->title && language == $language] {\n    title,\n    slug,\n    isPublished,\n    mainImage {\n  ...,\n  crop,\n  hotspot,\n  "url": asset->url,\n  "metadata": asset->metadata\n},\n    \'category\': *[_type == \'category\' && title == $category],\n    "translations": *[\n      _type == "translation.metadata" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n  }\n': FEATURED_POSTS_QUERY_RESULT;
-    '*[_type == "post" && slug.current == $slug && (language == "en" || !defined(language))][0]{\n  title, \n  description,\n  publishedAt,\n  body[]{\n    ...,\n    ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n    columnsBlock {\n      columnCount,\n      content[]{\n        ...,\n        ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n      }\n    }\n  },\n  mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}, \n  openGraph {\n    title,\n    description,\n    url,\n    image {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  },\n  language, isPublished, slug\n}': POST_QUERY_RESULT;
-    '\n  *[_type == \'page\' && slug.current == $pageName && language == $language][0] {\n    title, \n    subtitle, \n    description, \n    mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}, \n    body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n    }, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,\n    slideshow->{ \n      "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n} \n    }, \n    price,\n    faq[]->{question, answer, slug},\n    "translations": *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        subtitle,\n        slug,\n        body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n        isPublished,\n        faq[]->{ question, answer, slug },\n      })\n    }\n  }\n': PAGE_QUERY_RESULT;
-    '\n  *[_type == \'page\' && language == $language && $category in categories[] -> title] {\n    title, slug, language, isPublished,\n    "translations": *[\n      _type == "translation.metadata" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n  }\n': NAV_QUERY_RESULT;
+    '*[_type == "post" && slug.current == $slug && (language == "en" || !defined(language))][0]{\n  title, \n  description,\n  publishedAt,\n  tldr,\n  "faq":coalesce(faq[]->{\n    question,\n    answerFormat,\n    answer,\n    answerBlockContent,\n    slug,\n    keywords,\n    showOnVillaBruno,\n    category->{\n      title,\n      slug,\n      language\n    }\n  }, []),\n  body[]{\n    ...,\n    ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n    markDefs[] {\n        ...,\n        _type == "internalLink" => {\n          ...,\n          "reference": {\n            "slug": reference->slug,\n            "_type": reference->_type\n          }\n        }\n      },\n    columnsBlock {\n      columnCount,\n      content[]{\n        ...,\n        ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n      }\n    }\n  },\n  mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}, \n  openGraph {\n    title,\n    description,\n    url,\n    image {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  },\n  language, isPublished, slug\n}': POST_QUERY_RESULT;
+    '\n  *[_type == \'page\' && slug.current == $pageName && language == $language][0] {\n    title, \n    subtitle, \n    description, \n    mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}, \n    body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n      markDefs[] {\n        ...,\n        _type == "internalLink" => {\n          ...,\n          "reference": {\n            "slug": reference->slug,\n            "_type": reference->_type\n          }\n        }\n      }\n    }, language, isPublished, categories[]->{title}, showBookingOptions, showBookingDialog,\n    slideshow->{ \n      "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n} \n    }, \n    price,\n    faq[]->{question, answerFormat, answer, answerBlockContent, slug},\n    "translations": *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        subtitle,\n        slug,\n        body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n        isPublished,\n        faq[]->{ question, answerFormat, answer, answerBlockContent, slug },\n      })\n    }\n  }\n': PAGE_QUERY_RESULT;
+    "\n  *[(_type == 'page' || _type == 'accommodation') && language == $language && $category in categories[] -> title] {\n    title, slug, language, isPublished,\n    \"translations\": *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n  }\n": NAV_QUERY_RESULT;
     '*[_type == \'tour\' && defined(slug.current) && language == $language]{\n  slug,\n  title, \n  mainImage {\n  ...,\n  crop,\n  hotspot,\n  "url": asset->url,\n  "metadata": asset->metadata\n},\n  description, \n  dateAdded,\n  language,\n  isPublished,\n  _createdAt,\n  _updatedAt,\n  "translations": *[\n      _type == "translation.metadata" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug, description\n      })\n    }\n}\n': TOURS_QUERY_RESULT;
     '*[_type == \'tour\' && defined(slug.current) && isFeatured && language == $language]{\n  slug,\n  title, \n  mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n},\n  description, isPublished,\n   "translations": *[\n      _type == "translation.metadata" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug, description\n      })\n    }\n}\n': FEATURED_TOURS_QUERY_RESULT;
     "*[_type == 'dialog'][0] {\n  _id,\n  'cta': \"CTA_button\",\n  'date': \"Date_label\",\n  'selectDate': \"Select_date\",\n  'guests': \"Guests_label\",\n  'adults': \"Adults_label\",\n  'adult': \"Adult_label\",\n  'child': \"Child_label\",\n  'other': \"Other_label\",\n  'paymentMethod': \"Payment_method_label\",\n  'creditCard': \"Credit_card_label\",\n  'paypal': \"Paypal_label\",\n  'people': \"People_label\",\n  'person': \"Person_label\",\n  'total': \"Total_label\",\n  'ok': \"OK_button_label\",\n  'cancel': \"Cancel_button_label\",\n}\n": DIALOG_QUERY_RESULT;
     '\n*[_type == \'tour\' && slug.current == $slug && language == $language][0]{\n  _id,\n  language,\n  title,\n  slug,\n  description,\n  mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n},\n  isPublished,\n  slideshow->{ "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n} },\n  "price": coalesce(price, 0),\n  location,\n  geo,\n  duration,\n  body[]{\n    ...,\n    ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n  },\n    "translations": *[\n      _type == "translation.metadata" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug,\n        description,\n        body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n      })\n    }\n}\n': TOUR_QUERY_RESULT;
-    "\n  *[_type == 'page' && slug.current == 'about' && language == $language][0] {\n    title, description, mainImage, body, language,\n    \"translations\": *[\n      _type == \"translation.metadata\" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n  }\n": ABOUT_QUERY_RESULT;
-    '\n  *[_type==\'home\' && language == $language][0] {\n    hero_title,\n    hero_slogan,\n    hero_body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n    },\n    subtitle,\n    language,\n    featured_content_title,\n    featured_blog_title,\n    slug,\n    \'mediaUrl\': background_media.asset->{url},\n    \'mediaPoster\': background_media_poster.asset->{\n      url,\n      metadata {\n        lqip\n      }\n    },\n    intro_body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n      markDefs[] {\n        ...,\n        _type == "internalLink" => {\n          ...,\n          "slug": @.reference-> slug\n        }\n      }\n    },\n    \'translations\': *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        hero_title,\n        hero_slogan,\n        hero_body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n        subtitle,\n        language,\n        featured_content_title,\n        featured_blog_title,\n        slug,\n        \'mediaUrl\': background_media.asset->{url},\n        \'mediaPoster\': background_media_poster.asset->{\n          url,\n          metadata {\n            lqip\n          }\n        },\n        intro_body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n          markDefs[] {\n            ...,\n            _type == "internalLink" => {\n              ...,\n              "slug": @.reference-> slug\n            }\n          }\n        }\n      })\n    }\n  }\n': HOME_QUERY_RESULT;
+    '\n  *[_type == \'page\' && slug.current == \'about\' && language == $language][0] {\n    title, description, mainImage, body[] {\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n      markDefs[] {\n      ...,\n      _type == "internalLink" => {\n        ...,\n        "reference": {\n          "slug": reference->slug,\n          "_type": reference->_type\n        }\n      }\n    }\n    }, language,\n    "translations": *[\n      _type == "translation.metadata" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n  }\n': ABOUT_QUERY_RESULT;
+    '\n  *[_type==\'home\' && language == $language][0] {\n    hero_title,\n    hero_slogan,\n    hero_body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n    },\n    subtitle,\n    language,\n    featured_content_title,\n    featured_blog_title,\n    slug,\n    \'mediaUrl\': background_media.asset->{url},\n    \'mediaPoster\': background_media_poster.asset->{\n      url,\n      metadata {\n        lqip\n      }\n    },\n    intro_body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n      markDefs[] {\n        ...,\n        _type == "internalLink" => {\n          ...,\n          "reference": {\n            "slug": reference->slug,\n            "_type": reference->_type\n          }\n        }\n      }\n    },\n    locationDetails,\n    \'translations\': *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        hero_title,\n        hero_slogan,\n        hero_body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n        subtitle,\n        language,\n        featured_content_title,\n        featured_blog_title,\n        slug,\n        \'mediaUrl\': background_media.asset->{url},\n        \'mediaPoster\': background_media_poster.asset->{\n          url,\n          metadata {\n            lqip\n          }\n        },\n        intro_body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n          markDefs[] {\n            ...,\n            _type == "internalLink" => {\n              ...,\n              "slug": @.reference-> slug\n            }\n          }\n        },\n        locationDetails\n      })\n    }\n  }\n': HOME_QUERY_RESULT;
     '\n  *[_type == \'gallery\' && $category in categories[] -> title][0] {\n    title,\n    "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n}\n  }\n': GALLERY_QUERY_RESULT;
-    '\n  *[_type == \'faq\' && language == $language] | order(displayOrder asc) {\n    category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug, language,\n    "translations": *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        category->{title, slug, language}, question, answer, keywords, showOnVillaBruno, slug\n      })\n    }\n  }\n': FAQ_QUERY_RESULT;
-    '*[\n  _type == "booking" &&\n  dateTime(checkOut) > dateTime(now()) &&\n  !(_id in path("drafts.**"))\n]{\n  uid, checkIn, checkOut, guestName, source\n}': BOOKINGS_QUERY_RESULT;
-    '*[_type == "review"] | order(date desc){\n  _id,\n  platform,\n  author,\n  rating,\n  date,\n  reviewText,\n  photoUrl\n}': REVIEWS_QUERY_RESULT;
+    '\n  *[_type == \'faq\' && language == $language] | order(displayOrder asc) {\n    category->{title, slug, language}, question, answerFormat, answer, answerBlockContent, keywords, showOnVillaBruno, slug, language,\n    "translations": *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        category->{title, slug, language}, question, answerFormat, answer, answerBlockContent, keywords, showOnVillaBruno, slug\n      })\n    }\n  }\n': FAQ_QUERY_RESULT;
+    '*[\n  _type == "booking" &&\n  dateTime(checkOut) > dateTime(now()) &&\n  !(_id in path("drafts.**"))\n][]{\n  uid, checkIn, checkOut, guestName, source, email, phone, guests, totalPrice, currency, syncedAt\n}': BOOKINGS_QUERY_RESULT;
+    '*[_type == "review"][] | order(date desc){\n  _id,\n  platform,\n  author,\n  rating,\n  date,\n  reviewText,\n  photoUrl\n}': REVIEWS_QUERY_RESULT;
+    '\n  *[_type == "accommodation" && slug.current == $slug && language == $language][0] {\n    title, subtitle, description,\n    summary,\n    mainImage {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n    body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n    }, \n    language, \n    slug, \n    isPublished, \n    showBookingOptions, \n    showBookingDialog,\n    slideshow->{\n      "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n}\n    },\n    faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} }, \n    capacity, \n    bedrooms, \n    bathrooms, \n    propertyType, \n    location, \n    highlightFeatures,\n    checkInTime, \n    checkOutTime,\n    amenities[]->{ title, description, icon },\n    \'pricingRules\': *[\n      _type == "accommodation" &&\n      language == "en" &&\n      slug.current == ^.slug.current\n      ][0].pricingRules[]-> { \n        title, \n        description, \n        ruleType,\n        season,\n        startDate,\n        endDate,\n        basePrice,\n        percentage,\n        fixedAmount,\n        minimumNights,\n        isActive,\n        displayOrder,\n        language\n    },\n    paymentMethods[]->{ title, description, type },\n    cancellationPolicy->{ title, description, rules },\n    logistics[]->{ title, description, type },\n    "translations": coalesce(\n      *[_type == "translation.metadata" && ^._id in translations[].value._ref][0].translations[]{\n        ...(value->{\n          language,\n          title,\n          subtitle,\n          description,\n          slug,\n          body[]{\n            ...,\n            ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n          },\n          showBookingOptions,\n          showBookingDialog,\n          faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },\n          capacity, \n          bedrooms, \n          bathrooms, \n          propertyType, \n          location, \n          highlightFeatures,\n          checkInTime, \n          checkOutTime\n        })\n      },\n      []\n    )\n  }\n': ACCOMMODATION_QUERY_RESULT;
+    "*[_type == 'pricingRules' && _id in $rulesIds][] { \n      title, \n      description, \n      ruleType,\n      season,\n      startDate,\n      endDate,\n      basePrice,\n      percentage,\n      fixedAmount,\n      minimumNights,\n      isActive,\n      displayOrder,\n      language\n    }\n    ": PRICING_RULES_QUERY_RESULT;
   }
 }

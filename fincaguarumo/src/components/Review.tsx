@@ -1,10 +1,13 @@
 "use client"
 import Image from "next/image"
 import { useParams } from "next/navigation"
+import { useState } from "react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 import { TReview } from "../types"
 import { normalizeRatingTo5Stars } from "../lib/ratingUtils"
 
 import { containsPlace } from "../lib/villa-json-ld"
+import { Button } from "./ui/button"
 
 export const platformIcons = {
   google: "https://cdn.trustindex.io/assets/platform/Google/icon.svg",
@@ -26,9 +29,15 @@ export const defaultUserIcon = {
   booking: "https://a0.muscache.com/defaults/user_pic-225x225.png",
 }
 
+function truncateText(text: string, maxLength = 220) {
+  if (text.length <= maxLength) return text
+  return `${text.slice(0, maxLength).trim()}...`
+}
+
 const Review = ({ review }: { review: TReview }) => {
   const { locale } = useParams()
   const platform = review.platform || "google"
+  const [isExpanded, setIsExpanded] = useState(false)
 
   // Centralized derived values using utility function
   const normalizedRating = Math.max(
@@ -121,7 +130,7 @@ const Review = ({ review }: { review: TReview }) => {
     >
       <div className="flex items-center gap-2">
         <div
-          className="rounded-full"
+          className="rounded-full overflow-hidden"
           itemProp="author"
           itemScope
           itemType="https://schema.org/Person"
@@ -141,6 +150,7 @@ const Review = ({ review }: { review: TReview }) => {
             width="40"
             height="40"
             loading="lazy"
+            className="object-cover h-10"
           />
           <meta itemProp="name" content={validAuthorName} />
         </div>
@@ -198,7 +208,39 @@ const Review = ({ review }: { review: TReview }) => {
         ))}
       </div>
       <div className="text-zinc-800" itemProp="reviewBody">
-        {review?.text || review?.reviewText}
+        {(() => {
+          const reviewText = review?.text || review?.reviewText || ""
+          const hasLongText = reviewText.length > 220
+          return (
+            <>
+              <p>
+                {isExpanded || !hasLongText
+                  ? reviewText
+                  : truncateText(reviewText)}
+              </p>
+              {hasLongText && (
+                <Button
+                  variant="link"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="inline-flex items-center gap-2 text-sm font-medium ml-2"
+                  aria-expanded={isExpanded}
+                >
+                  {isExpanded ? (
+                    <>
+                      Read less
+                      <ChevronUp className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      Read more
+                      <ChevronDown className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              )}
+            </>
+          )
+        })()}
       </div>
       <div
         itemProp="itemReviewed"

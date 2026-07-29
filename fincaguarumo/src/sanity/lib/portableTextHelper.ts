@@ -1,9 +1,12 @@
 import { PortableTextBlock } from "@portabletext/types"
+import type { BlockContent } from "../../../sanity.types"
 
 /**
  * Extract plain text from Portable Text blocks
  */
-export function portableTextToPlain(blocks: PortableTextBlock[]): string {
+export function portableTextToPlain(
+  blocks: PortableTextBlock[] | BlockContent,
+): string {
   if (!blocks || !Array.isArray(blocks)) return ""
 
   return blocks
@@ -29,7 +32,7 @@ function generateKey(): string {
  */
 export function plainToPortableText(
   originalBlocks: PortableTextBlock[],
-  translatedText: string
+  translatedText: string,
 ): PortableTextBlock[] {
   if (!originalBlocks || !Array.isArray(originalBlocks)) return []
 
