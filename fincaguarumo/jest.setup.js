@@ -68,6 +68,9 @@ afterAll(() => {
 })
 
 // Mock environment variables
+process.env.SUPABASE_URL = "http://localhost:54321"
+process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key"
+process.env.SITE_URL = "http://localhost:3000"
 process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost:54321"
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-key"
 process.env.STRIPE_API_KEY = "sk_test_test"

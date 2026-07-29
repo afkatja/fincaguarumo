@@ -95,8 +95,9 @@ describe("Calendar Sync Service", () => {
     mockSupabase = createMockSupabase()
     const supabaseMock = require("@supabase/supabase-js")
     supabaseMock.__setMockSupabase(mockSupabase)
-    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co"
+    process.env.SUPABASE_URL = "https://test.supabase.co"
     process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-key"
+    process.env.SITE_URL = "http://localhost:3000"
   })
 
   describe("Background Sync Process (AC1, AC3)", () => {

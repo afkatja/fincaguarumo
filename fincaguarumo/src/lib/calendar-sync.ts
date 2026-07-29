@@ -37,9 +37,21 @@ export interface CalendarSyncResponse {
   status: "created" | "updated" | "deleted"
 }
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+function requireServerEnv(name: string): string {
+  const value = process.env[name]
+  if (!value) {
+    console.error(
+      `[calendar-sync] Missing required environment variable: ${name}`,
+    )
+    throw new Error(`${name} environment variable is required`)
+  }
+  return value
+}
+
+// Initialize Supabase client (server-side env only)
+const supabaseUrl = requireServerEnv("SUPABASE_URL")
+const supabaseServiceKey = requireServerEnv("SUPABASE_SERVICE_ROLE_KEY")
+const siteUrl = requireServerEnv("SITE_URL")
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 /**
@@ -178,7 +190,7 @@ export class CalendarSyncService {
     try {
       // Fetch all bookings from the existing merged endpoint
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/ical/merged`,
+        `${siteUrl}/api/ical/merged`,
       )
       if (!response.ok) {
         throw new Error(`Failed to fetch bookings: ${response.statusText}`)
@@ -436,9 +448,7 @@ export class CalendarSyncService {
    */
   async fetchBookingsFromAPI(): Promise<Booking[]> {
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-      const response = await fetch(`${baseUrl}/api/ical/merged`, {
+      const response = await fetch(`${siteUrl}/api/ical/merged`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

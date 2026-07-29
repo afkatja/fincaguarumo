@@ -23,7 +23,14 @@ const handler = async (event: NetlifyEvent, context: NetlifyContext) => {
 
     // Validate cron secret
     const secret = event.queryStringParameters?.secret
-    if (CRON_SECRET && secret !== CRON_SECRET) {
+    if (!CRON_SECRET) {
+      console.error("CALENDAR_SYNC_SECRET environment variable is missing")
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: "Server configuration error" }),
+      }
+    }
+    if (secret !== CRON_SECRET) {
       console.error("Unauthorized calendar sync attempt")
       return {
         statusCode: 401,
