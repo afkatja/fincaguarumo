@@ -108,6 +108,7 @@ export async function saveBookingToSanity(
           guests: bookingDetails.guests,
           totalPrice: bookingDetails.totalPrice,
           currency: bookingDetails.currency,
+          isTest: undefined, // Let setBookings auto-detect test bookings
         }),
       RETRY_CONFIG.sanity,
       "save-booking-to-sanity",

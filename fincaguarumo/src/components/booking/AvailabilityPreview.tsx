@@ -166,6 +166,7 @@ export default function AvailabilityPreview({
 
   return (
     <div
+      data-testid="availability-preview"
       className={`flex items-center gap-2 text-sm font-medium ${
         availability.isAvailable ? "text-guarumo-primary" : "text-destructive"
       } ${className}`}

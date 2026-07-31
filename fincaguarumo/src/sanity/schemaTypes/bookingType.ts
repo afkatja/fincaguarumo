@@ -88,5 +88,13 @@ export const bookingType = defineType({
         "When this booking was last synchronized from external sources",
       readOnly: true,
     },
+    {
+      name: "isTest",
+      type: "boolean",
+      title: "Test Booking",
+      description:
+        "Mark this booking as a test booking to prevent calendar synchronization",
+      initialValue: false,
+    },
   ],
 })

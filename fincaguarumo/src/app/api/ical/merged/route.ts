@@ -36,6 +36,7 @@ interface BookingResponse {
   summary?: string
   source?: string
   guestName?: string
+  isTest?: boolean
 }
 
 const FEEDS: Record<string, string | undefined> = {
@@ -514,6 +515,7 @@ export async function GET() {
           summary: booking.summary,
           source: booking.source,
           guestName: booking.guestName,
+          isTest: booking.isTest,
         }),
       )
       allBookingResponses.push(...sanityResponses)
