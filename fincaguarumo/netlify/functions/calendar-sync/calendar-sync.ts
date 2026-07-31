@@ -1,34 +1,18 @@
+import { Context } from "@netlify/functions"
 // Netlify function handler for calendar sync
 // Note: This function will be deployed to Netlify and has access to the same codebase
 
 // Environment variables required
-const CRON_SECRET = process.env.CALENDAR_SYNC_SECRET
 
-interface NetlifyEvent {
-  queryStringParameters?: {
-    secret?: string
-  }
-  headers?: {
-    [key: string]: string
-  }
-}
-
-interface NetlifyContext {
-  awsRequestId: string
-}
-
-const handler = async (event: NetlifyEvent, context: NetlifyContext) => {
+export default async (request: Request, context: Context) => {
   try {
-    console.log("Calendar sync cron job triggered", {
-      requestId: context.awsRequestId,
-      timestamp: new Date().toISOString(),
-    })
-
+    const CRON_SECRET = process.env.CALENDAR_SYNC_SECRET
     // Validate cron secret
     // Check headers first (for scheduled Netlify cron triggers)
     // Fall back to query parameters (for manual/legacy calls)
-    const headerSecret = event.headers?.["x-calendar-sync-secret"]
-    const querySecret = event.queryStringParameters?.secret
+    const url = new URL(request.url)
+    const headerSecret = request.headers?.get("x-calendar-sync-secret")
+    const querySecret = url.searchParams.get("secret")
     const secret = headerSecret || querySecret
 
     if (!CRON_SECRET) {
@@ -40,10 +24,7 @@ const handler = async (event: NetlifyEvent, context: NetlifyContext) => {
     }
     if (secret !== CRON_SECRET) {
       console.error("Unauthorized calendar sync attempt")
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ error: "Unauthorized" }),
-      }
+      return Response.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Call API route to perform sync
@@ -64,10 +45,10 @@ const handler = async (event: NetlifyEvent, context: NetlifyContext) => {
 
     if (!apiResponse.ok) {
       console.error("Calendar sync API call failed:", result)
-      return {
-        statusCode: apiResponse.status,
-        body: JSON.stringify(result),
-      }
+      return Response.json(
+        { error: "Calendar sync API call failed", details: result },
+        { status: apiResponse.status },
+      )
     }
 
     const functionResponse = {
@@ -76,28 +57,21 @@ const handler = async (event: NetlifyEvent, context: NetlifyContext) => {
       data: {
         sync: result.data?.sync || result,
         completedAt: new Date().toISOString(),
-        requestId: context.awsRequestId,
+        requestId: context.requestId,
       },
     }
 
     console.log("Calendar sync completed successfully:", functionResponse.data)
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(functionResponse),
-    }
+    return Response.json(functionResponse, { status: 200 })
   } catch (error) {
     console.error("Calendar sync cron error:", error)
 
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        error: "Internal server error",
-        message: error instanceof Error ? error.message : "Unknown error",
-        requestId: context.awsRequestId,
-      }),
-    }
+    return Response.json(
+      {
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
   }
 }
-
-export { handler }
