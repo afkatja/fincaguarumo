@@ -36,7 +36,7 @@
     "@ai-sdk/mistral": "^3.0.13",
     "@ai-sdk/perplexity": "^3.0.19",
     "@gsap/react": "^2.1.2",
-    "@hookform/resolvers": "^3.10.0",
+    "@hookform/resolvers": "^5.0.0",
     "@mistralai/mistralai": "^1.13.0",
     "@netlify/functions": "^5.3.0",
     "@netlify/plugin-nextjs": "^5.15.9",
