@@ -1,11 +1,11 @@
 "use client"
 import { FormEventHandler, useState } from "react"
+import { useStripe } from "@stripe/react-stripe-js"
 import {
   PaymentElement,
-  useStripe,
-  useCheckout,
+  useCheckoutElements,
   CurrencySelectorElement,
-} from "@stripe/react-stripe-js"
+} from "@stripe/react-stripe-js/checkout"
 import { Button } from "@/components/ui/button"
 import Loading from "../loading"
 import Title from "@/components/Title"
@@ -13,7 +13,7 @@ import { useBookingCore } from "../../../providers/BookingCoreProvider"
 
 export default function CheckoutForm() {
   const stripe = useStripe()
-  const checkout = useCheckout()
+  const checkout = useCheckoutElements()
   const { state } = useBookingCore()
 
   const [message, setMessage] = useState<null | string | undefined>(null)

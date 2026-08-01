@@ -1,8 +1,8 @@
 "use client"
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import { loadStripe } from "@stripe/stripe-js"
-import { CheckoutProvider } from "@stripe/react-stripe-js"
+import { CheckoutElementsProvider } from "@stripe/react-stripe-js/checkout"
 import CheckoutForm from "./CheckoutForm"
 import { useVillaBooking } from "../../../providers/VillaBookingProvider"
 import { useTourBooking } from "../../../providers/TourBookingProvider"
@@ -30,92 +30,95 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
     useVillaBooking()
   const { detailedTourData, isLoadingDetailed: tourLoading } = useTourBooking()
   const t = useTranslations("booking")
-  const clientSecret = useRef(null)
+  // const clientSecret = useRef(null)
 
-  useEffect(() => {
-    if (!state.data.bookingType) return
-    if (clientSecret.current) return
-    if (loading) return // Prevent concurrent fetches
+  const promise = useMemo(async () => {
+    const contentData =
+      state.data.bookingType === BOOKING_TYPE.villa
+        ? detailedVillaData
+        : detailedTourData
 
-    // Wait for data to be available
-    const isLoading =
-      state.data.bookingType === BOOKING_TYPE.villa ? villaLoading : tourLoading
-    if (isLoading) return
-
-    const fetchData = async () => {
-      try {
-        setError(null)
-        setLoading(true)
-
-        const contentData =
-          state.data.bookingType === BOOKING_TYPE.villa
-            ? detailedVillaData
-            : detailedTourData
-
-        if (!contentData) {
-          // Fallback to basic data if detailed data not available
-          console.warn("Detailed data not available, using basic booking data")
-          throw new Error("Booking data not available - please try again")
-        }
-
-        const completeBookingData = {
-          source: state.data.source,
-          customerDetails: state.data.customerDetails,
-          bookingDetails: {
-            type: state.data.bookingType!,
-            title: contentData.title,
-            description: contentData.description,
-            duration: "duration" in contentData ? contentData.duration : 0,
-            location: contentData.location || "",
-            body: "",
-            date: state.data.dates.date || new Date(),
-            checkIn: state.data.dates.checkIn,
-            checkOut: state.data.dates.checkOut,
-            guests: state.data.guests,
-            price: state.data.totalPrice,
-            basePrice: state.data.baseUnitPrice,
-            totalPrice: state.data.totalPrice,
-            currency: state.data.currency,
-            geo: contentData.geo || { lat: 0, lng: 0 },
-          },
-          pricingRules:
-            "pricingRules" in contentData ? contentData.pricingRules || [] : [],
-        }
-
-        const serializedData = serializeBookingData(completeBookingData)
-
-        const response = await fetch("/api/create-checkout-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            customerDetails: serializedData.customerDetails,
-            bookingDetails: {
-              ...serializedData.bookingDetails,
-              type: serializedData.bookingDetails.type,
-            },
-            pricingRules: serializedData.pricingRules,
-          }),
-        })
-
-        const { clientSecret: clientSecretData } = await response.json()
-
-        clientSecret.current = clientSecretData
-      } catch (err) {
-        console.error("Error creating payment session:", err)
-        setError(t("paymentError"))
-      } finally {
-        setLoading(false)
-      }
+    if (!contentData) {
+      // Fallback to basic data if detailed data not available
+      console.warn("Detailed data not available, using basic booking data")
+      throw new Error("Booking data not available - please try again")
     }
 
-    void fetchData()
-  }, [
-    state.data.bookingType,
-    detailedVillaData,
-    detailedTourData,
-    villaLoading,
-    tourLoading,
-  ])
+    const completeBookingData = {
+      source: state.data.source,
+      customerDetails: state.data.customerDetails,
+      bookingDetails: {
+        type: state.data.bookingType!,
+        title: contentData.title,
+        description: contentData.description,
+        duration: "duration" in contentData ? contentData.duration : 0,
+        location: contentData.location || "",
+        body: "",
+        date: state.data.dates.date || new Date(),
+        checkIn: state.data.dates.checkIn,
+        checkOut: state.data.dates.checkOut,
+        guests: state.data.guests,
+        price: state.data.totalPrice,
+        basePrice: state.data.baseUnitPrice,
+        totalPrice: state.data.totalPrice,
+        currency: state.data.currency,
+        geo: contentData.geo || { lat: 0, lng: 0 },
+      },
+      pricingRules:
+        "pricingRules" in contentData ? contentData.pricingRules || [] : [],
+    }
+
+    const serializedData = serializeBookingData(completeBookingData)
+
+    const response = await fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerDetails: serializedData.customerDetails,
+        bookingDetails: {
+          ...serializedData.bookingDetails,
+          type: serializedData.bookingDetails.type,
+        },
+        pricingRules: serializedData.pricingRules,
+      }),
+    })
+
+    const { clientSecret: clientSecretData } = await response.json()
+    return clientSecretData
+  }, [])
+
+  // useEffect(() => {
+  //   if (!state.data.bookingType) return
+  //   if (clientSecret.current) return
+  //   if (loading) return // Prevent concurrent fetches
+
+  //   // Wait for data to be available
+  //   const isLoading =
+  //     state.data.bookingType === BOOKING_TYPE.villa ? villaLoading : tourLoading
+  //   if (isLoading) return
+
+  //   const fetchData = async () => {
+  //     try {
+  //       setError(null)
+  //       setLoading(true)
+
+  //       clientSecret.current = clientSecretData
+  //     } catch (err) {
+  //       console.error("Error creating payment session:", err)
+  //       setError(t("paymentError"))
+  //     } finally {
+  //       setLoading(false)
+  //     }
+  //   }
+
+  //   void fetchData()
+  // }, [
+  //   state.data.bookingType,
+  //   detailedVillaData,
+  //   detailedTourData,
+  //   villaLoading,
+  //   tourLoading,
+  // ])
 
   const appearance = {
     theme: "stripe" as const,
@@ -131,15 +134,15 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
   }
 
   const options = {
-    // clientSecret: clientSecret.current,
+    clientSecret: promise,
     elementsOptions: { appearance },
-    fetchClientSecret: async () => {
-      return clientSecret.current || ""
-    },
+    // fetchClientSecret: async () => {
+    //   return clientSecret.current || ""
+    // },
     adaptivePricing: { allowed: true },
   }
 
-  if (!stripePromise || !clientSecret.current || loading)
+  if (!stripePromise || loading)
     return (
       <div data-testid="booking-payment">
         <Loading className="absolute top-0" />
@@ -156,7 +159,7 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
         <button
           onClick={() => {
             setError(null)
-            clientSecret.current = null
+            // clientSecret.current = null
           }}
           className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 transition-colors"
         >
@@ -166,9 +169,13 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
     )
   return (
     <div data-testid="booking-payment">
-      <CheckoutProvider options={options} stripe={stripePromise} {...props}>
+      <CheckoutElementsProvider
+        options={options}
+        stripe={stripePromise}
+        {...props}
+      >
         <CheckoutForm />
-      </CheckoutProvider>
+      </CheckoutElementsProvider>
       <Image
         src="/images/stripe-badge.png"
         width={450}
