@@ -120,7 +120,7 @@
     "@vitalets/google-translate-api": "^9.2.1",
     "babel-plugin-react-compiler": "^1.0.0",
     "dotenv": "^17.4.2",
-    "eslint": "^10.8.0",
+    "eslint": "^9.39.2",
     "eslint-config-next": "^16.2.12",
     "formatjs": "^0.1.1",
     "fs": "^0.0.1-security",
