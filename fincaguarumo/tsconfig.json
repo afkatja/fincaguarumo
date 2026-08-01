@@ -21,7 +21,6 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "baseUrl": ".",
     "target": "ES2017"
   },
   "include": [

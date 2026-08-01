@@ -15,6 +15,7 @@ const nextConfig = {
         "https://fincaguarumo.local:3000",
       ],
     },
+    useTypeScriptCli: true,
   },
   reactCompiler: true,
 
