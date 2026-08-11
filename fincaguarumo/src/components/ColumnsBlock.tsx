@@ -1,9 +1,8 @@
-import { BlockContent } from "sanity.types"
-import type { ImageWithMetadata } from "sanity.types"
 import { ImageWithFallback } from "./ImageWithFallback"
 import { urlFor } from "../sanity/lib/image"
 import { PortableText } from "next-sanity"
 import { portableTextComponents } from "./RichText"
+import { BlockContent } from "../../sanity.types"
 
 interface ColumnsBlockProps {
   value: {

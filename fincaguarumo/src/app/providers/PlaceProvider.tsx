@@ -16,7 +16,7 @@ type PlaceDetails = {
   displayName?: string | null
   formattedAddress?: string | null
   rating?: number | null
-  reviews?: google.maps.places.Review[] | null
+  reviews?: { authorAttribution: { displayName: string; photoUri?: string }; rating?: number; text?: { text: string }; relativePublishTimeDescription?: string }[] | null
 }
 
 type PlaceContextType = {

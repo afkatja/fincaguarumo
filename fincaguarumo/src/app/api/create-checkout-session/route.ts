@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     console.log("🎪 Creating Stripe checkout session...")
     const session = await stripeInstance.checkout.sessions.create({
-      ui_mode: "custom",
+      ui_mode: "elements",
       customer: customer.id,
       line_items: [
         {
