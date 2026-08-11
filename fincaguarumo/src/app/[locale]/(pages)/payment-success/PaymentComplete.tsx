@@ -1,6 +1,7 @@
 "use client"
 import React, { Suspense, useEffect, useState } from "react"
 import { useStripe } from "@stripe/react-stripe-js"
+import { useTranslations } from "next-intl"
 
 import PagesLayout from "../pagesLayout"
 import icons from "@/components/icons"
@@ -20,38 +21,8 @@ enum Status {
   Processing = "processing",
 }
 
-const STATUS_CONTENT_MAP: Record<
-  string,
-  { text: string; iconColor: string; icon: React.ReactNode }
-> = {
-  [Status.Success]: {
-    text: "Booking succeeded",
-    iconColor: "#30B130",
-    icon: <Success fill="#30B130" className="mr-4" title="Success" />,
-  },
-  [Status.Complete]: {
-    text: "Booking succeeded",
-    iconColor: "#30B130",
-    icon: <Success fill="#30B130" className="mr-4" title="Success" />,
-  },
-  [Status.PaymentError]: {
-    text: "Your payment was not successful, please try again.",
-    iconColor: "#DF1B41",
-    icon: <Error fill="#DF1B41" className="mr-4" title="Error" />,
-  },
-  [Status.Error]: {
-    text: "Something went wrong, please try again.",
-    iconColor: "#DF1B41",
-    icon: <Error fill="#DF1B41" className="mr-4" title="Error" />,
-  },
-  [Status.Processing]: {
-    text: "Your payment is processing.",
-    iconColor: "#6D6E78",
-    icon: <Info fill="#6D6E78" className="mr-4" />,
-  },
-}
-
 export default function CompletePage() {
+  const t = useTranslations("booking")
   const { usePathname, useRouter, redirect } = createNavigation()
   const pathname = usePathname()
   const router = useRouter()
@@ -76,6 +47,37 @@ export default function CompletePage() {
     Record<string, any> | null | undefined
   >(null)
   const [session, setSession] = useState<any>(null)
+
+  const STATUS_CONTENT_MAP: Record<
+    string,
+    { text: string; iconColor: string; icon: React.ReactNode }
+  > = {
+    [Status.Success]: {
+      text: t("paymentSuccess"),
+      iconColor: "#30B130",
+      icon: <Success fill="#30B130" className="mr-4" title="Success" />,
+    },
+    [Status.Complete]: {
+      text: t("paymentSuccess"),
+      iconColor: "#30B130",
+      icon: <Success fill="#30B130" className="mr-4" title="Success" />,
+    },
+    [Status.PaymentError]: {
+      text: t("paymentFailed"),
+      iconColor: "#DF1B41",
+      icon: <Error fill="#DF1B41" className="mr-4" title="Error" />,
+    },
+    [Status.Error]: {
+      text: t("paymentErrorMsg"),
+      iconColor: "#DF1B41",
+      icon: <Error fill="#DF1B41" className="mr-4" title="Error" />,
+    },
+    [Status.Processing]: {
+      text: t("paymentProcessing"),
+      iconColor: "#6D6E78",
+      icon: <Info fill="#6D6E78" className="mr-4" />,
+    },
+  }
 
   useEffect(() => {
     const clientSecret = searchParams.get("payment_intent_client_secret")
@@ -191,12 +193,21 @@ export default function CompletePage() {
           pageName="paymentComplete"
           title={
             status
-              ? `Dear ${bookingData.customerDetails?.name}, ${STATUS_CONTENT_MAP[status]?.text}`
-              : "Processing your payment..."
+              ? t("dearCustomer", {
+                  name: bookingData.customerDetails?.name,
+                  status: STATUS_CONTENT_MAP[status]?.text,
+                })
+              : t("processingPayment")
           }
           subtitle={
             status
-              ? `You paid $ ${(paymentIntent?.amount || (session?.amount_total as number)) / 100} for ${getBookingTitle()} at ${getBookingLocation()}`
+              ? t("paidAmount", {
+                  amount:
+                    (paymentIntent?.amount || (session?.amount_total as number)) /
+                    100,
+                  title: getBookingTitle(),
+                  location: getBookingLocation(),
+                })
               : ""
           }
           description={getBookingDescription()}
@@ -208,27 +219,26 @@ export default function CompletePage() {
               )}
               {(status === Status.Success || status == Status.Complete) && (
                 <p>
-                  Your booking of the <strong>{getBookingTitle()}</strong> for{" "}
-                  {bookingData.guests} guests on{" "}
-                  <strong>
-                    {new Date(
+                  {t("bookingConfirmed", {
+                    title: getBookingTitle(),
+                    guests: bookingData.guests,
+                    date: new Date(
                       bookingData.dates?.checkIn ??
                         bookingData.bookingDetails?.date,
                     ).toLocaleDateString(locale, {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
-                    })}
-                  </strong>{" "}
-                  has succeeded. An email with the confirmation has been sent to{" "}
-                  <strong>{bookingData.customerDetails?.email}</strong>.
+                    }),
+                    email: bookingData.customerDetails?.email,
+                  })}
                 </p>
               )}
               {status === Status.PaymentError && (
-                <p>Your payment was not successful. Please try again.</p>
+                <p>{t("paymentNotSuccessful")}</p>
               )}
               {status === Status.Error && (
-                <p>Something went wrong. Please try again.</p>
+                <p>{t("somethingWentWrong")}</p>
               )}
             </div>
 
