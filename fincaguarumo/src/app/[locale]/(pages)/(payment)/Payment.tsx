@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useMemo, useState } from "react"
 import Image from "next/image"
 import { loadStripe } from "@stripe/stripe-js"
 import { CheckoutElementsProvider } from "@stripe/react-stripe-js/checkout"
@@ -86,39 +86,6 @@ const Payment = ({ ...props }: { [prop: string]: any }) => {
     const { clientSecret: clientSecretData } = await response.json()
     return clientSecretData
   }, [])
-
-  // useEffect(() => {
-  //   if (!state.data.bookingType) return
-  //   if (clientSecret.current) return
-  //   if (loading) return // Prevent concurrent fetches
-
-  //   // Wait for data to be available
-  //   const isLoading =
-  //     state.data.bookingType === BOOKING_TYPE.villa ? villaLoading : tourLoading
-  //   if (isLoading) return
-
-  //   const fetchData = async () => {
-  //     try {
-  //       setError(null)
-  //       setLoading(true)
-
-  //       clientSecret.current = clientSecretData
-  //     } catch (err) {
-  //       console.error("Error creating payment session:", err)
-  //       setError(t("paymentError"))
-  //     } finally {
-  //       setLoading(false)
-  //     }
-  //   }
-
-  //   void fetchData()
-  // }, [
-  //   state.data.bookingType,
-  //   detailedVillaData,
-  //   detailedTourData,
-  //   villaLoading,
-  //   tourLoading,
-  // ])
 
   const appearance = {
     theme: "stripe" as const,
