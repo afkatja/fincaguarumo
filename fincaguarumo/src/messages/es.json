@@ -83,7 +83,17 @@
     "loadingCalendar": "Cargando calendario...",
     "checkOutAfterCheckIn": "La fecha de salida debe ser posterior a la fecha de entrada",
     "paymentError": "Error al inicializar la sesión de pago. Por favor, inténtelo de nuevo.",
-    "tryAgain": "Intentar de nuevo"
+    "tryAgain": "Intentar de nuevo",
+    "paymentSuccess": "Reserva exitosa",
+    "paymentFailed": "Tu pago no fue exitoso, por favor inténtalo de nuevo.",
+    "paymentErrorMsg": "Algo salió mal, por favor inténtalo de nuevo.",
+    "paymentProcessing": "Tu pago está siendo procesado.",
+    "processingPayment": "Procesando tu pago...",
+    "dearCustomer": "Estimado {name}, {status}",
+    "paidAmount": "Pagaste $ {amount} por {title} en {location}",
+    "bookingConfirmed": "Tu reserva de {title} para {guests} huéspedes el {date} ha sido confirmada. Se ha enviado un correo de confirmación a {email}.",
+    "paymentNotSuccessful": "Tu pago no fue exitoso. Por favor inténtalo de nuevo.",
+    "somethingWentWrong": "Algo salió mal. Por favor inténtalo de nuevo."
   },
   "page": {
     "moreFAQ": "Más preguntas frecuentes",

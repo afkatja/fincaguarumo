@@ -83,7 +83,17 @@
     "loadingCalendar": "Agenda laden...",
     "checkOutAfterCheckIn": "Check-out moet na check-in zijn",
     "paymentError": "Fout bij het initialiseren van de betaalsessie. Probeer het opnieuw.",
-    "tryAgain": "Probeer opnieuw"
+    "tryAgain": "Probeer opnieuw",
+    "paymentSuccess": "Boeking gelukt",
+    "paymentFailed": "Je betaling is niet gelukt, probeer het opnieuw.",
+    "paymentErrorMsg": "Er is iets misgegaan, probeer het opnieuw.",
+    "paymentProcessing": "Je betaling wordt verwerkt.",
+    "processingPayment": "Je betaling wordt verwerkt...",
+    "dearCustomer": "Beste {name}, {status}",
+    "paidAmount": "Je hebt $ {amount} betaald voor {title} in {location}",
+    "bookingConfirmed": "Je boeking van {title} voor {guests} gasten op {date} is gelukt. Een bevestigingsmail is gestuurd naar {email}.",
+    "paymentNotSuccessful": "Je betaling is niet gelukt. Probeer het opnieuw.",
+    "somethingWentWrong": "Er is iets misgegaan. Probeer het opnieuw."
   },
   "page": {
     "moreFAQ": "Meer veelgestelde vragen",

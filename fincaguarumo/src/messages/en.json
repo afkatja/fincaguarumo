@@ -75,7 +75,17 @@
     "loadingCalendar": "Loading calendar...",
     "checkOutAfterCheckIn": "Check-out must be after check-in",
     "paymentError": "Failed to initialize payment session. Please try again.",
-    "tryAgain": "Try Again"
+    "tryAgain": "Try Again",
+    "paymentSuccess": "Booking succeeded",
+    "paymentFailed": "Your payment was not successful, please try again.",
+    "paymentError": "Something went wrong, please try again.",
+    "paymentProcessing": "Your payment is processing.",
+    "processingPayment": "Processing your payment...",
+    "dearCustomer": "Dear {name}, {status}",
+    "paidAmount": "You paid $ {amount} for {title} at {location}",
+    "bookingConfirmed": "Your booking of the {title} for {guests} guests on {date} has succeeded. An email with the confirmation has been sent to {email}.",
+    "paymentNotSuccessful": "Your payment was not successful. Please try again.",
+    "somethingWentWrong": "Something went wrong. Please try again."
   },
   "page": {
     "moreFAQ": "More FAQ",

@@ -77,7 +77,17 @@
     "loadingCalendar": "Kalender wird geladen...",
     "checkOutAfterCheckIn": "Check-out muss nach dem Check-in liegen",
     "paymentError": "Fehler beim Initialisieren der Zahlungssitzung. Bitte versuchen Sie es erneut.",
-    "tryAgain": "Erneut versuchen"
+    "tryAgain": "Erneut versuchen",
+    "paymentSuccess": "Buchung erfolgreich",
+    "paymentFailed": "Ihre Zahlung war nicht erfolgreich, bitte versuchen Sie es erneut.",
+    "paymentErrorMsg": "Etwas ist schiefgelaufen, bitte versuchen Sie es erneut.",
+    "paymentProcessing": "Ihre Zahlung wird verarbeitet.",
+    "processingPayment": "Ihre Zahlung wird verarbeitet...",
+    "dearCustomer": "Sehr geehrte(r) {name}, {status}",
+    "paidAmount": "Sie haben $ {amount} für {title} in {location} bezahlt",
+    "bookingConfirmed": "Ihre Buchung von {title} für {guests} Gäste am {date} war erfolgreich. Eine Bestätigungs-E-Mail wurde an {email} gesendet.",
+    "paymentNotSuccessful": "Ihre Zahlung war nicht erfolgreich. Bitte versuchen Sie es erneut.",
+    "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
   },
   "page": {
     "moreFAQ": "Mehr FAQ",
