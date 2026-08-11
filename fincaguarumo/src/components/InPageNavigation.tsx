@@ -5,6 +5,7 @@ import { ScrollToPlugin } from "gsap/ScrollToPlugin"
 import { Button } from "./ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { cn } from "../lib/utils"
 
 // Register the plugin
 if (typeof window !== "undefined") {
@@ -218,7 +219,11 @@ const InPageNavigation: React.FC<InPageNavigationProps> = ({ sections }) => {
               key={section.id}
               onClick={() => scrollToSection(section.id)}
               variant={activeSection === section.id ? "default" : "outline"}
-              className="px-3 py-2 text-sm transition-all duration-200 border hidden sm:inline-flex"
+              className={cn(
+                "px-3 py-2 text-sm transition-all duration-200 border hidden sm:inline-flex",
+                activeSection === section.id &&
+                  "bg-guarumo-primary text-zinc-50",
+              )}
             >
               {section.label}
             </Button>

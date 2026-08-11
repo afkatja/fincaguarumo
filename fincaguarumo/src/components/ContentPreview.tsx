@@ -43,7 +43,7 @@ export const ContentPreview = ({ summary }: ContentPreviewProps) => {
           }}
         >
           {t("readMore")}
-          <ArrowDownIcon className="w-4 h-4 ml-2 stroke-guarumo-primary" />
+          <ArrowDownIcon className="w-4 h-4 ml-2 stroke-guarumo-primary dark:stroke-zinc-50" />
         </Button>
       </div>
     </div>

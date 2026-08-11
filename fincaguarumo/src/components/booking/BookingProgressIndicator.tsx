@@ -71,7 +71,7 @@ export default function BookingProgressIndicator({
                     mt-2 text-xs font-medium text-center max-w-20
                     ${
                       status === "completed"
-                        ? "text-guarumo-primary"
+                        ? "text-guarumo-primary dark:text-zinc-50"
                         : status === "current"
                           ? "text-guarumo-accent font-semibold"
                           : "text-zinc-500"
@@ -86,7 +86,7 @@ export default function BookingProgressIndicator({
                 <div
                   className={`
                     flex-1 h-1 mx-2 rounded-full transition-colors duration-200
-                    ${status === "completed" ? "bg-guarumo-primary" : "bg-zinc-200"}
+                    ${status === "completed" ? "bg-guarumo-primary dark:bg-zinc-50" : "bg-zinc-200"}
                   `}
                 />
               )}

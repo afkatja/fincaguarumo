@@ -64,6 +64,7 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const questionRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const filterBlockRef = useRef<HTMLDivElement | null>(null)
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
   const filteredFaqs = useMemo(() => {
     let items = [...faqs]
@@ -131,16 +132,14 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
         setActiveCategory(categoryMatch)
 
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const categoryEl = categoryRefs.current[categoryMatch]
-            if (categoryEl && filterBlockRef.current) {
-              const filterHeight = filterBlockRef.current.offsetHeight
-              const elementTop =
-                categoryEl.getBoundingClientRect().top + window.scrollY
-              const scrollPosition = elementTop - filterHeight - 70
-              window.scrollTo({ top: scrollPosition, behavior: "smooth" })
-            }
-          })
+          const categoryEl = categoryRefs.current[categoryMatch]
+          if (categoryEl && filterBlockRef.current) {
+            const filterHeight = filterBlockRef.current.offsetHeight
+            const elementTop =
+              categoryEl.getBoundingClientRect().top + window.scrollY
+            const scrollPosition = elementTop - filterHeight - 70
+            window.scrollTo({ top: scrollPosition, behavior: "smooth" })
+          }
         })
       }
     }
@@ -155,10 +154,50 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
     if (firstVisible) setActiveCategory(firstVisible)
   }, [visibleCategoryOrder])
 
+  // Scroll-based active category detection
+  useEffect(() => {
+    const categoryElements = visibleCategoryOrder
+      .map(key => categoryRefs.current[key])
+      .filter((el): el is HTMLDivElement => el !== null && el !== undefined)
+
+    if (categoryElements.length === 0) return
+
+    observerRef.current = new IntersectionObserver(
+      entries => {
+        // Find the entry with the highest intersection ratio (most visible)
+        let mostVisibleEntry: IntersectionObserverEntry | null = null
+        let maxRatio = 0
+
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
+            maxRatio = entry.intersectionRatio
+            mostVisibleEntry = entry
+          }
+        }
+
+        if (mostVisibleEntry) {
+          const key = mostVisibleEntry.target.id
+          if (key && key !== activeCategory) {
+            setActiveCategory(key)
+          }
+        }
+      },
+      {
+        rootMargin: "-20% 0px -10% 0px",
+        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
+      },
+    )
+
+    categoryElements.forEach(el => observerRef.current?.observe(el))
+
+    return () => {
+      observerRef.current?.disconnect()
+    }
+  }, [visibleCategoryOrder, activeCategory])
+
   const jumpToCategory = (key: string) => {
-    setSelectedCategory("all")
+    setSelectedCategory(key)
     setSearchQuery("")
-    setActiveCategory(key)
     const categoryEl = categoryRefs.current[key]
     if (categoryEl && filterBlockRef.current) {
       const filterHeight = filterBlockRef.current.offsetHeight
@@ -185,12 +224,16 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
   const clearFilters = () => {
     setSearchQuery("")
     setSelectedCategory("all")
-    setActiveCategory("all")
+    setActiveCategory("")
     if (typeof window !== "undefined") {
       history.replaceState(null, "", "?")
     }
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
+  const activeCategoryClassName =
+    "border-guarumo-accent bg-guarumo-accent text-zinc-50 transition-colors duration-300 hover:bg-guarumo-accent hover:cursor-default hover:translate-y-0 hover:shadow-none"
+  const selectedCategoryClassName =
+    "border-guarumo-primary bg-guarumo-primary text-zinc-50"
 
   return (
     <section className="mx-auto max-w-5xl">
@@ -206,7 +249,7 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
             {t("searchLabel")}
           </label>
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 " />
             <input
               id="faq-search"
               type="search"
@@ -224,8 +267,8 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
               onClick={() => setSelectedCategory("all")}
               className={`rounded-full border px-3 py-1.5 text-sm transition ${
                 selectedCategory === "all"
-                  ? "border-guarumo-primary bg-guarumo-primary text-white"
-                  : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+                  ? selectedCategoryClassName
+                  : "border-zinc-300 bg-white text-zinc-700 dark:text-zinc-50 hover:bg-zinc-50"
               }`}
             >
               {t("allCategories")}
@@ -233,15 +276,19 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
 
             {categoryOrder.map(key => {
               const title = getCategoryTitleFromFaqs(faqs, key)
+              const isSelected = selectedCategory === key
+              const isActive = activeCategory === key && !isSelected
               return (
                 <Button
                   key={key}
                   type="button"
                   onClick={() => jumpToCategory(key)}
                   className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                    activeCategory === key
-                      ? "border-guarumo-primary bg-guarumo-primary text-white"
-                      : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+                    isSelected
+                      ? selectedCategoryClassName
+                      : isActive
+                        ? activeCategoryClassName
+                        : "border-zinc-300 bg-zinc-50 text-zinc-700 dark:text-zinc-50 hover:bg-zinc-50"
                   }`}
                 >
                   {title}
@@ -249,14 +296,12 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
               )
             })}
 
-            {(searchQuery ||
-              selectedCategory !== "all" ||
-              activeCategory !== "all") && (
+            {(searchQuery || selectedCategory !== "all" || activeCategory) && (
               <Button
                 type="button"
                 variant="ghost"
                 onClick={clearFilters}
-                className="h-9 px-3"
+                className="h-9 px-3 text-zinc-900 hover:bg-transparent hover:shadow-none hover:translate-y-0"
               >
                 {t("clearFilters")}
               </Button>
@@ -281,7 +326,7 @@ export default function FAQCategories({ faqs }: { faqs: FAQType[] }) {
                 className="scroll-mt-28"
               >
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-semibold tracking-tight text-zinc-900 mb-4">
+                  <h3 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 mb-4">
                     {title}
                   </h3>
                   {items.map(faq => {

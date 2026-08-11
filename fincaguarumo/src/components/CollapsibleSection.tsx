@@ -24,7 +24,7 @@ export const CollapsibleSection = ({
 
   return (
     <div
-      className={`border border-guarumo-primary/20 rounded-lg md:border-0 overflow-hidden ${className}`}
+      className={`border border-guarumo-primary/20 dark:border-none rounded-lg md:border-0 overflow-hidden ${className}`}
     >
       <Button
         variant="ghost"

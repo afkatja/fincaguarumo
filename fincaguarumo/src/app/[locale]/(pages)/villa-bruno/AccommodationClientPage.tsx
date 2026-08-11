@@ -86,7 +86,7 @@ const AccommodationClientPage = ({
         <CollapsibleSection
           title="Quick Info"
           defaultExpanded={true}
-          className="bg-linear-to-r from-guarumo-primary/10 to-guarumo-accent/10"
+          className="bg-linear-to-r from-guarumo-primary/10 to-guarumo-accent/10 dark:bg-none"
         >
           <QuickInfoBar content={content} price={lowestPrice} guests={guests} />
         </CollapsibleSection>
@@ -135,10 +135,7 @@ const AccommodationClientPage = ({
       </div>
 
       {/* FAQ Section */}
-      <div
-        id="faq"
-        className="w-11/12 mx-auto mt-3 mb-8 flex flex-col py-5 lg:px-40"
-      >
+      <div id="faq" className="mx-auto mt-3 mb-8 flex flex-col py-5 max-w-5xl">
         <Title
           title={tPage("FAQ") || "FAQ"}
           Heading="h2"

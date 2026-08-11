@@ -354,7 +354,7 @@ export const ReviewSummary = ({
             className="group inline-flex max-w-3xl mt-6"
           >
             {t("readMoreReviews")}
-            <ArrowDown className="w-4 h-4 stroke-guarumo-primary" />
+            <ArrowDown className="w-4 h-4 stroke-guarumo-primary dark:stroke-zinc-50" />
           </Button>
         </div>
       )}
