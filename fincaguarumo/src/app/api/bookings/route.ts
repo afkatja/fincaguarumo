@@ -59,13 +59,16 @@ export async function POST(request: Request) {
       currency: bookingData.currency || "usd",
     }
 
-    // Only add optional fields if they exist in the schema
-    // These may need to be added via migration first
+    // Optional fields
     if (bookingData.summary !== undefined) {
       bookingRecord.summary = bookingData.summary
     }
     if (bookingData.description !== undefined) {
       bookingRecord.description = bookingData.description
+    }
+    // External reservation ID from booking platforms (booking.com, airbnb, etc.)
+    if (bookingData.externalReservationId !== undefined) {
+      bookingRecord.external_reservation_id = bookingData.externalReservationId
     }
 
     const { data, error } = await supabase
@@ -131,7 +134,7 @@ export async function POST(request: Request) {
 
 /**
  * GET: Fetch all bookings
- * Supports filtering by date range and source
+ * Supports filtering by date range, source, and ID
  * Requires admin authentication to prevent PII exposure
  */
 export async function GET(request: Request) {
@@ -143,10 +146,46 @@ export async function GET(request: Request) {
     const supabase = createAuthenticatedSupabaseClient(request)
 
     const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
     const from = searchParams.get("from")
     const to = searchParams.get("to")
     const source = searchParams.get("source")
     const limit = searchParams.get("limit")
+
+    // If ID is provided, fetch single booking
+    if (id) {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(`
+          id,
+          uid,
+          guest_name,
+          check_in,
+          check_out,
+          guests,
+          booking_type,
+          total_price,
+          currency,
+          source,
+          status,
+          external_reservation_id,
+          created_at,
+          updated_at
+        `)
+        .eq("id", id)
+        .single()
+
+      if (error) {
+        console.error("Error fetching booking:", error)
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      if (!data) {
+        return NextResponse.json({ error: "Booking not found" }, { status: 404 })
+      }
+
+      return NextResponse.json(data)
+    }
 
     // Only select non-sensitive fields to prevent PII exposure
     let query = supabase.from("bookings").select(`
@@ -160,6 +199,7 @@ export async function GET(request: Request) {
       currency,
       source,
       status,
+      external_reservation_id,
       created_at,
       updated_at
     `)
@@ -279,6 +319,8 @@ export async function PUT(request: Request) {
       updateRecord.summary = updateData.summary
     if (updateData.description !== undefined)
       updateRecord.description = updateData.description
+    if (updateData.externalReservationId !== undefined)
+      updateRecord.external_reservation_id = updateData.externalReservationId
 
     const { data, error } = await supabase
       .from("bookings")
@@ -294,6 +336,90 @@ export async function PUT(request: Request) {
     return NextResponse.json(data)
   } catch (error: any) {
     console.error("Error in PUT /api/bookings:", error)
+
+    // Handle authentication errors with proper status codes
+    if (error.status) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      )
+    }
+
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    )
+  }
+}
+
+/**
+ * PATCH: Admin-only booking refresh/sync
+ * Allows admins to update booking fields from external sources (booking.com, airbnb, etc.)
+ * Requires admin authentication
+ */
+export async function PATCH(request: Request) {
+  try {
+    // Verify admin authentication
+    const authUser = await verifyAdminAuth(request)
+
+    // Create authenticated Supabase client
+    const supabase = createAuthenticatedSupabaseClient(request)
+
+    const { id, ...updateData } = await request.json()
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Booking id is required" },
+        { status: 400 },
+      )
+    }
+
+    // Get the existing booking to verify it exists
+    const { data: existingBooking, error: fetchError } = await supabase
+      .from("bookings")
+      .select("id, external_reservation_id")
+      .eq("id", id)
+      .single()
+
+    if (fetchError || !existingBooking) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 })
+    }
+
+    const updateRecord: any = {
+      updated_at: new Date().toISOString(),
+    }
+
+    // Fields that can be refreshed from external sources
+    if (updateData.externalReservationId !== undefined)
+      updateRecord.external_reservation_id = updateData.externalReservationId
+    if (updateData.status !== undefined) updateRecord.status = updateData.status
+    if (updateData.totalPrice !== undefined) updateRecord.total_price = updateData.totalPrice
+    if (updateData.currency !== undefined) updateRecord.currency = updateData.currency
+    if (updateData.checkIn !== undefined) updateRecord.check_in = updateData.checkIn
+    if (updateData.checkOut !== undefined) updateRecord.check_out = updateData.checkOut
+    if (updateData.guestName !== undefined) updateRecord.guest_name = updateData.guestName
+    if (updateData.source !== undefined) updateRecord.source = updateData.source
+    if (updateData.guests !== undefined) updateRecord.guests = updateData.guests
+    if (updateData.bookingType !== undefined) updateRecord.booking_type = updateData.bookingType
+    if (updateData.email !== undefined) updateRecord.email = updateData.email
+    if (updateData.phone !== undefined) updateRecord.phone = updateData.phone
+    if (updateData.summary !== undefined) updateRecord.summary = updateData.summary
+    if (updateData.description !== undefined) updateRecord.description = updateData.description
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .update(updateRecord)
+      .eq("id", id)
+      .select()
+
+    if (error) {
+      console.error("Error refreshing booking:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, data })
+  } catch (error: any) {
+    console.error("Error in PATCH /api/bookings:", error)
 
     // Handle authentication errors with proper status codes
     if (error.status) {
