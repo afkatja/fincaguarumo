@@ -3,7 +3,7 @@ import {
   fetchUnavailableRanges,
   convertRangesToBlockedDates,
   triggeriCalSync,
-} from "../../../../lib/availability"
+} from "@/lib/availability"
 
 /**
  * GET: Fetch unavailable dates for calendar display
@@ -11,10 +11,9 @@ import {
  */
 export async function GET() {
   try {
-    // Trigger sync in the background, don't wait for it
-    triggeriCalSync().catch(syncError => {
-      console.error("Background sync failed:", syncError)
-    })
+    // Force sync to ensure calendar shows up-to-date data (bypasses cooldown)
+    // We await this because the calendar needs fresh availability data after cancelled bookings are cleaned up
+    await triggeriCalSync(undefined, true)
 
     // Fetch unavailable ranges using shared utility
     const { availabilityData, bookingsData } = await fetchUnavailableRanges()
