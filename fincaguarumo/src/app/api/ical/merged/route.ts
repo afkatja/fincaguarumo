@@ -62,16 +62,24 @@ function hashIcs(ics: string) {
   return crypto.createHash("sha256").update(ics).digest("hex")
 }
 
-async function fetchIcsWithConditional(url: string, cacheKey: string) {
+async function fetchIcsWithConditional(
+  url: string,
+  cacheKey: string,
+  force = false,
+) {
   const headers: Record<string, string> = {}
 
-  const res = await fetch(url, { headers })
+  // If forcing sync, bypass cache by adding cache-busting header
+  if (force) {
+    headers["Cache-Control"] = "no-cache"
+  }
 
-  if (res.status === 304) {
+  const res = await fetch(url, { headers })
+  if (res.status === 304 && !force) {
     // not changed
     return { changed: false, ics: memoryCache.ics[cacheKey] }
   }
-  if (!res.ok) throw new Error(`Failed to fetch iCal (${res.status})`)
+  if (!res.ok) throw new Error(`Failed to fetch iCal (${res.status}), ${url}`)
 
   const ics = await res.text()
   const hash = hashIcs(ics)
@@ -325,10 +333,10 @@ async function saveBookingToSupabase(syncRow: IcsSyncRow) {
       bookingData.total_price = booking.totalPrice
     }
 
-    console.log(
-      "Upserting booking data:",
-      JSON.stringify(createRedactedBooking(bookingData), null, 2),
-    )
+    // console.log(
+    //   "Upserting booking data:",
+    //   JSON.stringify(createRedactedBooking(bookingData), null, 2),
+    // )
 
     // Atomic upsert with conflict resolution on uid
     const { data, error } = await supabase
@@ -493,15 +501,93 @@ async function updateAvailabilityTable(
   }
 }
 
-export async function GET() {
+/**
+ * Clean up bookings that are no longer present in iCal feeds
+ * This handles cancelled bookings by removing them from the database
+ */
+async function cleanupCancelledBookings(
+  currentIcalUids: Set<string>,
+  feedSources: string[],
+): Promise<void> {
   try {
+    // Get all existing bookings from iCal sources
+    const { data: existingBookings, error: fetchError } = await supabase
+      .from("bookings")
+      .select("uid, source")
+      .in("source", feedSources)
+
+    if (fetchError) {
+      console.error("Error fetching existing bookings for cleanup:", fetchError)
+      return
+    }
+
+    if (!existingBookings || existingBookings.length === 0) {
+      return
+    }
+
+    // Find bookings that are no longer in current feeds
+    const cancelledUids: string[] = []
+    for (const booking of existingBookings) {
+      if (booking.uid && !currentIcalUids.has(booking.uid)) {
+        cancelledUids.push(booking.uid)
+      }
+    }
+
+    if (cancelledUids.length === 0) {
+      return
+    }
+
+    console.log(`Found ${cancelledUids.length} cancelled bookings to clean up`)
+
+    // Delete cancelled bookings from bookings table
+    const { error: deleteBookingsError } = await supabase
+      .from("bookings")
+      .delete()
+      .in("uid", cancelledUids)
+
+    if (deleteBookingsError) {
+      console.error("Error deleting cancelled bookings:", deleteBookingsError)
+    } else {
+      console.log(
+        `Successfully deleted ${cancelledUids.length} cancelled bookings`,
+      )
+    }
+
+    // Delete corresponding availability entries
+    const { error: deleteAvailabilityError } = await supabase
+      .from("availability")
+      .delete()
+      .in("booking_uid", cancelledUids)
+
+    if (deleteAvailabilityError) {
+      console.error(
+        "Error deleting availability entries for cancelled bookings:",
+        deleteAvailabilityError,
+      )
+    } else {
+      console.log(
+        `Successfully deleted availability entries for ${cancelledUids.length} cancelled bookings`,
+      )
+    }
+  } catch (error) {
+    console.error("Error in cleanupCancelledBookings:", error)
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const forceSync = searchParams.get("force") === "true"
+
     const feeds = Object.entries(FEEDS).filter(([, v]) => !!v) as [
       string,
       string,
     ][]
+    const feedSources = feeds.map(([name]) => name)
 
     const allSyncRows: IcsSyncRow[] = []
     const allBookingResponses: BookingResponse[] = []
+    const currentIcalUids = new Set<string>()
 
     // Fetch Sanity bookings and convert to response format
     let sanityBookingsCached: any[] = []
@@ -527,7 +613,8 @@ export async function GET() {
     for (const [name, url] of feeds) {
       try {
         const key = `ical_${name}`
-        const { ics } = await fetchIcsWithConditional(url!, key)
+        const { ics } = await fetchIcsWithConditional(url!, key, forceSync)
+
         if (!ics) continue
         const syncRows = parseIcsToBookings(ics!, name)
 
@@ -554,6 +641,9 @@ export async function GET() {
               // console.log(`Generated UID for booking: ${uid}`)
             }
 
+            // Track current UIDs for cleanup
+            currentIcalUids.add(uid)
+
             const result = await saveBookingToSupabase(syncRow)
 
             if (result) {
@@ -574,6 +664,14 @@ export async function GET() {
         console.error(`Error fetching/parsing ${name}:`, err)
         // continue — don't fail the whole response if one feed fails
       }
+    }
+
+    // Clean up cancelled bookings after processing all feeds
+    try {
+      await cleanupCancelledBookings(currentIcalUids, feedSources)
+    } catch (cleanupError) {
+      console.error("Error cleaning up cancelled bookings:", cleanupError)
+      // Continue anyway - the API should still return the booking data
     }
 
     // Convert all sync rows to Booking format for merge logic

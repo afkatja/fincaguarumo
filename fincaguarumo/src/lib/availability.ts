@@ -163,11 +163,14 @@ const SYNC_COOLDOWN = 5 * 60 * 1000 // 5 minutes in milliseconds
 /**
  * Trigger iCal sync with proper error handling and global cooldown
  */
-export async function triggeriCalSync(request?: Request): Promise<void> {
+export async function triggeriCalSync(
+  request?: Request,
+  force = false,
+): Promise<void> {
   const now = Date.now()
 
-  // Check global cooldown
-  if (now - lastSyncTime.timestamp < SYNC_COOLDOWN) {
+  // Check global cooldown (unless forced)
+  if (!force && now - lastSyncTime.timestamp < SYNC_COOLDOWN) {
     console.log(
       "Skipping sync - using cached data (last sync:",
       new Date(lastSyncTime.timestamp).toISOString(),
@@ -185,14 +188,18 @@ export async function triggeriCalSync(request?: Request): Promise<void> {
       siteUrl = `${requestUrl.protocol}//${requestUrl.host}`
     } else if (process.env.NEXT_PUBLIC_SITE_URL) {
       siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-    } else if (process.env.VERCEL_URL) {
-      siteUrl = `https://${process.env.VERCEL_URL}`
     } else {
       siteUrl = "http://localhost:3000"
     }
 
-    const syncResponse = await fetch(`${siteUrl}/api/ical/merged`, {
+    // Add force parameter to bypass iCal merged endpoint's internal caching
+    const syncUrl = force
+      ? `${siteUrl}/api/ical/merged?force=true`
+      : `${siteUrl}/api/ical/merged`
+
+    const syncResponse = await fetch(syncUrl, {
       method: "GET",
+      signal: AbortSignal.timeout(30000), // 30 second timeout
     })
 
     if (!syncResponse.ok) {
