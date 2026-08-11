@@ -11,10 +11,10 @@ export function portableTextToPlain(
 
   return blocks
     .map(block => {
-      if (block._type !== "block" || !block.children) {
+      if (block._type !== "block" || !Array.isArray((block as any).children)) {
         return ""
       }
-      return block.children.map((child: any) => child.text || "").join("")
+      return (block as any).children.map((child: any) => child.text || "").join("")
     })
     .join("\n\n")
 }

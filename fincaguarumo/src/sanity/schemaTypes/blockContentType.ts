@@ -1,5 +1,7 @@
 import { defineType, defineArrayMember } from "sanity"
-import { BookIcon, ImageIcon, LinkIcon } from "@sanity/icons"
+import { LinkIcon } from "@sanity/icons/Link"
+import { ImageIcon } from "@sanity/icons/Image"
+import { BookIcon } from "@sanity/icons/Book"
 import { ExternalLinkIcon } from "lucide-react"
 
 /**
