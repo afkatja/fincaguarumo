@@ -69,6 +69,7 @@ const DatePicker = ({
       onOpenChange={open => {
         if (!open) onClose?.()
       }}
+      modal
     >
       <PopoverTrigger asChild onClick={loading ? undefined : onOpen}>
         <Button
