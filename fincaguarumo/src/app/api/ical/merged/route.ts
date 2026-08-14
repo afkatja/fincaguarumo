@@ -588,6 +588,7 @@ export async function GET(request: Request) {
     const allSyncRows: IcsSyncRow[] = []
     const allBookingResponses: BookingResponse[] = []
     const currentIcalUids = new Set<string>()
+    const successfulFeedSources: string[] = []
 
     // Fetch Sanity bookings and convert to response format
     let sanityBookingsCached: any[] = []
@@ -657,6 +658,9 @@ export async function GET(request: Request) {
           }
         }
 
+        // Track this feed as successfully processed
+        successfulFeedSources.push(name)
+
         // console.log(
         //   `Saved ${savedCount}, skipped ${skippedCount}, errors ${errorCount} bookings from ${name}`,
         // )
@@ -667,8 +671,10 @@ export async function GET(request: Request) {
     }
 
     // Clean up cancelled bookings after processing all feeds
+    // Only pass successfully fetched/parsed feed sources to prevent
+    // failed feeds from causing their existing bookings to be deleted
     try {
-      await cleanupCancelledBookings(currentIcalUids, feedSources)
+      await cleanupCancelledBookings(currentIcalUids, successfulFeedSources)
     } catch (cleanupError) {
       console.error("Error cleaning up cancelled bookings:", cleanupError)
       // Continue anyway - the API should still return the booking data
