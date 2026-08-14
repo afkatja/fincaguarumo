@@ -5,11 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "../../../../components/ui/button"
 import Input from "../../../../components/Input"
 import { getBrowserClient } from "../../../../lib/supabaseClient"
+import { validateRedirectTo } from "../../../../lib/utils"
 
 export default function AdminLoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get("redirectTo") || "/admin"
+  const redirectTo = validateRedirectTo(searchParams.get("redirectTo"), "/admin")
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

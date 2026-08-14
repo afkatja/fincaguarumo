@@ -80,3 +80,27 @@ export const getInternationalizedValue = (
   // Finally, use the provided fallback
   return fallback || ""
 }
+
+/**
+ * Validates a redirectTo parameter to prevent open redirect vulnerabilities.
+ * Only accepts same-origin relative paths (starting with / but not // or /\\).
+ * Falls back to the provided default for absolute URLs, protocol-relative URLs,
+ * or otherwise unsafe values.
+ */
+export function validateRedirectTo(
+  redirectTo: string | null | undefined,
+  fallback: string,
+): string {
+  if (!redirectTo) return fallback
+
+  // Must be a relative path starting with /
+  if (!redirectTo.startsWith("/")) return fallback
+
+  // Reject protocol-relative URLs (//example.com) and backslash paths (/\...)
+  if (redirectTo.startsWith("//") || redirectTo.startsWith("/\\")) {
+    return fallback
+  }
+
+  // Accept valid internal paths
+  return redirectTo
+}

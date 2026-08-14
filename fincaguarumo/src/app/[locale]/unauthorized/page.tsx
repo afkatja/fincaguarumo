@@ -2,11 +2,12 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
+import { validateRedirectTo } from "../../../lib/utils"
 
 export default function UnauthorizedPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get("redirectTo") || "/"
+  const redirectTo = validateRedirectTo(searchParams.get("redirectTo"), "/")
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
