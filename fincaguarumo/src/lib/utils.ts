@@ -104,3 +104,28 @@ export function validateRedirectTo(
   // Accept valid internal paths
   return redirectTo
 }
+
+/**
+ * Returns the site origin (protocol + host) for the current environment.
+ *
+ * Resolution order:
+ * 1. NEXT_PUBLIC_SITE_URL env var (explicit override)
+ * 2. window.location.origin (browser — correct for localhost, Netlify previews, production)
+ * 3. http://localhost:3000 (safe SSR fallback)
+ */
+export function getSiteOrigin(): string {
+  const envSiteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  if (envSiteUrl) {
+    try {
+      return new URL(envSiteUrl).origin
+    } catch {
+      return envSiteUrl.replace(/\/$/, "")
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    return window.location.origin
+  }
+
+  return "http://localhost:3000"
+}

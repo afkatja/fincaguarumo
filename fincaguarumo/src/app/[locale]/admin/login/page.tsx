@@ -5,12 +5,15 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "../../../../components/ui/button"
 import Input from "../../../../components/Input"
 import { getBrowserClient } from "../../../../lib/supabaseClient"
-import { validateRedirectTo } from "../../../../lib/utils"
+import { validateRedirectTo, getSiteOrigin } from "../../../../lib/utils"
 
 export default function AdminLoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = validateRedirectTo(searchParams.get("redirectTo"), "/admin")
+  const redirectTo = validateRedirectTo(
+    searchParams.get("redirectTo"),
+    "/admin",
+  )
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -26,10 +29,18 @@ export default function AdminLoginPage() {
 
     try {
       if (isSignUp) {
-        // Sign up
+        const siteOrigin = getSiteOrigin()
+        const localePath = window.location.pathname
+        const redirectParams = new URLSearchParams()
+        redirectParams.set("redirectTo", redirectTo)
+        const emailRedirectTo = `${siteOrigin}${localePath}?${redirectParams.toString()}`
+
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo,
+          },
         })
 
         if (signUpError) {
@@ -56,12 +67,14 @@ export default function AdminLoginPage() {
 
         if (data.user) {
           // Check if user is admin
-          const { data: { session } } = await supabase.auth.getSession()
+          const {
+            data: { session },
+          } = await supabase.auth.getSession()
           const response = await fetch("/api/auth/check-admin", {
             method: "POST",
-            headers: { 
+            headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${session?.access_token}`
+              Authorization: `Bearer ${session?.access_token}`,
             },
             credentials: "include",
           })
