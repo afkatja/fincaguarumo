@@ -5,6 +5,10 @@ import { verifyAdminAuth } from "@/lib/auth"
 
 const stripe = new Stripe(process.env.STRIPE_API_KEY!)
 
+// Module-scope constants for manual charge validation
+const MAX_MANUAL_AMOUNT = 1000000 // 10,000.00 in cents (10k max)
+const ALLOWED_CURRENCIES = new Set(["usd", "eur", "gbp", "crc"])
+
 export async function POST(request: Request) {
   try {
     await verifyAdminAuth(request)
@@ -43,8 +47,34 @@ export async function POST(request: Request) {
           { status: 400 },
         )
       }
+
+      // Validate expectedAmount as a positive integer within maximum
+      if (
+        !Number.isInteger(expectedAmount) ||
+        expectedAmount <= 0 ||
+        expectedAmount > MAX_MANUAL_AMOUNT
+      ) {
+        return NextResponse.json(
+          {
+            error: `expectedAmount must be a positive integer (max ${MAX_MANUAL_AMOUNT} cents)`,
+          },
+          { status: 400 },
+        )
+      }
+
+      // Validate expectedCurrency against allowlist
+      const normalizedCurrency = expectedCurrency.toLowerCase()
+      if (!ALLOWED_CURRENCIES.has(normalizedCurrency)) {
+        return NextResponse.json(
+          {
+            error: `expectedCurrency must be one of: ${Array.from(ALLOWED_CURRENCIES).join(", ").toUpperCase()}`,
+          },
+          { status: 400 },
+        )
+      }
+
       amount = expectedAmount
-      currency = expectedCurrency.toLowerCase()
+      currency = normalizedCurrency
       externalReservationId = reservationId
       internalBookingId = `manual-${reservationId}`
     } else {
