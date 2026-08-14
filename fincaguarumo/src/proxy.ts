@@ -52,7 +52,12 @@ export default async function proxy(request: NextRequest) {
       // Redirect to login if not authenticated
       const redirectUrl = new URL(`/${detectedLocale}/admin/login`, request.url)
       redirectUrl.searchParams.set("redirectTo", request.nextUrl.pathname)
-      return NextResponse.redirect(redirectUrl)
+      const redirectResponse = NextResponse.redirect(redirectUrl)
+      // Copy cookies from Supabase response to redirect response
+      response.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie)
+      })
+      return redirectResponse
     }
 
     // Check if user is admin using service role
@@ -76,9 +81,14 @@ export default async function proxy(request: NextRequest) {
 
     if (!userData?.is_admin) {
       // Redirect to unauthorized page if not admin
-      return NextResponse.redirect(
+      const redirectResponse = NextResponse.redirect(
         new URL(`/${detectedLocale}/unauthorized`, request.url),
       )
+      // Copy cookies from Supabase response to redirect response
+      response.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie)
+      })
+      return redirectResponse
     }
 
     return response
