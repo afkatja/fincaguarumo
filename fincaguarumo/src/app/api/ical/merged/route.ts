@@ -547,6 +547,7 @@ async function cleanupCancelledBookings(
 
     if (deleteBookingsError) {
       console.error("Error deleting cancelled bookings:", deleteBookingsError)
+      return
     } else {
       console.log(
         `Successfully deleted ${cancelledUids.length} cancelled bookings`,
