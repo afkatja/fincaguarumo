@@ -54,8 +54,6 @@ export default function AdminLoginPage() {
           throw signInError
         }
 
-        console.log("Sign in successful, user:", data.user)
-
         if (data.user) {
           // Check if user is admin
           const response = await fetch("/api/auth/check-admin", {
@@ -67,11 +65,7 @@ export default function AdminLoginPage() {
 
           const adminData = await response.json()
 
-          console.log("Admin check response:", adminData)
-          console.log("Redirecting to:", redirectTo)
-
           if (adminData.isAdmin) {
-            console.log("User is admin, attempting redirect...")
             // Use window.location.href for full page reload to ensure auth state is established
             window.location.href = redirectTo
           } else {
