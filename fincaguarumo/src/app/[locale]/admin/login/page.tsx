@@ -56,10 +56,13 @@ export default function AdminLoginPage() {
 
         if (data.user) {
           // Check if user is admin
+          const { data: { session } } = await supabase.auth.getSession()
           const response = await fetch("/api/auth/check-admin", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: data.user.id }),
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session?.access_token}`
+            },
             credentials: "include",
           })
 
