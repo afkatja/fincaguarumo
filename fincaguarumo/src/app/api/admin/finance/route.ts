@@ -20,6 +20,7 @@ export async function POST(request: Request) {
       expectedAmount,
       expectedCurrency,
       isManual,
+      source,
     } = body
 
     if (!reservationId || !paymentMethodId) {
@@ -81,17 +82,23 @@ export async function POST(request: Request) {
       // Auto mode: try to find booking in database
       let { data: booking, error: bookingError } = await supabaseAdmin
         .from("bookings")
-        .select("id, total_price, currency, external_reservation_id")
+        .select("id, total_price, currency, external_reservation_id, source")
         .eq("id", reservationId)
         .single()
 
       // If not found by internal ID, try external reservation ID
       if (bookingError || !booking) {
-        const { data: extBooking, error: extError } = await supabaseAdmin
+        // Try to find by external_reservation_id with source if provided
+        let query = supabaseAdmin
           .from("bookings")
-          .select("id, total_price, currency, external_reservation_id")
+          .select("id, total_price, currency, external_reservation_id, source")
           .eq("external_reservation_id", reservationId)
-          .single()
+
+        if (source) {
+          query = query.eq("source", source)
+        }
+
+        const { data: extBooking, error: extError } = await query.single()
 
         if (!extError && extBooking) {
           booking = extBooking

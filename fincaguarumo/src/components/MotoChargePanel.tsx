@@ -14,6 +14,7 @@ type Props = {
   onSucceeded?: (paymentIntentId: string) => void
   isManual?: boolean
   getAccessToken?: () => Promise<string | null>
+  source?: string
 }
 
 type ChargeResponse = {
@@ -44,6 +45,7 @@ export function MotoApiChargePanel({
   onSucceeded,
   isManual = false,
   getAccessToken,
+  source,
 }: Props) {
   const stripe = useStripe()
   const elements = useElements()
@@ -117,6 +119,7 @@ export function MotoApiChargePanel({
           expectedCurrency: currency.toLowerCase(),
           description,
           isManual,
+          source,
         }),
       })
 

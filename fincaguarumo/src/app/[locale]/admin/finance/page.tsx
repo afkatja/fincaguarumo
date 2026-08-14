@@ -444,24 +444,25 @@ const FinanceChargePage = () => {
           <div
             className={currentStep === 3 && bookingData ? "block" : "hidden"}
           >
-            {bookingData && (
-              <MotoApiChargePanel
-                reservationId={
-                  manualMode ? manualReservationId : bookingData.id
-                }
-                amount={bookingData.total_price}
-                currency={bookingData.currency}
-                description={
-                  manualMode
-                    ? `Manual VCC charge for reservation ${manualReservationId}`
-                    : getDescription(bookingData)
-                }
-                chargeEndpoint="/api/admin/finance"
-                isManual={manualMode}
-                getAccessToken={getAccessToken}
-                onSucceeded={handlePaymentSuccess}
-              />
-            )}
+{bookingData && (
+                <MotoApiChargePanel
+                  reservationId={
+                    manualMode ? manualReservationId : bookingData.id
+                  }
+                  amount={bookingData.total_price}
+                  currency={bookingData.currency}
+                  description={
+                    manualMode
+                      ? `Manual VCC charge for reservation ${manualReservationId}`
+                      : getDescription(bookingData)
+                  }
+                  chargeEndpoint="/api/admin/finance"
+                  isManual={manualMode}
+                  getAccessToken={getAccessToken}
+                  onSucceeded={handlePaymentSuccess}
+                  source={bookingData.source}
+                />
+              )}
           </div>
         </Elements>
 
