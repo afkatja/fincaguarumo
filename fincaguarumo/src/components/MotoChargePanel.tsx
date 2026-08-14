@@ -75,28 +75,27 @@ export function MotoApiChargePanel({
     setStatus("creating_payment_method")
     setMessage("Securely tokenizing card data with Stripe…")
 
-    const result = await stripe.createPaymentMethod({
-      type: "card",
-      card,
-      billing_details: {
-        address: postalCode.trim()
-          ? { postal_code: postalCode.trim() }
-          : undefined,
-      },
-    })
-
-    if (result.error || !result.paymentMethod) {
-      setStatus("error")
-      setMessage(
-        result.error?.message || "Stripe could not create a payment method.",
-      )
-      return
-    }
-
-    setStatus("charging")
-    setMessage("Submitting the MOTO payment for authorization…")
-
     try {
+      const result = await stripe.createPaymentMethod({
+        type: "card",
+        card,
+        billing_details: {
+          address: postalCode.trim()
+            ? { postal_code: postalCode.trim() }
+            : undefined,
+        },
+      })
+
+      if (result.error || !result.paymentMethod) {
+        setStatus("error")
+        setMessage(
+          result.error?.message || "Stripe could not create a payment method.",
+        )
+        return
+      }
+
+      setStatus("charging")
+      setMessage("Submitting the MOTO payment for authorization…")
       const accessToken = getAccessToken ? await getAccessToken() : null
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
