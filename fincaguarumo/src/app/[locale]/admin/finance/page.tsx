@@ -262,6 +262,8 @@ const FinanceChargePage = () => {
                   value={manualAmount}
                   onChange={e => setManualAmount(e.target.value)}
                   placeholder="Amount in cents (e.g., 10000 for $100.00)"
+                  min="1"
+                  step="1"
                 />
                 <div>
                   <Label
@@ -290,9 +292,14 @@ const FinanceChargePage = () => {
                       setError("Please fill in all fields")
                       return
                     }
+                    const amountValue = parseInt(manualAmount, 10)
+                    if (!Number.isFinite(amountValue) || amountValue < 1) {
+                      setError("Amount must be a positive integer (in cents)")
+                      return
+                    }
                     setBookingData({
                       id: "manual",
-                      total_price: parseInt(manualAmount, 10),
+                      total_price: amountValue,
                       currency: manualCurrency,
                       status: "pending",
                       guest_name: "Manual Entry",
