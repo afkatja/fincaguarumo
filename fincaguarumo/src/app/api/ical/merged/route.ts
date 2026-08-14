@@ -5,6 +5,7 @@ import crypto from "crypto"
 import { Booking, getSanityBookings } from "@/lib/setBookings"
 import bookingToNights from "@/lib/bookingToNights"
 import { createClient } from "@supabase/supabase-js"
+import { verifyAdminAuth } from "@/lib/auth"
 
 /**
  * Internal sync DTO containing full guest metadata from iCal parsing
@@ -578,7 +579,20 @@ async function cleanupCancelledBookings(
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const forceSync = searchParams.get("force") === "true"
+    const requestedForce = searchParams.get("force") === "true"
+    
+    // Only allow force=true for authenticated admin users
+    let forceSync = false
+    if (requestedForce) {
+      try {
+        await verifyAdminAuth(request)
+        forceSync = true
+      } catch (authError: any) {
+        // If not authenticated/authorized, ignore the force parameter
+        console.warn("Unauthorized force sync attempt, ignoring force parameter")
+        forceSync = false
+      }
+    }
 
     const feeds = Object.entries(FEEDS).filter(([, v]) => !!v) as [
       string,
