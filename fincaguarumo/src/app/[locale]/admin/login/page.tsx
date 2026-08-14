@@ -31,9 +31,13 @@ export default function AdminLoginPage() {
       if (isSignUp) {
         const siteOrigin = getSiteOrigin()
         const localePath = window.location.pathname
+        const confirmPath = localePath.replace(
+          /\/admin\/login\/?$/,
+          "/admin/auth/confirm",
+        )
         const redirectParams = new URLSearchParams()
         redirectParams.set("redirectTo", redirectTo)
-        const emailRedirectTo = `${siteOrigin}${localePath}?${redirectParams.toString()}`
+        const emailRedirectTo = `${siteOrigin}${confirmPath}?${redirectParams.toString()}`
 
         const normalizedEmail = email.trim().toLowerCase()
         const emailDomain = normalizedEmail.split("@")[1] ?? "unknown"
@@ -41,6 +45,7 @@ export default function AdminLoginPage() {
         console.debug("[auth:signup] → signUp attempt", {
           emailDomain,
           emailRedirectTo,
+          confirmPath,
           siteOrigin,
           hasNEXT_PUBLIC_SITE_URL: Boolean(process.env.NEXT_PUBLIC_SITE_URL),
           windowOrigin:
@@ -87,6 +92,53 @@ export default function AdminLoginPage() {
             "[auth:signup] email already registered but unconfirmed — proceeding with signUp to resend confirmation",
             { emailDomain, createdAt: diag.created_at },
           )
+        }
+
+        console.debug("[auth:signup] → diag-link pre-flight", {
+          emailDomain,
+          emailRedirectTo,
+        })
+        let linkDiag: any = null
+        try {
+          const linkDiagRes = await fetch("/api/auth/diag-link", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: normalizedEmail,
+              emailRedirectTo,
+            }),
+          })
+          if (linkDiagRes.ok) {
+            linkDiag = await linkDiagRes.json()
+            console.debug("[auth:signup] ← diag-link pre-flight response", {
+              ok: linkDiag?.ok,
+              requestedOrigin: linkDiag?.requestedOrigin,
+              generatedOrigin: linkDiag?.generatedOrigin,
+              originRewritten: linkDiag?.originRewritten,
+              mismatchAdvice: linkDiag?.mismatchAdvice,
+              generatedActionLinkPreview: linkDiag?.generatedActionLink
+                ? linkDiag.generatedActionLink.split("?")[0] + "?..."
+                : null,
+            })
+          }
+        } catch (linkErr) {
+          console.warn("[auth:signup] diag-link pre-flight failed", linkErr)
+        }
+
+        if (linkDiag?.originRewritten) {
+          console.error(
+            "[auth:signup] SUPABASE WILL REWRITE THE REDIRECT ORIGIN — check your Supabase Redirect URLs allowlist",
+            {
+              requestedOrigin: linkDiag.requestedOrigin,
+              generatedOrigin: linkDiag.generatedOrigin,
+              advice: linkDiag.mismatchAdvice,
+            },
+          )
+          setError(
+            `Sign-up configuration issue: Supabase is sending the confirmation email with a redirect to ${linkDiag.generatedOrigin} instead of ${linkDiag.requestedOrigin}. An admin must add "${linkDiag.requestedOrigin}/*" to Authentication → URL Configuration → Redirect URLs in the Supabase dashboard. After confirming your email you will still be taken to ${linkDiag.generatedOrigin}.`,
+          )
+          // Don't return here — still proceed with the signUp so the user gets an
+          // email. But the big red error explains the redirect misconfiguration.
         }
 
         const { data, error: signUpError } = await supabase.auth.signUp({
@@ -140,6 +192,7 @@ export default function AdminLoginPage() {
           userId: data.user.id,
           emailDomain,
           emailRedirectTo,
+          supabaseRewroteOrigin: linkDiag?.originRewritten ?? null,
         })
         setError(
           "Sign up successful! Please check your email to confirm your account.",
