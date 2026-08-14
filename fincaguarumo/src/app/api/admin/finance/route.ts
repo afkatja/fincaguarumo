@@ -134,7 +134,9 @@ export async function POST(request: Request) {
     }
 
     // Use internal ID for idempotency key to prevent double-charges
-    const idempotencyKey = `booking-vcc:${internalBookingId}:${amount}:${currency}`
+    // Include attempt ID to distinguish intentional retries (different payment method) from transport retries
+    const attemptId = paymentMethodId
+    const idempotencyKey = `booking-vcc:${internalBookingId}:${amount}:${currency}:attempt-${attemptId}`
 
     const intent = await stripe.paymentIntents.create(
       {
