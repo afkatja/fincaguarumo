@@ -23,18 +23,29 @@ async function makeAdmin(email: string) {
   try {
     console.log(`Looking up user with email: ${email}`)
 
-    // Get the user from auth.users
-    const {
-      data: { users },
-      error: authError,
-    } = await supabaseAdmin.auth.admin.listUsers()
+    // Get all users from auth.users with pagination
+    const allUsers = []
+    let page = 1
+    const perPage = 1000
+    let hasMore = true
 
-    if (authError) {
-      console.error("Error fetching users from auth:", authError)
-      process.exit(1)
+    while (hasMore) {
+      const {
+        data: { users },
+        error: authError,
+      } = await supabaseAdmin.auth.admin.listUsers({ page, perPage })
+
+      if (authError) {
+        console.error("Error fetching users from auth:", authError)
+        process.exit(1)
+      }
+
+      allUsers.push(...users)
+      hasMore = users.length === perPage
+      page++
     }
 
-    const user = users.find(u => u.email === email)
+    const user = allUsers.find(u => u.email === email)
 
     if (!user) {
       console.error(`User with email ${email} not found in auth.users`)
