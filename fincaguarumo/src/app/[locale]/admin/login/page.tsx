@@ -35,6 +35,60 @@ export default function AdminLoginPage() {
         redirectParams.set("redirectTo", redirectTo)
         const emailRedirectTo = `${siteOrigin}${localePath}?${redirectParams.toString()}`
 
+        const normalizedEmail = email.trim().toLowerCase()
+        const emailDomain = normalizedEmail.split("@")[1] ?? "unknown"
+
+        console.debug("[auth:signup] → signUp attempt", {
+          emailDomain,
+          emailRedirectTo,
+          siteOrigin,
+          hasNEXT_PUBLIC_SITE_URL: Boolean(process.env.NEXT_PUBLIC_SITE_URL),
+          windowOrigin:
+            typeof window !== "undefined" ? window.location.origin : null,
+        })
+
+        console.debug("[auth:signup] → diag-signup pre-check", { emailDomain })
+        let diag: any = null
+        try {
+          const diagRes = await fetch("/api/auth/diag-signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: normalizedEmail }),
+          })
+          diag = diagRes.ok ? await diagRes.json() : null
+          console.debug("[auth:signup] ← diag-signup pre-check response", {
+            ok: diag?.ok ?? null,
+            code: diag?.code ?? null,
+            exists: diag?.exists ?? null,
+            emailConfirmed: diag?.emailConfirmed ?? null,
+            createdAt: diag?.created_at ?? null,
+            emailConfirmedAt: diag?.email_confirmed_at ?? null,
+          })
+        } catch (diagErr) {
+          console.warn("[auth:signup] diag-signup pre-check failed", diagErr)
+        }
+
+        if (diag?.exists) {
+          if (diag.emailConfirmed) {
+            console.info(
+              "[auth:signup] blocking signup: email already confirmed",
+              {
+                emailDomain,
+                createdAt: diag.created_at,
+                lastSignInAt: diag.last_sign_in_at,
+              },
+            )
+            setError(
+              "An account with this email already exists. Please sign in instead.",
+            )
+            return
+          }
+          console.info(
+            "[auth:signup] email already registered but unconfirmed — proceeding with signUp to resend confirmation",
+            { emailDomain, createdAt: diag.created_at },
+          )
+        }
+
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -43,16 +97,54 @@ export default function AdminLoginPage() {
           },
         })
 
+        console.debug("[auth:signup] ← signUp response", {
+          error: signUpError
+            ? {
+                name: signUpError.name,
+                code: (signUpError as any).code,
+                status: (signUpError as any).status,
+                message: signUpError.message,
+              }
+            : null,
+          userId: data.user?.id ?? null,
+          emailConfirmedAt: data.user?.email_confirmed_at ?? null,
+          createdAt: data.user?.created_at ?? null,
+          lastSignInAt: data.user?.last_sign_in_at ?? null,
+          hasSession: Boolean(data.session),
+          identitiesCount: data.user?.identities?.length ?? 0,
+        })
+
         if (signUpError) {
           throw signUpError
         }
 
-        if (data.user) {
+        if (!data.user) {
           setError(
-            "Sign up successful! Please check your email to confirm your account.",
+            "Sign up did not return a user. Please try again in a moment.",
           )
           return
         }
+
+        if (data.user.email_confirmed_at) {
+          console.info(
+            "[auth:signup] signUp returned already-confirmed user — treating as existing account",
+            { userId: data.user.id, emailDomain },
+          )
+          setError(
+            "An account with this email already exists. Please sign in instead.",
+          )
+          return
+        }
+
+        console.info("[auth:signup] new signup pending email confirmation", {
+          userId: data.user.id,
+          emailDomain,
+          emailRedirectTo,
+        })
+        setError(
+          "Sign up successful! Please check your email to confirm your account.",
+        )
+        return
       } else {
         // Sign in
         const { data, error: signInError } =
