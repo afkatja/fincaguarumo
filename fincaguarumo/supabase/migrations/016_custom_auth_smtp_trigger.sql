@@ -72,7 +72,7 @@ IMMUTABLE
 RETURNS NULL ON NULL INPUT
 AS $$
   -- 👇 Replace this with the public URL of /api/auth/custom-send-confirmation
-  SELECT 'https://fincaguarumo.com/api/auth/custom-send-confirmation'::text;
+  SELECT 'https://deploy-preview-80--fincaguarumo.netlify.app/api/auth/custom-send-confirmation'::text;
 $$;
 
 ALTER FUNCTION public.custom_confirmation_hook_url() OWNER TO postgres;

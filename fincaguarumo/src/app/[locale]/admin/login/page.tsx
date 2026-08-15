@@ -141,49 +141,43 @@ export default function AdminLoginPage() {
           // email. But the big red error explains the redirect misconfiguration.
         }
 
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo,
+        const { data, error: signUpError } = await fetch(
+          "/api/auth/admin-create-user",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: normalizedEmail,
+              password,
+              emailRedirectTo,
+              data: {
+                locale: searchParams.get("locale") || "en",
+                emailRedirectTo,
+              },
+            }),
           },
-        })
+        ).then(res => res.json())
 
-        console.debug("[auth:signup] ← signUp response", {
+        console.debug("[auth:signup] ← admin-create-user response", {
           error: signUpError
             ? {
                 name: signUpError.name,
-                code: (signUpError as any).code,
-                status: (signUpError as any).status,
+                code: signUpError.code,
+                status: signUpError.status,
                 message: signUpError.message,
               }
             : null,
           userId: data.user?.id ?? null,
-          emailConfirmedAt: data.user?.email_confirmed_at ?? null,
-          createdAt: data.user?.created_at ?? null,
-          lastSignInAt: data.user?.last_sign_in_at ?? null,
-          hasSession: Boolean(data.session),
-          identitiesCount: data.user?.identities?.length ?? 0,
+          message: data.message ?? null,
         })
 
         if (signUpError) {
-          throw signUpError
+          throw new Error(signUpError.message || "Sign up failed")
         }
 
         if (!data.user) {
           setError(
             "Sign up did not return a user. Please try again in a moment.",
-          )
-          return
-        }
-
-        if (data.user.email_confirmed_at) {
-          console.info(
-            "[auth:signup] signUp returned already-confirmed user — treating as existing account",
-            { userId: data.user.id, emailDomain },
-          )
-          setError(
-            "An account with this email already exists. Please sign in instead.",
           )
           return
         }
