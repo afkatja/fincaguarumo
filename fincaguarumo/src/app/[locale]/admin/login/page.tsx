@@ -172,6 +172,8 @@ export default function AdminLoginPage() {
         })
 
         if (signUpError) {
+          console.error({ signUpError })
+
           throw new Error(signUpError.message || "Sign up failed")
         }
 

@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server"
 import { createSupabaseAdmin } from "@/lib/auth"
-import { verifyAdminAuth } from "@/lib/auth"
 
 export async function POST(request: Request) {
   try {
-    // Verify the request is from an authenticated admin
-    await verifyAdminAuth(request)
+    // Note: This endpoint is used for admin signup, so it doesn't require admin authentication
+    // The new user will be created and then can be granted admin status via separate process
 
     const body = await request.json()
     const { email, password, emailRedirectTo, data } = body
@@ -21,12 +20,14 @@ export async function POST(request: Request) {
 
     // Create user via admin API - bypasses public rate limits
     // The custom SMTP trigger (migration 016) will still fire AFTER INSERT on auth.users
-    const { data: userData, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: false, // Let the custom trigger send confirmation email
-      user_metadata: data || {},
-    })
+    const { data: userData, error } = await supabaseAdmin.auth.admin.createUser(
+      {
+        email,
+        password,
+        email_confirm: false, // Let the custom trigger send confirmation email
+        user_metadata: data || {},
+      },
+    )
 
     if (error) {
       console.error("[auth:admin-create-user] createUser failed:", error)
@@ -39,14 +40,15 @@ export async function POST(request: Request) {
     // If emailRedirectTo is provided, generate a confirmation link manually
     // and send it via the custom endpoint (optional - trigger handles it)
     if (emailRedirectTo && userData.user) {
-      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-        type: "signup",
-        email,
-        password,
-        options: {
-          redirectTo: emailRedirectTo,
-        },
-      })
+      const { data: linkData, error: linkError } =
+        await supabaseAdmin.auth.admin.generateLink({
+          type: "signup",
+          email,
+          password,
+          options: {
+            redirectTo: emailRedirectTo,
+          },
+        })
 
       if (linkError) {
         console.warn("[auth:admin-create-user] generateLink failed:", linkError)
@@ -59,16 +61,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       user: userData.user,
-      message: "User created successfully. Confirmation email will be sent via custom SMTP.",
+      message:
+        "User created successfully. Confirmation email will be sent via custom SMTP.",
     })
   } catch (error: any) {
     console.error("[auth:admin-create-user] unexpected error:", error)
-    if (error.status === 401 || error.status === 403) {
-      return NextResponse.json(
-        { error: "Admin authentication required" },
-        { status: 401 },
-      )
-    }
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
