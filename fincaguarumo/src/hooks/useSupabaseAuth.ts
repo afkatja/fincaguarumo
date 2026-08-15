@@ -45,10 +45,35 @@ export function useSupabaseAuth() {
     return currentSession.access_token
   }
 
+  const signInWithEmail = async (email: string, password: string) => {
+    const supabase = getBrowserClient()
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      throw error
+    }
+
+    return data
+  }
+
+  const signOut = async () => {
+    const supabase = getBrowserClient()
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error("Error signing out:", error)
+      throw error
+    }
+  }
+
   return {
     session,
     loading,
     user: session?.user || null,
     getAccessToken,
+    signInWithEmail,
+    signOut,
   }
 }

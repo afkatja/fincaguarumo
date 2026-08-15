@@ -1,26 +1,24 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "../../../../components/ui/button"
 import Input from "../../../../components/Input"
-import { getBrowserClient } from "../../../../lib/supabaseClient"
+import { useSupabaseAuth } from "../../../../hooks/useSupabaseAuth"
 import { validateRedirectTo, getSiteOrigin } from "../../../../lib/utils"
 
 export default function AdminLoginPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = validateRedirectTo(
     searchParams.get("redirectTo"),
     "/admin",
   )
+  const { signInWithEmail, signOut } = useSupabaseAuth()
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const supabase = getBrowserClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -195,11 +193,10 @@ export default function AdminLoginPage() {
         return
       } else {
         // Sign in
-        const { data, error: signInError } =
-          await supabase.auth.signInWithPassword({
-            email,
-            password,
-          })
+        const { data, error: signInError } = await signInWithEmail(
+          email,
+          password,
+        )
 
         if (signInError) {
           throw signInError
@@ -207,14 +204,11 @@ export default function AdminLoginPage() {
 
         if (data.user) {
           // Check if user is admin
-          const {
-            data: { session },
-          } = await supabase.auth.getSession()
           const response = await fetch("/api/auth/check-admin", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${session?.access_token}`,
+              Authorization: `Bearer ${data.session?.access_token}`,
             },
             credentials: "include",
           })
@@ -226,12 +220,11 @@ export default function AdminLoginPage() {
             window.location.href = redirectTo
           } else {
             setError("Access denied. Admin privileges required.")
-            await supabase.auth.signOut()
+            await signOut()
           }
         }
       }
     } catch (err) {
-      console.error("Uncaught error", { err })
       setError(err instanceof Error ? err.message : "Authentication failed")
     } finally {
       setLoading(false)
