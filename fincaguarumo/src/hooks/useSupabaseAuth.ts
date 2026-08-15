@@ -56,7 +56,7 @@ export function useSupabaseAuth() {
       throw error
     }
 
-    return data
+    return { data, error }
   }
 
   const signOut = async () => {
