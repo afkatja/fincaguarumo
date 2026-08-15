@@ -31,8 +31,22 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("[auth:admin-create-user] createUser failed:", error)
+
+      // Handle specific error cases with user-friendly messages
+      if (
+        error.message?.includes("already been registered") ||
+        error.message?.includes("already exists")
+      ) {
+        return NextResponse.json(
+          {
+            error: "A user with this email address has already been registered",
+          },
+          { status: 409 }, // 409 Conflict
+        )
+      }
+
       return NextResponse.json(
-        { error: error.message },
+        { error: error.message || "Failed to create user" },
         { status: error.status || 400 },
       )
     }

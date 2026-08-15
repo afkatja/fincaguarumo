@@ -141,43 +141,42 @@ export default function AdminLoginPage() {
           // email. But the big red error explains the redirect misconfiguration.
         }
 
-        const { data, error: signUpError } = await fetch(
-          "/api/auth/admin-create-user",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: normalizedEmail,
-              password,
+        const response = await fetch("/api/auth/admin-create-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: normalizedEmail,
+            password,
+            emailRedirectTo,
+            data: {
+              locale: searchParams.get("locale") || "en",
               emailRedirectTo,
-              data: {
-                locale: searchParams.get("locale") || "en",
-                emailRedirectTo,
-              },
-            }),
-          },
-        ).then(res => res.json())
-
-        console.debug("[auth:signup] ← admin-create-user response", {
-          error: signUpError
-            ? {
-                name: signUpError.name,
-                code: signUpError.code,
-                status: signUpError.status,
-                message: signUpError.message,
-              }
-            : null,
-          userId: data.user?.id ?? null,
-          message: data.message ?? null,
+            },
+          }),
         })
 
-        if (signUpError) {
-          console.error({ signUpError })
+        const responseData = await response.json()
 
-          throw new Error(signUpError.message || "Sign up failed")
+        console.debug("[auth:signup] ← admin-create-user response", {
+          status: response.status,
+          ok: response.ok,
+          error: responseData.error ?? null,
+          userId: responseData.user?.id ?? null,
+          message: responseData.message ?? null,
+        })
+
+        if (!response.ok) {
+          // Handle specific error cases
+          if (response.status === 409) {
+            setError(
+              "An account with this email already exists. Please sign in instead.",
+            )
+            return
+          }
+          throw new Error(responseData.error || "Sign up failed")
         }
 
-        if (!data.user) {
+        if (!responseData.user) {
           setError(
             "Sign up did not return a user. Please try again in a moment.",
           )
@@ -185,7 +184,7 @@ export default function AdminLoginPage() {
         }
 
         console.info("[auth:signup] new signup pending email confirmation", {
-          userId: data.user.id,
+          userId: responseData.user.id,
           emailDomain,
           emailRedirectTo,
           supabaseRewroteOrigin: linkDiag?.originRewritten ?? null,
@@ -232,6 +231,7 @@ export default function AdminLoginPage() {
         }
       }
     } catch (err) {
+      console.error("Uncaught error", { err })
       setError(err instanceof Error ? err.message : "Authentication failed")
     } finally {
       setLoading(false)
