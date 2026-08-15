@@ -182,8 +182,6 @@ export async function POST(request: Request) {
       { status: 422 },
     )
   } catch (error: any) {
-    console.error("MOTO charge error:", error)
-
     if (error.status) {
       return NextResponse.json(
         { error: error.message },

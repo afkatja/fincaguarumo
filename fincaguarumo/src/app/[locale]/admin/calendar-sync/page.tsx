@@ -112,7 +112,6 @@ export default function CalendarSyncPage() {
       })
 
       if (response.ok) {
-        const data = await response.json()
         // Sync logs are fetched independently in useEffect
       } else if (response.status === 401) {
         console.error("Authentication required")
@@ -162,10 +161,6 @@ export default function CalendarSyncPage() {
             gcal_event_id: log.gcal_event_id,
           }))
         setSyncLogs(parsedLogs)
-      } else if (response.status === 401) {
-        console.error("Authentication required")
-      } else if (response.status === 403) {
-        console.error("Admin access required")
       }
     } catch (error) {
       console.error("Failed to fetch recent sync logs:", error)
@@ -440,7 +435,6 @@ export default function CalendarSyncPage() {
             <div
               data-testid="sync-log-entry"
               className="p-4 border rounded cursor-pointer hover:bg-gray-50"
-              onClick={() => console.log("Sync log entry clicked")}
             >
               <div data-testid="sync-details">
                 <div>Last sync: {new Date().toLocaleString()}</div>
