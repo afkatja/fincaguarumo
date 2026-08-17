@@ -33,7 +33,7 @@ const FinanceChargePage = () => {
   const [bookingData, setBookingData] = useState<BookingData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [manualMode, setManualMode] = useState(false)
+  const [manualMode, setManualMode] = useState(true)
   const [manualReservationId, setManualReservationId] = useState("")
   const [manualAmount, setManualAmount] = useState("")
   const [manualCurrency, setManualCurrency] = useState("usd")
