@@ -24,6 +24,7 @@ interface IcsSyncRow {
     guests?: number
   }
   rawDescription?: string
+  externalReservationId?: string
 }
 
 /**
@@ -119,6 +120,7 @@ function parseIcsToBookings(
       e.component.getFirstPropertyValue("description") ?? undefined
     const guestInfo = extractGuestInfo(summary, description)
 
+    const externalReservationId = extractExternalReservationId(sourceName, summary, description)
     out.push({
       uid,
       start,
@@ -127,6 +129,7 @@ function parseIcsToBookings(
       source: sourceName,
       guestInfo,
       rawDescription: description,
+      externalReservationId,
     })
   }
 
@@ -142,6 +145,7 @@ function parseIcsToBookings(
       o.component.getFirstPropertyValue("description") ?? undefined
     const guestInfo = extractGuestInfo(summary, description)
 
+    const externalReservationId = extractExternalReservationId(sourceName, summary, description)
     out.push({
       uid,
       start,
@@ -150,6 +154,7 @@ function parseIcsToBookings(
       source: sourceName,
       guestInfo,
       rawDescription: description,
+      externalReservationId,
     })
   }
 
@@ -216,6 +221,45 @@ function extractGuestInfo(
 }
 
 /**
+ * Extract external reservation ID from iCal description/summary based on source platform
+ */
+function extractExternalReservationId(
+  source: string,
+  summary?: string,
+  description?: string,
+): string | undefined {
+  const text = summary || description || ""
+  
+  switch (source.toLowerCase()) {
+    case "booking":
+      // booking.com: description often contains "Reservation ID: 123456789" or "Booking.com confirmation: 123456789"
+      const bookingMatch = text.match(/(?:reservation|booking|confirmation)\s*(?:id|number|code)[:#]?\s*([A-Z0-9]+)/i)
+      if (bookingMatch) return bookingMatch[1]
+      // Also check UID format: often contains the reservation ID
+      const uidMatch = text.match(/booking[.-]?com[.-]?(\d+)/i)
+      if (uidMatch) return uidMatch[1]
+      break
+      
+    case "airbnb":
+      // Airbnb: description contains "Reservation code: HMJ3Y4K" or "Confirmation code: HMJ3Y4K"
+      const airbnbMatch = text.match(/(?:reservation|confirmation)\s*(?:code|id)[:#]?\s*([A-Z0-9]+)/i)
+      if (airbnbMatch) return airbnbMatch[1]
+      // UID often contains airbnb reservation code
+      const airbnbUidMatch = text.match(/airbnb[.-]?([A-Z0-9]+)/i)
+      if (airbnbUidMatch) return airbnbUidMatch[1]
+      break
+      
+    case "vrbo":
+      // VRBO: description contains "Reservation ID: 12345678" or "Booking number: 12345678"
+      const vrboMatch = text.match(/(?:reservation|booking)\s*(?:id|number)[:#]?\s*(\d+)/i)
+      if (vrboMatch) return vrboMatch[1]
+      break
+  }
+  
+  return undefined
+}
+
+/**
  * Convert internal IcsSyncRow to sanitized BookingResponse for client consumption
  */
 function mapToBookingResponse(syncRow: IcsSyncRow): BookingResponse {
@@ -243,6 +287,7 @@ function mapToBookingForSupabase(syncRow: IcsSyncRow): Booking {
     email: syncRow.guestInfo.email,
     phone: syncRow.guestInfo.phone,
     guests: syncRow.guestInfo.guests,
+    externalReservationId: syncRow.externalReservationId,
   }
 }
 
@@ -327,6 +372,13 @@ async function saveBookingToSupabase(syncRow: IcsSyncRow) {
       booking_type: "villa",
       currency: booking.currency || "usd",
       guests: booking.guests || 1,
+    }
+    
+    // Use extracted external reservation ID if available, otherwise fall back to UID
+    if (booking.externalReservationId) {
+      bookingData.external_reservation_id = booking.externalReservationId
+    } else if (booking.uid) {
+      bookingData.external_reservation_id = booking.uid
     }
 
     // Add optional price fields if present

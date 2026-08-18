@@ -82,26 +82,46 @@ export async function POST(request: Request) {
       // Auto mode: try to find booking in database
       let { data: booking, error: bookingError } = await supabaseAdmin
         .from("bookings")
-        .select("id, total_price, currency, external_reservation_id, source")
+        .select(
+          "id, total_price, currency, external_reservation_id, source, uid",
+        )
         .eq("id", reservationId)
-        .single()
+        .maybeSingle()
 
       // If not found by internal ID, try external reservation ID
       if (bookingError || !booking) {
         // Try to find by external_reservation_id with source if provided
         let query = supabaseAdmin
           .from("bookings")
-          .select("id, total_price, currency, external_reservation_id, source")
+          .select(
+            "id, total_price, currency, external_reservation_id, source, uid",
+          )
           .eq("external_reservation_id", reservationId)
 
         if (source) {
           query = query.eq("source", source)
         }
 
-        const { data: extBooking, error: extError } = await query.single()
+        const { data: extBooking, error: extError } = await query.maybeSingle()
 
         if (!extError && extBooking) {
           booking = extBooking
+          bookingError = null
+        }
+      }
+
+      // If still not found, try uid as fallback (for legacy bookings)
+      if (bookingError || !booking) {
+        const { data: uidBooking, error: uidError } = await supabaseAdmin
+          .from("bookings")
+          .select(
+            "id, total_price, currency, external_reservation_id, source, uid",
+          )
+          .eq("uid", reservationId)
+          .maybeSingle()
+
+        if (!uidError && uidBooking) {
+          booking = uidBooking
           bookingError = null
         }
       }
@@ -134,9 +154,9 @@ export async function POST(request: Request) {
     }
 
     // Use internal ID for idempotency key to prevent double-charges
-    // Include attempt ID to distinguish intentional retries (different payment method) from transport retries
-    const attemptId = paymentMethodId
-    const idempotencyKey = `booking-vcc:${internalBookingId}:${amount}:${currency}:attempt-${attemptId}`
+    // Key is based on booking + amount + currency so the same reservation
+    // cannot be charged multiple times regardless of payment method
+    const idempotencyKey = `booking-vcc:${internalBookingId}:${amount}:${currency}`
 
     const intent = await stripe.paymentIntents.create(
       {
@@ -181,18 +201,26 @@ export async function POST(request: Request) {
       },
       { status: 422 },
     )
-  } catch (error: any) {
-    if (error.status) {
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Finance charge error:", error.message)
       return NextResponse.json(
-        { error: error.message },
-        { status: error.status },
+        { error: error.message || "Internal server error" },
+        { status: 500 },
       )
     }
 
-    if (error.type === "StripeCardError") {
-      return NextResponse.json({ error: error.message }, { status: 402 })
+    if (typeof error === "object" && error !== null) {
+      const stripeError = error as { type?: string; message?: string }
+      if (stripeError.type === "StripeCardError") {
+        return NextResponse.json(
+          { error: stripeError.message || "Card error" },
+          { status: 402 },
+        )
+      }
     }
 
+    console.error("Unknown finance charge error:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

@@ -15,6 +15,7 @@ export type Booking = {
   guests?: number
   totalPrice?: number
   currency?: string
+  externalReservationId?: string
 }
 
 export async function setBookings({

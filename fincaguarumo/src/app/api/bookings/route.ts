@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminAuth, verifyUserAuth } from "@/lib/auth"
+import { BOOKINGS_ADMIN_SELECT_COLUMNS } from "@/lib/db-schema/bookings"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -147,31 +148,17 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
+    const externalReservationId = searchParams.get("external_reservation_id")
     const from = searchParams.get("from")
     const to = searchParams.get("to")
     const source = searchParams.get("source")
     const limit = searchParams.get("limit")
 
-    // If ID is provided, fetch single booking
+    // If ID is provided, fetch single booking by internal ID
     if (id) {
       const { data, error } = await supabase
         .from("bookings")
-        .select(`
-          id,
-          uid,
-          guest_name,
-          check_in,
-          check_out,
-          guests,
-          booking_type,
-          total_price,
-          currency,
-          source,
-          status,
-          external_reservation_id,
-          created_at,
-          updated_at
-        `)
+        .select(BOOKINGS_ADMIN_SELECT_COLUMNS.join(", "))
         .eq("id", id)
         .single()
 
@@ -187,22 +174,36 @@ export async function GET(request: Request) {
       return NextResponse.json(data)
     }
 
+    // If external_reservation_id is provided, fetch single booking by external ID
+    if (externalReservationId) {
+      let query = supabase
+        .from("bookings")
+        .select(BOOKINGS_ADMIN_SELECT_COLUMNS.join(", "))
+        .eq("external_reservation_id", externalReservationId)
+
+      // Optionally filter by source if provided
+      if (source) {
+        query = query.eq("source", source)
+      }
+
+      const { data, error } = await query.maybeSingle()
+
+      if (error) {
+        console.error("Error fetching booking by external_reservation_id:", error)
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      if (!data) {
+        return NextResponse.json({ error: "Booking not found" }, { status: 404 })
+      }
+
+      return NextResponse.json(data)
+    }
+
     // Only select non-sensitive fields to prevent PII exposure
-    let query = supabase.from("bookings").select(`
-      id,
-      uid,
-      check_in,
-      check_out,
-      guests,
-      booking_type,
-      total_price,
-      currency,
-      source,
-      status,
-      external_reservation_id,
-      created_at,
-      updated_at
-    `)
+    let query = supabase
+      .from("bookings")
+      .select(BOOKINGS_ADMIN_SELECT_COLUMNS.join(", "))
 
     // Filter by date range if provided
     if (from) {
