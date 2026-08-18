@@ -1,0 +1,63 @@
+name: No Debug Statements
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-debug-statements:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            **/*.{ts,tsx,js,jsx}
+
+      - name: Check for debug statements
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "Checking for debug statements in changed files..."
+          
+          # List of patterns to search for
+          patterns=(
+            "console\.log"
+            "console\.info"
+            "console\.debug"
+            "console\.warn"
+            "console\.error"
+            "debugger"
+          )
+          
+          files_with_debug=()
+          
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            if [[ "$file" =~ \.(ts|tsx|js|jsx)$ ]]; then
+              for pattern in "${patterns[@]}"; do
+                if grep -q "$pattern" "$file" 2>/dev/null; then
+                  files_with_debug+=("$file")
+                  echo "❌ Found debug statement in $file:"
+                  grep -n "$pattern" "$file" | head -5
+                  break
+                fi
+              done
+            fi
+          done
+          
+          if [ ${#files_with_debug[@]} -gt 0 ]; then
+            echo ""
+            echo "❌ Debug statements found in the following files:"
+            printf '%s\n' "${files_with_debug[@]}"
+            echo ""
+            echo "Please remove all debug statements (console.log, console.info, console.debug, console.warn, console.error, debugger) before merging."
+            exit 1
+          else
+            echo "✅ No debug statements found in changed files."
+          fi

@@ -11,11 +11,7 @@ import {
  */
 export async function GET() {
   try {
-    // Force sync to ensure calendar shows up-to-date data (bypasses cooldown)
-    // We await this because the calendar needs fresh availability data after cancelled bookings are cleaned up
-    await triggeriCalSync(undefined, true)
-
-    // Fetch unavailable ranges using shared utility
+    // Fetch unavailable ranges using shared utility (uses cached sync data with cooldown)
     const { availabilityData, bookingsData } = await fetchUnavailableRanges()
 
     // Convert to blocked dates format
