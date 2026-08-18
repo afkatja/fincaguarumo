@@ -5,6 +5,7 @@ import type { Session } from "@supabase/supabase-js"
 export function useSupabaseAuth() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [tokenLoading, setTokenLoading] = useState(false)
 
   useEffect(() => {
     const supabase = getBrowserClient()
@@ -32,17 +33,38 @@ export function useSupabaseAuth() {
   const getAccessToken = async () => {
     if (!session) return null
 
-    const supabase = getBrowserClient()
-    const {
-      data: { session: currentSession },
-      error,
-    } = await supabase.auth.getSession()
+    setTokenLoading(true)
+    try {
+      const supabase = getBrowserClient()
 
-    if (error || !currentSession) {
-      return null
+      // First, try to get the current session
+      const {
+        data: { session: currentSession },
+        error: sessionError,
+      } = await supabase.auth.getSession()
+
+      // If session exists and is valid, return the access token
+      if (currentSession && !sessionError) {
+        return currentSession.access_token
+      }
+
+      // If session is expired or invalid, attempt to refresh
+      const {
+        data: { session: refreshedSession },
+        error: refreshError,
+      } = await supabase.auth.refreshSession()
+
+      if (refreshError || !refreshedSession) {
+        // Session refresh failed - user needs to re-authenticate
+        return null
+      }
+
+      // Update the local session state with the refreshed session
+      setSession(refreshedSession)
+      return refreshedSession.access_token
+    } finally {
+      setTokenLoading(false)
     }
-
-    return currentSession.access_token
   }
 
   const signInWithEmail = async (email: string, password: string) => {
@@ -71,6 +93,7 @@ export function useSupabaseAuth() {
   return {
     session,
     loading,
+    tokenLoading,
     user: session?.user || null,
     getAccessToken,
     signInWithEmail,
