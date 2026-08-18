@@ -59,6 +59,8 @@
     "phoneLabel": "Ваш номер телефона *",
     "priceLabel": "Цена за",
     "rateLabel": "Цена",
+    "priceFrom": "Цена от {price} для {guests} {guestsLabel}",
+    "priceFromShort": "для {guests} {guestsLabel}",
     "reserveButton": "Резервировать",
     "selectDate": "Выберите дату",
     "rateVATlabel": "Цена (в том числе 13% НДС)",
@@ -98,6 +100,13 @@
   "page": {
     "moreFAQ": "Еще вопросы",
     "FAQ": "Часто задаваемые вопросы",
+    "quickInfo": "Краткая информация",
+    "reviews": "Отзывы",
+    "about": "О",
+    "details": "Подробности",
+    "allReviews": "Все отзывы",
+    "more": "Ещё",
+    "less": "Меньше",
     "greetings": {
       "homepage": "Добро пожаловать на виллу Бруно! Чем я могу помочь вам сегодня?",
       "stay": "Привет! Я здесь, чтобы помочь вам забронировать {propertyTitle}. Что бы вы хотели знать?",
@@ -149,6 +158,17 @@
     "aboutThisAccommodation": "Об этом жилье",
     "continueReading": "Продолжайте читать, чтобы узнать больше об этой уникальной эковилле...",
     "readMore": "Читать далее"
+  },
+  "faq": {
+    "title": "Часто задаваемые вопросы",
+    "browseInstructions": "Просматривайте вопросы по категориям или ищите то, что вам нужно.",
+    "searchLabel": "Поиск FAQ",
+    "searchPlaceholder": "Поиск FAQ",
+    "allCategories": "Все категории",
+    "clearFilters": "Очистить фильтры",
+    "readLess": "Читать меньше",
+    "readMore": "Читать больше",
+    "noResults": "Нет FAQ, соответствующих вашему поиску или выбранной категории."
   },
   "reviews": {
     "wildlifeNature": "Дикая природа и природа",
