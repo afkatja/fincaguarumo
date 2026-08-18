@@ -1,6 +1,7 @@
 "use client"
 
 import { FormEvent, useState } from "react"
+import { useRouter } from "next/navigation"
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js"
 import Input from "./Input"
 import { Label } from "./ui/label"
@@ -47,6 +48,7 @@ export function MotoApiChargePanel({
   getAccessToken,
   source,
 }: Props) {
+  const router = useRouter()
   const stripe = useStripe()
   const elements = useElements()
   const [status, setStatus] = useState<Status>("idle")
@@ -99,11 +101,21 @@ export function MotoApiChargePanel({
       setStatus("charging")
       setMessage("Submitting the MOTO payment for authorization…")
       const accessToken = getAccessToken ? await getAccessToken() : null
+
+      if (!accessToken) {
+        // Redirect to login with return URL
+        const currentPath = window.location.pathname
+        router.push(
+          `/admin/login?redirectTo=${encodeURIComponent(currentPath)}`,
+        )
+        setStatus("error")
+        setMessage("Session expired. Please log in again.")
+        return
+      }
+
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
-      }
-      if (accessToken) {
-        headers.Authorization = `Bearer ${accessToken}`
+        Authorization: `Bearer ${accessToken}`,
       }
 
       const response = await fetch(chargeEndpoint, {
