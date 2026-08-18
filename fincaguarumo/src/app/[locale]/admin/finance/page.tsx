@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, FormEvent } from "react"
+import { useRouter } from "next/navigation"
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
 import { MotoApiChargePanel } from "@/components/MotoChargePanel"
@@ -10,10 +11,13 @@ import { Button } from "../../../../components/ui/button"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { Label } from "../../../../components/ui/label"
 import AdminHeader from "@/components/AdminHeader"
+import ErrorBoundary from "@/components/ErrorBoundary"
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-)
+const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+if (!stripeKey) {
+  throw new Error("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not configured")
+}
+const stripePromise = loadStripe(stripeKey)
 
 type BookingData = {
   id: string
@@ -28,8 +32,10 @@ type BookingData = {
 }
 
 const FinanceChargePage = () => {
+  const router = useRouter()
   const { getAccessToken, loading: authLoading } = useSupabaseAuth()
   const [bookingId, setBookingId] = useState("")
+  const [bookingSource, setBookingSource] = useState("booking")
   const [bookingData, setBookingData] = useState<BookingData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -65,11 +71,23 @@ const FinanceChargePage = () => {
     try {
       const accessToken = await getAccessToken()
       if (!accessToken) {
-        throw new Error("Not authenticated. Please log in.")
+        // Redirect to login with return URL
+        const currentPath = window.location.pathname
+        router.push(
+          `/admin/login?redirectTo=${encodeURIComponent(currentPath)}`,
+        )
+        return
+      }
+
+      // Use external_reservation_id parameter to look up by booking.com/airbnb ID
+      const params = new URLSearchParams()
+      params.set("external_reservation_id", bookingId.trim())
+      if (bookingSource) {
+        params.set("source", bookingSource)
       }
 
       const response = await fetch(
-        `/api/bookings?id=${encodeURIComponent(bookingId.trim())}`,
+        `/api/bookings?${params.toString()}`,
         {
           credentials: "include",
           headers: {
@@ -79,15 +97,17 @@ const FinanceChargePage = () => {
       )
 
       if (!response.ok) {
-        const err = await response.json().catch(() => ({}))
-        throw new Error(err.error || "Failed to fetch booking")
+        const error = await response.json().catch(() => ({}))
+        throw new Error(error.error || "Failed to fetch booking")
       }
 
       const data = await response.json()
       setBookingData(data)
       setCurrentStep(2)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load booking")
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to load booking",
+      )
     } finally {
       setLoading(false)
     }
@@ -138,7 +158,7 @@ const FinanceChargePage = () => {
                   </div>
                   {index < 2 && (
                     <div
-                      className={`flex-1 h-0.5 mx-2 w-28 ${
+                      className={`flex-1 h-0.5 mx-2 lg:w-28 ${
                         currentStep > step.id
                           ? "bg-guarumo-primary"
                           : "bg-zinc-200"
@@ -179,7 +199,7 @@ const FinanceChargePage = () => {
           {currentStep === 1 && (
             <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-zinc-950 mb-4">
-                {manualMode ? "Manual Entry" : "Lookup Booking"}
+                {manualMode ? "Manual Entry" : "Look Up Booking by External ID"}
               </h2>
 
               <div className="mb-4">
@@ -194,30 +214,51 @@ const FinanceChargePage = () => {
                     setCurrentStep(1)
                   }}
                 >
-                  {manualMode ? "← Back to Lookup" : "Switch to Manual Entry"}
+                  {manualMode ? "← Back to Look Up" : "Switch to Manual Entry"}
                 </Button>
               </div>
 
               {!manualMode ? (
                 <form onSubmit={fetchBooking} className="space-y-4">
-                  <Input
-                    id="bookingId"
-                    type="text"
-                    required
-                    labelText="Booking ID or External Reservation ID"
-                    errorMessage="Enter a valid booking ID or external reservation ID"
-                    value={bookingId}
-                    onChange={e => setBookingId(e.target.value)}
-                    disabled={loading}
-                    placeholder="Enter internal booking ID or external reservation ID (e.g., from booking.com/airbnb)"
-                  />
+                  <div className="space-y-4">
+                    <Input
+                      id="bookingId"
+                      type="text"
+                      required
+                      labelText="External Reservation ID"
+                      errorMessage="Enter the external reservation ID from booking.com, Airbnb, or VRBO"
+                      value={bookingId}
+                      onChange={e => setBookingId(e.target.value)}
+                      disabled={loading}
+                      placeholder="e.g., 123456789 (booking.com), HMJ3Y4K (Airbnb), etc."
+                    />
+                    <div>
+                      <Label
+                        htmlFor="bookingSource"
+                        className="block text-sm font-medium text-zinc-700 mb-1"
+                      >
+                        Source Platform
+                      </Label>
+                      <select
+                        id="bookingSource"
+                        value={bookingSource}
+                        onChange={e => setBookingSource(e.target.value)}
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-base outline-none ring-0 focus:border-zinc-950"
+                        disabled={loading}
+                      >
+                        <option value="booking">Booking.com</option>
+                        <option value="airbnb">Airbnb</option>
+                        <option value="vrbo">VRBO</option>
+                      </select>
+                    </div>
+                  </div>
                   <Button
                     type="submit"
                     variant="default"
                     disabled={loading || !bookingId.trim()}
                     className="mt-5"
                   >
-                    {loading ? "Loading…" : "Load Booking"}
+                    {loading ? "Loading…" : "Look Up Booking"}
                   </Button>
                   {error && (
                     <div
@@ -552,4 +593,10 @@ const FinanceChargePage = () => {
   )
 }
 
-export default FinanceChargePage
+const FinanceChargePageWithErrorBoundary = () => (
+  <ErrorBoundary>
+    <FinanceChargePage />
+  </ErrorBoundary>
+)
+
+export default FinanceChargePageWithErrorBoundary
