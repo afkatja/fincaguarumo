@@ -3,28 +3,20 @@
 import { FormEvent, useState } from "react"
 import { useRouter } from "next/navigation"
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js"
+import { useCharge } from "@moto-pos/core/react"
 import Input from "./Input"
 import { Label } from "./ui/label"
+import { StatusAlert, Button } from "@moto-pos/core/react"
 
 type Props = {
   reservationId: string
   amount: number
   currency: string
   description?: string
-  chargeEndpoint?: string
   onSucceeded?: (paymentIntentId: string) => void
-  isManual?: boolean
+  onRequiresAction?: (clientSecret: string, paymentIntentId: string) => void
   getAccessToken?: () => Promise<string | null>
-  source?: string
 }
-
-type ChargeResponse = {
-  paymentIntentId?: string
-  error?: string
-}
-
-type Status =
-  "idle" | "creating_payment_method" | "charging" | "succeeded" | "error"
 
 const money = (amount: number, currency: string) =>
   new Intl.NumberFormat("en-US", {
@@ -32,31 +24,37 @@ const money = (amount: number, currency: string) =>
     currency: currency.toUpperCase(),
   }).format(amount / 100)
 
-/**
- * Mount inside <Elements stripe={stripePromise}>.
- * The CardElement is hosted by Stripe; PAN, expiry, and CVC never reach Next.js,
- * Supabase, Netlify, or your own API route.
- */
-export function MotoApiChargePanel({
+export function MotoChargePanel({
   reservationId,
   amount,
   currency,
   description = "Booking.com VCC charge",
-  chargeEndpoint = "/api/finance/moto-charge",
   onSucceeded,
-  isManual = false,
+  onRequiresAction,
   getAccessToken,
-  source,
 }: Props) {
   const router = useRouter()
   const stripe = useStripe()
   const elements = useElements()
-  const [status, setStatus] = useState<Status>("idle")
-  const [message, setMessage] = useState(
-    "Enter the active Booking.com VCC details.",
-  )
   const [postalCode, setPostalCode] = useState("")
   const [confirmed, setConfirmed] = useState(false)
+  const [idempotencyKey, setIdempotencyKey] = useState(
+    `booking-vcc:${reservationId}:${amount}:${currency.toLowerCase()}`
+  )
+
+  const chargeMutation = useCharge({
+    endpoint: "/api/pos/charge",
+    onSuccess: (result: { paymentIntentId: string; status: string; clientSecret?: string }) => {
+      if (result.status === "succeeded") {
+        onSucceeded?.(result.paymentIntentId)
+      } else if (result.status === "requires_action") {
+        onRequiresAction?.(result.clientSecret!, result.paymentIntentId)
+      }
+    },
+    onError: (error: Error) => {
+      // Error handled by mutation state
+    },
+  })
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -64,97 +62,47 @@ export function MotoApiChargePanel({
 
     const card = elements.getElement(CardElement)
     if (!card) {
-      setStatus("error")
-      setMessage("Stripe Card Element is not ready.")
+      chargeMutation.reset()
       return
     }
     if (!confirmed) {
-      setStatus("error")
-      setMessage(
-        "Confirm the reservation, amount, and currency before charging.",
-      )
       return
     }
-
-    setStatus("creating_payment_method")
-    setMessage("Securely tokenizing card data with Stripe…")
 
     try {
       const result = await stripe.createPaymentMethod({
         type: "card",
         card,
         billing_details: {
-          address: postalCode.trim()
-            ? { postal_code: postalCode.trim() }
-            : undefined,
+          address: postalCode.trim() ? { postal_code: postalCode.trim() } : undefined,
         },
       })
 
       if (result.error || !result.paymentMethod) {
-        setStatus("error")
-        setMessage(
-          result.error?.message || "Stripe could not create a payment method.",
-        )
         return
       }
 
-      setStatus("charging")
-      setMessage("Submitting the MOTO payment for authorization…")
       const accessToken = getAccessToken ? await getAccessToken() : null
 
       if (!accessToken) {
-        // Redirect to login with return URL
         const currentPath = window.location.pathname
-        router.push(
-          `/admin/login?redirectTo=${encodeURIComponent(currentPath)}`,
-        )
-        setStatus("error")
-        setMessage("Session expired. Please log in again.")
+        router.push(`/admin/login?redirectTo=${encodeURIComponent(currentPath)}`)
         return
       }
 
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      }
-
-      const response = await fetch(chargeEndpoint, {
-        method: "POST",
-        credentials: "include",
-        headers,
-        body: JSON.stringify({
-          reservationId,
-          paymentMethodId: result.paymentMethod.id,
-          // These values are useful for UI validation/audit only. The server must
-          // load the authoritative amount/currency from its reservation record.
-          expectedAmount: amount,
-          expectedCurrency: currency.toLowerCase(),
-          description,
-          isManual,
-          source,
-        }),
+      // Use the module's hook to charge
+      chargeMutation.mutate({
+        amount,
+        currency: currency.toLowerCase(),
+        paymentMethodId: result.paymentMethod.id,
+        idempotencyKey,
       })
-
-      const body = (await response.json().catch(() => ({}))) as ChargeResponse
-      if (!response.ok || !body.paymentIntentId) {
-        throw new Error(body.error || "The MOTO charge was not completed.")
-      }
-
-      setStatus("succeeded")
-      setMessage(`Payment succeeded: ${body.paymentIntentId}`)
-      setConfirmed(false)
-      card.clear()
-      setPostalCode("")
-      onSucceeded?.(body.paymentIntentId)
-    } catch (error) {
-      setStatus("error")
-      setMessage(
-        error instanceof Error ? error.message : "The MOTO charge failed.",
-      )
+    } catch {
+      // Error handled by mutation
     }
   }
 
-  const busy = status === "creating_payment_method" || status === "charging"
+  const busy = chargeMutation.isPending
 
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
@@ -169,7 +117,7 @@ export function MotoApiChargePanel({
           </p>
         </div>
         <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-zinc-700">
-          {status}
+          {chargeMutation.status === "pending" ? "charging" : chargeMutation.status}
         </span>
       </div>
 
@@ -218,10 +166,10 @@ export function MotoApiChargePanel({
 
         <Input
           value={postalCode}
-          onChange={event => setPostalCode(event.target.value)}
+          onChange={(event) => setPostalCode(event.target.value)}
           autoComplete="off"
           inputMode="text"
-          disabled={busy || status === "succeeded"}
+          disabled={busy || chargeMutation.status === "success"}
           id="postal-code"
           type="text"
           placeholder="12345"
@@ -234,8 +182,8 @@ export function MotoApiChargePanel({
             type="checkbox"
             className="mt-0.5 size-4 rounded border-zinc-300"
             checked={confirmed}
-            disabled={busy || status === "succeeded"}
-            onChange={event => setConfirmed(event.target.checked)}
+            disabled={busy || chargeMutation.status === "success"}
+            onChange={(event) => setConfirmed(event.target.checked)}
           />
           <span>
             I verified that this VCC is active and that the reservation, amount,
@@ -244,72 +192,33 @@ export function MotoApiChargePanel({
           </span>
         </Label>
 
-        <button
+        <Button
           type="submit"
-          disabled={!stripe || busy || !confirmed || status === "succeeded"}
-          className="w-full rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+          variant="primary"
+          size="lg"
+          fullWidth
+          loading={busy}
+          disabled={!stripe || busy || !confirmed || chargeMutation.status === "success"}
         >
           {busy ? "Processing…" : `Charge ${money(amount, currency)}`}
-        </button>
+        </Button>
+
+        {chargeMutation.status === "error" && (
+          <StatusAlert
+            variant="error"
+            title="Payment Error"
+            message={chargeMutation.error?.message || "The MOTO charge failed."}
+          />
+        )}
+
+        {chargeMutation.status === "success" && (
+          <StatusAlert
+            variant="success"
+            title="Payment Successful"
+            message={`Payment succeeded: ${chargeMutation.data?.paymentIntentId}`}
+          />
+        )}
       </form>
-
-      {status === "error" && (
-        <div
-          className="mt-4 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg"
-          role="alert"
-        >
-          <svg
-            className="w-5 h-5 text-red-600 shrink-0 mt-0.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-red-800">Payment Error</p>
-            <p className="text-sm text-red-700 mt-1">{message}</p>
-          </div>
-        </div>
-      )}
-
-      {status === "succeeded" && (
-        <div
-          className="mt-4 flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg"
-          role="status"
-        >
-          <svg
-            className="w-5 h-5 text-guarumo-primary shrink-0 mt-0.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-guarumo-primary">
-              Payment Successful
-            </p>
-            <p className="text-sm text-guarumo-primary mt-1">{message}</p>
-          </div>
-        </div>
-      )}
-
-      {status !== "error" && status !== "succeeded" && (
-        <p role="status" className="mt-4 text-sm text-zinc-600">
-          {message}
-        </p>
-      )}
     </section>
   )
 }

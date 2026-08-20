@@ -3,21 +3,21 @@
   "version": "0.1.0",
   "description": "Standalone MOTO POS module for Stripe payment processing",
   "main": "dist/index.js",
-  "module": "dist/index.mjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./react": {
-      "import": "./dist/react/index.mjs",
+      "import": "./dist/react/index.js",
       "require": "./dist/react/index.js",
       "types": "./dist/react/index.d.ts"
     },
     "./tokens": {
-      "import": "./dist/tokens/index.mjs",
+      "import": "./dist/tokens/index.js",
       "require": "./dist/tokens/index.js",
       "types": "./dist/tokens/index.d.ts"
     }
@@ -51,5 +51,8 @@
     "payments",
     "vcc"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^15.0.0"
+  }
 }

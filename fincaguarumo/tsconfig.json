@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@moto-pos/core/*": ["./modules/moto-pos/dist/*"]
     },
     "target": "ES2017"
   },

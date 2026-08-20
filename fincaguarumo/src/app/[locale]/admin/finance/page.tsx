@@ -4,14 +4,14 @@ import { useState, FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
-import { MotoApiChargePanel } from "@/components/MotoChargePanel"
+import { MotoChargePanel } from "@/components/MotoChargePanel"
 import PageLayout from "../../(pages)/pagesLayout"
 import Input from "../../../../components/Input"
 import { Button } from "../../../../components/ui/button"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
-import { Label } from "../../../../components/ui/label"
 import AdminHeader from "@/components/AdminHeader"
 import ErrorBoundary from "@/components/ErrorBoundary"
+import { StatusAlert } from "@moto-pos/core/react"
 
 const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 if (!stripeKey) {
@@ -62,6 +62,13 @@ const FinanceChargePage = () => {
     setCurrentStep(4)
   }
 
+  const handleRequiresAction = (clientSecret: string, paymentIntentId: string) => {
+    // For 3DS, we could redirect or handle inline
+    // For now, show requires action state
+    setPaymentIntentId(paymentIntentId)
+    setCurrentStep(4)
+  }
+
   const fetchBooking = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
@@ -71,7 +78,6 @@ const FinanceChargePage = () => {
     try {
       const accessToken = await getAccessToken()
       if (!accessToken) {
-        // Redirect to login with return URL
         const currentPath = window.location.pathname
         router.push(
           `/admin/login?redirectTo=${encodeURIComponent(currentPath)}`,
@@ -79,7 +85,6 @@ const FinanceChargePage = () => {
         return
       }
 
-      // Use external_reservation_id parameter to look up by booking.com/airbnb ID
       const params = new URLSearchParams()
       params.set("external_reservation_id", bookingId.trim())
       if (bookingSource) {
@@ -254,57 +259,38 @@ const FinanceChargePage = () => {
                   </div>
                   <Button
                     type="submit"
-                    variant="default"
+                    variant="primary"
                     disabled={loading || !bookingId.trim()}
                     className="mt-5"
                   >
                     {loading ? "Loading…" : "Look Up Booking"}
                   </Button>
                   {error && (
-                    <div
-                      className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg"
-                      role="alert"
-                    >
-                      <svg
-                        className="w-5 h-5 text-red-600 shrink-0 mt-0.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-red-800">
-                          Error
-                        </p>
-                        <p className="text-sm text-red-700 mt-1">{error}</p>
-                      </div>
-                    </div>
+                    <StatusAlert
+                      variant="error"
+                      title="Error"
+                      message={error}
+                      dismissible
+                      onDismiss={() => setError(null)}
+                    />
                   )}
                 </form>
               ) : (
                 <form className="space-y-4">
-                  <Input
+                  <input
                     id="manualReservationId"
                     type="text"
                     required
-                    labelText="External Reservation ID"
-                    errorMessage="Enter the external reservation ID"
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-base outline-none ring-0 focus:border-zinc-950"
                     value={manualReservationId}
                     onChange={e => setManualReservationId(e.target.value)}
                     placeholder="e.g., 123456789 from booking.com/airbnb"
                   />
-                  <Input
+                  <input
                     id="manualAmount"
                     type="number"
                     required
-                    labelText="Amount (in cents)"
-                    errorMessage="Enter the amount in cents (e.g., 10000 for $100.00)"
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-base outline-none ring-0 focus:border-zinc-950"
                     value={manualAmount}
                     onChange={e => setManualAmount(e.target.value)}
                     placeholder="Amount in cents (e.g., 10000 for $100.00)"
@@ -312,12 +298,12 @@ const FinanceChargePage = () => {
                     step="1"
                   />
                   <div>
-                    <Label
+                    <label
                       htmlFor="manualCurrency"
                       className="block text-sm font-medium text-zinc-700 mb-1"
                     >
                       Currency
-                    </Label>
+                    </label>
                     <select
                       id="manualCurrency"
                       value={manualCurrency}
@@ -332,7 +318,7 @@ const FinanceChargePage = () => {
                   </div>
                   <Button
                     type="button"
-                    variant="default"
+                    variant="primary"
                     onClick={() => {
                       if (!manualReservationId || !manualAmount) {
                         setError("Please fill in all fields")
@@ -361,30 +347,13 @@ const FinanceChargePage = () => {
                     Continue to Payment
                   </Button>
                   {error && (
-                    <div
-                      className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg"
-                      role="alert"
-                    >
-                      <svg
-                        className="w-5 h-5 text-red-600 shrink-0 mt-0.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <div className="flex-1">
-                        <p className="text-sm text-red-800 my-0! font-bold">
-                          Error
-                        </p>
-                        <p className="text-sm text-red-700 mt-1">{error}</p>
-                      </div>
-                    </div>
+                    <StatusAlert
+                      variant="error"
+                      title="Error"
+                      message={error}
+                      dismissible
+                      onDismiss={() => setError(null)}
+                    />
                   )}
                 </form>
               )}
@@ -493,7 +462,7 @@ const FinanceChargePage = () => {
               className={currentStep === 3 && bookingData ? "block" : "hidden"}
             >
               {bookingData && (
-                <MotoApiChargePanel
+                <MotoChargePanel
                   reservationId={
                     manualMode ? manualReservationId : bookingData.id
                   }
@@ -504,11 +473,9 @@ const FinanceChargePage = () => {
                       ? `Manual VCC charge for reservation ${manualReservationId}`
                       : getDescription(bookingData)
                   }
-                  chargeEndpoint="/api/admin/finance"
-                  isManual={manualMode}
                   getAccessToken={getAccessToken}
                   onSucceeded={handlePaymentSuccess}
-                  source={bookingData.source}
+                  onRequiresAction={handleRequiresAction}
                 />
               )}
             </div>
@@ -570,7 +537,7 @@ const FinanceChargePage = () => {
                 )}
                 <Button
                   type="button"
-                  variant="default"
+                  variant="primary"
                   onClick={() => {
                     setCurrentStep(1)
                     setBookingData(null)

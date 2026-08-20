@@ -1,30 +1,89 @@
 import "@testing-library/jest-dom"
 
-// Mock Request for Node.js environment (needed for API route tests)
-global.Request = class Request {
-  constructor(input, init) {
-    this.url = typeof input === "string" ? input : input.url
-    this.method = init?.method || "GET"
-    this.headers = new Headers(init?.headers)
-    this.body = init?.body
+// Polyfill Request/Response for Node.js environment
+const OriginalRequest = global.Request
+const OriginalResponse = global.Response
+
+class MockRequest {
+  constructor(input, init = {}) {
+    this._url = ""
+    this._method = "GET"
+    this._headers = new Headers()
+    this._body = undefined
+
+    if (typeof input === "string") {
+      this._url = input
+    } else if (input instanceof URL) {
+      this._url = input.toString()
+    } else if (input instanceof MockRequest || (OriginalRequest && input instanceof OriginalRequest)) {
+      this._url = input.url
+      this._method = input.method
+      this._headers = new Headers(input.headers)
+      this._body = input.body
+    } else {
+      this._url = ""
+    }
+    if (init.method) this._method = init.method
+    if (init.headers) this._headers = new Headers(init.headers)
+    if (init.body !== undefined) this._body = init.body
   }
+
+  get url() { return this._url }
+  get method() { return this._method }
+  get headers() { return this._headers }
+  get body() { return this._body }
+  get bodyUsed() { return false }
+
   async json() {
-    return typeof this.body === "string" ? JSON.parse(this.body) : this.body
+    return typeof this._body === "string" ? JSON.parse(this._body) : this._body
+  }
+  async text() {
+    return typeof this._body === "string" ? this._body : JSON.stringify(this._body)
+  }
+  async blob() { return new Blob() }
+  async arrayBuffer() { return new ArrayBuffer(0) }
+  async formData() { return new FormData() }
+  clone() { return new MockRequest(this) }
+}
+
+class MockResponse {
+  constructor(body = null, init = {}) {
+    this._body = body
+    this._status = init.status || 200
+    this._statusText = init.statusText || "OK"
+    this._headers = new Headers(init.headers)
+  }
+
+  get status() { return this._status }
+  get statusText() { return this._statusText }
+  get headers() { return this._headers }
+  get ok() { return this._status >= 200 && this._status < 300 }
+  get body() { return this._body }
+  get bodyUsed() { return false }
+
+  async json() {
+    return typeof this._body === "string" ? JSON.parse(this._body) : this._body
+  }
+  async text() {
+    return typeof this._body === "string" ? this._body : JSON.stringify(this._body)
+  }
+  async blob() { return new Blob() }
+  async arrayBuffer() { return new ArrayBuffer(0) }
+  async formData() { return new FormData() }
+  clone() { return new MockResponse(this._body, { status: this._status, statusText: this._statusText, headers: this._headers }) }
+
+  // Static factory method for NextResponse.json()
+  static json(data, init = {}) {
+    return new MockResponse(JSON.stringify(data), {
+      status: init.status || 200,
+      headers: { "Content-Type": "application/json", ...init.headers },
+    })
   }
 }
 
-global.Response = class Response {
-  constructor(body, init) {
-    this.body = body
-    this.status = init?.status || 200
-    this.statusText = init?.statusText || "OK"
-    this.headers = new Headers(init?.headers)
-  }
-  async json() {
-    return typeof this.body === "string" ? JSON.parse(this.body) : this.body
-  }
-}
-
+// Replace globals
+global.Request = MockRequest
+global.Response = MockResponse
 global.Headers = Headers
 
 // Mock Next.js router
@@ -101,5 +160,5 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key"
 process.env.SITE_URL = "http://localhost:3000"
 process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost:54321"
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-key"
-process.env.STRIPE_API_KEY = "sk_test_test" // Test-only Stripe key for Jest environment
+process.env.STRIPE_API_KEY = "sk_test_test"
 process.env.STRIPE_WEBHOOK_SECRET_LOCAL = "whsec_test_local"
