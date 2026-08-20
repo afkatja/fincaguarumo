@@ -22,8 +22,8 @@ export interface AuthUser {
 }
 
 export interface AuthProvider {
-  verifyUser(req: Request): Promise<AuthUser>
-  verifyAdmin(req: Request): Promise<AuthUser>
+  verifyUser(req: HttpRequestLike): Promise<AuthUser>
+  verifyAdmin(req: HttpRequestLike): Promise<AuthUser>
 }
 
 export interface ModuleConfig {
