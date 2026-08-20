@@ -1,0 +1,151 @@
+:root {
+  /* Moto POS Design Tokens */
+  --moto-pos-color-primary: #034b25;
+  --moto-pos-color-primary-hover: #023a1d;
+  --moto-pos-color-primary-light: #e8f5ee;
+  --moto-pos-color-secondary: #18181b;
+  --moto-pos-color-accent: #9d1f60;
+  --moto-pos-color-accent-hover: #7a184a;
+  --moto-pos-color-success: #166534;
+  --moto-pos-color-success-light: #dcfce7;
+  --moto-pos-color-warning: #854d0e;
+  --moto-pos-color-warning-light: #fef3c7;
+  --moto-pos-color-error: #991b1b;
+  --moto-pos-color-error-light: #fee2e2;
+  --moto-pos-color-background: #ffffff;
+  --moto-pos-color-surface: #fafafa;
+  --moto-pos-color-surface-hover: #f4f4f5;
+  --moto-pos-color-border: #e4e4e7;
+  --moto-pos-color-border-focus: #034b25;
+  --moto-pos-color-text-primary: #18181b;
+  --moto-pos-color-text-secondary: #52525b;
+  --moto-pos-color-text-muted: #a1a1aa;
+  --moto-pos-color-text-inverse: #ffffff;
+  --moto-pos-color-overlay: rgba(24, 24, 27, 0.5);
+
+  /* Spacing */
+  --moto-pos-space-1: 0.25rem;
+  --moto-pos-space-2: 0.5rem;
+  --moto-pos-space-3: 0.75rem;
+  --moto-pos-space-4: 1rem;
+  --moto-pos-space-5: 1.25rem;
+  --moto-pos-space-6: 1.5rem;
+  --moto-pos-space-8: 2rem;
+  --moto-pos-space-10: 2.5rem;
+  --moto-pos-space-12: 3rem;
+
+  /* Border Radius */
+  --moto-pos-radius-sm: 0.375rem;
+  --moto-pos-radius-md: 0.5rem;
+  --moto-pos-radius-lg: 0.75rem;
+  --moto-pos-radius-full: 9999px;
+
+  /* Shadows */
+  --moto-pos-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --moto-pos-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --moto-pos-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --moto-pos-shadow-focus: 0 0 0 3px var(--moto-pos-color-primary-light);
+
+  /* Transitions */
+  --moto-pos-transition-fast: 150ms ease;
+  --moto-pos-transition-normal: 200ms ease;
+
+  /* Typography */
+  --moto-pos-font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --moto-pos-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --moto-pos-text-xs: 0.75rem;
+  --moto-pos-text-sm: 0.875rem;
+  --moto-pos-text-base: 1rem;
+  --moto-pos-text-lg: 1.125rem;
+  --moto-pos-text-xl: 1.25rem;
+  --moto-pos-text-2xl: 1.5rem;
+  --moto-pos-font-normal: 400;
+  --moto-pos-font-medium: 500;
+  --moto-pos-font-semibold: 600;
+  --moto-pos-font-bold: 700;
+
+  /* Z-index */
+  --moto-pos-z-dropdown: 100;
+  --moto-pos-z-modal: 200;
+  --moto-pos-z-toast: 300;
+  --moto-pos-z-tooltip: 400;
+}
+
+.dark {
+  --moto-pos-color-primary: #4ade80;
+  --moto-pos-color-primary-hover: #22c55e;
+  --moto-pos-color-primary-light: #052e16;
+  --moto-pos-color-secondary: #f4f4f5;
+  --moto-pos-color-accent: #f472b6;
+  --moto-pos-color-accent-hover: #ec4899;
+  --moto-pos-color-success: #4ade80;
+  --moto-pos-color-success-light: #052e16;
+  --moto-pos-color-warning: #fbbf24;
+  --moto-pos-color-warning-light: #422006;
+  --moto-pos-color-error: #f87171;
+  --moto-pos-color-error-light: #450a0a;
+  --moto-pos-color-background: #09090b;
+  --moto-pos-color-surface: #18181b;
+  --moto-pos-color-surface-hover: #27272a;
+  --moto-pos-color-border: #3f3f46;
+  --moto-pos-color-border-focus: #4ade80;
+  --moto-pos-color-text-primary: #fafafa;
+  --moto-pos-color-text-secondary: #d4d4d8;
+  --moto-pos-color-text-muted: #71717a;
+  --moto-pos-color-text-inverse: #09090b;
+  --moto-pos-color-overlay: rgba(250, 250, 250, 0.5);
+  --moto-pos-shadow-focus: 0 0 0 3px var(--moto-pos-color-primary-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --moto-pos-color-primary: #4ade80;
+    --moto-pos-color-primary-hover: #22c55e;
+    --moto-pos-color-primary-light: #052e16;
+    --moto-pos-color-secondary: #f4f4f5;
+    --moto-pos-color-accent: #f472b6;
+    --moto-pos-color-accent-hover: #ec4899;
+    --moto-pos-color-success: #4ade80;
+    --moto-pos-color-success-light: #052e16;
+    --moto-pos-color-warning: #fbbf24;
+    --moto-pos-color-warning-light: #422006;
+    --moto-pos-color-error: #f87171;
+    --moto-pos-color-error-light: #450a0a;
+    --moto-pos-color-background: #09090b;
+    --moto-pos-color-surface: #18181b;
+    --moto-pos-color-surface-hover: #27272a;
+    --moto-pos-color-border: #3f3f46;
+    --moto-pos-color-border-focus: #4ade80;
+    --moto-pos-color-text-primary: #fafafa;
+    --moto-pos-color-text-secondary: #d4d4d8;
+    --moto-pos-color-text-muted: #71717a;
+    --moto-pos-color-text-inverse: #09090b;
+    --moto-pos-color-overlay: rgba(250, 250, 250, 0.5);
+    --moto-pos-shadow-focus: 0 0 0 3px var(--moto-pos-color-primary-light);
+  }
+}
+
+/* Global reset for Moto POS components */
+.moto-pos *,
+.moto-pos *::before,
+.moto-pos *::after {
+  box-sizing: border-box;
+}
+
+.moto-pos {
+  font-family: var(--moto-pos-font-sans);
+  color: var(--moto-pos-color-text-primary);
+  background-color: var(--moto-pos-color-background);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.moto-pos button,
+.moto-pos input,
+.moto-pos select,
+.moto-pos textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
