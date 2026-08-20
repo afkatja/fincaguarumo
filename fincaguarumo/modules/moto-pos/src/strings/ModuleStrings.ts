@@ -24,6 +24,21 @@ export interface ModuleStrings {
     error: string
     missingFields: string
   }
+  login: {
+    title: string
+    emailLabel: string
+    emailPlaceholder: string
+    passwordLabel: string
+    passwordPlaceholder: string
+    signInButton: string
+    signingIn: string
+    success: string
+    welcome: (params: { email: string }) => string
+    error: string
+    failed: string
+    configMissing: string
+    configMissingMessage: string
+  }
 }
 
 export const defaultStrings: ModuleStrings = {
@@ -51,5 +66,20 @@ export const defaultStrings: ModuleStrings = {
     failedMessage: ({ status }) => `Payment status: ${status}`,
     error: 'Error',
     missingFields: 'Payment Method ID and Idempotency Key are required',
+  },
+  login: {
+    title: 'Sign In',
+    emailLabel: 'Email',
+    emailPlaceholder: 'admin@example.com',
+    passwordLabel: 'Password',
+    passwordPlaceholder: '••••••••',
+    signInButton: 'Sign In',
+    signingIn: 'Signing in...',
+    success: 'Signed In',
+    welcome: ({ email }) => `Welcome back, ${email}`,
+    error: 'Sign In Failed',
+    failed: 'Invalid email or password',
+    configMissing: 'Configuration Missing',
+    configMissingMessage: 'VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables are required',
   },
 }
