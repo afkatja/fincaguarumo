@@ -1,0 +1,54 @@
+{
+  "name": "@moto-pos/core",
+  "version": "0.1.0",
+  "description": "Standalone MOTO POS module for Stripe payment processing",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./react": {
+      "import": "./dist/react/index.mjs",
+      "require": "./dist/react/index.js",
+      "types": "./dist/react/index.d.ts"
+    },
+    "./tokens": {
+      "import": "./dist/tokens/index.mjs",
+      "require": "./dist/tokens/index.js",
+      "types": "./dist/tokens/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc && tsc -m ESNext --outDir dist/esm && mv dist/esm/* dist/ && rmdir dist/esm",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "stripe": ">=14"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "eslint": "^10.8.1",
+    "stripe": "^14.0.0",
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^1.0.0"
+  },
+  "keywords": [
+    "stripe",
+    "moto",
+    "pos",
+    "payments",
+    "vcc"
+  ],
+  "license": "MIT"
+}
