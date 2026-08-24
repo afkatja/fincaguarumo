@@ -10,7 +10,6 @@ const customJestConfig = {
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
-    "^@moto-pos/core/(.*)$": "<rootDir>/modules/moto-pos/dist/$1",
   },
   testEnvironment: "jest-environment-jsdom",
   testPathIgnorePatterns: [
