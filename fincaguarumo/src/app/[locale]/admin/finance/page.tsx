@@ -16,25 +16,17 @@ const FinanceChargePage = () => {
         description="Charge a Booking.com VCC"
       >
         <div className="w-11/12 mx-auto py-5 space-y-6 prose lg:prose-lg">
-          {!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ? (
-            "Stripe key is required"
-          ) : (
-            <>
-              <MotoChargePanel
-                publishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-              />
+          <MotoChargePanel />
 
-              <Button
-                type="button"
-                variant="default"
-                onClick={() => {
-                  window.location.reload()
-                }}
-              >
-                Process Another Payment
-              </Button>
-            </>
-          )}
+          <Button
+            type="button"
+            variant="default"
+            onClick={() => {
+              window.location.reload()
+            }}
+          >
+            Process Another Payment
+          </Button>
         </div>
       </PageLayout>
     </>
