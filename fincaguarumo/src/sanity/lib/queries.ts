@@ -565,3 +565,22 @@ export const PRICING_RULES_QUERY = groq`*[_type == 'pricingRules' && _id in $rul
       language
     }
     `
+
+export const ALL_PRICING_RULES_QUERY = groq`*[_type == 'pricingRules'] | order(displayOrder asc, _createdAt asc) {
+  _id,
+  title,
+  description,
+  ruleType,
+  season,
+  startDate,
+  endDate,
+  basePrice,
+  percentage,
+  fixedAmount,
+  minimumNights,
+  isActive,
+  displayOrder,
+  language,
+  _createdAt,
+  _updatedAt
+}`
