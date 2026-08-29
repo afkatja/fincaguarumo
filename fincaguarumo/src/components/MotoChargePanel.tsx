@@ -15,7 +15,7 @@ const ChargeWidget = ({ defaultAmount = 100, defaultCurrency = "usd" }) => {
       <StringsProvider>
         <div className="moto-pos">
           <MotoChargePanel
-            defaultAmount={defaultAmount * 100} // dollars → cents
+            defaultAmount={defaultAmount}
             defaultCurrency={defaultCurrency}
             publishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
           />
