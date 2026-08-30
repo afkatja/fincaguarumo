@@ -188,6 +188,100 @@
   --prose-body: #374151;
 
   --rdp-accent-color: var(--guarumo-accent);
+
+  --moto-pos-color-primary: var(--guarumo-primary);
+  --moto-pos-color-primary-hover: var(--color-guarumo-secondary);
+  --moto-pos-color-primary-light: var(--color-foreground);
+  --moto-pos-color-secondary: var(--color-background);
+  --moto-pos-color-accent: var(--color-guarumo-accent);
+  --moto-pos-color-accent-hover: var(--color-guarumo-secondary);
+  --moto-pos-color-success: var(--color-guarumo-primary);
+  --moto-pos-color-success-light: var(--color-foreground);
+  --moto-pos-color-warning: var(--color-destructive);
+  --moto-pos-color-warning-light: var(--color-warning);
+  --moto-pos-color-error: var(--color-red-500);
+  --moto-pos-color-error-light: var(--color-red-300);
+  --moto-pos-color-background: var(--color-background);
+  --moto-pos-color-surface: var(--color-muted);
+  --moto-pos-color-surface-hover: var(--color-muted-foreground);
+  --moto-pos-color-border: var(--color-border);
+  --moto-pos-color-border-focus: var(--color-ring);
+  --moto-pos-color-text-primary: var(--color-foreground);
+  --moto-pos-color-text-secondary: var(--color-muted-foreground);
+  --moto-pos-color-text-muted: var(--color-muted);
+  --moto-pos-color-text-inverse: var(--color-foreground);
+  --moto-pos-color-overlay: rgba(24, 24, 27, 0.5);
+
+  --moto-pos-space-1: 0.25rem;
+  --moto-pos-space-2: 0.5rem;
+  --moto-pos-space-3: 0.75rem;
+  --moto-pos-space-4: 1rem;
+  --moto-pos-space-5: 1.25rem;
+  --moto-pos-space-6: 1.5rem;
+  --moto-pos-space-8: 2rem;
+  --moto-pos-space-10: 2.5rem;
+  --moto-pos-space-12: 3rem;
+
+  --moto-pos-radius-sm: 0.375rem;
+  --moto-pos-radius-md: 0.5rem;
+  --moto-pos-radius-lg: 0.75rem;
+  --moto-pos-radius-full: 9999px;
+
+  --moto-pos-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --moto-pos-shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --moto-pos-shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --moto-pos-shadow-focus: 0 0 0 3px var(--moto-pos-color-primary-light);
+
+  --moto-pos-transition-fast: 150ms ease;
+  --moto-pos-transition-normal: 200ms ease;
+
+  --moto-pos-font-sans: var(--font-family-body);
+  --moto-pos-font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+  --moto-pos-text-xs: 0.75rem;
+  --moto-pos-text-sm: 0.875rem;
+  --moto-pos-text-base: 1rem;
+  --moto-pos-text-lg: 1.125rem;
+  --moto-pos-text-xl: 1.25rem;
+  --moto-pos-text-2xl: 1.5rem;
+  --moto-pos-font-normal: 400;
+  --moto-pos-font-medium: 500;
+  --moto-pos-font-semibold: 600;
+  --moto-pos-font-bold: 700;
+
+  --moto-pos-z-dropdown: 100;
+  --moto-pos-z-modal: 200;
+  --moto-pos-z-toast: 300;
+  --moto-pos-z-tooltip: 400;
+}
+
+.dark {
+  --moto-pos-color-primary: var(--guarumo-primary);
+  --moto-pos-color-primary-hover: var(--color-guarumo-secondary);
+  --moto-pos-color-primary-light: var(--color-foreground);
+  --moto-pos-color-secondary: var(--color-background);
+  --moto-pos-color-accent: var(--color-guarumo-accent);
+  --moto-pos-color-accent-hover: var(--color-guarumo-secondary);
+  --moto-pos-color-success: var(--color-guarumo-primary);
+  --moto-pos-color-success-light: var(--color-foreground);
+  --moto-pos-color-warning: var(--color-destructive);
+  --moto-pos-color-warning-light: var(--color-warning);
+  --moto-pos-color-error: var(--color-red-500);
+  --moto-pos-color-error-light: var(--color-red-300);
+  --moto-pos-color-background: var(--color-background);
+  --moto-pos-color-surface: var(--color-muted);
+  --moto-pos-color-surface-hover: var(--color-muted-foreground);
+  --moto-pos-color-border: var(--color-border);
+  --moto-pos-color-border-focus: var(--color-ring);
+  --moto-pos-color-text-primary: var(--color-foreground);
+  --moto-pos-color-text-secondary: var(--color-muted-foreground);
+  --moto-pos-color-text-muted: var(--color-muted);
+  --moto-pos-color-text-inverse: var(--color-foreground);
+  --moto-pos-color-overlay: rgba(24, 24, 27, 0.5);
+  --moto-pos-shadow-focus: 0 0 0 3px var(--moto-pos-color-primary-light);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -222,6 +316,30 @@
     .prose {
       --tw-prose-headings: var(--foreground);
     }
+
+    --moto-pos-color-primary: var(--guarumo-primary);
+    --moto-pos-color-primary-hover: var(--color-guarumo-secondary);
+    --moto-pos-color-primary-light: var(--color-foreground);
+    --moto-pos-color-secondary: var(--color-background);
+    --moto-pos-color-accent: var(--color-guarumo-accent);
+    --moto-pos-color-accent-hover: var(--color-guarumo-secondary);
+    --moto-pos-color-success: var(--color-guarumo-primary);
+    --moto-pos-color-success-light: var(--color-foreground);
+    --moto-pos-color-warning: var(--color-destructive);
+    --moto-pos-color-warning-light: var(--color-warning);
+    --moto-pos-color-error: var(--color-red-500);
+    --moto-pos-color-error-light: var(--color-red-300);
+    --moto-pos-color-background: var(--color-background);
+    --moto-pos-color-surface: var(--color-muted);
+    --moto-pos-color-surface-hover: var(--color-muted-foreground);
+    --moto-pos-color-border: var(--color-border);
+    --moto-pos-color-border-focus: var(--color-ring);
+    --moto-pos-color-text-primary: var(--color-foreground);
+    --moto-pos-color-text-secondary: var(--color-muted-foreground);
+    --moto-pos-color-text-muted: var(--color-muted);
+    --moto-pos-color-text-inverse: var(--color-foreground);
+    --moto-pos-color-overlay: rgba(24, 24, 27, 0.5);
+    --moto-pos-shadow-focus: 0 0 0 3px var(--moto-pos-color-primary-light);
   }
 }
 
