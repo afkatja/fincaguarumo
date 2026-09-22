@@ -54,6 +54,7 @@
     "@radix-ui/themes": "^3.3.0",
     "@sanity/document-internationalization": "^6.2.27",
     "@sanity/image-url": "^2.1.1",
+    "@sanity/language-filter": "^5.0.18",
     "@sanity/vision": "^6.8.0",
     "@stripe/react-stripe-js": "^6.8.0",
     "@stripe/stripe-js": "^9.12.1",
