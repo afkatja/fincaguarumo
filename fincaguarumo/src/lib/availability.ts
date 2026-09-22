@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { createSupabaseAdmin } from "../lib/auth"
+import { runIcalSync } from "./ical-sync"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -180,36 +181,9 @@ export async function triggeriCalSync(
   }
 
   try {
-    // Determine site URL based on environment and request
-    let siteUrl: string
+    const { merged } = await runIcalSync(force)
 
-    if (process.env.NODE_ENV === "production" && request) {
-      const requestUrl = new URL(request.url)
-      siteUrl = `${requestUrl.protocol}//${requestUrl.host}`
-    } else if (process.env.NEXT_PUBLIC_SITE_URL) {
-      siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-    } else {
-      siteUrl = "http://localhost:3000"
-    }
-
-    // Add force parameter to bypass iCal merged endpoint's internal caching
-    const syncUrl = force
-      ? `${siteUrl}/api/ical/merged?force=true`
-      : `${siteUrl}/api/ical/merged`
-
-    const syncResponse = await fetch(syncUrl, {
-      method: "GET",
-      signal: AbortSignal.timeout(30000), // 30 second timeout
-    })
-
-    if (!syncResponse.ok) {
-      console.warn(
-        `Sync endpoint returned ${syncResponse.status}: ${syncResponse.statusText}`,
-      )
-      return
-    }
-
-    console.log("Bookings sync completed successfully")
+    console.log("Bookings sync completed successfully, merged ranges:", merged.length)
     lastSyncTime.timestamp = now // Update last sync time only on success
   } catch (syncError) {
     console.warn("Error syncing bookings:", syncError)
