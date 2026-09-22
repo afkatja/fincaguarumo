@@ -18,7 +18,6 @@ export async function GET(request: Request) {
   try {
     // Verify admin authentication
     const adminUser = await verifyAdminAuth(request)
-    console.log(`Admin ${adminUser.email} requested calendar sync status`)
 
     // Get sync statistics using the internal API with server-side secret
     if (!CALENDAR_SYNC_SECRET) {
@@ -55,8 +54,6 @@ export async function GET(request: Request) {
       requestedBy: adminUser.email,
     })
   } catch (error: any) {
-    console.error("Admin calendar sync GET error:", error)
-
     // Handle auth errors specifically
     if (error.status === 401) {
       return NextResponse.json(
@@ -85,7 +82,6 @@ export async function POST(request: Request) {
   try {
     // Verify admin authentication
     const adminUser = await verifyAdminAuth(request)
-    console.log(`Admin ${adminUser.email} triggered calendar sync`)
 
     // Parse request body for options
     const body = await request.json().catch(() => ({}))
@@ -131,8 +127,6 @@ export async function POST(request: Request) {
       triggeredBy: adminUser.email,
     })
   } catch (error: any) {
-    console.error("Admin calendar sync POST error:", error)
-
     // Handle auth errors specifically
     if (error.status === 401) {
       return NextResponse.json(
@@ -222,13 +216,11 @@ async function getRecentSyncLogs(limit = 10) {
       .limit(limit)
 
     if (error) {
-      console.error("Failed to fetch recent sync logs:", error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error("Error fetching recent sync logs:", error)
     return []
   }
 }

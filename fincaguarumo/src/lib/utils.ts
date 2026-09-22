@@ -80,3 +80,52 @@ export const getInternationalizedValue = (
   // Finally, use the provided fallback
   return fallback || ""
 }
+
+/**
+ * Validates a redirectTo parameter to prevent open redirect vulnerabilities.
+ * Only accepts same-origin relative paths (starting with / but not // or /\\).
+ * Falls back to the provided default for absolute URLs, protocol-relative URLs,
+ * or otherwise unsafe values.
+ */
+export function validateRedirectTo(
+  redirectTo: string | null | undefined,
+  fallback: string,
+): string {
+  if (!redirectTo) return fallback
+
+  // Must be a relative path starting with /
+  if (!redirectTo.startsWith("/")) return fallback
+
+  // Reject protocol-relative URLs (//example.com) and backslash paths (/\...)
+  if (redirectTo.startsWith("//") || redirectTo.startsWith("/\\")) {
+    return fallback
+  }
+
+  // Accept valid internal paths
+  return redirectTo
+}
+
+/**
+ * Returns the site origin (protocol + host) for the current environment.
+ *
+ * Resolution order:
+ * 1. NEXT_PUBLIC_SITE_URL env var (explicit override)
+ * 2. window.location.origin (browser — correct for localhost, Netlify previews, production)
+ * 3. http://localhost:3000 (safe SSR fallback)
+ */
+export function getSiteOrigin(): string {
+  const envSiteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  if (envSiteUrl) {
+    try {
+      return new URL(envSiteUrl).origin
+    } catch {
+      return envSiteUrl.replace(/\/$/, "")
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    return window.location.origin
+  }
+
+  return "http://localhost:3000"
+}

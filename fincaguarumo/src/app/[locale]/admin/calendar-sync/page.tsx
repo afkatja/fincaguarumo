@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
+import AdminHeader from "@/components/AdminHeader"
 
 // Constants
 const MAX_BOOKINGS_DISPLAY = 10
@@ -111,7 +112,6 @@ export default function CalendarSyncPage() {
       })
 
       if (response.ok) {
-        const data = await response.json()
         // Sync logs are fetched independently in useEffect
       } else if (response.status === 401) {
         console.error("Authentication required")
@@ -161,10 +161,6 @@ export default function CalendarSyncPage() {
             gcal_event_id: log.gcal_event_id,
           }))
         setSyncLogs(parsedLogs)
-      } else if (response.status === 401) {
-        console.error("Authentication required")
-      } else if (response.status === 403) {
-        console.error("Admin access required")
       }
     } catch (error) {
       console.error("Failed to fetch recent sync logs:", error)
@@ -320,190 +316,199 @@ export default function CalendarSyncPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Google Calendar Sync</h1>
+    <div>
+      <AdminHeader />
+      <div className="container mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-6">Google Calendar Sync</h1>
 
-      <div className="space-y-6">
-        {/* Sync Controls */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="space-y-4">
-            <button
-              data-testid="sync-calendars-button"
-              onClick={handleSync}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              Sync Calendars
-            </button>
-            <div className="hidden space-x-2">
-              <button
-                data-testid="sync-error-button"
-                onClick={handleSyncError}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Simulate Error
-              </button>
-              <button
-                data-testid="sync-cancellation-button"
-                onClick={handleSyncCancellation}
-                className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
-              >
-                Simulate Cancellation
-              </button>
-            </div>
-          </div>
-
-          {syncStatus && (
-            <div data-testid="sync-status" className="mt-4">
-              {syncStatus}
-            </div>
-          )}
-
-          {errorMessage && (
-            <div data-testid="error-message" className="mt-4 text-red-600">
-              {errorMessage}
-            </div>
-          )}
-
-          {retryCount > 0 && (
-            <>
-              <div data-testid="retry-count" className="mt-2 text-sm">
-                {retryCount}
-              </div>
-              <button
-                data-testid="retry-button"
-                onClick={handleRetry}
-                className="mt-4 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-              >
-                Retry
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* Sync Results */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Sync Results</h2>
-          <div data-testid="synced-bookings-count">{syncedBookingsCount}</div>
-          <div data-testid="sync-success-count">{syncSuccessCount}</div>
-          <div data-testid="sync-failed-count">{syncFailedCount}</div>
-          <div data-testid="deleted-bookings-count">{deletedBookingsCount}</div>
-        </div>
-
-        {/* Bookings List */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Bookings</h2>
-          {loadingBookings ? (
-            <div className="text-gray-500">Loading bookings...</div>
-          ) : bookings.length === 0 ? (
-            <div className="text-gray-500">No bookings found</div>
-          ) : (
-            <div className="space-y-2">
-              {bookings.slice(0, MAX_BOOKINGS_DISPLAY).map(renderBookingItem)}
-              {bookings.length > MAX_BOOKINGS_DISPLAY && (
-                <div className="text-sm text-gray-500 text-center">
-                  ... and {bookings.length - MAX_BOOKINGS_DISPLAY} more bookings
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Alert Details */}
-        <div
-          data-testid="alert-details"
-          className="bg-white p-6 rounded-lg shadow"
-        >
-          <h2 className="text-lg font-semibold mb-4">Recent Sync Activity</h2>
-          {syncLogs.length === 0 ? (
-            <div className="text-gray-500">No recent sync activity</div>
-          ) : (
+        <div className="space-y-6">
+          {/* Sync Controls */}
+          <div className="bg-white p-6 rounded-lg shadow">
             <div className="space-y-4">
-              {syncLogs.slice(0, MAX_SYNC_LOGS_DISPLAY).map(renderSyncLogItem)}
-            </div>
-          )}
-        </div>
-
-        {/* Sync History */}
-        <div
-          data-testid="sync-history"
-          className="bg-white p-6 rounded-lg shadow"
-        >
-          <h2 className="text-lg font-semibold mb-4">Sync History</h2>
-          <div
-            data-testid="sync-log-entry"
-            className="p-4 border rounded cursor-pointer hover:bg-gray-50"
-            onClick={() => console.log("Sync log entry clicked")}
-          >
-            <div data-testid="sync-details">
-              <div>Last sync: {new Date().toLocaleString()}</div>
-              <div>Bookings processed: {syncedBookingsCount}</div>
-              <div>Events created: {syncSuccessCount}</div>
-              <div>Events updated: 0</div>
-              <div>Events deleted: {deletedBookingsCount}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Authentication Section */}
-        <div
-          data-testid="google-auth-section"
-          className="bg-white p-6 rounded-lg shadow"
-        >
-          <h2 className="text-lg font-semibold mb-4">
-            Google Calendar Authentication
-          </h2>
-
-          {isCalendarConnected && calendarId ? (
-            <>
-              <div
-                data-testid="auth-success-message"
-                className="mt-4 text-green-600"
+              <button
+                data-testid="sync-calendars-button"
+                onClick={handleSync}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
               >
-                Successfully connected!
+                Sync Calendars
+              </button>
+              <div className="hidden space-x-2">
+                <button
+                  data-testid="sync-error-button"
+                  onClick={handleSyncError}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                >
+                  Simulate Error
+                </button>
+                <button
+                  data-testid="sync-cancellation-button"
+                  onClick={handleSyncCancellation}
+                  className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+                >
+                  Simulate Cancellation
+                </button>
               </div>
-              <div data-testid="calendar-connected-status" className="mt-2">
-                Connected to Google Calendar
+            </div>
+
+            {syncStatus && (
+              <div data-testid="sync-status" className="mt-4">
+                {syncStatus}
               </div>
-              <div data-testid="calendar-id">{calendarId}</div>
-            </>
-          ) : (
-            <button
-              data-testid="google-auth-button"
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Connect Google Calendar
-            </button>
-          )}
-        </div>
+            )}
 
-        {/* Sync Frequency */}
-        <div
-          data-testid="sync-frequency-setting"
-          className="bg-white p-6 rounded-lg shadow"
-        >
-          <h2 className="text-lg font-semibold mb-4">Sync Frequency</h2>
-          <div>15 minutes</div>
-          <div data-testid="last-sync-time">{new Date().toLocaleString()}</div>
-          <div data-testid="next-sync-countdown">14:59</div>
-        </div>
+            {errorMessage && (
+              <div data-testid="error-message" className="mt-4 text-red-600">
+                {errorMessage}
+              </div>
+            )}
 
-        {/* Backfill Section */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Initial Backfill</h2>
-          <button
-            data-testid="initial-backfill-button"
-            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+            {retryCount > 0 && (
+              <>
+                <div data-testid="retry-count" className="mt-2 text-sm">
+                  {retryCount}
+                </div>
+                <button
+                  data-testid="retry-button"
+                  onClick={handleRetry}
+                  className="mt-4 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+                >
+                  Retry
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Sync Results */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4">Sync Results</h2>
+            <div data-testid="synced-bookings-count">{syncedBookingsCount}</div>
+            <div data-testid="sync-success-count">{syncSuccessCount}</div>
+            <div data-testid="sync-failed-count">{syncFailedCount}</div>
+            <div data-testid="deleted-bookings-count">
+              {deletedBookingsCount}
+            </div>
+          </div>
+
+          {/* Bookings List */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4">Bookings</h2>
+            {loadingBookings ? (
+              <div className="text-gray-500">Loading bookings...</div>
+            ) : bookings.length === 0 ? (
+              <div className="text-gray-500">No bookings found</div>
+            ) : (
+              <div className="space-y-2">
+                {bookings.slice(0, MAX_BOOKINGS_DISPLAY).map(renderBookingItem)}
+                {bookings.length > MAX_BOOKINGS_DISPLAY && (
+                  <div className="text-sm text-gray-500 text-center">
+                    ... and {bookings.length - MAX_BOOKINGS_DISPLAY} more
+                    bookings
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Alert Details */}
+          <div
+            data-testid="alert-details"
+            className="bg-white p-6 rounded-lg shadow"
           >
-            Start Backfill
-          </button>
-          <div data-testid="backfill-progress" className="mt-4">
-            Processing 50 bookings...
+            <h2 className="text-lg font-semibold mb-4">Recent Sync Activity</h2>
+            {syncLogs.length === 0 ? (
+              <div className="text-gray-500">No recent sync activity</div>
+            ) : (
+              <div className="space-y-4">
+                {syncLogs
+                  .slice(0, MAX_SYNC_LOGS_DISPLAY)
+                  .map(renderSyncLogItem)}
+              </div>
+            )}
           </div>
-          <div data-testid="backfill-status" className="mt-2 text-green-600">
-            Backfill completed
+
+          {/* Sync History */}
+          <div
+            data-testid="sync-history"
+            className="bg-white p-6 rounded-lg shadow"
+          >
+            <h2 className="text-lg font-semibold mb-4">Sync History</h2>
+            <div
+              data-testid="sync-log-entry"
+              className="p-4 border rounded cursor-pointer hover:bg-gray-50"
+            >
+              <div data-testid="sync-details">
+                <div>Last sync: {new Date().toLocaleString()}</div>
+                <div>Bookings processed: {syncedBookingsCount}</div>
+                <div>Events created: {syncSuccessCount}</div>
+                <div>Events updated: 0</div>
+                <div>Events deleted: {deletedBookingsCount}</div>
+              </div>
+            </div>
           </div>
-          <div data-testid="backfill-results" className="mt-2">
-            50 bookings processed
+
+          {/* Authentication Section */}
+          <div
+            data-testid="google-auth-section"
+            className="bg-white p-6 rounded-lg shadow"
+          >
+            <h2 className="text-lg font-semibold mb-4">
+              Google Calendar Authentication
+            </h2>
+
+            {isCalendarConnected && calendarId ? (
+              <>
+                <div
+                  data-testid="auth-success-message"
+                  className="mt-4 text-green-600"
+                >
+                  Successfully connected!
+                </div>
+                <div data-testid="calendar-connected-status" className="mt-2">
+                  Connected to Google Calendar
+                </div>
+                <div data-testid="calendar-id">{calendarId}</div>
+              </>
+            ) : (
+              <button
+                data-testid="google-auth-button"
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                Connect Google Calendar
+              </button>
+            )}
+          </div>
+
+          {/* Sync Frequency */}
+          <div
+            data-testid="sync-frequency-setting"
+            className="bg-white p-6 rounded-lg shadow"
+          >
+            <h2 className="text-lg font-semibold mb-4">Sync Frequency</h2>
+            <div>15 minutes</div>
+            <div data-testid="last-sync-time">
+              {new Date().toLocaleString()}
+            </div>
+            <div data-testid="next-sync-countdown">14:59</div>
+          </div>
+
+          {/* Backfill Section */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4">Initial Backfill</h2>
+            <button
+              data-testid="initial-backfill-button"
+              className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+            >
+              Start Backfill
+            </button>
+            <div data-testid="backfill-progress" className="mt-4">
+              Processing 50 bookings...
+            </div>
+            <div data-testid="backfill-status" className="mt-2 text-green-600">
+              Backfill completed
+            </div>
+            <div data-testid="backfill-results" className="mt-2">
+              50 bookings processed
+            </div>
           </div>
         </div>
       </div>
