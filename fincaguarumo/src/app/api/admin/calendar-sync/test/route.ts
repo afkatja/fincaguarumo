@@ -10,7 +10,6 @@ export async function GET(request: Request) {
   try {
     // Verify admin authentication
     const adminUser = await verifyAdminAuth(request)
-    console.log(`Admin ${adminUser.id} testing calendar connection`)
 
     // Test calendar access
     const hasAccess = await googleCalendarService.testAccess()

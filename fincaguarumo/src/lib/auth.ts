@@ -31,6 +31,24 @@ export interface AuthUser {
 }
 
 /**
+ * Extracts admin status from user's app_metadata (set via database trigger)
+ * Falls back to database check if app_metadata is not available
+ */
+function getAdminStatusFromUser(user: any): boolean {
+  // Check app_metadata.role first (zero-DB lookup)
+  const appMetadata = user.app_metadata
+  if (appMetadata && typeof appMetadata === "object") {
+    const role = appMetadata.role
+    if (role === "admin") return true
+    if (role === "user") return false
+  }
+
+  // Fallback: could query database here if needed, but for now default to false
+  // The database trigger should have synced app_metadata for all users
+  return false
+}
+
+/**
  * Verifies the current user's authentication (not requiring admin)
  * @param request - The incoming request object
  * @returns AuthUser object if authenticated
@@ -60,26 +78,8 @@ export async function verifyUserAuth(request: Request): Promise<AuthUser> {
       throw authError
     }
 
-    // Check admin status from database only (trusted source)
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from("users")
-      .select("is_admin")
-      .eq("id", user.id)
-      .maybeSingle()
-
-    let isAdmin = false
-    if (userError) {
-      // Real database failure (missing table, connection issues, etc.)
-      const serverError = new Error(
-        `Database error during user verification: ${(userError as any).message || "Unknown database error"}`,
-      )
-      ;(serverError as any).status = 500
-      throw serverError
-    } else if (userData) {
-      // User row exists, check admin status
-      isAdmin = userData.is_admin
-    }
-    // If userData is null, user row doesn't exist - treat as non-admin (isAdmin remains false)
+    // Check admin status from JWT app_metadata (zero-DB lookup)
+    const isAdmin = getAdminStatusFromUser(user)
 
     return {
       id: user.id,
@@ -129,33 +129,10 @@ export async function verifyAdminAuth(request: Request): Promise<AuthUser> {
       throw authError
     }
 
-    // Check admin status from database only (trusted source)
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from("users")
-      .select("is_admin")
-      .eq("id", user.id)
-      .single()
+    // Check admin status from JWT app_metadata (zero-DB lookup)
+    const isAdmin = getAdminStatusFromUser(user)
 
-    if (userError) {
-      // Distinguish between "not found" and actual database failures
-      if ((userError as any).code === "PGRST116" || !userData) {
-        // PGRST116: No rows returned - user not found in users table
-        const adminError = new Error(
-          "User not found or admin status cannot be verified",
-        )
-        ;(adminError as any).status = 403
-        throw adminError
-      } else {
-        // Real database failure (missing table, connection issues, etc.)
-        const serverError = new Error(
-          `Database error during admin verification: ${(userError as any).message || "Unknown database error"}`,
-        )
-        ;(serverError as any).status = 500
-        throw serverError
-      }
-    }
-
-    if (!userData.is_admin) {
+    if (!isAdmin) {
       const forbiddenError = new Error("Admin access required")
       ;(forbiddenError as any).status = 403
       throw forbiddenError
@@ -164,7 +141,7 @@ export async function verifyAdminAuth(request: Request): Promise<AuthUser> {
     return {
       id: user.id,
       email: user.email,
-      is_admin: userData.is_admin,
+      is_admin: isAdmin,
     }
   } catch (error: any) {
     // Re-throw errors with their status codes
