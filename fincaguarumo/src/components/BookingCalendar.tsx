@@ -24,6 +24,7 @@ const BookingCalendar = ({
   const [loading, setLoading] = useState(false)
   const [activePopover, setActivePopover] = useState<string | null>(null)
   const [blockedDates, setBlockedDates] = useState<Date[]>([])
+  const [fetchAttempted, setFetchAttempted] = useState(false)
 
   // Update parent component when loading state changes
   useEffect(() => {
@@ -40,8 +41,9 @@ const BookingCalendar = ({
   }, [blockedDates, onBlockedDatesChange])
 
   useEffect(() => {
-    if (blockedDates.length) return
+    if (blockedDates.length || fetchAttempted) return
     setLoading(true)
+    setFetchAttempted(true)
 
     const fetchData = async () => {
       try {
@@ -70,7 +72,7 @@ const BookingCalendar = ({
     }
 
     fetchData()
-  }, [blockedDates])
+  }, [blockedDates, fetchAttempted])
 
   return (
     <div data-testid="booking-calendar">
