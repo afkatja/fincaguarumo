@@ -10,6 +10,7 @@ import { clientSideFetch } from "@/sanity/lib/clientSide"
 import { Button } from "@/components/ui/button"
 import Loading from "../app/[locale]/loading"
 import FadeInObserver from "./FadeInObserver"
+import { useTranslations } from "next-intl"
 
 export const LocationReviews = ({
   initialCount = 8,
@@ -18,6 +19,7 @@ export const LocationReviews = ({
   initialCount?: number
   showMoreLink?: boolean
 }) => {
+  const t = useTranslations("reviews")
   const {
     reviews: gbpReviews,
     loading,
@@ -47,13 +49,15 @@ export const LocationReviews = ({
   // Load more - if more reviews available locally, just show them; otherwise fetch more GBP pages
   const handleLoadMore = async () => {
     if (isAllLoaded) return
-    
+
     // If there are more reviews already loaded locally, just show them
     if (displayedCount < allReviews.length) {
-      setDisplayedCount(prev => Math.min(prev + initialCount, allReviews.length))
+      setDisplayedCount(prev =>
+        Math.min(prev + initialCount, allReviews.length),
+      )
       return
     }
-    
+
     // Otherwise, fetch more GBP pages
     if (!loadingMore && hasMore) {
       await loadMore()
@@ -77,10 +81,11 @@ export const LocationReviews = ({
       {displayedReviews.length > 0 && (
         <div className="md:grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {displayedReviews.map((review: TReview, index) => (
-            <FadeInObserver key={`${review?.date || index}-${review?.author?.name || review?.authorAttribution?.displayName}-${index}`} className="fade-in">
-              <Review
-                review={review}
-              />
+            <FadeInObserver
+              key={`${review?.date || index}-${review?.author?.name || review?.authorAttribution?.displayName}-${index}`}
+              className="fade-in"
+            >
+              <Review review={review} />
             </FadeInObserver>
           ))}
         </div>
@@ -94,7 +99,7 @@ export const LocationReviews = ({
             disabled={loadingMore || isAllLoaded}
             className="w-64"
           >
-            {loadingMore ? <Loading /> : "Load more reviews"}
+            {loadingMore ? <Loading /> : t("loadMoreReviews")}
           </Button>
         </div>
       )}
