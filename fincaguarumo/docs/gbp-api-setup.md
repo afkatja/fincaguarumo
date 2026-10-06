@@ -141,6 +141,48 @@ import { ReviewsProvider } from '@/app/providers/ReviewsProvider'  // GBP review
 
 The GBP API uses JWT-based service account authentication.
 
+> **Important**: This implementation uses the **Google Business Profile APIs (v1)**:
+> - Account Management: `https://mybusinessaccountmanagement.googleapis.com/v1`
+> - Business Information (locations, reviews): `https://mybusinessbusinessinformation.googleapis.com/v1`
+> 
+> The legacy Google My Business API v4 (`mybusiness.googleapis.com/v4`) is deprecated.
+
+## Service Account Access Requirement
+
+**Critical Prerequisite**: The location must be **claimed and verified** in Google Business Profile by the primary owner *before* the service account can accept the invitation.
+
+### Required Setup Order
+
+1. **Primary Owner**: Claim & verify the location in GBP
+   - Go to https://business.google.com/ as the primary owner
+   - Add/claim "Villa Bruno at Finca Guarumo" (or "Finca Guarumo")
+   - Complete verification (postcard, phone, email, etc.)
+   - Location must show as **"Verified"** in GBP
+
+2. **Primary Owner**: Invite service account as Manager
+   - Copy service account email from GCP
+   - In GBP → Users → "Add users"
+   - Add service account email with **"Manager"** role
+   - This creates a pending invitation
+
+3. **Accept the invitation** (one-time setup):
+   - **Option A (API)**: 
+     ```bash
+     # List pending invitations
+     curl -X GET "http://localhost:3000/api/gbp/invitations"
+     
+     # Accept invitation (use the `name` from the response)
+     curl -X POST "http://localhost:3000/api/gbp/invitations" \
+       -H "Content-Type: application/json" \
+       -d '{"invitationName": "accounts/.../invitations/..."}'
+     ```
+   - **Option B (UI)**: In GBP → Users, find the pending invitation for the service account, click "Accept"
+4. Wait a few minutes for propagation
+
+Without verification, the API returns `"Precondition check failed"` when accepting the invitation, and `/api/gbp/locations` returns `{ "locations": [] }`.
+
+> **Why this fails without verification**: The invitation is for a location that exists in Google Maps (has a `placeId`) but isn't yet claimed/verified in GBP. The GBP API requires the location to be verified before a service account can manage it.
+
 ```typescript
 // src/lib/gbp/client.ts
 import { JWT } from 'google-auth-library'
