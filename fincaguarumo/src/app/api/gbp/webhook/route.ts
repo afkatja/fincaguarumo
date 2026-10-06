@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { revalidateTag } from "next/cache"
+import { revalidateTag, revalidatePath } from "next/cache"
 
 export const revalidate = 0
 
@@ -22,14 +22,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required attributes" }, { status: 400 })
     }
 
-    console.log(`GBP webhook received: ${notificationType} for ${locationName}`)
-
     // Invalidate cache for this location's reviews
     const reviewCacheTag = `gbp-reviews-${locationName.replace(/\//g, "-")}`
     const locationsCacheTag = "gbp-locations"
 
-    revalidateTag(reviewCacheTag)
-    revalidateTag(locationsCacheTag)
+    revalidateTag(reviewCacheTag, "gbp-webhook")
+    revalidateTag(locationsCacheTag, "gbp-webhook")
+
+    // Also invalidate specific paths
+    revalidatePath("/api/gbp/reviews")
+    revalidatePath("/api/gbp/locations")
 
     // Optionally fetch and cache the latest review immediately
     if (notificationType === "NEW_REVIEW" || notificationType === "UPDATED_REVIEW") {

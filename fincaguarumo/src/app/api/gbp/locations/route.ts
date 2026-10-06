@@ -5,30 +5,14 @@ export const revalidate = 3600
 
 export async function GET() {
   try {
-    const locations = await fetchLocations()
-
-    const simplifiedLocations = locations.map(loc => ({
-      name: loc.name,
-      title: loc.title,
-      address: loc.address
-        ? [
-            ...(loc.address.addressLines || []),
-            loc.address.locality,
-            loc.address.administrativeArea,
-            loc.address.postalCode,
-            loc.address.regionCode,
-          ]
-            .filter(Boolean)
-            .join(', ')
-        : undefined,
-      phoneNumber: loc.phoneNumber,
-    }))
+    const locations = await fetchLocations(false) // use OAuth
 
     return NextResponse.json(
-      { locations: simplifiedLocations },
+      { locations },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=600',
+          'X-Cache-Tags': 'gbp-locations',
         },
       }
     )
