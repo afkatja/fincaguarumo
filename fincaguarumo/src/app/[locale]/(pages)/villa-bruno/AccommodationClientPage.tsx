@@ -20,10 +20,8 @@ import { useBookingCore } from "../../../providers/BookingCoreProvider"
 import FAQ from "@/components/FAQ"
 import Title from "@/components/Title"
 import Icon from "../../../../components/Icon"
-import { APIProvider } from "@vis.gl/react-google-maps"
-import { PlaceProvider } from "../../../providers/PlaceProvider"
-import { placeId } from "../../../../../data/geo"
-import { PlaceReviews } from "../../../../components/PlaceReviews"
+import { ReviewsProvider } from "@/app/providers/ReviewsProvider"
+import { LocationReviews } from "@/components/LocationReviews"
 import { QuickInfoBar } from "@/components/QuickInfoBar"
 import { ReviewSummary } from "@/components/ReviewSummary"
 import { ContentPreview } from "@/components/ContentPreview"
@@ -31,6 +29,7 @@ import { CollapsibleSection } from "@/components/CollapsibleSection"
 import InPageNavigation from "@/components/InPageNavigation"
 import { cn } from "../../../../lib/utils"
 import Loading from "../loading"
+
 
 const AccommodationClientPage = ({
   content,
@@ -43,8 +42,6 @@ const AccommodationClientPage = ({
   const t = useTranslations("booking")
   const tPage = useTranslations("page")
   const r = useTranslations("reviews")
-
-  const googleMapsKey = process.env.NEXT_PUBLIC_GMAPS_API_KEY as string
 
   // Define navigation sections with translatable labels
   const navigationSections = [
@@ -77,7 +74,7 @@ const AccommodationClientPage = ({
   })
 
   return (
-    <>
+    <ReviewsProvider locationId={process.env.NEXT_PUBLIC_GBP_LOCATION_ID}>
       {/* In-Page Navigation */}
       <InPageNavigation sections={navigationSections} />
 
@@ -93,31 +90,22 @@ const AccommodationClientPage = ({
       </div>
 
       {/* Reviews Section - Prominently placed with summary */}
-      {googleMapsKey && (
-        <div id="reviews-summary" className="w-11/12 mx-auto my-8">
-          <CollapsibleSection title="Reviews" defaultExpanded={false}>
-            <APIProvider
-              apiKey={googleMapsKey}
-              // onLoad={() => console.log("Maps API has loaded.")}
-            >
-              <PlaceProvider placeId={placeId}>
-                <Title
-                  title={r("whatGuestsLoveMost")}
-                  Heading="h2"
-                  titleClassName="text-3xl font-bold text-guarumo-primary dark:text-zinc-50 my-5 text-center"
-                  icon={{
-                    iconClassName: "fill-guarumo-primary dark:fill-zinc-50",
-                  }}
-                />
-                <ReviewSummary
-                  highlightFeatures={content.highlightFeatures}
-                  readMoreSection="reviews"
-                />
-              </PlaceProvider>
-            </APIProvider>
-          </CollapsibleSection>
-        </div>
-      )}
+      <div id="reviews-summary" className="w-11/12 mx-auto my-8">
+        <CollapsibleSection title="Reviews" defaultExpanded={false}>
+          <Title
+            title={r("whatGuestsLoveMost")}
+            Heading="h2"
+            titleClassName="text-3xl font-bold text-guarumo-primary dark:text-zinc-50 my-5 text-center"
+            icon={{
+              iconClassName: "fill-guarumo-primary dark:fill-zinc-50",
+            }}
+          />
+          <ReviewSummary
+            highlightFeatures={content.highlightFeatures}
+            readMoreSection="reviews"
+          />
+        </CollapsibleSection>
+      </div>
 
       {/* Content Preview - First few sections of Sanity content */}
       <div id="about" className="w-11/12 mx-auto mb-6">
@@ -161,18 +149,12 @@ const AccommodationClientPage = ({
           </Link>
         </div>
       </div>
-      {googleMapsKey && (
-        <div id="reviews" className="w-11/12 mx-auto mt-3 mb-8">
-          <APIProvider
-            apiKey={googleMapsKey}
-            // onLoad={() => console.log("Maps API has loaded.")}
-          >
-            <PlaceProvider placeId={placeId}>
-              <PlaceReviews count={4} />
-            </PlaceProvider>
-          </APIProvider>
-        </div>
-      )}
+
+      {/* Reviews with GBP API Comparison */}
+      <div id="reviews" className="w-11/12 mx-auto mt-3 mb-8">
+        <LocationReviews initialCount={4} />
+      </div>
+
       {/* Booking Footer - Sticky booking options */}
       {content?.showBookingDialog && (
         <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-dark shadow-sm">
@@ -230,8 +212,8 @@ const AccommodationClientPage = ({
           </div>
         </footer>
       )}
-    </>
-  )
+      </ReviewsProvider>
+    )
 }
 
 export default AccommodationClientPage
