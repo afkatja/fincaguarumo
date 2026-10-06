@@ -59,8 +59,8 @@
     "phoneLabel": "Je telefoonnummer *",
     "priceLabel": "Prijs voor",
     "rateLabel": "Prijs",
-    "reserveButton": "Boek nu",
-    "selectDate": "Selecteer datum",
+    "priceFrom": "Prijs vanaf {price} voor {guests} {guestsLabel}",
+    "priceFromShort": "voor {guests} {guestsLabel}",
     "rateVATlabel": "Prijs (incl. 13% btw)",
     "reserveButtonTour": "Boek nu",
     "discount10": "Korting (10% voor verblijven van 7+ nachten)",
@@ -98,6 +98,13 @@
   "page": {
     "moreFAQ": "Meer veelgestelde vragen",
     "FAQ": "FAQ",
+    "quickInfo": "Snelle info",
+    "reviews": "Beoordelingen",
+    "about": "Over",
+    "details": "Details",
+    "allReviews": "Alle beoordelingen",
+    "more": "Meer",
+    "less": "Minder",
     "greetings": {
       "homepage": "Welkom bij Villa Bruno! Hoe kan ik je vandaag helpen?",
       "stay": "Hoi! Ik ben hier om u te helpen bij het boeken van {propertyTitle}. Wat zou je willen weten?",
@@ -149,6 +156,17 @@
     "aboutThisAccommodation": "Over deze accommodatie",
     "continueReading": "Lees verder voor meer informatie over deze unieke eco-villa-ervaring...",
     "readMore": "Lees meer"
+  },
+  "faq": {
+    "title": "Veelgestelde vragen",
+    "browseInstructions": "Blader door vragen per categorie of zoek naar wat je nodig hebt.",
+    "searchLabel": "Zoek FAQs",
+    "searchPlaceholder": "Zoek FAQs",
+    "allCategories": "Alle categorieën",
+    "clearFilters": "Filters wissen",
+    "readLess": "Lees minder",
+    "readMore": "Lees meer",
+    "noResults": "Geen FAQs die overeenkomen met je zoekopdracht of geselecteerde categorie."
   },
   "reviews": {
     "wildlifeNature": "Dieren in het wild en natuur",

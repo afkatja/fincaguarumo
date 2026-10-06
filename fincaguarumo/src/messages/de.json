@@ -53,6 +53,8 @@
     "phoneLabel": "Ihre Telefonnummer *",
     "priceLabel": "Preis für",
     "rateLabel": "Preis",
+    "priceFrom": "Preis ab {price} für {guests} {guestsLabel}",
+    "priceFromShort": "für {guests} {guestsLabel}",
     "selectDate": "Datum auswählen",
     "rateVATlabel": "Rate (inkl. 13% Mehrwertsteuer)",
     "reserveButtonTour": "Buchen Sie jetzt",
@@ -92,6 +94,13 @@
   "page": {
     "moreFAQ": "Mehr FAQ",
     "FAQ": "FAQ",
+    "quickInfo": "Kurzinfo",
+    "reviews": "Bewertungen",
+    "about": "Über",
+    "details": "Details",
+    "allReviews": "Alle Bewertungen",
+    "more": "Mehr",
+    "less": "Weniger",
     "greetings": {
       "homepage": "Willkommen in der Villa Bruno! Wie kann ich Ihnen heute helfen?",
       "stay": "Hallo! Ich bin hier, um Ihnen bei der Buchung von {propertyTitle} zu helfen. Was möchten Sie wissen?",
@@ -143,6 +152,17 @@
     "aboutThisAccommodation": "Über diese Unterkunft",
     "continueReading": "Lesen Sie weiter, um mehr über dieses einzigartige Öko-Villa-Erlebnis zu erfahren ...",
     "readMore": "Mehr lesen"
+  },
+  "faq": {
+    "title": "Häufig gestellte Fragen",
+    "browseInstructions": "Durchsuchen Sie Fragen nach Kategorien oder suchen Sie nach dem, was Sie brauchen.",
+    "searchLabel": "FAQs suchen",
+    "searchPlaceholder": "FAQs suchen",
+    "allCategories": "Alle Kategorien",
+    "clearFilters": "Filter zurücksetzen",
+    "readLess": "Weniger lesen",
+    "readMore": "Mehr lesen",
+    "noResults": "Keine FAQs entsprechen Ihrer Suche oder der ausgewählten Kategorie."
   },
   "reviews": {
     "wildlifeNature": "Tierwelt und Natur",
