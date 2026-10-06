@@ -16,7 +16,6 @@ type PlaceDetails = {
   displayName?: string | null
   formattedAddress?: string | null
   rating?: number | null
-  reviews?: { authorAttribution: { displayName: string; photoUri?: string }; rating?: number; text?: { text: string }; relativePublishTimeDescription?: string }[] | null
 }
 
 type PlaceContextType = {
@@ -57,7 +56,7 @@ export const PlaceProvider: React.FC<PlaceProviderProps> = ({
         })
 
         const request = {
-          fields: ["displayName", "rating", "formattedAddress", "reviews"],
+          fields: ["displayName", "rating", "formattedAddress"],
         }
 
         const result = await placeInstance.fetchFields(request)
@@ -67,7 +66,6 @@ export const PlaceProvider: React.FC<PlaceProviderProps> = ({
           displayName: result.place.displayName,
           formattedAddress: result.place.formattedAddress,
           rating: result.place.rating,
-          reviews: result.place.reviews,
         }
 
         setPlace(placeDetails)
