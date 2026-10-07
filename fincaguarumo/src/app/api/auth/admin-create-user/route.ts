@@ -1,10 +1,62 @@
 import { NextResponse } from "next/server"
 import { createSupabaseAdmin } from "@/lib/auth"
 
+// Simple in-memory rate limiting (for edge functions)
+// In production, consider using a Redis-based solution
+export const rateLimitMap = new Map<
+  string,
+  { count: number; resetTime: number }
+>()
+const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 5 // 5 requests per minute per IP
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const record = rateLimitMap.get(ip)
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
+    return true
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false
+  }
+
+  record.count++
+  return true
+}
+
 export async function POST(request: Request) {
   try {
-    // Note: This endpoint is used for admin signup, so it doesn't require admin authentication
-    // The new user will be created and then can be granted admin status via separate process
+    // Rate limiting by IP
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0] || "unknown"
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 },
+      )
+    }
+
+    // Authentication via shared secret (similar to custom-send-confirmation)
+    const headerSecret = request.headers.get("x-admin-signup-secret")
+    const sharedSecret = process.env.ADMIN_SIGNUP_SECRET || ""
+
+    if (!sharedSecret) {
+      console.error(
+        "[auth:admin-create-user] ADMIN_SIGNUP_SECRET env var is empty",
+      )
+      return NextResponse.json(
+        { error: "Server misconfigured" },
+        { status: 500 },
+      )
+    }
+
+    if (!headerSecret || headerSecret !== sharedSecret) {
+      console.warn("[auth:admin-create-user] authentication failed", { ip })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
     const body = await request.json()
     const { email, password, emailRedirectTo, data } = body
@@ -78,7 +130,7 @@ export async function POST(request: Request) {
       message:
         "User created successfully. Confirmation email will be sent via custom SMTP.",
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[auth:admin-create-user] unexpected error:", error)
     return NextResponse.json(
       { error: "Internal server error" },
