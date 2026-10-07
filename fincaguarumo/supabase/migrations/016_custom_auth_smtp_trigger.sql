@@ -72,7 +72,7 @@ IMMUTABLE
 RETURNS NULL ON NULL INPUT
 AS $$
   -- 👇 Replace this with the public URL of /api/auth/custom-send-confirmation
-  SELECT 'https://deploy-preview-80--fincaguarumo.netlify.app/api/auth/custom-send-confirmation'::text;
+  SELECT 'https://fincaguarumo.com/api/auth/custom-send-confirmation'::text;
 $$;
 
 ALTER FUNCTION public.custom_confirmation_hook_url() OWNER TO postgres;
@@ -88,7 +88,7 @@ The auth.users trigger POSTs confirmation email payloads here via pg_net.';
 -- Uncomment the following block and create the secret:
 --
 --   SELECT vault.create_secret(
---     'https://deploy-preview-80--fincaguarumo.netlify.app/api/auth/custom-send-confirmation',
+--     'https://fincaguarumo.com/api/auth/custom-send-confirmation',
 --     'custom_confirmation_hook_url'
 --   );
 --
