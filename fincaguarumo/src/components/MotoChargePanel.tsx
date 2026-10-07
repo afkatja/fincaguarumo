@@ -5,6 +5,7 @@ import { MotoChargePanel } from "@moto-pos/core/react"
 import "@moto-pos/core/tokens.css"
 import { useSupabaseAuth } from "../hooks/useSupabaseAuth"
 import { useEffect, useState } from "react"
+import Loading from "../app/[locale]/loading"
 
 const queryClient = new QueryClient()
 
@@ -14,19 +15,25 @@ const ChargeWidget = ({ defaultAmount = 100, defaultCurrency = "usd" }) => {
   }
   const { getAccessToken } = useSupabaseAuth()
   const [token, setToken] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
   useEffect(() => {
-    if (token) return
     const fetchToken = async () => {
       const authToken = await getAccessToken()
-      console.log("Fetched auth token:", authToken)
       if (!authToken) {
         console.error("Failed to get access token")
+        setIsLoading(false)
         return
       }
       setToken(authToken)
+      setIsLoading(false)
     }
     fetchToken()
   }, [getAccessToken])
+
+  if (isLoading) {
+    return <Loading />
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
