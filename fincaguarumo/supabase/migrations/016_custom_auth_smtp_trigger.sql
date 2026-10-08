@@ -71,7 +71,6 @@ LANGUAGE sql
 IMMUTABLE
 RETURNS NULL ON NULL INPUT
 AS $$
-  -- 👇 Replace this with the public URL of /api/auth/custom-send-confirmation
   SELECT 'https://fincaguarumo.com/api/auth/custom-send-confirmation'::text;
 $$;
 

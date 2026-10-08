@@ -202,17 +202,11 @@ export async function POST(request: Request) {
       { status: 422 },
     )
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error("Finance charge error:", error.message)
-      return NextResponse.json(
-        { error: error.message || "Internal server error" },
-        { status: 500 },
-      )
-    }
-
+    // Check Stripe errors first (before generic Error check)
     if (typeof error === "object" && error !== null) {
       const stripeError = error as { type?: string; message?: string }
       if (stripeError.type === "StripeCardError") {
+        console.error("Finance charge card error:", stripeError.message)
         return NextResponse.json(
           { error: stripeError.message || "Card error" },
           { status: 402 },
@@ -220,7 +214,18 @@ export async function POST(request: Request) {
       }
     }
 
-    console.error("Unknown finance charge error:", error)
+    // Preserve 401/403 from verifyAdminAuth (status property)
+    if (error instanceof Error && (error as any).status === 401) {
+      console.error("Finance charge auth error:", error.message)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+    if (error instanceof Error && (error as any).status === 403) {
+      console.error("Finance charge auth error:", error.message)
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    // Generic error: log details but return generic message to client
+    console.error("Finance charge error:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
