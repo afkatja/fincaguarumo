@@ -152,7 +152,7 @@ const AccommodationClientPage = ({
 
       {/* Reviews with GBP API Comparison */}
       <div id="reviews" className="w-11/12 mx-auto mt-3 mb-8">
-        <LocationReviews initialCount={4} />
+        <LocationReviews initialCount={4} mode="preview" />
       </div>
 
       {/* Booking Footer - Sticky booking options */}

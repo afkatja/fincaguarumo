@@ -11,13 +11,19 @@ import { Button } from "@/components/ui/button"
 import Loading from "../app/[locale]/loading"
 import FadeInObserver from "./FadeInObserver"
 import { useTranslations } from "next-intl"
+import Link from "next/link"
+import Icon from "./Icon"
+
+type LocationReviewsMode = "infinite" | "preview"
 
 export const LocationReviews = ({
   initialCount = 8,
   showMoreLink = true,
+  mode = "infinite",
 }: {
   initialCount?: number
   showMoreLink?: boolean
+  mode?: LocationReviewsMode
 }) => {
   const t = useTranslations("reviews")
   const {
@@ -40,6 +46,8 @@ export const LocationReviews = ({
     })
   }, [JSON.stringify(sanityReviews), JSON.stringify(gbpReviews)])
 
+  const isPreviewMode = mode === "preview"
+
   // Track displayed reviews - append more as they load
   const [displayedCount, setDisplayedCount] = useState(initialCount)
 
@@ -58,8 +66,8 @@ export const LocationReviews = ({
       return
     }
 
-    // Otherwise, fetch more GBP pages
-    if (!loadingMore && hasMore) {
+    // Otherwise, fetch more GBP pages (only in infinite mode)
+    if (!isPreviewMode && !loadingMore && hasMore) {
       await loadMore()
     }
   }
@@ -68,7 +76,17 @@ export const LocationReviews = ({
   if (loading) return <Loading />
   if (error) return <div className="py-5 text-destructive">Error: {error}</div>
 
-  const displayedReviews = allReviews.slice(0, displayedCount)
+  // In preview mode, only show initialCount; in infinite mode, show all loaded
+  const displayedReviews = allReviews.slice(
+    0,
+    isPreviewMode ? initialCount : displayedCount,
+  )
+
+  // In preview mode, show link if there are more reviews than displayed
+  const hasMoreToShow = isPreviewMode
+    ? allReviews.length > initialCount
+    : !isAllLoaded
+  console.log({ allReviewsLength: allReviews.length })
 
   return (
     <div className="py-5 lg:px-40 mt-5">
@@ -90,7 +108,22 @@ export const LocationReviews = ({
           ))}
         </div>
       )}
-      {!isAllLoaded && showMoreLink && (
+      {!isAllLoaded && showMoreLink && hasMoreToShow && isPreviewMode && (
+        <div className="w-full flex justify-center mt-8">
+          <Link
+            href="/reviews"
+            className="w-64 inline-flex items-center justify-center h-full group no-underline"
+          >
+            {t("readAllReviews")}
+            <Icon
+              icon="ArrowRight"
+              className="h-8 w-8 transition-all group-hover:translate-x-3 stroke-guarumo-accent dark:stroke-zinc-50"
+              color="currentColor"
+            />
+          </Link>
+        </div>
+      )}
+      {!isPreviewMode && !isAllLoaded && showMoreLink && hasMoreToShow && (
         <div className="w-full flex justify-center mt-8">
           <Button
             variant="outline"

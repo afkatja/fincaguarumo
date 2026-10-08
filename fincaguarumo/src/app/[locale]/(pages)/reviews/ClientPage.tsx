@@ -7,7 +7,7 @@ const ClientPage = () => {
     <ReviewsProvider locationId={process.env.NEXT_PUBLIC_GBP_LOCATION_ID} pageSize={8}>
       <GuestLikesSummary />
 
-      <LocationReviews initialCount={8} showMoreLink={true} />
+      <LocationReviews initialCount={8} showMoreLink={true} mode="infinite" />
     </ReviewsProvider>
   )
 }

@@ -119,7 +119,7 @@ const HomePage = ({
                 />
                 <ReviewSummary />
               </div>
-              <LocationReviews initialCount={4} showMoreLink={true} />
+              <LocationReviews initialCount={4} showMoreLink={true} mode="preview" />
             </ReviewsProvider>
           </div>
 
