@@ -1,14 +1,10 @@
 "use client"
-import { usePlace } from "../app/providers/PlaceProvider"
 import Title from "./Title"
 import { ReviewSummary } from "./ReviewSummary"
 import { useTranslations } from "next-intl"
 
 export const GuestLikesSummary = () => {
-  const { place } = usePlace()
   const r = useTranslations("reviews")
-
-  if (!place) return null
 
   return (
     <div className="prose w-11/12 lg:prose-lg mx-auto py-5 mt-5">

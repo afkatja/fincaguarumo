@@ -177,6 +177,10 @@
     "whatGuestsLoveMost": "What guests love most",
     "recentGuestComments": "Recent guest comments",
     "guest": "Guest",
-    "readMoreReviews": "Read more reviews"
+    "readMoreReviews": "Read more reviews",
+    "readMore": "Read more",
+    "readLess": "Read less",
+    "loadMoreReviews": "Load more reviews",
+    "readAllReviews": "Read all reviews"
   }
 }

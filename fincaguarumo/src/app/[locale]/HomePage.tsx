@@ -11,6 +11,11 @@ import LazyLoad from "../../components/LazyLoad"
 import Loading from "./(pages)/loading"
 import { useDialog } from "@/app/providers/DialogProvider"
 import { HomeContent } from "../../types"
+import { ReviewsProvider } from "../providers/ReviewsProvider"
+import { useTranslations } from "next-intl"
+import { ReviewSummary } from "../../components/ReviewSummary"
+import { LocationReviews } from "../../components/LocationReviews"
+import Title from "../../components/Title"
 
 const HomeMap = dynamic(() => import("../../components/HomeMap"), {
   ssr: false,
@@ -27,6 +32,8 @@ const HomePage = ({
   content: HomeContent
 }) => {
   const { isBookingDialogOpen } = useDialog()
+  const b = useTranslations("reviews")
+
   return (
     <>
       <VideoOpenZip>
@@ -97,6 +104,24 @@ const HomePage = ({
             <HomeMap />
           </LazyLoad>
           {/* )} */}
+          <div className="w-11/12 mx-auto">
+            <ReviewsProvider
+              locationId={process.env.NEXT_PUBLIC_GBP_LOCATION_ID}
+            >
+              <div className="max-w-240 mx-auto">
+                <Title
+                  Heading="h2"
+                  titleClassName="text-3xl font-bold text-guarumo-primary dark:text-zinc-50 mb-4"
+                  title={b("title")}
+                  icon={{
+                    iconClassName: "fill-guarumo-primary dark:fill-zinc-50",
+                  }}
+                />
+                <ReviewSummary />
+              </div>
+              <LocationReviews initialCount={4} showMoreLink={true} mode="preview" />
+            </ReviewsProvider>
+          </div>
 
           <FeaturedContentLoader locale={locale} />
         </div>
