@@ -26,7 +26,7 @@ const customJestConfig = {
   ],
   extensionsToTreatAsEsm: [".ts", ".tsx"],
   transformIgnorePatterns: [
-    "node_modules/(?!(next-sanity|@sanity|@next|@portabletext|@hookform|groq)/)",
+    "node_modules/(?!(next-sanity|@sanity|@next|@portabletext|@hookform|groq|@moto-pos)/)",
   ],
 }
 

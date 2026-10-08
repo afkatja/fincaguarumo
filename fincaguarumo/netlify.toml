@@ -6,6 +6,14 @@
   # Production environment variables for RAG
   # Set these in Netlify dashboard for production
   NODE_VERSION = "20"
+  # Per-deploy site origin used by Supabase auth redirects.
+  # Netlify provides $DEPLOY_URL automatically: https://docs.netlify.com/configure-builds/environment-variables/#deploy-urls-and-metadata
+  #   - Production deploys:   e.g. https://fincaguarumo.com
+  #   - Preview deploys:      e.g. https://deploy-preview-80--fincaguarumo.netlify.app
+  #   - Branch deploys:       e.g. https://feat-xyz--fincaguarumo.netlify.app
+  # NEXT_PUBLIC_* is inlined at build time so this guarantees getSiteOrigin()
+  # returns the host that actually built + served this deploy.
+  NEXT_PUBLIC_SITE_URL = "$DEPLOY_URL"
 
 # Production headers for SSE
 [[headers]]
