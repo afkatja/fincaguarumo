@@ -3,6 +3,10 @@ import { NextResponse } from "next/server"
 import { createSupabaseAdmin } from "@/lib/auth"
 import { verifyAdminAuth } from "@/lib/auth"
 
+interface ErrorWithStatus extends Error {
+  status?: number
+}
+
 const stripe = new Stripe(process.env.STRIPE_API_KEY!)
 
 // Module-scope constants for manual charge validation
@@ -215,11 +219,11 @@ export async function POST(request: Request) {
     }
 
     // Preserve 401/403 from verifyAdminAuth (status property)
-    if (error instanceof Error && (error as any).status === 401) {
+    if (error instanceof Error && (error as ErrorWithStatus).status === 401) {
       console.error("Finance charge auth error:", error.message)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-    if (error instanceof Error && (error as any).status === 403) {
+    if (error instanceof Error && (error as ErrorWithStatus).status === 403) {
       console.error("Finance charge auth error:", error.message)
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
