@@ -11,9 +11,11 @@
     "lint": "next lint",
     "type-check": "npx tsc --noEmit",
     "codegen": "sanity schema extract --enforce-required-fields && npx sanity typegen generate",
-    "i18n:build": "npx tsc scripts/translate.ts --outDir dist --esModuleInterop --allowSyntheticDefaultImports --module NodeNext --moduleResolution NodeNext --skipLibCheck",
-    "i18n:run": "npm run i18n:build && node dist/scripts/translate.js",
-    "i18n:watch": "nodemon --watch /src/messages/en.json --exec \"npm run i18n:run\"",
+    "i18n:build": "tsx --tsconfig tsconfig.scripts.json scripts/translate.ts",
+    "i18n:run": "npm run i18n:build",
+    "i18n:watch": "nodemon --watch src/messages/en.json --exec \"npm run i18n:run\"",
+    "i18n:check": "tsx scripts/check-translations.ts",
+    "i18n:ai": "tsx scripts/translate-ai.ts",
     "prepare": "husky",
     "translate": "npm run i18n:run",
     "manual-email": "NODE_ENV=production npx tsc --project tsconfig.build.json && MAILERSEND_FROM_EMAIL='info@fincaguarumo.com' CONTACT_EMAIL='info@fincaguarumo.com' CONTACT_PHONE='+506 87495341' NODE_ENV=production node dist/scripts/send-email.js",
@@ -29,7 +31,7 @@
   },
   "lint-staged": {
     "src/messages/en.json": [
-      "npm run i18n:run"
+      "npm run i18n:check && npm run i18n:ai"
     ]
   },
   "dependencies": {
@@ -134,6 +136,7 @@
     "eslint-config-next": "^16.2.12",
     "formatjs": "^0.1.1",
     "fs": "^0.0.1-security",
+    "http-proxy-agent": "^9.1.0",
     "husky": "^9.1.7",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
