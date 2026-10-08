@@ -89,7 +89,16 @@
     "paidAmount": "Sie haben $ {amount} für {title} in {location} bezahlt",
     "bookingConfirmed": "Ihre Buchung von {title} für {guests} Gäste am {date} war erfolgreich. Eine Bestätigungs-E-Mail wurde an {email} gesendet.",
     "paymentNotSuccessful": "Ihre Zahlung war nicht erfolgreich. Bitte versuchen Sie es erneut.",
-    "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+    "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "selectDates": "Wählen Sie die Datumszeiten aus, um Verfügbarkeit zu überprüfen",
+    "selectCheckInFirst": "Bitte wählen Sie zunächst eine Check-in-Datum aus.",
+    "priceSummary": "Preisübersicht",
+    "vatLabel": "Mehrwertsteuer 13%",
+    "totalWithoutVat": "Preis (ohne MwSt.) x {Gäste} {Gästelabel} x {Nächte}",
+    "totalVat": "Steuer x {Gäste} {Gästelabel} x {Nächte}",
+    "totalWithVat": "Preis (zuz. MwSt.) x {Gäste} {Gästelabel} x {Nächte}",
+    "totalDisplayedVilla": "Gesamt für {nächte} Nächte",
+    "totalDisplayedTour": "Gesamt für {guests} {guestsLabel}"
   },
   "page": {
     "moreFAQ": "Mehr FAQ",
@@ -105,7 +114,8 @@
       "homepage": "Willkommen in der Villa Bruno! Wie kann ich Ihnen heute helfen?",
       "stay": "Hallo! Ich bin hier, um Ihnen bei der Buchung von {propertyTitle} zu helfen. Was möchten Sie wissen?",
       "other": "Hallo! Wie kann ich Ihnen heute helfen?"
-    }
+    },
+    "moreReviews": "Mehr Bewertungen"
   },
   "map": {
     "location": "Standort"
@@ -176,6 +186,11 @@
     "whatGuestsLoveMost": "Was Gäste am meisten lieben",
     "recentGuestComments": "Aktuelle Gästekommentare",
     "guest": "Gast",
-    "readMoreReviews": "Mehr Bewertungen lesen"
+    "readMoreReviews": "Mehr Bewertungen lesen",
+    "title": "Gästebewertungen",
+    "readMore": "Lesen Sie mehr",
+    "readLess": "Lesen weniger",
+    "loadMoreReviews": "Lade mehr Bewertungen",
+    "readAllReviews": "Lesen Sie alle Bewertungen"
   }
 }

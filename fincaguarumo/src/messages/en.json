@@ -178,6 +178,9 @@
     "recentGuestComments": "Recent guest comments",
     "guest": "Guest",
     "readMoreReviews": "Read more reviews",
-    "readMore": "Read more"
+    "readMore": "Read more",
+    "readLess": "Read less",
+    "loadMoreReviews": "Load more reviews",
+    "readAllReviews": "Read all reviews"
   }
 }
