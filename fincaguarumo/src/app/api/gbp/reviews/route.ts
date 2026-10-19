@@ -7,17 +7,46 @@ import {
 
 export const revalidate = 3600
 
+const LOCATION_ID_PATTERN = /^accounts\/\d+\/locations\/\d+$/
+const MAX_PAGE_SIZE = 50
+const MIN_PAGE_SIZE = 1
+
+function validateLocationId(locationId: string): string {
+  if (LOCATION_ID_PATTERN.test(locationId)) {
+    return locationId
+  }
+  const configuredLocationId = process.env.GBP_LOCATION_ID
+  if (configuredLocationId && LOCATION_ID_PATTERN.test(configuredLocationId)) {
+    return configuredLocationId
+  }
+  throw new Error("Invalid locationId format. Expected: accounts/{accountId}/locations/{locationId}")
+}
+
+function clampPageSize(pageSize: number): number {
+  return Math.min(Math.max(pageSize, MIN_PAGE_SIZE), MAX_PAGE_SIZE)
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const locationId = searchParams.get("locationId")
-    const pageSize = parseInt(searchParams.get("pageSize") || "50", 10)
+    const rawLocationId = searchParams.get("locationId")
+    const pageSize = clampPageSize(parseInt(searchParams.get("pageSize") || "50", 10))
     const pageToken = searchParams.get("pageToken") || undefined
     const all = searchParams.get("all") === "true"
 
-    if (!locationId) {
+    if (!rawLocationId) {
       return NextResponse.json(
         { error: { code: "BAD_REQUEST", message: "locationId is required" } },
+        { status: 400 },
+      )
+    }
+
+    let locationId: string
+    try {
+      locationId = validateLocationId(rawLocationId)
+    } catch {
+      return NextResponse.json(
+        { error: { code: "BAD_REQUEST", message: "Invalid locationId format" } },
         { status: 400 },
       )
     }
@@ -28,13 +57,13 @@ export async function GET(request: NextRequest) {
     let nextPageToken: string | undefined
 
     if (all) {
-      reviews = await fetchAllReviews(locationId, false)
+      reviews = await fetchAllReviews(locationId, true)
     } else {
       const result = await fetchReviewsPage(
         locationId,
         pageSize,
         pageToken,
-        false,
+        true,
       )
       reviews = result.reviews
       nextPageToken = result.nextPageToken
