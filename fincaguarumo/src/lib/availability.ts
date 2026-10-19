@@ -181,7 +181,7 @@ export async function triggeriCalSync(
   }
 
   try {
-    const { merged } = await runIcalSync(force)
+    const { merged } = await runIcalSync(force, 30000)
 
     console.log("Bookings sync completed successfully, merged ranges:", merged.length)
     lastSyncTime.timestamp = now // Update last sync time only on success

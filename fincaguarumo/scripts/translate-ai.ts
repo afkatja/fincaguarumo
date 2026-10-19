@@ -227,7 +227,7 @@ async function syncTranslations(
       data = {}
     }
 
-    console.log(`🔄 Syncing ${lang.value} (${lang.label})...`)
+    console.log(`🔄 Syncing ${lang.value} (${lang.title})...`)
     const [synced, updated] = await syncObject(enData, data, lang, options)
 
     if (updated) {

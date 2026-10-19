@@ -41,10 +41,9 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 const memoryCache: {
-  hash: string
   ics: Record<string, string>
-  parsed: any
-} = { hash: "", ics: {}, parsed: null }
+  etag: Record<string, string>
+} = { ics: {}, etag: {} }
 
 function hashIcs(ics: string) {
   return crypto.createHash("sha256").update(ics).digest("hex")
@@ -54,6 +53,7 @@ async function fetchIcsWithConditional(
   url: string,
   cacheKey: string,
   force = false,
+  feedTimeoutMs = 30000,
 ) {
   const headers: Record<string, string> = {}
 
@@ -61,18 +61,31 @@ async function fetchIcsWithConditional(
     headers["Cache-Control"] = "no-cache"
   }
 
-  const res = await fetch(url, { headers })
+  // Use ETag for conditional requests
+  if (memoryCache.etag[cacheKey] && !force) {
+    headers["If-None-Match"] = memoryCache.etag[cacheKey]
+  }
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), feedTimeoutMs)
+
+  const res = await fetch(url, { headers, signal: controller.signal })
+  clearTimeout(timeoutId)
+
   if (res.status === 304 && !force) {
     return { changed: false, ics: memoryCache.ics[cacheKey] }
   }
   if (!res.ok) throw new Error(`Failed to fetch iCal (${res.status}), ${url}`)
 
   const ics = await res.text()
-  const hash = hashIcs(ics)
   memoryCache.ics[cacheKey] = ics
-  memoryCache.hash = hash
-  const parsed = parseIcsToBookings(ics, cacheKey)
-  memoryCache.parsed = parsed
+
+  // Store ETag for future conditional requests
+  const etag = res.headers.get("etag")
+  if (etag) {
+    memoryCache.etag[cacheKey] = etag
+  }
+
   return { changed: true, ics }
 }
 
@@ -113,15 +126,32 @@ function parseIcsToBookings(
     })
   }
 
-  for (const o of occurrences) {
-    const status = o.component.getFirstPropertyValue("status")
+  interface ICalComponent {
+  getFirstPropertyValue(name: string): string | null
+}
+
+interface OccurrenceItem {
+  component: ICalComponent
+}
+
+interface Occurrence {
+  item?: OccurrenceItem
+  component: ICalComponent
+  startDate: { toJSDate: () => Date }
+  endDate: { toJSDate: () => Date }
+}
+
+for (const o of occurrences) {
+    const occurrence = o as Occurrence
+    const component = occurrence.item?.component ?? occurrence.component
+    const status = component.getFirstPropertyValue("status")
     if (status && String(status).toUpperCase() === "CANCELLED") continue
     const start = o.startDate.toJSDate().toISOString()
     const end = o.endDate.toJSDate().toISOString()
-    const uid = o.component.getFirstPropertyValue("uid") ?? undefined
-    const summary = o.component.getFirstPropertyValue("summary") ?? undefined
+    const uid = component.getFirstPropertyValue("uid") ?? undefined
+    const summary = component.getFirstPropertyValue("summary") ?? undefined
     const description =
-      o.component.getFirstPropertyValue("description") ?? undefined
+      component.getFirstPropertyValue("description") ?? undefined
     const guestInfo = extractGuestInfo(summary, description)
 
     out.push({
@@ -421,13 +451,18 @@ async function updateAvailabilityTable(
 
 async function cleanupCancelledBookings(
   currentIcalUids: Set<string>,
-  feedSources: string[],
+  successfulFeedSources: string[],
 ): Promise<void> {
   try {
+    if (successfulFeedSources.length === 0) {
+      console.log("No successful feeds to clean up")
+      return
+    }
+
     const { data: existingBookings, error: fetchError } = await supabase
       .from("bookings")
       .select("uid, source")
-      .in("source", feedSources)
+      .in("source", successfulFeedSources)
 
     if (fetchError) {
       console.error("Error fetching existing bookings for cleanup:", fetchError)
@@ -484,9 +519,9 @@ async function cleanupCancelledBookings(
   }
 }
 
-export async function runIcalSync(force = false): Promise<{
+export async function runIcalSync(force = false, feedTimeoutMs = 30000): Promise<{
   bookings: BookingResponse[]
-  merged: any[]
+  merged: ReturnType<typeof mergeBookings>
 }> {
   const feeds = Object.entries(FEEDS).filter(([, v]) => !!v) as [
     string,
@@ -497,6 +532,7 @@ export async function runIcalSync(force = false): Promise<{
   const allSyncRows: IcsSyncRow[] = []
   const allBookingResponses: BookingResponse[] = []
   const currentIcalUids = new Set<string>()
+  const successfulFeeds = new Set<string>()
 
   let sanityBookingsCached: any[] = []
   try {
@@ -520,15 +556,17 @@ export async function runIcalSync(force = false): Promise<{
   for (const [name, url] of feeds) {
     try {
       const key = `ical_${name}`
-      const { ics } = await fetchIcsWithConditional(url!, key, force)
+      const { ics, changed } = await fetchIcsWithConditional(url!, key, force, feedTimeoutMs)
 
-      if (!ics) continue
+      if (!ics || !changed) continue
       const syncRows = parseIcsToBookings(ics!, name)
 
       allSyncRows.push(...syncRows)
 
       const bookingResponses = syncRows.map(mapToBookingResponse)
       allBookingResponses.push(...bookingResponses)
+
+      successfulFeeds.add(name)
 
       let savedCount = 0
       let skippedCount = 0
@@ -562,10 +600,14 @@ export async function runIcalSync(force = false): Promise<{
     }
   }
 
-  try {
-    await cleanupCancelledBookings(currentIcalUids, feedSources)
-  } catch (cleanupError) {
-    console.error("Error cleaning up cancelled bookings:", cleanupError)
+  if (successfulFeeds.size === 0) {
+    console.log("No feeds successfully synced, skipping cleanup")
+  } else {
+    try {
+      await cleanupCancelledBookings(currentIcalUids, [...successfulFeeds])
+    } catch (cleanupError) {
+      console.error("Error cleaning up cancelled bookings:", cleanupError)
+    }
   }
 
   const allBookings = [
