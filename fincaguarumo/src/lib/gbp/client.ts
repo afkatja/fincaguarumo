@@ -36,12 +36,7 @@ function getServiceAccountJWT(): JWT {
   return serviceAccountJWT
 }
 
-// OAuth2 Client (for human owner - initial setup)
-let oauth2Client: OAuth2Client | null = null
-
-function getOAuth2Client(): OAuth2Client {
-  if (oauth2Client) return oauth2Client
-
+function createOAuth2Client(): OAuth2Client {
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID
   const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET
   const redirectUri =
@@ -54,12 +49,25 @@ function getOAuth2Client(): OAuth2Client {
     )
   }
 
-  oauth2Client = new OAuth2Client(clientId, clientSecret, redirectUri)
-  return oauth2Client
+  return new OAuth2Client(clientId, clientSecret, redirectUri)
+}
+
+export function createAuthenticatedOAuth2Client(
+  accessToken: string,
+  refreshToken: string,
+  expiryDate: number,
+): OAuth2Client {
+  const client = createOAuth2Client()
+  client.setCredentials({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expiry_date: expiryDate,
+  })
+  return client
 }
 
 export function getAuthUrl(state?: string): string {
-  const client = getOAuth2Client()
+  const client = createOAuth2Client()
   return client.generateAuthUrl({
     access_type: "offline",
     scope: OAUTH2_SCOPES,
@@ -75,42 +83,15 @@ interface OAuthTokens {
 }
 
 export async function getTokensFromCode(code: string): Promise<OAuthTokens> {
-  const client = getOAuth2Client()
+  const client = createOAuth2Client()
   const { tokens } = await client.getToken(code)
   return tokens as OAuthTokens
 }
 
-export function setOAuth2Credentials(
-  accessToken: string,
-  refreshToken: string,
-  expiryDate: number,
-): void {
-  const client = getOAuth2Client()
-  client.setCredentials({
-    access_token: accessToken,
-    refresh_token: refreshToken,
-    expiry_date: expiryDate,
-  })
-}
-
-// Initialize OAuth2 client with stored refresh token (for production)
-function initOAuth2WithStoredToken(): void {
-  const refreshToken = process.env.GBP_OAUTH_REFRESH_TOKEN
-  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID
-  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET
-
-  if (refreshToken && clientId && clientSecret) {
-    const client = getOAuth2Client()
-    client.setCredentials({
-      refresh_token: refreshToken,
-    })
-  }
-}
-
-// Initialize on module load for production
-initOAuth2WithStoredToken()
-
-async function getValidAccessToken(useServiceAccount = true): Promise<string> {
+async function getValidAccessToken(
+  useServiceAccount = true,
+  oauth2Client?: OAuth2Client,
+): Promise<string> {
   if (useServiceAccount) {
     const jwt = getServiceAccountJWT()
     const tokens = await jwt.authorize()
@@ -120,7 +101,16 @@ async function getValidAccessToken(useServiceAccount = true): Promise<string> {
   }
 
   // Use OAuth2 client (human owner)
-  const client = getOAuth2Client()
+  const client = oauth2Client ?? createOAuth2Client()
+
+  // If no explicit client provided, try to initialize with stored refresh token
+  if (!oauth2Client) {
+    const refreshToken = process.env.GBP_OAUTH_REFRESH_TOKEN
+    if (refreshToken) {
+      client.setCredentials({ refresh_token: refreshToken })
+    }
+  }
+
   if (!client.credentials.refresh_token) {
     throw new Error(
       "OAuth2 refresh token not configured. Set GBP_OAUTH_REFRESH_TOKEN or run auth flow.",
@@ -159,9 +149,10 @@ async function accountApiFetch<T>(
   method: "GET" | "POST" = "GET",
   body?: Record<string, unknown>,
   useServiceAccount = true,
+  oauth2Client?: OAuth2Client,
 ): Promise<T> {
   return rateLimitedFetch(async () => {
-    const accessToken = await getValidAccessToken(useServiceAccount)
+    const accessToken = await getValidAccessToken(useServiceAccount, oauth2Client)
     const url = new URL(`${ACCOUNT_API_BASE}${endpoint}`)
     if (params) {
       Object.entries(params).forEach(([key, value]) =>
@@ -192,6 +183,7 @@ async function accountApiFetch<T>(
         method,
         body,
         useServiceAccount,
+        oauth2Client,
       )
     }
 
@@ -214,9 +206,10 @@ async function locationApiFetch<T>(
   endpoint: string,
   params?: Record<string, string>,
   useServiceAccount = true,
+  oauth2Client?: OAuth2Client,
 ): Promise<T> {
   return rateLimitedFetch(async () => {
-    const accessToken = await getValidAccessToken(useServiceAccount)
+    const accessToken = await getValidAccessToken(useServiceAccount, oauth2Client)
     const url = new URL(`${LOCATION_API_BASE}${endpoint}`)
     if (params) {
       Object.entries(params).forEach(([key, value]) =>
@@ -235,7 +228,7 @@ async function locationApiFetch<T>(
       const retryAfter = response.headers.get("Retry-After")
       const delay = retryAfter ? parseInt(retryAfter) * 1000 : 5000
       await new Promise(resolve => setTimeout(resolve, delay))
-      return locationApiFetch<T>(endpoint, params, useServiceAccount)
+      return locationApiFetch<T>(endpoint, params, useServiceAccount, oauth2Client)
     }
 
     if (!response.ok) {
@@ -253,9 +246,10 @@ async function reviewsApiFetch<T>(
   endpoint: string,
   params?: Record<string, string>,
   useServiceAccount = true,
+  oauth2Client?: OAuth2Client,
 ): Promise<T> {
   return rateLimitedFetch(async () => {
-    const accessToken = await getValidAccessToken(useServiceAccount)
+    const accessToken = await getValidAccessToken(useServiceAccount, oauth2Client)
     const url = new URL(`${REVIEWS_API_BASE}${endpoint}`)
     if (params) {
       Object.entries(params).forEach(([key, value]) =>
@@ -274,7 +268,7 @@ async function reviewsApiFetch<T>(
       const retryAfter = response.headers.get("Retry-After")
       const delay = retryAfter ? parseInt(retryAfter) * 1000 : 5000
       await new Promise(resolve => setTimeout(resolve, delay))
-      return reviewsApiFetch<T>(endpoint, params, useServiceAccount)
+      return reviewsApiFetch<T>(endpoint, params, useServiceAccount, oauth2Client)
     }
 
     if (!response.ok) {
@@ -358,8 +352,6 @@ interface GBPAccountsResponse {
   accounts: GBPAccount[]
 }
 
-let cachedAccountId: string | null = null
-
 interface GBPInvitation {
   name: string
   accountId: string
@@ -378,15 +370,17 @@ interface GBPInvitationsResponse {
   invitations: GBPInvitation[]
 }
 
-export async function getAccountId(useServiceAccount = true): Promise<string> {
-  if (cachedAccountId) return cachedAccountId
-
+export async function getAccountId(
+  useServiceAccount = true,
+  oauth2Client?: OAuth2Client,
+): Promise<string> {
   const data = await accountApiFetch<GBPAccountsResponse>(
     "/accounts",
     undefined,
     "GET",
     undefined,
     useServiceAccount,
+    oauth2Client,
   )
   const accounts = data.accounts || []
 
@@ -394,12 +388,12 @@ export async function getAccountId(useServiceAccount = true): Promise<string> {
     throw new Error("No GBP accounts found")
   }
 
-  cachedAccountId = accounts[0].name.replace("accounts/", "")
-  return cachedAccountId
+  return accounts[0].name.replace("accounts/", "")
 }
 
 export async function listAccounts(
   useServiceAccount = true,
+  oauth2Client?: OAuth2Client,
 ): Promise<GBPAccount[]> {
   const data = await accountApiFetch<GBPAccountsResponse>(
     "/accounts",
@@ -407,20 +401,23 @@ export async function listAccounts(
     "GET",
     undefined,
     useServiceAccount,
+    oauth2Client,
   )
   return data.accounts || []
 }
 
 export async function listInvitations(
   useServiceAccount = true,
+  oauth2Client?: OAuth2Client,
 ): Promise<GBPInvitation[]> {
-  const accountId = await getAccountId(useServiceAccount)
+  const accountId = await getAccountId(useServiceAccount, oauth2Client)
   const data = await accountApiFetch<GBPInvitationsResponse>(
     `/accounts/${accountId}/invitations`,
     undefined,
     "GET",
     undefined,
     useServiceAccount,
+    oauth2Client,
   )
   return data.invitations || []
 }
@@ -428,6 +425,7 @@ export async function listInvitations(
 export async function acceptInvitation(
   invitationName: string,
   useServiceAccount = true,
+  oauth2Client?: OAuth2Client,
 ): Promise<void> {
   await accountApiFetch(
     `/${invitationName}:accept`,
@@ -435,13 +433,15 @@ export async function acceptInvitation(
     "POST",
     {},
     useServiceAccount,
+    oauth2Client,
   )
 }
 
 export async function fetchLocations(
   useServiceAccount = true,
+  oauth2Client?: OAuth2Client,
 ): Promise<ReturnType<typeof normalizeLocation>[]> {
-  const accountId = await getAccountId(useServiceAccount)
+  const accountId = await getAccountId(useServiceAccount, oauth2Client)
   const data = await accountApiFetch<GBPLocationsResponse>(
     `/accounts/${accountId}/locations`,
     {
@@ -450,6 +450,7 @@ export async function fetchLocations(
     "GET",
     undefined,
     useServiceAccount,
+    oauth2Client,
   )
   return (data.locations || []).map(normalizeLocation)
 }
@@ -457,6 +458,7 @@ export async function fetchLocations(
 export async function fetchAllReviews(
   locationId: string,
   useServiceAccount = true,
+  oauth2Client?: OAuth2Client,
 ): Promise<GBPReview[]> {
   const allReviews: GBPReview[] = []
   let pageToken: string | undefined
@@ -476,6 +478,7 @@ export async function fetchAllReviews(
       `/${locationId}/reviews`,
       params,
       useServiceAccount,
+      oauth2Client,
     )
     allReviews.push(...(data.reviews || []))
     pageToken = data.nextPageToken
@@ -490,6 +493,7 @@ export async function fetchReviewsPage(
   pageSize = 50,
   pageToken?: string,
   useServiceAccount = true,
+  oauth2Client?: OAuth2Client,
 ): Promise<{ reviews: GBPReview[]; nextPageToken?: string }> {
   const params: Record<string, string> = {
     pageSize: String(pageSize),
@@ -503,6 +507,7 @@ export async function fetchReviewsPage(
     `/${locationId}/reviews`,
     params,
     useServiceAccount,
+    oauth2Client,
   )
   return {
     reviews: data.reviews || [],

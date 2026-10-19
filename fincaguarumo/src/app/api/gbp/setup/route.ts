@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { listAccounts, listInvitations, acceptInvitation, fetchLocations, setOAuth2Credentials } from "@/lib/gbp/client"
+import { listAccounts, listInvitations, acceptInvitation, fetchLocations, createAuthenticatedOAuth2Client } from "@/lib/gbp/client"
 
 export const revalidate = 0
 
@@ -17,11 +17,15 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    setOAuth2Credentials(accessToken, refreshToken, parseInt(expiry))
+    const oauth2Client = createAuthenticatedOAuth2Client(
+      accessToken,
+      refreshToken,
+      parseInt(expiry),
+    )
 
-    const accounts = await listAccounts(false)
-    const invitations = await listInvitations(false)
-    const locations = await fetchLocations(false)
+    const accounts = await listAccounts(false, oauth2Client)
+    const invitations = await listInvitations(false, oauth2Client)
+    const locations = await fetchLocations(false, oauth2Client)
 
     return NextResponse.json({
       authenticated: true,
@@ -52,11 +56,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
 
-    setOAuth2Credentials(accessToken, refreshToken, parseInt(expiry))
+    const oauth2Client = createAuthenticatedOAuth2Client(
+      accessToken,
+      refreshToken,
+      parseInt(expiry),
+    )
 
     if (action === "accept_invitation" && invitationName) {
-      await acceptInvitation(invitationName, false)
-      const locations = await fetchLocations(false)
+      await acceptInvitation(invitationName, false, oauth2Client)
+      const locations = await fetchLocations(false, oauth2Client)
       return NextResponse.json({ success: true, locations })
     }
 

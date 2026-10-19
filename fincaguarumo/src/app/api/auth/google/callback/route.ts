@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getTokensFromCode, setOAuth2Credentials, listAccounts, listInvitations } from "@/lib/gbp/client"
+import { getTokensFromCode, createAuthenticatedOAuth2Client, listAccounts, listInvitations } from "@/lib/gbp/client"
 
 export const revalidate = 0
 
@@ -23,11 +23,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const tokens = await getTokensFromCode(code)
-    setOAuth2Credentials(tokens.access_token!, tokens.refresh_token!, tokens.expiry_date!)
+    const oauth2Client = createAuthenticatedOAuth2Client(
+      tokens.access_token!,
+      tokens.refresh_token!,
+      tokens.expiry_date!,
+    )
 
     // Verify we can access the human owner's accounts
-    await listAccounts(false) // useServiceAccount = false
-    await listInvitations(false)
+    await listAccounts(false, oauth2Client)
+    await listInvitations(false, oauth2Client)
 
     // Store tokens in session/cookies for subsequent requests
     const response = NextResponse.redirect(new URL("/admin/gbp-setup?success=1", request.url))
