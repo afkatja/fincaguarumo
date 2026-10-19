@@ -129,6 +129,27 @@ async function getValidAccessToken(
   return client.credentials.access_token!
 }
 
+const MAX_429_RETRIES = 2
+const MIN_RETRY_DELAY_MS = 1000
+const MAX_RETRY_DELAY_MS = 60_000
+
+function parseRetryAfter(header: string | null): number {
+  if (!header) return 5000
+
+  const seconds = parseInt(header, 10)
+  if (!Number.isNaN(seconds)) {
+    return Math.max(MIN_RETRY_DELAY_MS, Math.min(seconds * 1000, MAX_RETRY_DELAY_MS))
+  }
+
+  const date = new Date(header)
+  if (!Number.isNaN(date.getTime())) {
+    const delay = date.getTime() - Date.now()
+    return Math.max(MIN_RETRY_DELAY_MS, Math.min(delay, MAX_RETRY_DELAY_MS))
+  }
+
+  return 5000
+}
+
 async function rateLimitedFetch<T>(fn: () => Promise<T>): Promise<T> {
   const now = Date.now()
   const timeSinceLastRequest = now - lastRequestTime
@@ -150,6 +171,7 @@ async function accountApiFetch<T>(
   body?: Record<string, unknown>,
   useServiceAccount = true,
   oauth2Client?: OAuth2Client,
+  retryCount = 0,
 ): Promise<T> {
   return rateLimitedFetch(async () => {
     const accessToken = await getValidAccessToken(useServiceAccount, oauth2Client)
@@ -174,8 +196,13 @@ async function accountApiFetch<T>(
     const response = await fetch(url.toString(), fetchOptions)
 
     if (response.status === 429) {
-      const retryAfter = response.headers.get("Retry-After")
-      const delay = retryAfter ? parseInt(retryAfter) * 1000 : 5000
+      if (retryCount >= MAX_429_RETRIES) {
+        const errorText = await response.text()
+        throw new Error(
+          `GBP Account API error: ${response.status} ${response.statusText} - ${errorText} (max retries exceeded)`,
+        )
+      }
+      const delay = parseRetryAfter(response.headers.get("Retry-After"))
       await new Promise(resolve => setTimeout(resolve, delay))
       return accountApiFetch<T>(
         endpoint,
@@ -184,6 +211,7 @@ async function accountApiFetch<T>(
         body,
         useServiceAccount,
         oauth2Client,
+        retryCount + 1,
       )
     }
 
@@ -207,6 +235,7 @@ async function locationApiFetch<T>(
   params?: Record<string, string>,
   useServiceAccount = true,
   oauth2Client?: OAuth2Client,
+  retryCount = 0,
 ): Promise<T> {
   return rateLimitedFetch(async () => {
     const accessToken = await getValidAccessToken(useServiceAccount, oauth2Client)
@@ -225,10 +254,15 @@ async function locationApiFetch<T>(
     })
 
     if (response.status === 429) {
-      const retryAfter = response.headers.get("Retry-After")
-      const delay = retryAfter ? parseInt(retryAfter) * 1000 : 5000
+      if (retryCount >= MAX_429_RETRIES) {
+        const errorText = await response.text()
+        throw new Error(
+          `GBP Location API error: ${response.status} ${response.statusText} - ${errorText} (max retries exceeded)`,
+        )
+      }
+      const delay = parseRetryAfter(response.headers.get("Retry-After"))
       await new Promise(resolve => setTimeout(resolve, delay))
-      return locationApiFetch<T>(endpoint, params, useServiceAccount, oauth2Client)
+      return locationApiFetch<T>(endpoint, params, useServiceAccount, oauth2Client, retryCount + 1)
     }
 
     if (!response.ok) {
@@ -247,6 +281,7 @@ async function reviewsApiFetch<T>(
   params?: Record<string, string>,
   useServiceAccount = true,
   oauth2Client?: OAuth2Client,
+  retryCount = 0,
 ): Promise<T> {
   return rateLimitedFetch(async () => {
     const accessToken = await getValidAccessToken(useServiceAccount, oauth2Client)
@@ -265,10 +300,15 @@ async function reviewsApiFetch<T>(
     })
 
     if (response.status === 429) {
-      const retryAfter = response.headers.get("Retry-After")
-      const delay = retryAfter ? parseInt(retryAfter) * 1000 : 5000
+      if (retryCount >= MAX_429_RETRIES) {
+        const errorText = await response.text()
+        throw new Error(
+          `GBP Reviews API error: ${response.status} ${response.statusText} - ${errorText} (max retries exceeded)`,
+        )
+      }
+      const delay = parseRetryAfter(response.headers.get("Retry-After"))
       await new Promise(resolve => setTimeout(resolve, delay))
-      return reviewsApiFetch<T>(endpoint, params, useServiceAccount, oauth2Client)
+      return reviewsApiFetch<T>(endpoint, params, useServiceAccount, oauth2Client, retryCount + 1)
     }
 
     if (!response.ok) {
