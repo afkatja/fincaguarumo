@@ -14,8 +14,24 @@ import { useTranslations } from "next-intl"
 import Link from "next/link"
 import Icon from "./Icon"
 
+/** Display modes for the LocationReviews component */
 type LocationReviewsMode = "infinite" | "preview"
 
+/**
+ * Displays reviews from GBP API and Sanity CMS with pagination support.
+ * 
+ * Supports two display modes:
+ * - "infinite": Loads all reviews incrementally with "Load more" button (reviews page)
+ * - "preview": Shows only initialCount reviews with "Read all reviews" link (home/accommodation pages)
+ * 
+ * Combines reviews from GBP API (Google Business Profile) and Sanity CMS,
+ * sorted by date (newest first). Uses FadeInObserver for smooth scroll animations.
+ * 
+ * @param initialCount - Number of reviews to show initially (default: 8)
+ * @param showMoreLink - Whether to show "Load more" or "Read all reviews" link (default: true)
+ * @param mode - Display mode: "infinite" for pagination, "preview" for limited preview
+ * @returns React element displaying reviews grid with pagination/preview controls
+ */
 export const LocationReviews = ({
   initialCount = 8,
   showMoreLink = true,
@@ -55,6 +71,16 @@ export const LocationReviews = ({
   const isAllLoaded = displayedCount >= allReviews.length && !hasMore
 
   // Load more - if more reviews available locally, just show them; otherwise fetch more GBP pages
+  /**
+   * Handles "Load more" button click.
+   * 
+   * Behavior depends on mode:
+   * - In preview mode: never calls loadMore, just shows link to reviews page
+   * - In infinite mode:
+   *   1. If undisplayed reviews exist locally, increments displayedCount
+   *   2. Otherwise, calls loadMore() to fetch next GBP API page
+   *   3. After successful fetch, increments displayedCount to show new reviews
+   */
   const handleLoadMore = async () => {
     if (isAllLoaded) return
 

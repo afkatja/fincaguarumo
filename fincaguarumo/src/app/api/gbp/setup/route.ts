@@ -3,6 +3,16 @@ import { listAccounts, listInvitations, acceptInvitation, fetchLocations, create
 
 export const revalidate = 0
 
+/**
+ * Checks the GBP setup status and returns available accounts, invitations, and locations.
+ * 
+ * Restores OAuth2 credentials from httpOnly cookies and uses them to fetch
+ * the user's GBP accounts, pending invitations, and accessible locations.
+ * 
+ * @param request - The incoming NextRequest with OAuth cookies
+ * @returns JSON with authenticated status, accounts, invitations, and locations
+ * @returns 401 if not authenticated, with authUrl for OAuth flow
+ */
 export async function GET(request: NextRequest) {
   try {
     // Try to restore OAuth2 credentials from cookies
@@ -43,6 +53,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * Performs GBP setup actions using authenticated OAuth2 client.
+ * 
+ * Currently supports accepting GBP location invitations.
+ * Restores OAuth2 credentials from cookies and performs the requested action.
+ * 
+ * @param request - The incoming NextRequest with action and optional invitationName
+ * @returns JSON with success status and updated locations (for accept_invitation)
+ * @returns 401 if not authenticated, 400 for invalid action, 500 for server errors
+ */
 export async function POST(request: NextRequest) {
   try {
     const { action, invitationName } = await request.json()

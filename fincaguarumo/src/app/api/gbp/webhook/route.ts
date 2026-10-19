@@ -10,6 +10,18 @@ const WEBHOOK_VERIFICATION_TOKEN = process.env.GBP_WEBHOOK_VERIFICATION_TOKEN
 
 const oauth2Client = new OAuth2Client()
 
+/**
+ * Verifies a Google OIDC ID token for GBP webhook authentication.
+ * 
+ * Validates that the token:
+ * - Is a valid OIDC token signed by Google
+ * - Has the correct audience (this webhook's URL)
+ * - Was issued by Google (accounts.google.com or https://accounts.google.com)
+ * - Was issued by the GBP push service account
+ * 
+ * @param token - The OIDC ID token from the Authorization header
+ * @returns True if the token is valid and from the expected GBP service account
+ */
 async function verifyOIDCToken(token: string): Promise<boolean> {
   try {
     const ticket = await oauth2Client.verifyIdToken({
@@ -38,6 +50,16 @@ async function verifyOIDCToken(token: string): Promise<boolean> {
   }
 }
 
+/**
+ * Verifies a shared secret token for webhook authentication.
+ * 
+ * Checks for the shared secret token in:
+ * 1. Query parameter `token` (for Pub/Sub push URLs with embedded token)
+ * 2. Custom header `x-gbp-webhook-token`
+ * 
+ * @param request - The incoming NextRequest
+ * @returns True if the shared secret token matches
+ */
 function verifySharedSecret(request: NextRequest): boolean {
   if (!WEBHOOK_VERIFICATION_TOKEN) return false
 
@@ -52,6 +74,16 @@ function verifySharedSecret(request: NextRequest): boolean {
   return false
 }
 
+/**
+ * Authenticates an incoming GBP webhook request.
+ * 
+ * Tries authentication methods in order:
+ * 1. OIDC Bearer token (preferred) - validates Google-issued ID token
+ * 2. Shared secret token - fallback for environments without OIDC support
+ * 
+ * @param request - The incoming NextRequest
+ * @returns True if authentication succeeds, false otherwise
+ */
 async function authenticateRequest(request: NextRequest): Promise<boolean> {
   // Try OIDC token first (recommended)
   const authHeader = request.headers.get("authorization")
@@ -66,6 +98,22 @@ async function authenticateRequest(request: NextRequest): Promise<boolean> {
   return false
 }
 
+/**
+ * Handles incoming GBP webhook notifications for review changes.
+ * 
+ * Receives Pub/Sub push notifications from Google Business Profile API
+ * when reviews are created, updated, or deleted. Authenticates the request,
+ * invalidates relevant caches, and optionally pre-warms the review cache.
+ * 
+ * Supported notification types:
+ * - NEW_REVIEW: A new review was posted
+ * - UPDATED_REVIEW: An existing review was modified
+ * - DELETED_REVIEW: A review was deleted
+ * 
+ * @param request - The incoming NextRequest with Pub/Sub message body
+ * @returns JSON with success status and invalidated cache tags
+ * @returns 401 if authentication fails, 400 for invalid message format, 500 for server errors
+ */
 export async function POST(request: NextRequest) {
   // Authenticate the request
   if (!(await authenticateRequest(request))) {

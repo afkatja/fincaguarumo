@@ -3,6 +3,20 @@ import { getTokensFromCode, createAuthenticatedOAuth2Client, listAccounts, listI
 
 export const revalidate = 0
 
+/**
+ * Handles the OAuth 2.0 callback from Google after user authorization.
+ * 
+ * This endpoint:
+ * 1. Validates the OAuth state parameter to prevent CSRF attacks
+ * 2. Exchanges the authorization code for access/refresh tokens
+ * 3. Creates an authenticated OAuth2 client with the tokens
+ * 4. Verifies the user has access to GBP accounts/locations
+ * 5. Stores tokens in httpOnly cookies for subsequent requests
+ * 
+ * @param request - The incoming NextRequest containing OAuth callback parameters
+ * @returns A redirect response to the admin setup page with success/error status
+ * @throws Redirects to error page on validation failure or token exchange error
+ */
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code")
   const error = request.nextUrl.searchParams.get("error")
