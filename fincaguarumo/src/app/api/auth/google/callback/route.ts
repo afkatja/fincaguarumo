@@ -6,6 +6,8 @@ export const revalidate = 0
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code")
   const error = request.nextUrl.searchParams.get("error")
+  const returnedState = request.nextUrl.searchParams.get("state")
+  const storedState = request.cookies.get("oauth_state")?.value
 
   if (error) {
     return NextResponse.redirect(new URL(`/admin/gbp-setup?error=${encodeURIComponent(error)}`, request.url))
@@ -13,6 +15,10 @@ export async function GET(request: NextRequest) {
 
   if (!code) {
     return NextResponse.redirect(new URL("/admin/gbp-setup?error=no_code", request.url))
+  }
+
+  if (!storedState || !returnedState || storedState !== returnedState) {
+    return NextResponse.redirect(new URL("/admin/gbp-setup?error=invalid_state", request.url))
   }
 
   try {
@@ -25,6 +31,9 @@ export async function GET(request: NextRequest) {
 
     // Store tokens in session/cookies for subsequent requests
     const response = NextResponse.redirect(new URL("/admin/gbp-setup?success=1", request.url))
+    
+    // Clear the oauth_state cookie after successful validation
+    response.cookies.delete("oauth_state")
     
     // Set httpOnly cookies for the OAuth tokens
     response.cookies.set("gbp_access_token", tokens.access_token!, {
