@@ -1,9 +1,78 @@
 import { NextRequest, NextResponse } from "next/server"
 import { revalidateTag, revalidatePath } from "next/cache"
+import { OAuth2Client } from "google-auth-library"
 
 export const revalidate = 0
 
+const GBP_PUSH_SERVICE_ACCOUNT = "mybusiness-api-pubsub@system.gserviceaccount.com"
+const WEBHOOK_AUDIENCE = process.env.GBP_WEBHOOK_AUDIENCE || `${process.env.NEXT_PUBLIC_SITE_URL || "https://fincaguarumo.com"}/api/gbp/webhook`
+const WEBHOOK_VERIFICATION_TOKEN = process.env.GBP_WEBHOOK_VERIFICATION_TOKEN
+
+const oauth2Client = new OAuth2Client()
+
+async function verifyOIDCToken(token: string): Promise<boolean> {
+  try {
+    const ticket = await oauth2Client.verifyIdToken({
+      idToken: token,
+      audience: WEBHOOK_AUDIENCE,
+    })
+    const payload = ticket.getPayload()
+    if (!payload) return false
+
+    // Verify issuer is Google
+    if (payload.iss !== "https://accounts.google.com" && payload.iss !== "accounts.google.com") {
+      console.warn("Invalid OIDC token issuer:", payload.iss)
+      return false
+    }
+
+    // Verify the service account email (GBP uses this service account)
+    if (payload.email !== GBP_PUSH_SERVICE_ACCOUNT) {
+      console.warn("Invalid OIDC token email:", payload.email)
+      return false
+    }
+
+    return true
+  } catch (err) {
+    console.warn("OIDC token verification failed:", err)
+    return false
+  }
+}
+
+function verifySharedSecret(request: NextRequest): boolean {
+  if (!WEBHOOK_VERIFICATION_TOKEN) return false
+
+  // Check query parameter (Pub/Sub can embed token in push URL)
+  const urlToken = request.nextUrl.searchParams.get("token")
+  if (urlToken && urlToken === WEBHOOK_VERIFICATION_TOKEN) return true
+
+  // Check custom header
+  const headerToken = request.headers.get("x-gbp-webhook-token")
+  if (headerToken && headerToken === WEBHOOK_VERIFICATION_TOKEN) return true
+
+  return false
+}
+
+async function authenticateRequest(request: NextRequest): Promise<boolean> {
+  // Try OIDC token first (recommended)
+  const authHeader = request.headers.get("authorization")
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7)
+    if (await verifyOIDCToken(token)) return true
+  }
+
+  // Fallback to shared secret
+  if (verifySharedSecret(request)) return true
+
+  return false
+}
+
 export async function POST(request: NextRequest) {
+  // Authenticate the request
+  if (!(await authenticateRequest(request))) {
+    console.warn("GBP webhook authentication failed")
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
 
@@ -36,7 +105,12 @@ export async function POST(request: NextRequest) {
     // Optionally fetch and cache the latest review immediately
     if (notificationType === "NEW_REVIEW" || notificationType === "UPDATED_REVIEW") {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "https://fincaguarumo.com"}/api/gbp/reviews`, {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fincaguarumo.com"
+        const prewarmUrl = new URL(`${siteUrl}/api/gbp/reviews`)
+        prewarmUrl.searchParams.set("locationId", locationName)
+        prewarmUrl.searchParams.set("pageSize", "10")
+
+        await fetch(prewarmUrl.toString(), {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
