@@ -51,8 +51,8 @@ export const LocationReviews = ({
   // Track displayed reviews - append more as they load
   const [displayedCount, setDisplayedCount] = useState(initialCount)
 
-  // Determine if we've loaded all available reviews
-  const isAllLoaded = displayedCount >= allReviews.length
+  // Determine if we've loaded all available reviews AND there are no more GBP pages to fetch
+  const isAllLoaded = displayedCount >= allReviews.length && !hasMore
 
   // Load more - if more reviews available locally, just show them; otherwise fetch more GBP pages
   const handleLoadMore = async () => {
@@ -69,6 +69,8 @@ export const LocationReviews = ({
     // Otherwise, fetch more GBP pages (only in infinite mode)
     if (!isPreviewMode && !loadingMore && hasMore) {
       await loadMore()
+      // After fetching more GBP pages, increase displayed count to show the new reviews
+      setDisplayedCount(prev => prev + initialCount)
     }
   }
 
