@@ -7,11 +7,31 @@ import Layout from "../pagesLayout"
 import ClientPage from "./ClientPage"
 import { FAQType, SanityImageObject } from "@/types"
 
+function getImageUrl(image: SanityImageObject | undefined): string {
+  if (!image) return ""
+  // SanityImageSource has url property
+  return (image as any).url || ""
+}
+
+function getImageAlt(image: SanityImageObject | undefined): string {
+  if (!image) return ""
+  return (image as any).alt || ""
+}
+
+const localeMap: Record<string, string> = {
+  en: "en_US",
+  es: "es_CR",
+  de: "de_DE",
+  nl: "nl_NL",
+  ru: "ru_RU",
+}
+
 const jsonLd = (data: {
   title: string
   slug: { current: string }
   description?: string
   locale: string
+  url: string
 }) => ({
   "@context": "https://schema.org",
   "@type": "WebPage",
@@ -19,7 +39,7 @@ const jsonLd = (data: {
   description:
     data.description ||
     "Learn about Finca Guarumo and our sustainable eco-tourism initiatives in Costa Rica's Osa Peninsula",
-  url: `https://fincaguarumo.com/${data.slug.current}`,
+  url: data.url,
   about: {
     "@type": "Thing",
     name: "Eco-Tourism",
@@ -51,6 +71,12 @@ export type Content = {
   price?: number
   categories?: { title: string }[]
   faq?: FAQType[]
+  translations?: Array<{
+    language: string
+    slug: { current: string }
+    title: string
+    description: string
+  }>
 }
 
 export async function generateMetadata({
@@ -66,6 +92,12 @@ export async function generateMetadata({
     revalidate: 0,
   })
 
+  if (!content?.isPublished) {
+    return {
+      robots: "noindex, nofollow",
+    }
+  }
+
   const baseUrl = "https://fincaguarumo.com"
   const canonicalUrl =
     locale === "en" ? `${baseUrl}/${slug}` : `${baseUrl}/${locale}/${slug}`
@@ -78,22 +110,35 @@ export async function generateMetadata({
     ? content?.description
     : "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing"
 
-  // Enhanced keywords for stay/accommodation pages
-  const keywords =
-    slug === "villa-bruno"
-      ? `eco-villa, sustainable accommodation, Costa Rica, Osa Peninsula, Villa Bruno, eco-luxury, solar power, off-grid, wildlife viewing, Corcovado National Park, Puerto Jimenez, jungle retreat, nature vacation, sustainable travel, eco-tourism, birdwatching, rainforest accommodation, luxury villa, private villa, romantic getaway, nature immersion, regenerative tourism, solar powered villa, eco-lodge Costa Rica, sustainable hospitality, green travel, carbon neutral accommodation, wildlife sanctuary, biodiversity hotspot, pristine nature, exclusive retreat, eco-friendly lodging`
-          .split(",")
-          .map(k => k.trim())
-          .filter(Boolean)
-      : `finca guarumo, costa rica, osa peninsula, eco-tourism, sustainable travel, nature, wildlife, birdwatching, jungle, corcovado national park, puerto jimenez, eco-lodge, sustainable hospitality`
-          .split(",")
-          .map(k => k.trim())
-          .filter(Boolean)
+  // Build hreflang alternates only for locales with actual translations
+  const languages: Record<string, string> = {
+    "x-default": canonicalUrl,
+    [locale]: canonicalUrl,
+  }
+
+  if (content.translations) {
+    for (const t of content.translations) {
+      if (t.language && t.language !== locale && t.slug?.current) {
+        const altUrl =
+          t.language === "en"
+            ? `${baseUrl}/${t.slug.current}`
+            : `${baseUrl}/${t.language}/${t.slug.current}`
+        languages[t.language] = altUrl
+      }
+    }
+  }
+
+  // Use page-specific image if available, fallback to default
+  const ogImageUrl = getImageUrl(content?.mainImage)
+    ? getImageUrl(content.mainImage)
+    : "/images/finca-guarumo-v4.4.jpg"
+  const ogImageAlt = getImageAlt(content?.mainImage)
+    ? getImageAlt(content.mainImage)
+    : `${content?.title || "Finca Guarumo"} - Eco-Villa in Costa Rica`
 
   return {
     title,
     description,
-    keywords,
     metadataBase: new URL(baseUrl),
     robots: "index, follow",
     icons: {
@@ -103,15 +148,7 @@ export async function generateMetadata({
     },
     alternates: {
       canonical: canonicalUrl,
-      languages: {
-        "x-default": `${baseUrl}/${slug}`,
-        ...Object.fromEntries(
-          ["en", "es", "ru", "de", "nl"].map(loc => [
-            loc,
-            loc === "en" ? `${baseUrl}/${slug}` : `${baseUrl}/${loc}/${slug}`,
-          ]),
-        ),
-      },
+      languages,
     },
     openGraph: {
       title,
@@ -119,14 +156,30 @@ export async function generateMetadata({
       url: canonicalUrl,
       siteName: "Finca Guarumo",
       type: "website",
+      locale: localeMap[locale] || "en_US",
       images: [
         {
-          url: "/images/finca-guarumo-v4.4.jpg",
+          url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: `${content?.title || "Finca Guarumo"} - Eco-Villa in Costa Rica`,
+          alt: ogImageAlt,
         },
       ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: "@fincaguarumo",
+      title,
+      description,
+      images: [
+        {
+          url: ogImageUrl,
+          alt: ogImageAlt,
+        },
+      ],
+    },
+    other: {
+      "og:locale": localeMap[locale] || "en_US",
     },
   }
 }
@@ -142,6 +195,10 @@ const Page = async ({ params }: { params: any }) => {
 
   if (!content?.isPublished) notFound()
 
+  const baseUrl = "https://fincaguarumo.com"
+  const canonicalUrl =
+    locale === "en" ? `${baseUrl}/${slug}` : `${baseUrl}/${locale}/${slug}`
+
   return (
     <Layout
       locale={locale}
@@ -153,16 +210,20 @@ const Page = async ({ params }: { params: any }) => {
       images={content?.slideshow?.images}
     >
       <ClientPage content={content} />
-      <script type="application/ld+json">
-        {JSON.stringify(
-          jsonLd({
-            title: content?.title,
-            slug: content?.slug,
-            description: content?.description,
-            locale,
-          }),
-        ).replace(/</g, "\\u003c")}
-      </script>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            jsonLd({
+              title: content?.title,
+              slug: content?.slug,
+              description: content?.description,
+              locale,
+              url: canonicalUrl,
+            }),
+          ).replace(/</g, "\\u003c"),
+        }}
+      />
     </Layout>
   )
 }

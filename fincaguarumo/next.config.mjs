@@ -88,7 +88,13 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      // Redirect non-English blog pages to English
+      // Redirect double-locale /en/en/... to canonical /en/... (which then redirects to /... via middleware)
+      {
+        source: "/en/en/:path*",
+        destination: "/en/:path*",
+        permanent: true,
+      },
+      // Redirect non-English blog pages to English (blog only in English)
       {
         source: "/es/blog",
         destination: "/en/blog",
@@ -130,6 +136,9 @@ const nextConfig = {
         destination: "/en/blog/:slug*",
         permanent: true,
       },
+      // Redirect www to non-www (if needed - handled by Netlify, but good to have)
+      // Redirect http to https (handled by HSTS/Netlify)
+      // Trailing slash redirects handled by next-intl middleware
     ]
   },
 }

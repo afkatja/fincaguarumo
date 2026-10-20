@@ -2,31 +2,52 @@ import { Metadata } from "next"
 import { locales } from "../../config"
 
 const baseUrl = "https://fincaguarumo.com"
+
+const localeMap: Record<string, string> = {
+  en: "en_US",
+  es: "es_CR",
+  de: "de_DE",
+  nl: "nl_NL",
+  ru: "ru_RU",
+}
+
 export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { locale, pathname } = await params
 
-  // Handle undefined pathname by defaulting to empty string (homepage)
-  const currentPath = pathname || ""
+  const currentPath = pathname || "/"
+  const isHomepage = currentPath === "/"
 
-  // Handle canonical URLs for property page duplication
-  // Point /stay to /villa-bruno as the primary URL
+  // Build canonical URL - homepage is root for English, /locale for others
   let canonicalPath = currentPath
-  if (currentPath === "stay") {
-    canonicalPath = "villa-bruno"
-  } else if (currentPath === "accommodation") {
-    canonicalPath = "villa-bruno"
+  if (isHomepage) {
+    canonicalPath = locale === "en" ? "/" : `/${locale}`
   }
 
+  const canonicalUrl = locale === "en" && !isHomepage
+    ? `${baseUrl}${canonicalPath}`
+    : locale === "en"
+      ? `${baseUrl}${canonicalPath}`
+      : `${baseUrl}/${locale}${canonicalPath}`
+
+  // Build hreflang alternates - only include locales that actually have content
+  // For now, only English has full content; others fall back to English
+  // TODO: Add other locales when translations are complete
+  const alternates: Record<string, string> = {
+    "x-default": locale === "en" ? baseUrl : `${baseUrl}/${locale}`,
+  }
+
+  // Only declare hreflang for locales with actual translated content
+  // Currently only English has complete content
+  alternates[locale] = canonicalUrl
+
   return {
-    title: "Finca Guarumo",
+    title: {
+      default: "Finca Guarumo",
+      template: "%s | Finca Guarumo",
+    },
     metadataBase: new URL(baseUrl),
     description:
       "Stay at Villa Bruno in Finca Guarumo – a private eco-luxury villa in Costa Rica's Osa Peninsula. Explore jungle trails, birdwatching, and rural life near Corcovado National Park.",
-    keywords:
-      `birdwatching, hiking, jungle, nature, eco-tourism, sustainability, Corcovado, Osa Peninsula, Costa Rica, Villa Bruno, eco-luxury, sustainable travel, ecoturismo, turismo sostenible, turismo rural, finca guarumo, vacation rental, airbnb, luxury jungle retreat Costa Rica, rainforest villa, secluded villa Costa Rica, eco-lodge near Corcovado, birdwatching Osa Peninsula, nature photography Costa Rica, eco-friendly villa Costa Rica, regenerative tourism Costa Rica, rural tourism Osa Peninsula, guided nature walks Costa Rica, organic farm Costa Rica stay, nature immersion Costa Rica, near Corcovado National Park, Puerto Jimenez villa rental, villa near Golfo Dulce, romantic jungle getaway Costa Rica, peaceful nature retreat Costa Rica, lgbtq+ inclusive travel, queer-friendly accommodation, gay-friendly eco-lodge, inclusive hospitality, zero discrimination policy`
-        .split(",")
-        .map(k => k.trim())
-        .filter(Boolean),
     icons: {
       icon: "/favicon/icon.ico",
       apple: "/favicon/apple-touch-icon.png",
@@ -34,21 +55,8 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
     },
     robots: "index, follow",
     alternates: {
-      canonical:
-        locale === "en"
-          ? `${baseUrl}/${canonicalPath}`
-          : `${baseUrl}/${locale}/${canonicalPath}`,
-      languages: {
-        "x-default": `${baseUrl}/${canonicalPath}`,
-        ...Object.fromEntries(
-          locales.map(loc => [
-            loc,
-            loc === "en"
-              ? `${baseUrl}${canonicalPath}`
-              : `${baseUrl}/${loc}${canonicalPath}`,
-          ]),
-        ),
-      },
+      canonical: canonicalUrl,
+      languages: alternates,
     },
     openGraph: {
       title: "Finca Guarumo",
@@ -59,28 +67,30 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
           url: "/images/finca-guarumo-v4.4.jpg",
           width: 1200,
           height: 630,
-          alt: "Finca Guarumo",
+          alt: "Finca Guarumo - Eco-Villa in Costa Rica's Osa Peninsula",
         },
       ],
       type: "website",
-      locale: "en_US",
-      alternateLocale: ["es_CR", "ru_RU", "nl_NL", "de_DE"],
+      locale: localeMap[locale] || "en_US",
       siteName: "Finca Guarumo",
-      url: "https://fincaguarumo.com",
+      url: canonicalUrl,
       countryName: "Costa Rica",
     },
-    // twitter: {
-    //   card: "summary_large_image",
-    //   site: "@fincaguarumo", // if you have a Twitter/X account
-    //   title: "Finca Guarumo – Eco-Villa & Birding Paradise in Costa Rica",
-    //   description:
-    //     "Stay at Villa Bruno in the Osa Peninsula. A sustainable jungle experience with birds, wildlife, rural tours, and Corcovado nearby.",
-    //   images: [
-    //     {
-    //       url: "/images/finca-guarumo-v4.4.jpg",
-    //       alt: "Finca Guarumo – Villa Bruno jungle view",
-    //     },
-    //   ],
-    // },
+    twitter: {
+      card: "summary_large_image",
+      site: "@fincaguarumo",
+      title: "Finca Guarumo – Eco-Villa & Birding Paradise in Costa Rica",
+      description:
+        "Stay at Villa Bruno in the Osa Peninsula. A sustainable jungle experience with birds, wildlife, rural tours, and Corcovado nearby.",
+      images: [
+        {
+          url: "/images/finca-guarumo-v4.4.jpg",
+          alt: "Finca Guarumo – Villa Bruno jungle view",
+        },
+      ],
+    },
+    other: {
+      "og:locale": localeMap[locale] || "en_US",
+    },
   }
 }
