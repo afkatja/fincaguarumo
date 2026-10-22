@@ -2,6 +2,7 @@
 import { POSTS_QUERY_RESULT } from "../../../../sanity.types"
 import FeaturedContent from "../../../components/FeaturedContent"
 import TourItem from "../(pages)/tours/TourItem"
+import { getLocalizedPath } from "@/lib/url"
 import { usePathname } from "../../../navigation"
 
 export function Posts({
@@ -20,7 +21,7 @@ export function Posts({
       content: {
         [post.slug?.current as string]: (
           <TourItem
-            href={`/en/blog/${post?.slug?.current}`}
+            href={getLocalizedPath(`/blog/${post?.slug?.current}`, locale)}
             // @ts-expect-error
             mainImage={
               typeof post?.mainImage === "object"
@@ -36,7 +37,7 @@ export function Posts({
             description={""}
             slug={post.slug as { current: string }}
             isPublished={post.isPublished ?? false}
-            locale="en"
+            locale={locale}
           />
         ),
       },

@@ -88,52 +88,46 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      // Redirect double-locale /en/en/... to canonical /en/... (which then redirects to /... via middleware)
-      {
-        source: "/en/en/:path*",
-        destination: "/en/:path*",
-        permanent: true,
-      },
       // Redirect non-English blog pages to English (blog only in English)
       {
         source: "/es/blog",
-        destination: "/en/blog",
+        destination: "/blog",
         permanent: true,
       },
       {
         source: "/ru/blog",
-        destination: "/en/blog",
+        destination: "/blog",
         permanent: true,
       },
       {
         source: "/de/blog",
-        destination: "/en/blog",
+        destination: "/blog",
         permanent: true,
       },
       {
         source: "/nl/blog",
-        destination: "/en/blog",
+        destination: "/blog",
         permanent: true,
       },
       // Redirect non-English blog posts to English
       {
         source: "/es/blog/:slug*",
-        destination: "/en/blog/:slug*",
+        destination: "/blog/:slug*",
         permanent: true,
       },
       {
         source: "/ru/blog/:slug*",
-        destination: "/en/blog/:slug*",
+        destination: "/blog/:slug*",
         permanent: true,
       },
       {
         source: "/de/blog/:slug*",
-        destination: "/en/blog/:slug*",
+        destination: "/blog/:slug*",
         permanent: true,
       },
       {
         source: "/nl/blog/:slug*",
-        destination: "/en/blog/:slug*",
+        destination: "/blog/:slug*",
         permanent: true,
       },
       // Redirect www to non-www (if needed - handled by Netlify, but good to have)

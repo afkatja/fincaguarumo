@@ -4,6 +4,7 @@ import { POST_QUERY } from "../../../../sanity/lib/queries"
 import { notFound } from "next/navigation"
 import { Post } from "./Post"
 import { generateBlogMetadata } from "./metadata"
+import { getLocalizedUrl } from "@/lib/url"
 
 export { generateBlogMetadata as generateMetadata }
 
@@ -22,7 +23,7 @@ const blogPostJsonLd = (post: NonNullable<POST_QUERY_RESULT>) => ({
   "@type": "BlogPosting",
   headline: post.title,
   description: post.description || post.tldr,
-  url: `https://fincaguarumo.com/en/blog/${post.slug.current}`,
+  url: getLocalizedUrl(`/blog/${post.slug.current}`, "en"),
   datePublished: post.publishedAt || new Date().toISOString(),
   dateModified: post.publishedAt || new Date().toISOString(),
   author: {
@@ -46,14 +47,14 @@ const blogPostJsonLd = (post: NonNullable<POST_QUERY_RESULT>) => ({
   isPartOf: {
     "@type": "Blog",
     name: "Finca Guarumo Blog",
-    url: "https://fincaguarumo.com/en/blog",
+    url: getLocalizedUrl("/blog", "en"),
   },
   articleSection: "Eco-Tourism",
   keywords: "eco-tourism, sustainable travel, Costa Rica, Osa Peninsula, wildlife, birdwatching",
 })
 
-export default async function Page({ params }: { params: any }) {
-  const { slug } = await params
+export default async function Page({ params }: { params: Promise<{ locale: string; slug: string }> }) {
+  const { locale, slug } = await params
   const post = await sanityFetch<POST_QUERY_RESULT>({
     query: POST_QUERY,
     params: { slug },

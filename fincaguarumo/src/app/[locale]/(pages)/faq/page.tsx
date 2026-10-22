@@ -7,8 +7,7 @@ import { FAQType } from "@/types"
 import FAQCategories from "@/components/FAQ"
 import { getTranslations } from "next-intl/server"
 import { portableTextToPlain } from "@/sanity/lib/portableTextHelper"
-
-const baseUrl = "https://fincaguarumo.com"
+import { getLocalizedUrl } from "@/lib/url"
 
 const localeMap: Record<string, string> = {
   en: "en_US",
@@ -40,7 +39,7 @@ const jsonLd = (faqs: FAQType[], lastModified?: string) => ({
 export async function generateMetadata({
   params,
 }: {
-  params: any
+  params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
 
@@ -59,8 +58,7 @@ export async function generateMetadata({
   const t = await getTranslations("faq")
   const title = t("title", { defaultValue: "Frequently Asked Questions" })
 
-  const canonicalUrl =
-    locale === "en" ? `${baseUrl}/faq` : `${baseUrl}/${locale}/faq`
+  const canonicalUrl = getLocalizedUrl("/faq", locale)
 
   const description =
     "Find answers to common questions about Villa Bruno, tours, sustainability, booking, and staying at Finca Guarumo in Costa Rica's Osa Peninsula."
@@ -68,12 +66,12 @@ export async function generateMetadata({
   return {
     title,
     description,
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL("https://fincaguarumo.com"),
     robots: "index, follow",
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        "x-default": canonicalUrl,
+        "x-default": getLocalizedUrl("/faq", "en"),
         [locale]: canonicalUrl,
       },
     },
@@ -105,7 +103,7 @@ export async function generateMetadata({
   }
 }
 
-const FAQpage = async ({ params }: { params: any }) => {
+const FAQpage = async ({ params }: { params: Promise<{ locale: string }> }) => {
   const { locale } = await params
   const faqs: FAQType[] = await sanityFetch({
     query: FAQ_QUERY,

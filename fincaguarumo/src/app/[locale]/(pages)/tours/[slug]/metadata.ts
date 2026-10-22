@@ -1,8 +1,7 @@
 import { Metadata } from "next"
 import { sanityFetch } from "@/sanity/lib/client"
 import { TOUR_QUERY } from "@/sanity/lib/queries"
-
-const baseUrl = "https://fincaguarumo.com"
+import { getLocalizedUrl } from "@/lib/url"
 
 const localeMap: Record<string, string> = {
   en: "en_US",
@@ -50,10 +49,7 @@ export async function generateTourMetadata({
     }
   }
 
-  const canonicalUrl =
-    locale === "en"
-      ? `${baseUrl}/tours/${slug}`
-      : `${baseUrl}/${locale}/tours/${slug}`
+  const canonicalUrl = getLocalizedUrl(`/tours/${slug}`, locale)
 
   const title = tour?.title
     ? `${tour.title} - Finca Guarumo Tours`
@@ -65,18 +61,14 @@ export async function generateTourMetadata({
 
   // Build hreflang alternates only for locales with actual translations
   const languages: Record<string, string> = {
-    "x-default": canonicalUrl,
+    "x-default": getLocalizedUrl(`/tours/${slug}`, "en"),
     [locale]: canonicalUrl,
   }
 
   if (tour.translations) {
     for (const t of tour.translations) {
       if (t.language && t.language !== locale && t.slug?.current) {
-        const altUrl =
-          t.language === "en"
-            ? `${baseUrl}/tours/${t.slug.current}`
-            : `${baseUrl}/${t.language}/tours/${t.slug.current}`
-        languages[t.language] = altUrl
+        languages[t.language] = getLocalizedUrl(`/tours/${t.slug.current}`, t.language)
       }
     }
   }
@@ -91,7 +83,7 @@ export async function generateTourMetadata({
   return {
     title,
     description,
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL("https://fincaguarumo.com"),
     robots: "index, follow",
     alternates: {
       canonical: canonicalUrl,

@@ -2,8 +2,7 @@ import { Metadata } from "next"
 import { sanityFetch } from "@/sanity/lib/client"
 import { POST_QUERY } from "@/sanity/lib/queries"
 import { POST_QUERY_RESULT } from "../../../../../sanity.types"
-
-const baseUrl = "https://fincaguarumo.com"
+import { getLocalizedUrl } from "@/lib/url"
 
 export async function generateBlogMetadata({
   params,
@@ -30,7 +29,7 @@ export async function generateBlogMetadata({
     }
   }
 
-  const canonicalUrl = `${baseUrl}/en/blog/${slug}`
+  const canonicalUrl = getLocalizedUrl(`/blog/${slug}`, "en")
   const title = post?.title
     ? `${post.title} - Finca Guarumo Blog`
     : "Finca Guarumo Blog"
@@ -62,7 +61,7 @@ export async function generateBlogMetadata({
   return {
     title,
     description,
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL("https://fincaguarumo.com"),
     robots: "index, follow",
     alternates: {
       canonical: canonicalUrl,

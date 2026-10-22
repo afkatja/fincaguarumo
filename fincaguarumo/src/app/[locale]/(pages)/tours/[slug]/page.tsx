@@ -3,6 +3,7 @@ import { DIALOG_QUERY, TOUR_QUERY } from "@/sanity/lib/queries"
 import { IDialog, TTour, SanityImageObject } from "@/types"
 import TourPage from "./TourPage"
 import { generateTourMetadata } from "./metadata"
+import { getLocalizedUrl } from "@/lib/url"
 
 export { generateTourMetadata as generateMetadata }
 
@@ -16,7 +17,7 @@ const tourJsonLd = (tour: TTour) => ({
   "@type": "TouristTrip",
   name: tour.title,
   description: tour.description,
-  url: tour.slug?.current ? `https://fincaguarumo.com/en/tours/${tour.slug.current}` : "https://fincaguarumo.com/tours",
+  url: tour.slug?.current ? getLocalizedUrl(`/tours/${tour.slug.current}`, "en") : "https://fincaguarumo.com/tours",
   provider: {
     "@type": "Organization",
     name: "Finca Guarumo",
@@ -26,7 +27,7 @@ const tourJsonLd = (tour: TTour) => ({
     "@type": "Offer",
     name: tour.title,
     description: tour.description,
-    url: tour.slug?.current ? `https://fincaguarumo.com/en/tours/${tour.slug.current}` : "https://fincaguarumo.com/tours",
+    url: tour.slug?.current ? getLocalizedUrl(`/tours/${tour.slug.current}`, "en") : "https://fincaguarumo.com/tours",
     price: tour.price || 0,
     priceCurrency: "USD",
     availability: "https://schema.org/InStock",

@@ -1,7 +1,6 @@
 import { Metadata } from "next"
 import { locales } from "../../config"
-
-const baseUrl = "https://fincaguarumo.com"
+import { getLocalizedUrl } from "@/lib/url"
 
 const localeMap: Record<string, string> = {
   en: "en_US",
@@ -17,35 +16,23 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
   const currentPath = pathname || "/"
   const isHomepage = currentPath === "/"
 
-  // Build canonical URL - homepage is root for English, /locale for others
-  let canonicalPath = currentPath
-  if (isHomepage) {
-    canonicalPath = locale === "en" ? "/" : `/${locale}`
-  }
-
-  const canonicalUrl = locale === "en" && !isHomepage
-    ? `${baseUrl}${canonicalPath}`
-    : locale === "en"
-      ? `${baseUrl}${canonicalPath}`
-      : `${baseUrl}/${locale}${canonicalPath}`
+  // Build canonical URL using locale-aware helper
+  const canonicalUrl = getLocalizedUrl(currentPath, locale)
 
   // Build hreflang alternates - only include locales that actually have content
   // For now, only English has full content; others fall back to English
   // TODO: Add other locales when translations are complete
   const alternates: Record<string, string> = {
-    "x-default": locale === "en" ? baseUrl : `${baseUrl}/${locale}`,
+    "x-default": getLocalizedUrl(currentPath, "en"),
+    [locale]: canonicalUrl,
   }
-
-  // Only declare hreflang for locales with actual translated content
-  // Currently only English has complete content
-  alternates[locale] = canonicalUrl
 
   return {
     title: {
       default: "Finca Guarumo",
       template: "%s | Finca Guarumo",
     },
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL("https://fincaguarumo.com"),
     description:
       "Stay at Villa Bruno in Finca Guarumo – a private eco-luxury villa in Costa Rica's Osa Peninsula. Explore jungle trails, birdwatching, and rural life near Corcovado National Park.",
     icons: {

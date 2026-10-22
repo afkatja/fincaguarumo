@@ -6,6 +6,7 @@ import { PAGES_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import ClientPage from "./ClientPage"
 import { FAQType, SanityImageObject } from "@/types"
+import { getLocalizedUrl } from "@/lib/url"
 
 function getImageUrl(image: SanityImageObject | undefined): string {
   if (!image) return ""
@@ -82,7 +83,7 @@ export type Content = {
 export async function generateMetadata({
   params,
 }: {
-  params: any
+  params: Promise<{ locale: string; slug: string }>
 }): Promise<Metadata> {
   const { locale, slug } = await params
 
@@ -98,9 +99,7 @@ export async function generateMetadata({
     }
   }
 
-  const baseUrl = "https://fincaguarumo.com"
-  const canonicalUrl =
-    locale === "en" ? `${baseUrl}/${slug}` : `${baseUrl}/${locale}/${slug}`
+  const canonicalUrl = getLocalizedUrl(`/${slug}`, locale)
 
   const title = content?.title
     ? `${content?.title} - Finca Guarumo`
@@ -112,18 +111,14 @@ export async function generateMetadata({
 
   // Build hreflang alternates only for locales with actual translations
   const languages: Record<string, string> = {
-    "x-default": canonicalUrl,
+    "x-default": getLocalizedUrl(`/${slug}`, "en"),
     [locale]: canonicalUrl,
   }
 
   if (content.translations) {
     for (const t of content.translations) {
       if (t.language && t.language !== locale && t.slug?.current) {
-        const altUrl =
-          t.language === "en"
-            ? `${baseUrl}/${t.slug.current}`
-            : `${baseUrl}/${t.language}/${t.slug.current}`
-        languages[t.language] = altUrl
+        languages[t.language] = getLocalizedUrl(`/${t.slug.current}`, t.language)
       }
     }
   }
@@ -139,7 +134,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL("https://fincaguarumo.com"),
     robots: "index, follow",
     icons: {
       icon: "/favicon/icon.ico",
@@ -184,7 +179,7 @@ export async function generateMetadata({
   }
 }
 
-const Page = async ({ params }: { params: any }) => {
+const Page = async ({ params }: { params: Promise<{ locale: string; slug: string }> }) => {
   const { locale, slug } = await params
 
   const content: Content = await sanityFetch({
@@ -195,9 +190,7 @@ const Page = async ({ params }: { params: any }) => {
 
   if (!content?.isPublished) notFound()
 
-  const baseUrl = "https://fincaguarumo.com"
-  const canonicalUrl =
-    locale === "en" ? `${baseUrl}/${slug}` : `${baseUrl}/${locale}/${slug}`
+  const canonicalUrl = getLocalizedUrl(`/${slug}`, locale)
 
   return (
     <Layout
