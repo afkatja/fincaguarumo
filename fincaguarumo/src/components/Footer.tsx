@@ -2,6 +2,7 @@
 import { Link, usePathname } from "@/navigation"
 import React from "react"
 import Icon from "./Icon"
+import { getLocalizedPath } from "@/lib/url"
 
 import { navItems } from "./SocialNav"
 
@@ -27,7 +28,7 @@ const Footer = () => {
     },
     {
       title: "Sustainability commitment",
-      href: `/${locale === "en" ? "" : locale + "/" }about#sustainability`,
+      href: getLocalizedPath("/about#sustainability", locale),
       icon: "Guarumo",
       className: "col-span-4",
     },
