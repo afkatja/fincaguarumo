@@ -42,7 +42,6 @@ async function translateWithOllama(
   target: string,
   options: TranslateOptions,
 ): Promise<string | null> {
-  const { ollamaHost, ollamaModel } = options
   const prompt = `Translate the following text to ${target}. Return ONLY the translation, no explanations:\n\n${text}`
 
   try {
@@ -152,7 +151,7 @@ async function autoTranslate(
     case "huggingface":
       return translateWithHuggingFace(text, targetLang, options)
     case "google":
-    default:
+    default: {
       // Fall through to google translate
       const { translate } = await import("@vitalets/google-translate-api")
       try {
@@ -162,48 +161,50 @@ async function autoTranslate(
         console.error("Google translate error:", err)
         return null
       }
-  }
-}
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-async function syncObject(
-  enObj: Record<string, any>,
-  langObj: Record<string, any>,
-  lang: Lang,
-  options: TranslateOptions,
-): Promise<[Record<string, any>, boolean]> {
-  let updated = false
-
-  for (const [key, value] of Object.entries(enObj)) {
-    if (typeof value === "string") {
-      if (!(key in langObj) || value === null || langObj[key] === null) {
-        const translated = await autoTranslate(value, lang, options)
-        if (translated) {
-          langObj[key] = translated
-          updated = true
-          console.log(
-            `  ✓ ${lang.value}: "${value.substring(0, 50)}..." → "${translated.substring(0, 50)}..."`,
-          )
-        }
-      }
-    } else if (typeof value === "object" && value !== null) {
-      if (!(key in langObj)) {
-        langObj[key] = {}
-        updated = true
-      }
-      const [nested, nestedUpdated] = await syncObject(
-        value,
-        langObj[key],
-        lang,
-        options,
-      )
-      langObj[key] = nested
-      if (nestedUpdated) updated = true
     }
   }
+}
+
+type TranslationObject = Record<string, unknown>
+
+async function syncObject(
+  enObj: TranslationObject,
+  langObj: TranslationObject,
+  lang: Lang,
+  options: TranslateOptions,
+): Promise<[TranslationObject, boolean]> {
+  let updated = false
+
+  const typedEnObj = enObj as Record<string, TranslationObject | string>
+
+  for (const [key, value] of Object.entries(typedEnObj)) {
+    if (typeof value === "string") {
+        if (!(key in langObj) || value === null || langObj[key] === null) {
+          const translated = await autoTranslate(value, lang, options)
+          if (translated) {
+            langObj[key] = translated
+            updated = true
+            console.log(
+              `  ✓ ${lang.value}: "${value.substring(0, 50)}..." → "${translated.substring(0, 50)}..."`,
+            )
+          }
+        }
+      } else if (typeof value === "object" && value !== null) {
+        const nestedObj: TranslationObject = value as TranslationObject
+        if (!(key in langObj)) {
+          langObj[key] = Object.create(null) as TranslationObject
+          updated = true
+        }
+        const [nested, nestedUpdated] = await syncObject(
+          nestedObj,
+          langObj[key] as TranslationObject,
+          lang,
+          options,
+        )
+        langObj[key] = nested
+        if (nestedUpdated) updated = true
+      }
+    }
 
   return [langObj, updated]
 }
@@ -220,7 +221,7 @@ async function syncTranslations(
     if (lang.value === "en") continue
 
     const filePath = path.join(localesDir, `${lang.value}.json`)
-    let data: Record<string, any> = {}
+    let data: TranslationObject
     try {
       data = JSON.parse(await fs.readFile(filePath, "utf-8"))
     } catch {

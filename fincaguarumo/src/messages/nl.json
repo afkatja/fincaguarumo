@@ -93,7 +93,18 @@
     "paidAmount": "Je hebt $ {amount} betaald voor {title} in {location}",
     "bookingConfirmed": "Je boeking van {title} voor {guests} gasten op {date} is gelukt. Een bevestigingsmail is gestuurd naar {email}.",
     "paymentNotSuccessful": "Je betaling is niet gelukt. Probeer het opnieuw.",
-    "somethingWentWrong": "Er is iets misgegaan. Probeer het opnieuw."
+    "somethingWentWrong": "Er is iets misgegaan. Probeer het opnieuw.",
+    "selectDates": "Selecteer data om de beschikbaarheid te controleren",
+    "selectCheckInFirst": "Selecteer eerst een incheckdatum",
+    "priceSummary": "Prijsoverzicht",
+    "vatLabel": "BTW 13%",
+    "totalWithoutVat": "Prijs (excl. BTW) x {gasten} {guestsLabel} x {nachten}",
+    "totalVat": "BTW x {gasten} {guestsLabel} x {nachten}",
+    "totalWithVat": "Prijs (incl. BTW) x {gasten} {guestsLabel} x {nachten}",
+    "totalDisplayedVilla": "Totaal voor {nights} nachten",
+    "totalDisplayedTour": "Totaal voor {gasten} {guestsLabel}",
+    "reserveButton": "Boek nu Villa Bruno",
+    "selectDate": "Datum selecteren"
   },
   "page": {
     "moreFAQ": "Meer veelgestelde vragen",
@@ -109,7 +120,8 @@
       "homepage": "Welkom bij Villa Bruno! Hoe kan ik je vandaag helpen?",
       "stay": "Hoi! Ik ben hier om u te helpen bij het boeken van {propertyTitle}. Wat zou je willen weten?",
       "other": "Hallo! Hoe kan ik u vandaag helpen?"
-    }
+    },
+    "moreReviews": "Meer beoordelingen"
   },
   "map": {
     "location": "Locatie"
@@ -180,6 +192,11 @@
     "whatGuestsLoveMost": "Waar gasten het meest van houden",
     "recentGuestComments": "Recente opmerkingen van gasten",
     "guest": "Gast",
-    "readMoreReviews": "Lees meer recensies"
+    "readMoreReviews": "Lees meer recensies",
+    "title": "Gastrecensies",
+    "readMore": "Lees meer",
+    "readLess": "Lees minder",
+    "loadMoreReviews": "Laad meer beoordelingen",
+    "readAllReviews": "Lees alle beoordelingen"
   }
 }

@@ -2,7 +2,7 @@ import fs from "fs/promises"
 import path from "path"
 import { languages } from "../src/config.js"
 
-type Lang = (typeof languages)[number]
+type TranslationObject = Record<string, unknown>
 
 /**
  * Check if translations need updating by comparing en.json with other languages
@@ -21,8 +21,7 @@ async function checkTranslations(): Promise<boolean> {
     if (lang.value === "en") continue
 
     const filePath = path.join(localesDir, `${lang.value}.json`)
-    let data: Record<string, any> = {}
-
+    let data: TranslationObject
     try {
       data = JSON.parse(await fs.readFile(filePath, "utf-8"))
     } catch {
@@ -53,10 +52,12 @@ async function checkTranslations(): Promise<boolean> {
   return needsUpdate
 }
 
-function findMissingKeys(enObj: Record<string, any>, langObj: Record<string, any>, prefix = ""): string[] {
+function findMissingKeys(enObj: TranslationObject, langObj: TranslationObject, prefix = ""): string[] {
   const missing: string[] = []
 
-  for (const [key, value] of Object.entries(enObj)) {
+  const enEntries = Object.entries(enObj) as [string, TranslationObject | string][]
+
+  for (const [key, value] of enEntries) {
     const fullKey = prefix ? `${prefix}.${key}` : key
 
     if (typeof value === "string") {
@@ -66,9 +67,9 @@ function findMissingKeys(enObj: Record<string, any>, langObj: Record<string, any
     } else if (typeof value === "object" && value !== null) {
       if (!(key in langObj) || typeof langObj[key] !== "object") {
         // Entire object missing
-        collectAllKeys(value, fullKey, missing)
+        collectAllKeys(value as TranslationObject, fullKey, missing)
       } else {
-        missing.push(...findMissingKeys(value, langObj[key], fullKey))
+        missing.push(...findMissingKeys(value as TranslationObject, langObj[key] as TranslationObject, fullKey))
       }
     }
   }
@@ -76,13 +77,15 @@ function findMissingKeys(enObj: Record<string, any>, langObj: Record<string, any
   return missing
 }
 
-function collectAllKeys(obj: Record<string, any>, prefix: string, result: string[]): void {
-  for (const [key, value] of Object.entries(obj)) {
+function collectAllKeys(obj: TranslationObject, prefix: string, result: string[]): void {
+  const entries = Object.entries(obj) as [string, TranslationObject | string][]
+
+  for (const [key, value] of entries) {
     const fullKey = prefix ? `${prefix}.${key}` : key
     if (typeof value === "string") {
       result.push(fullKey)
     } else if (typeof value === "object" && value !== null) {
-      collectAllKeys(value, fullKey, result)
+      collectAllKeys(value as TranslationObject, fullKey, result)
     }
   }
 }
