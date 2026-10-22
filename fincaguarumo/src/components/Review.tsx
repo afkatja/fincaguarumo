@@ -5,6 +5,7 @@ import { useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { TReview } from "../types"
 import { normalizeRatingTo5Stars } from "../lib/ratingUtils"
+import { useTranslations } from "next-intl"
 
 import { containsPlace } from "../lib/villa-json-ld"
 import { Button } from "./ui/button"
@@ -38,6 +39,7 @@ const Review = ({ review }: { review: TReview }) => {
   const { locale } = useParams()
   const platform = review.platform || "google"
   const [isExpanded, setIsExpanded] = useState(false)
+  const t = useTranslations("reviews")
 
   // Centralized derived values using utility function
   const normalizedRating = Math.max(
@@ -187,7 +189,7 @@ const Review = ({ review }: { review: TReview }) => {
         <meta itemProp="ratingValue" content={normalizedRating.toString()} />
         <meta itemProp="bestRating" content="5" />
         <meta itemProp="worstRating" content="1" />
-        {stars.map((n, i) => (
+        {stars.map(n => (
           <Image
             key={n}
             className="ti-star"
@@ -227,12 +229,12 @@ const Review = ({ review }: { review: TReview }) => {
                 >
                   {isExpanded ? (
                     <>
-                      Read less
+                      {t("readLess") || "Read less"}
                       <ChevronUp className="h-4 w-4" />
                     </>
                   ) : (
                     <>
-                      Read more
+                      {t("readMore") || "Read more"}
                       <ChevronDown className="h-4 w-4" />
                     </>
                   )}
