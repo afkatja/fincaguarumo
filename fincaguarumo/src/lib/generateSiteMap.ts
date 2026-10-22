@@ -62,6 +62,12 @@ function buildAlternates(pathsByLocale: Record<string, string>): MetadataRoute.S
   return { languages }
 }
 
+function safeDate(dateString: string | undefined): Date {
+  if (!dateString) return new Date()
+  const date = new Date(dateString)
+  return isNaN(date.getTime()) ? new Date() : date
+}
+
 export const generateSitemap = async () => {
   const { posts, tours, pages, accommodation } = await fetchContent()
 
@@ -114,7 +120,7 @@ export const generateSitemap = async () => {
     const alternates = buildAlternates({ en: path }) // Add other locales if translations exist
     urls.push({
       url: getUrlForLocale(path, "en"),
-      lastModified: new Date(accommodation._updatedAt),
+      lastModified: safeDate(accommodation._updatedAt),
       alternates,
       changeFrequency: "weekly" as const,
       priority: 0.9,
@@ -140,7 +146,7 @@ export const generateSitemap = async () => {
 
     urls.push({
       url: getUrlForLocale(path, "en"),
-      lastModified: new Date(tour._updatedAt),
+      lastModified: safeDate(tour._updatedAt),
       alternates,
       changeFrequency: "weekly" as const,
       priority: 0.8,
@@ -165,7 +171,7 @@ export const generateSitemap = async () => {
 
     urls.push({
       url: getUrlForLocale(path, "en"),
-      lastModified: new Date(page._updatedAt),
+      lastModified: safeDate(page._updatedAt),
       alternates,
       changeFrequency: "weekly" as const,
       priority: 0.7,
@@ -180,7 +186,7 @@ export const generateSitemap = async () => {
 
     urls.push({
       url: getUrlForLocale(path, "en"),
-      lastModified: new Date(post._updatedAt),
+      lastModified: safeDate(post._updatedAt),
       alternates: buildAlternates({ en: path }),
       changeFrequency: "monthly" as const,
       priority: 0.6,
