@@ -13,11 +13,11 @@ const MIN_PAGE_SIZE = 1
 
 /**
  * Validates and normalizes a GBP location ID.
- * 
+ *
  * Accepts location IDs in the format `accounts/{accountId}/locations/{locationId}`.
  * If the provided ID doesn't match the pattern, falls back to the configured
  * GBP_LOCATION_ID environment variable.
- * 
+ *
  * @param locationId - The location ID to validate
  * @returns The validated location ID in the correct format
  * @throws Error if the location ID format is invalid and no valid fallback is configured
@@ -30,14 +30,16 @@ function validateLocationId(locationId: string): string {
   if (configuredLocationId && LOCATION_ID_PATTERN.test(configuredLocationId)) {
     return configuredLocationId
   }
-  throw new Error("Invalid locationId format. Expected: accounts/{accountId}/locations/{locationId}")
+  throw new Error(
+    "Invalid locationId format. Expected: accounts/{accountId}/locations/{locationId}",
+  )
 }
 
 /**
  * Clamps a page size value to the allowed range.
- * 
+ *
  * Ensures the page size is between MIN_PAGE_SIZE and MAX_PAGE_SIZE.
- * 
+ *
  * @param pageSize - The requested page size
  * @returns The clamped page size within [MIN_PAGE_SIZE, MAX_PAGE_SIZE]
  */
@@ -47,17 +49,17 @@ function clampPageSize(pageSize: number): number {
 
 /**
  * Fetches GBP reviews for a specific location with pagination support.
- * 
+ *
  * Supports both full review fetch (`all=true`) and paginated results.
  * Uses OAuth2 credentials for authenticated access to GBP API.
  * Results are cached with 1-hour TTL and cache tags for targeted revalidation.
- * 
+ *
  * Query parameters:
  * - locationId: GBP location ID (format: accounts/{accountId}/locations/{locationId})
  * - pageSize: Number of reviews per page (1-50, default 50)
  * - pageToken: Pagination token for next page
  * - all: If "true", fetches all reviews (bypasses pagination)
- * 
+ *
  * @param request - The incoming NextRequest with query parameters
  * @returns JSON response with reviews array, nextPageToken, and cache tags
  * @throws 400 if locationId is missing or invalid
@@ -67,7 +69,9 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const rawLocationId = searchParams.get("locationId")
-    const pageSize = clampPageSize(parseInt(searchParams.get("pageSize") || "50", 10))
+    const pageSize = clampPageSize(
+      parseInt(searchParams.get("pageSize") || "50", 10),
+    )
     const pageToken = searchParams.get("pageToken") || undefined
     const all = searchParams.get("all") === "true"
 
@@ -83,7 +87,9 @@ export async function GET(request: NextRequest) {
       locationId = validateLocationId(rawLocationId)
     } catch {
       return NextResponse.json(
-        { error: { code: "BAD_REQUEST", message: "Invalid locationId format" } },
+        {
+          error: { code: "BAD_REQUEST", message: "Invalid locationId format" },
+        },
         { status: 400 },
       )
     }
@@ -100,7 +106,7 @@ export async function GET(request: NextRequest) {
         locationId,
         pageSize,
         pageToken,
-        true,
+        false,
       )
       reviews = result.reviews
       nextPageToken = result.nextPageToken
