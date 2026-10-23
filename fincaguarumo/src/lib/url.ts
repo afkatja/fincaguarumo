@@ -45,3 +45,12 @@ export function buildHreflangAlternates(
 
   return languages
 }
+
+export function hasTranslation(
+  translations: Array<{ language: string; slug?: { current: string } }> | undefined,
+  locale: string
+): boolean {
+  if (!translations) return false
+  if (locale === "en") return true // English is always the source
+  return translations.some(t => t.language === locale && t.slug?.current)
+}

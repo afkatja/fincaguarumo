@@ -1,3 +1,4 @@
+import { Metadata } from "next"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { ABOUT_QUERY } from "../../../../sanity/lib/queries"
 import Layout from "../pagesLayout"
@@ -9,12 +10,22 @@ import {
   staticKnowsAbout,
   staticSameAs,
 } from "../../../../lib/schema/lodgingBusiness"
+import { getLocalizedUrl, hasTranslation } from "@/lib/url"
+import { getTranslations } from "next-intl/server"
+import { localeMap } from "@/lib/schema/lodgingBusiness"
+
+function getImageUrl(image: SanityImageObject | undefined): string {
+  if (!image) return ""
+  return (image as any).url || ""
+}
 
 type Content = {
   title: string
   description: string
   mainImage: SanityImageObject
   body: any
+  language: string
+  translations?: Array<{ language: string; slug?: { current: string } }>
 }
 
 const jsonLd = {
@@ -50,7 +61,71 @@ const jsonLd = {
   },
 }
 
-const About = async ({ params }: { params: any }) => {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+
+  const content: Content = await sanityFetch({
+    query: ABOUT_QUERY,
+    params: { language: locale },
+  })
+
+  // Return noindex for untranslated locales (non-English without Sanity translation)
+  if (!hasTranslation(content?.translations, locale)) {
+    return {
+      robots: "noindex, nofollow",
+    }
+  }
+
+  const t = await getTranslations("about")
+  const title = t("title", { defaultValue: "About Finca Guarumo" })
+
+  const canonicalUrl = getLocalizedUrl("/about", locale)
+
+  return {
+    title,
+    description: content?.description || "About Finca Guarumo - Sustainable eco-lodge in Costa Rica's Osa Peninsula",
+    metadataBase: new URL("https://fincaguarumo.com"),
+    robots: "index, follow",
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        "x-default": getLocalizedUrl("/about", "en"),
+        [locale]: canonicalUrl,
+      },
+    },
+    openGraph: {
+      title,
+      description: content?.description || "About Finca Guarumo",
+      url: canonicalUrl,
+      siteName: "Finca Guarumo",
+      type: "website",
+      locale: localeMap[locale] || "en_US",
+      images: [
+        {
+          url: getImageUrl(content?.mainImage) || "/images/finca-guarumo-v4.4.jpg",
+          width: 1200,
+          height: 630,
+          alt: "Finca Guarumo - About",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: content?.description || "About Finca Guarumo",
+      images: [getImageUrl(content?.mainImage) || "/images/finca-guarumo-v4.4.jpg"],
+    },
+    other: {
+      "og:locale": localeMap[locale] || "en_US",
+    },
+  }
+}
+
+const About = async ({ params }: { params: Promise<{ locale: string }> }) => {
   const { locale } = await params
   const content: Content = await sanityFetch({
     query: ABOUT_QUERY,

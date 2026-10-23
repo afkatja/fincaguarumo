@@ -1,8 +1,16 @@
+import { Metadata } from "next"
 import { sanityFetch } from "../../../../sanity/lib/client"
 import { PAGE_QUERY } from "../../../../sanity/lib/queries"
 import { PAGE_QUERY_RESULT } from "../../../../../sanity.types"
 
 import ContactPage from "./ContactPage"
+import { getLocalizedUrl, hasTranslation } from "@/lib/url"
+import { getTranslations } from "next-intl/server"
+import { localeMap } from "@/lib/schema/lodgingBusiness"
+
+type PageContentWithTranslations = PAGE_QUERY_RESULT & {
+  translations?: Array<{ language: string; slug?: { current: string } }>
+}
 
 const schema = {
   "@context": "https://schema.org",
@@ -51,7 +59,72 @@ const people = [
   },
 ]
 
-const Contact = async ({ params }: { params: any }) => {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+
+  const content = await sanityFetch<PageContentWithTranslations>({
+    query: PAGE_QUERY,
+    revalidate: 0,
+    params: { pageName: "contact", language: locale },
+  })
+
+  // Return noindex for untranslated locales (non-English without Sanity translation)
+  if (!hasTranslation(content?.translations, locale)) {
+    return {
+      robots: "noindex, nofollow",
+    }
+  }
+
+  const t = await getTranslations("contact")
+  const title = t("title", { defaultValue: "Contact Finca Guarumo" })
+
+  const canonicalUrl = getLocalizedUrl("/contact", locale)
+
+  return {
+    title,
+    description: content?.description || "Contact Finca Guarumo - Get in touch with us",
+    metadataBase: new URL("https://fincaguarumo.com"),
+    robots: "index, follow",
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        "x-default": getLocalizedUrl("/contact", "en"),
+        [locale]: canonicalUrl,
+      },
+    },
+    openGraph: {
+      title,
+      description: content?.description || "Contact Finca Guarumo",
+      url: canonicalUrl,
+      siteName: "Finca Guarumo",
+      type: "website",
+      locale: localeMap[locale] || "en_US",
+      images: [
+        {
+          url: content?.mainImage?.url || "/images/finca-guarumo-v4.4.jpg",
+          width: 1200,
+          height: 630,
+          alt: "Finca Guarumo - Contact",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: content?.description || "Contact Finca Guarumo",
+      images: [content?.mainImage?.url || "/images/fincaguarumo-v4.4.jpg"],
+    },
+    other: {
+      "og:locale": localeMap[locale] || "en_US",
+    },
+  }
+}
+
+const Contact = async ({ params }: { params: Promise<{ locale: string }> }) => {
   const { locale } = await params
   const content = await sanityFetch<PAGE_QUERY_RESULT>({
     query: PAGE_QUERY,
