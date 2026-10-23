@@ -9,8 +9,93 @@ const intlMiddleware = createMiddleware({
   localePrefix: "as-needed",
 })
 
+// Tracking parameters to strip for canonical URL
+const TRACKING_PARAMS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "fbclid",
+  "gclid",
+  "msclkid",
+  "ref",
+  "source",
+  "mc_cid",
+  "mc_eid",
+  "_ga",
+  "_gl",
+]
+
+function stripTrackingParams(url: URL): URL {
+  const cleanUrl = new URL(url)
+  for (const param of TRACKING_PARAMS) {
+    cleanUrl.searchParams.delete(param)
+  }
+  // Remove search entirely if empty
+  if (cleanUrl.searchParams.toString() === "") {
+    cleanUrl.search = ""
+  }
+  return cleanUrl
+}
+
+// Blog is English-only - redirect non-English locale prefixes to root
+function handleBlogLocaleRedirect(request: NextRequest): NextResponse | null {
+  const pathname = request.nextUrl.pathname
+  const locale = pathname.split("/")[1]
+  
+  // Check if it's a non-English locale prefix for blog paths
+  if (locales.includes(locale) && locale !== "en") {
+    // Match /{locale}/blog and /{locale}/blog/{slug}
+    if (pathname === `/${locale}/blog` || pathname.startsWith(`/${locale}/blog/`)) {
+      const targetPath = pathname.replace(`/${locale}/blog`, "/blog")
+      const redirectUrl = new URL(targetPath, request.url)
+      return NextResponse.redirect(redirectUrl, 308)
+    }
+  }
+  return null
+}
+
+// Handle /en and /en/ redirect to root with 308 (permanent)
+function handleDefaultLocaleRedirect(request: NextRequest): NextResponse | null {
+  const pathname = request.nextUrl.pathname
+  
+  // Match /en or /en/ (with optional trailing slash)
+  if (pathname === "/en" || pathname === "/en/") {
+    const redirectUrl = new URL("/", request.url)
+    // Preserve non-tracking search params
+    const cleanUrl = stripTrackingParams(redirectUrl)
+    return NextResponse.redirect(cleanUrl, 308)
+  }
+  return null
+}
+
+// Handle tracking parameter stripping
+function handleTrackingParams(request: NextRequest): NextResponse | null {
+  const { searchParams } = request.nextUrl
+  const hasTrackingParams = TRACKING_PARAMS.some(param => searchParams.has(param))
+  
+  if (hasTrackingParams) {
+    const cleanUrl = stripTrackingParams(request.nextUrl)
+    return NextResponse.redirect(cleanUrl, 308)
+  }
+  return null
+}
+
 export default async function proxy(request: NextRequest) {
-  // Handle internationalization first
+  // Handle blog locale redirects BEFORE intl middleware
+  const blogRedirect = handleBlogLocaleRedirect(request)
+  if (blogRedirect) return blogRedirect
+
+  // Handle default locale redirect (/en -> /) with 308
+  const defaultLocaleRedirect = handleDefaultLocaleRedirect(request)
+  if (defaultLocaleRedirect) return defaultLocaleRedirect
+
+  // Handle tracking parameter stripping
+  const trackingRedirect = handleTrackingParams(request)
+  if (trackingRedirect) return trackingRedirect
+
+  // Handle internationalization
   const response = intlMiddleware(request)
 
   const locale = request.nextUrl.pathname.split("/")[1]

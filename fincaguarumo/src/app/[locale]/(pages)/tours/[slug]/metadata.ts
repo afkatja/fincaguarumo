@@ -1,9 +1,15 @@
 import { Metadata } from "next"
 import { sanityFetch } from "@/sanity/lib/client"
-import { TOURS_QUERY } from "@/sanity/lib/queries"
-import { locales } from "@/config"
+import { TOUR_QUERY } from "@/sanity/lib/queries"
+import { getLocalizedUrl } from "@/lib/url"
 
-const baseUrl = "https://fincaguarumo.com"
+const localeMap: Record<string, string> = {
+  en: "en_US",
+  es: "es_CR",
+  de: "de_DE",
+  nl: "nl_NL",
+  ru: "ru_RU",
+}
 
 interface TourData {
   title?: string
@@ -11,9 +17,17 @@ interface TourData {
   slug?: { current: string }
   isPublished?: boolean
   price?: number
+  duration?: string
   mainImage?: {
     url?: string
+    alt?: string
   }
+  translations?: Array<{
+    language: string
+    slug: { current: string }
+    title: string
+    description: string
+  }>
 }
 
 export async function generateTourMetadata({
@@ -24,7 +38,7 @@ export async function generateTourMetadata({
   const { locale, slug } = await params
 
   const tour: TourData = await sanityFetch({
-    query: TOURS_QUERY,
+    query: TOUR_QUERY,
     params: { slug, language: locale },
     revalidate: 0,
   })
@@ -35,10 +49,7 @@ export async function generateTourMetadata({
     }
   }
 
-  const canonicalUrl =
-    locale === "en"
-      ? `${baseUrl}/tours/${slug}`
-      : `${baseUrl}/${locale}/tours/${slug}`
+  const canonicalUrl = getLocalizedUrl(`/tours/${slug}`, locale)
 
   const title = tour?.title
     ? `${tour.title} - Finca Guarumo Tours`
@@ -48,24 +59,35 @@ export async function generateTourMetadata({
     tour?.description ||
     "Discover guided tours at Finca Guarumo in Costa Rica's Osa Peninsula. Experience wildlife, birdwatching, and sustainable eco-tourism."
 
+  // Build hreflang alternates only for locales with actual translations
+  const languages: Record<string, string> = {
+    "x-default": getLocalizedUrl(`/tours/${slug}`, "en"),
+    [locale]: canonicalUrl,
+  }
+
+  if (tour.translations) {
+    for (const t of tour.translations) {
+      if (t.language && t.language !== locale && t.slug?.current) {
+        languages[t.language] = getLocalizedUrl(`/tours/${t.slug.current}`, t.language)
+      }
+    }
+  }
+
+  const ogImageUrl = tour.mainImage?.url
+    ? tour.mainImage.url
+    : "/images/finca-guarumo-v4.4.jpg"
+  const ogImageAlt = tour.mainImage?.alt
+    ? tour.mainImage.alt
+    : tour.title || "Finca Guarumo Tours"
+
   return {
     title,
     description,
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL("https://fincaguarumo.com"),
     robots: "index, follow",
     alternates: {
       canonical: canonicalUrl,
-      languages: {
-        "x-default": `${baseUrl}/tours/${slug}`,
-        ...Object.fromEntries(
-          locales.map((loc: string) => [
-            loc,
-            loc === "en"
-              ? `${baseUrl}/tours/${slug}`
-              : `${baseUrl}/${loc}/tours/${slug}`,
-          ]),
-        ),
-      },
+      languages,
     },
     openGraph: {
       title,
@@ -73,31 +95,24 @@ export async function generateTourMetadata({
       url: canonicalUrl,
       siteName: "Finca Guarumo",
       type: "website",
-      images: tour.mainImage?.url
-        ? [
-            {
-              url: tour.mainImage.url,
-              width: 1200,
-              height: 630,
-              alt: tour.title,
-            },
-          ]
-        : [
-            {
-              url: "/images/finca-guarumo-v4.4.jpg",
-              width: 1200,
-              height: 630,
-              alt: "Finca Guarumo Tours",
-            },
-          ],
+      locale: localeMap[locale] || "en_US",
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: ogImageAlt,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: tour.mainImage?.url
-        ? [tour.mainImage.url]
-        : ["/images/finca-guarumo-v4.4.jpg"],
+      images: [ogImageUrl],
+    },
+    other: {
+      "og:locale": localeMap[locale] || "en_US",
     },
   }
 }

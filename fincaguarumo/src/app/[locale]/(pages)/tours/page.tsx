@@ -6,12 +6,13 @@ import { sanityFetch } from "../../../../sanity/lib/client"
 import Layout from "../pagesLayout"
 import ClientPage from "./ClientPage"
 import { TourType } from "./TourItem"
+import { getLocalizedUrl } from "@/lib/url"
 
 // Generate metadata for the tours page
 export async function generateMetadata({
   params,
 }: {
-  params: any
+  params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
   const pageContent = await sanityFetch<SanityDocument>({
@@ -20,8 +21,7 @@ export async function generateMetadata({
     revalidate: 0,
   })
 
-  const baseUrl = "https://fincaguarumo.com"
-  const canonicalUrl = `${baseUrl}/${locale}/tours`
+  const canonicalUrl = getLocalizedUrl("/tours", locale)
 
   return {
     title: pageContent?.title || "Tours - Finca Guarumo",
@@ -31,11 +31,11 @@ export async function generateMetadata({
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        en: `${baseUrl}/en/tours`,
-        es: `${baseUrl}/es/tours`,
-        ru: `${baseUrl}/ru/tours`,
-        nl: `${baseUrl}/nl/tours`,
-        de: `${baseUrl}/de/tours`,
+        en: getLocalizedUrl("/tours", "en"),
+        es: getLocalizedUrl("/tours", "es"),
+        ru: getLocalizedUrl("/tours", "ru"),
+        nl: getLocalizedUrl("/tours", "nl"),
+        de: getLocalizedUrl("/tours", "de"),
       },
     },
     openGraph: {
@@ -49,7 +49,7 @@ export async function generateMetadata({
   }
 }
 
-const Tours = async ({ params }: { params: any }) => {
+const Tours = async ({ params }: { params: Promise<{ locale: string }> }) => {
   const { locale } = await params
   const toursContent = await sanityFetch<TourType[]>({
     query: TOURS_QUERY,
