@@ -53,6 +53,8 @@
     "phoneLabel": "Ihre Telefonnummer *",
     "priceLabel": "Preis für",
     "rateLabel": "Preis",
+    "priceFrom": "Preis ab {price} für {guests} {guestsLabel}",
+    "priceFromShort": "für {guests} {guestsLabel}",
     "selectDate": "Datum auswählen",
     "rateVATlabel": "Rate (inkl. 13% Mehrwertsteuer)",
     "reserveButtonTour": "Buchen Sie jetzt",
@@ -87,16 +89,33 @@
     "paidAmount": "Sie haben $ {amount} für {title} in {location} bezahlt",
     "bookingConfirmed": "Ihre Buchung von {title} für {guests} Gäste am {date} war erfolgreich. Eine Bestätigungs-E-Mail wurde an {email} gesendet.",
     "paymentNotSuccessful": "Ihre Zahlung war nicht erfolgreich. Bitte versuchen Sie es erneut.",
-    "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+    "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "selectDates": "Wählen Sie die Datumszeiten aus, um Verfügbarkeit zu überprüfen",
+    "selectCheckInFirst": "Bitte wählen Sie zunächst eine Check-in-Datum aus.",
+    "priceSummary": "Preisübersicht",
+    "vatLabel": "Mehrwertsteuer 13%",
+    "totalWithoutVat": "Preis (ohne MwSt.) x {Gäste} {Gästelabel} x {Nächte}",
+    "totalVat": "Steuer x {Gäste} {Gästelabel} x {Nächte}",
+    "totalWithVat": "Preis (zuz. MwSt.) x {Gäste} {Gästelabel} x {Nächte}",
+    "totalDisplayedVilla": "Gesamt für {nächte} Nächte",
+    "totalDisplayedTour": "Gesamt für {guests} {guestsLabel}"
   },
   "page": {
     "moreFAQ": "Mehr FAQ",
     "FAQ": "FAQ",
+    "quickInfo": "Kurzinfo",
+    "reviews": "Bewertungen",
+    "about": "Über",
+    "details": "Details",
+    "allReviews": "Alle Bewertungen",
+    "more": "Mehr",
+    "less": "Weniger",
     "greetings": {
       "homepage": "Willkommen in der Villa Bruno! Wie kann ich Ihnen heute helfen?",
       "stay": "Hallo! Ich bin hier, um Ihnen bei der Buchung von {propertyTitle} zu helfen. Was möchten Sie wissen?",
       "other": "Hallo! Wie kann ich Ihnen heute helfen?"
-    }
+    },
+    "moreReviews": "Mehr Bewertungen"
   },
   "map": {
     "location": "Standort"
@@ -144,6 +163,17 @@
     "continueReading": "Lesen Sie weiter, um mehr über dieses einzigartige Öko-Villa-Erlebnis zu erfahren ...",
     "readMore": "Mehr lesen"
   },
+  "faq": {
+    "title": "Häufig gestellte Fragen",
+    "browseInstructions": "Durchsuchen Sie Fragen nach Kategorien oder suchen Sie nach dem, was Sie brauchen.",
+    "searchLabel": "FAQs suchen",
+    "searchPlaceholder": "FAQs suchen",
+    "allCategories": "Alle Kategorien",
+    "clearFilters": "Filter zurücksetzen",
+    "readLess": "Weniger lesen",
+    "readMore": "Mehr lesen",
+    "noResults": "Keine FAQs entsprechen Ihrer Suche oder der ausgewählten Kategorie."
+  },
   "reviews": {
     "wildlifeNature": "Tierwelt und Natur",
     "ecoFriendly": "Umweltfreundlich",
@@ -156,6 +186,11 @@
     "whatGuestsLoveMost": "Was Gäste am meisten lieben",
     "recentGuestComments": "Aktuelle Gästekommentare",
     "guest": "Gast",
-    "readMoreReviews": "Mehr Bewertungen lesen"
+    "readMoreReviews": "Mehr Bewertungen lesen",
+    "title": "Gästebewertungen",
+    "readMore": "Lesen Sie mehr",
+    "readLess": "Lesen weniger",
+    "loadMoreReviews": "Lade mehr Bewertungen",
+    "readAllReviews": "Lesen Sie alle Bewertungen"
   }
 }

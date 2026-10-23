@@ -11,9 +11,11 @@
     "lint": "next lint",
     "type-check": "npx tsc --noEmit",
     "codegen": "sanity schema extract --enforce-required-fields && npx sanity typegen generate",
-    "i18n:build": "npx tsc scripts/translate.ts --outDir dist --esModuleInterop --allowSyntheticDefaultImports --module NodeNext --moduleResolution NodeNext --skipLibCheck",
-    "i18n:run": "npm run i18n:build && node dist/scripts/translate.js",
-    "i18n:watch": "nodemon --watch /src/messages/en.json --exec \"npm run i18n:run\"",
+    "i18n:build": "tsx --tsconfig tsconfig.scripts.json scripts/translate.ts",
+    "i18n:run": "npm run i18n:build",
+    "i18n:watch": "nodemon --watch src/messages/en.json --exec \"npm run i18n:run\"",
+    "i18n:check": "tsx scripts/check-translations.ts",
+    "i18n:ai": "tsx scripts/translate-ai.ts",
     "prepare": "husky",
     "translate": "npm run i18n:run",
     "manual-email": "NODE_ENV=production npx tsc --project tsconfig.build.json && MAILERSEND_FROM_EMAIL='info@fincaguarumo.com' CONTACT_EMAIL='info@fincaguarumo.com' CONTACT_PHONE='+506 87495341' NODE_ENV=production node dist/scripts/send-email.js",
@@ -29,15 +31,15 @@
   },
   "lint-staged": {
     "src/messages/en.json": [
-      "npm run i18n:run"
+      "npm run i18n:check && npm run i18n:ai"
     ]
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@hookform/resolvers": "^5.5.7",
-    "@moto-pos/core": "^0.2.1",
+    "@moto-pos/core": "^0.2.3",
     "@netlify/functions": "^5.3.0",
-    "@netlify/plugin-nextjs": "^5.15.13",
+    "@netlify/plugin-nextjs": "^5.16.2",
     "@portabletext/react": "^7.0.1",
     "@radix-ui/react-avatar": "^1.2.6",
     "@radix-ui/react-collapsible": "^1.1.20",
@@ -55,6 +57,7 @@
     "@radix-ui/themes": "^3.3.0",
     "@sanity/document-internationalization": "^6.2.27",
     "@sanity/image-url": "^2.1.1",
+    "@sanity/language-filter": "^5.0.18",
     "@sanity/vision": "^6.8.0",
     "@stripe/react-stripe-js": "^6.8.0",
     "@stripe/stripe-js": "^9.12.1",
@@ -76,6 +79,7 @@
     "embla-carousel-react": "^8.6.0",
     "embla-carousel-reactive-utils": "^8.6.0",
     "file-saver": "^2.0.5",
+    "google-auth-library": "^11.1.0",
     "googleapis": "^173.0.0",
     "gsap": "^3.15.0",
     "ical-expander": "^3.2.0",
@@ -111,6 +115,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@eslint/compat": "^2.1.0",
+    "@eslint/eslintrc": "^3.3.6",
+    "@eslint/js": "^10.0.1",
     "@formatjs/intl-localematcher": "^0.8.13",
     "@next/bundle-analyzer": "16.2.12",
     "@playwright/test": "^1.62.1",
@@ -129,6 +136,7 @@
     "eslint-config-next": "^16.2.12",
     "formatjs": "^0.1.1",
     "fs": "^0.0.1-security",
+    "http-proxy-agent": "^9.1.0",
     "husky": "^9.1.7",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
@@ -140,8 +148,13 @@
     "postcss-import": "^16.1.1",
     "supabase": "^2.111.0",
     "ts-node": "^10.9.2",
-    "typescript": "^7.0.2",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.1",
     "uuid": "^14.0.1"
+  },
+  "peerDependencies": {
+    "eslint": "^8.57.0 || ^9.0.0 || ^10.0.0",
+    "typescript": ">=4.8.4 <7.0.0"
   },
   "overrides": {
     "@types/react": "19.2.18",

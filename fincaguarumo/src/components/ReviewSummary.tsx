@@ -1,6 +1,6 @@
 "use client"
 import React from "react"
-import { usePlace } from "../app/providers/PlaceProvider"
+import { useReviews } from "../app/providers/ReviewsProvider"
 import Image from "next/image"
 import { TReview } from "../types"
 import useSWR from "swr"
@@ -29,7 +29,7 @@ interface ReviewSummaryProps {
   useAIProcessing?: boolean
 }
 
-const extractCommonThemes = (texts: string[], t: any): string[] => {
+const extractCommonThemes = (texts: string[], t: ReturnType<typeof useTranslations>): string[] => {
   const themes = [
     {
       keywords: ["wildlife", "animals", "monkeys", "birds", "nature"],
@@ -86,12 +86,12 @@ export const ReviewSummary = ({
   useAIProcessing = false,
 }: ReviewSummaryProps) => {
   const t = useTranslations("reviews")
-  const { place } = usePlace()
   const { data: sanityReviews } = useSWR(REVIEWS_QUERY, clientSideFetch)
+  const { reviews: gbpReviews } = useReviews()
 
   const stableAllReviews = React.useMemo(() => {
-    return [...(place?.reviews ?? []), ...(sanityReviews ?? [])] as TReview[]
-  }, [place, JSON.stringify(place?.reviews), JSON.stringify(sanityReviews)])
+    return [...(sanityReviews ?? []), ...(gbpReviews ?? [])] as TReview[]
+  }, [JSON.stringify(sanityReviews), JSON.stringify(gbpReviews)])
 
   const reviewsForProcessing = React.useMemo(() => {
     return stableAllReviews.map(review => ({
@@ -283,7 +283,7 @@ export const ReviewSummary = ({
                   {useAIProcessing
                     ? processedAspects
                         .slice(0, 5)
-                        .map((aspect: any, index: number) => (
+                        .map((aspect: { aspect: string; mentionCount: number }, index: number) => (
                           <span
                             key={`aspect-${index}`}
                             className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-guarumo-primary/10 text-guarumo-primary dark:bg-zinc-700 dark:text-zinc-300"

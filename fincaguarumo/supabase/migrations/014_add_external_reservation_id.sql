@@ -8,25 +8,15 @@
 ALTER TABLE bookings
 ADD COLUMN IF NOT EXISTS external_reservation_id VARCHAR(255);
 
--- Step 1: Resolve existing duplicates before creating unique index
--- Keep the most recent booking (by created_at) for each (source, external_reservation_id) pair
-DELETE FROM bookings
-WHERE ctid NOT IN (
-  SELECT DISTINCT ON (source, external_reservation_id) ctid
-  FROM bookings
-  WHERE external_reservation_id IS NOT NULL
-  ORDER BY source, external_reservation_id, created_at DESC
-);
-
--- Step 2: Create concurrent unique index on (source, external_reservation_id)
+-- Step 1: Create concurrent index on (source, external_reservation_id)
 -- CONCURRENTLY requires running outside a transaction block
--- This enforces uniqueness per provider/platform since the same external ID
--- can exist across different platforms (booking.com, airbnb, etc.)
-CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS unique_source_external_reservation_id
+-- This index supports efficient lookups per provider/platform without enforcing uniqueness
+-- Duplicate records are preserved for auditing and reconciliation purposes
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_source_external_reservation_id
 ON bookings (source, external_reservation_id)
 WHERE external_reservation_id IS NOT NULL;
 
--- Step 3: Create partial index for backward-compatible lookups without source
+-- Step 2: Create partial index for backward-compatible lookups without source
 -- Used when finance endpoint receives only external_reservation_id without source
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_external_reservation_id
 ON bookings (external_reservation_id)

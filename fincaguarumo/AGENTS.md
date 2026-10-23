@@ -122,6 +122,21 @@ When creating new components:
 - [ ] Used `cn()` utility for conditional styling
 - [ ] Followed existing component patterns and naming conventions
 
+### TypeScript & Component Patterns
+
+**Component Structure:**
+- Prefer arrow functions for components
+- Each component should default export
+- Compound components should have their parts as named exports but the main component as default export
+
+**Function Arguments:**
+- Prefer named function args using destructuring (e.g., `func({ arg1, arg2 }: { arg1: Type; arg2: Type })`)
+
+**Type Safety:**
+- Avoid implicit/explicit `any`
+- If type is truly unknown, use `unknown`
+- Prefer explicit, documented types
+
 ## Skills and workflows
 
 - For new feature work, prefer:

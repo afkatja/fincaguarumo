@@ -1,6 +1,15 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { getBrowserClient } from "../lib/supabaseClient"
 import type { Session } from "@supabase/supabase-js"
+
+function getIsAdminFromUser(user: Session["user"] | null | undefined): boolean {
+  if (!user) return false
+  const appMetadata = user.app_metadata
+  if (appMetadata && typeof appMetadata === "object") {
+    return appMetadata.role === "admin"
+  }
+  return false
+}
 
 export function useSupabaseAuth() {
   const [session, setSession] = useState<Session | null>(null)
@@ -30,7 +39,9 @@ export function useSupabaseAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const getAccessToken = async () => {
+  const isAdmin = useMemo(() => getIsAdminFromUser(session?.user), [session?.user])
+
+  const getAccessToken: () => Promise<string | null> = async () => {
     if (!session) return null
 
     setTokenLoading(true)
@@ -62,6 +73,9 @@ export function useSupabaseAuth() {
       // Update the local session state with the refreshed session
       setSession(refreshedSession)
       return refreshedSession.access_token
+    } catch (err) {
+      console.error("Error fetching access token:", err)
+      return null
     } finally {
       setTokenLoading(false)
     }
@@ -95,6 +109,7 @@ export function useSupabaseAuth() {
     loading,
     tokenLoading,
     user: session?.user || null,
+    isAdmin,
     getAccessToken,
     signInWithEmail,
     signOut,
