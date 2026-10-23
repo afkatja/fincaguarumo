@@ -9,8 +9,29 @@ const intlMiddleware = createMiddleware({
   localePrefix: "as-needed",
 })
 
+// Blog is English-only - redirect non-English locale prefixes to root
+function handleBlogLocaleRedirect(request: NextRequest): NextResponse | null {
+  const pathname = request.nextUrl.pathname
+  const locale = pathname.split("/")[1]
+  
+  // Check if it's a non-English locale prefix for blog paths
+  if (locales.includes(locale) && locale !== "en") {
+    // Match /{locale}/blog and /{locale}/blog/{slug}
+    if (pathname === `/${locale}/blog` || pathname.startsWith(`/${locale}/blog/`)) {
+      const targetPath = pathname.replace(`/${locale}/blog`, "/blog")
+      const redirectUrl = new URL(targetPath, request.url)
+      return NextResponse.redirect(redirectUrl, 308)
+    }
+  }
+  return null
+}
+
 export default async function proxy(request: NextRequest) {
-  // Handle internationalization first
+  // Handle blog locale redirects BEFORE intl middleware
+  const blogRedirect = handleBlogLocaleRedirect(request)
+  if (blogRedirect) return blogRedirect
+
+  // Handle internationalization
   const response = intlMiddleware(request)
 
   const locale = request.nextUrl.pathname.split("/")[1]

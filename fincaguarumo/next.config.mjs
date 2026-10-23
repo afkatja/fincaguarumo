@@ -88,51 +88,10 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      // Redirect non-English blog pages to English (blog only in English)
-      {
-        source: "/es/blog",
-        destination: "/blog",
-        permanent: true,
-      },
-      {
-        source: "/ru/blog",
-        destination: "/blog",
-        permanent: true,
-      },
-      {
-        source: "/de/blog",
-        destination: "/blog",
-        permanent: true,
-      },
-      {
-        source: "/nl/blog",
-        destination: "/blog",
-        permanent: true,
-      },
-      // Redirect non-English blog posts to English
-      {
-        source: "/es/blog/:slug*",
-        destination: "/blog/:slug*",
-        permanent: true,
-      },
-      {
-        source: "/ru/blog/:slug*",
-        destination: "/blog/:slug*",
-        permanent: true,
-      },
-      {
-        source: "/de/blog/:slug*",
-        destination: "/blog/:slug*",
-        permanent: true,
-      },
-      {
-        source: "/nl/blog/:slug*",
-        destination: "/blog/:slug*",
-        permanent: true,
-      },
       // Redirect www to non-www (if needed - handled by Netlify, but good to have)
       // Redirect http to https (handled by HSTS/Netlify)
       // Trailing slash redirects handled by next-intl middleware
+      // Blog locale redirects handled in middleware (src/proxy.ts) for reliability
     ]
   },
 }
