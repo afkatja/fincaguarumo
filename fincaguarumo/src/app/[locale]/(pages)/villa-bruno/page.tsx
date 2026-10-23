@@ -10,6 +10,8 @@ import { PricingRule } from "@/lib/pricingEngine"
 import {
   buildLodgingBusinessSchema,
   localeMap,
+  gbpUrl,
+  airbnbUrl,
 } from "@/lib/schema/lodgingBusiness"
 import { getLocalizedUrl } from "@/lib/url"
 
@@ -44,7 +46,7 @@ function buildVillaBrunoSchema(data: {
     identifier: `villa-bruno-finca-guarumo`,
     description:
       data.description ||
-      "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
+      "Villa Bruno, off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
     url: data.url,
     floorSizeValue: 56,
     occupancyMax: 4,
@@ -79,7 +81,10 @@ function buildVillaBrunoSchema(data: {
       "https://www.instagram.com/fincaguarumo.osa",
       "https://www.facebook.com/fincaguarumoosa",
       "https://www.youtube.com/@FincaGuarumo",
+      gbpUrl,
+      airbnbUrl,
     ],
+    hasMap: gbpUrl,
     mainImage: data.mainImage,
   })
 }
@@ -195,7 +200,7 @@ export async function generateMetadata({
 
   const description = content?.description
     ? content?.description
-    : "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing"
+    : "Villa Bruno, off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing"
 
   // Build hreflang alternates only for locales with actual translations
   const languages: Record<string, string> = {

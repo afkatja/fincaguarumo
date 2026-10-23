@@ -6,7 +6,7 @@ const jsonLd = {
   "@type": "CollectionPage",
   name: "Guest Reviews and Testimonials for Villa Bruno at Finca Guarumo",
   description:
-    "Read all reviews from guests who have stayed at Villa Bruno in Costa Rica.",
+    "Read all reviews from guests who have stayed at Villa Bruno at Finca Guarumo in Costa Rica.",
   url: "https://fincaguarumo.com/reviews",
 
   about: {
