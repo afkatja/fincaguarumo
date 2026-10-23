@@ -34,6 +34,7 @@ const jsonLd = (faqs: FAQType[], lastModified?: string) => ({
       text: getFAQAnswerText(faq),
     },
   })),
+  displayOrder: "alphabetical",
 })
 
 export async function generateMetadata({
@@ -127,7 +128,10 @@ const FAQpage = async ({ params }: { params: Promise<{ locale: string }> }) => {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd(faqs, faqs[0]?.lastModified)).replace(/</g, "\\u003c"),
+          __html: JSON.stringify(jsonLd(faqs, faqs[0]?.lastModified)).replace(
+            /</g,
+            "\\u003c",
+          ),
         }}
       />
     </>

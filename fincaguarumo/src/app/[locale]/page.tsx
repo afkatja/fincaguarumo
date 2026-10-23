@@ -7,6 +7,10 @@ import {
   buildLodgingBusinessSchema,
   buildWebSiteSchema,
   localeMap,
+  gbpUrl,
+  airbnbUrl,
+  staticKnowsAbout,
+  staticSameAs,
 } from "@/lib/schema/lodgingBusiness"
 
 const baseUrl = "https://fincaguarumo.com"
@@ -37,19 +41,9 @@ const homePageSchema = buildLodgingBusinessSchema({
     "https://fincaguarumo.com/images/villa-bruno-wildlife.jpg",
     "https://fincaguarumo.com/images/villa-bruno-sunset.jpg",
   ],
-  knowsAbout: [
-    "Eco-tourism",
-    "Wildlife viewing",
-    "Sustainable travel",
-    "Corcovado National Park",
-    "Birdwatching",
-    "Rainforest conservation",
-  ],
-  sameAs: [
-    "https://www.instagram.com/fincaguarumo.osa",
-    "https://www.facebook.com/fincaguarumoosa",
-    "https://www.youtube.com/@FincaGuarumo",
-  ],
+  knowsAbout: staticKnowsAbout,
+  sameAs: staticSameAs,
+  hasMap: gbpUrl,
 })
 
 const jsonLd = (data: { locale: string }) => ({

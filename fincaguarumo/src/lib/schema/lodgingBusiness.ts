@@ -41,8 +41,8 @@ export const staticAddress = {
 
 export const staticGeo = {
   "@type": "GeoCoordinates",
-  latitude: 8.496420632614996,
-  longitude: -83.3341457939961,
+  latitude: 8.496008133150292,
+  longitude: -83.33408512883554,
 }
 
 export const staticKnowsAbout = [
@@ -52,6 +52,10 @@ export const staticKnowsAbout = [
   "Corcovado National Park",
   "Birdwatching",
   "Rainforest conservation",
+  "Solar power systems",
+  "Spring water systems",
+  "Organic farming",
+  "Reforestation",
 ]
 
 export const staticAreaServed = {
@@ -68,6 +72,15 @@ export const staticSocial = [
   "https://www.instagram.com/fincaguarumo.osa",
   "https://www.facebook.com/fincaguarumoosa",
   "https://www.youtube.com/@FincaGuarumo",
+]
+
+export const gbpUrl = "https://maps.app.goo.gl/SVgH1dBZqY8eUUhm9"
+export const airbnbUrl = "https://www.airbnb.com/rooms/1392758794880269478"
+
+export const staticSameAs = [
+  ...staticSocial,
+  gbpUrl,
+  airbnbUrl,
 ]
 
 export interface LodgingBusinessConfig {
@@ -110,9 +123,9 @@ export function buildLodgingBusinessSchema(config: LodgingBusinessConfig) {
     validFrom,
     images,
     knowsAbout = staticKnowsAbout,
-    sameAs = staticSocial,
+    sameAs = staticSameAs,
     mainImage,
-    hasMap = "https://maps.app.goo.gl/GAfQHZfeW8ZtKPkk8",
+    hasMap = gbpUrl,
   } = config
 
   const imageUrls = getImageUrl(mainImage) ? [getImageUrl(mainImage)] : images
@@ -141,7 +154,7 @@ export function buildLodgingBusinessSchema(config: LodgingBusinessConfig) {
     paymentAccepted: "Cash, PayPal, Credit Card, Bank Transfer",
     address: staticAddress,
     geo: staticGeo,
-    amenityFeature: staticAmenities.map((a) => ({
+    amenityFeature: staticAmenities.map(a => ({
       "@type": "LocationFeatureSpecification",
       name: a.name,
       value: a.value,
