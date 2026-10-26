@@ -497,6 +497,52 @@ export const ACCOMMODATION_QUERY = groq`
     checkInTime, 
     checkOutTime,
     amenities[]->{ title, description, icon },
+    "activityBlocks": activityBlocks[]-> {
+      title,
+      subtitle,
+      description,
+      mainImage ${mainImageWithDimensions},
+      slug,
+      "activities": activities[] {
+        name,
+        description,
+        season,
+        duration,
+        distanceFromVilla,
+        transportIncluded,
+        difficulty,
+        highlights,
+        icon,
+        isFeatured,
+        sortOrder
+      } | order(sortOrder asc)
+    } | order(displayOrder asc),
+    "whyChooseVillaBruno": whyChooseVillaBruno-> {
+      title,
+      subtitle,
+      description,
+      mainImage ${mainImageWithDimensions},
+      slug,
+      "comparisonTable": comparisonTable[] {
+        feature,
+        villaBruno,
+        largeEcoResorts,
+        corcovadoLodges,
+        traditionalHotels,
+        otherVacationRentals,
+        category,
+        sortOrder,
+        isHighlight
+      } | order(sortOrder asc),
+      "keyDifferentiators": keyDifferentiators[] {
+        title,
+        description,
+        icon,
+        sortOrder
+      } | order(sortOrder asc),
+      idealFor,
+      lessSuitableFor
+    },
     'pricingRules': *[
       _type == "accommodation" &&
       language == "en" &&
@@ -518,7 +564,21 @@ export const ACCOMMODATION_QUERY = groq`
     },
     paymentMethods[]->{ title, description, type },
     cancellationPolicy->{ title, description, rules },
-    logistics[]->{ title, description, type },
+    logistics[]->{ 
+      title,
+      description,
+      category,
+      checkInTime,
+      checkOutTime,
+      earlyCheckIn,
+      earlyCheckInFee,
+      lateCheckOut,
+      lateCheckOutFee,
+      instructions,
+      contactInfo,
+      address,
+      distance 
+},
     "translations": coalesce(
       *[_type == "translation.metadata" && ^._id in translations[].value._ref][0].translations[]{
         ...(value->{
@@ -541,7 +601,53 @@ export const ACCOMMODATION_QUERY = groq`
           location, 
           highlightFeatures,
           checkInTime, 
-          checkOutTime
+          checkOutTime,
+          "activityBlocks": activityBlocks[]-> {
+            title,
+            subtitle,
+            description,
+            mainImage ${mainImageWithDimensions},
+            slug,
+            "activities": activities[] {
+              name,
+              description,
+              season,
+              duration,
+              distanceFromVilla,
+              transportIncluded,
+              difficulty,
+              highlights,
+              icon,
+              isFeatured,
+              sortOrder
+            } | order(sortOrder asc)
+          } | order(displayOrder asc),
+          "whyChooseVillaBruno": whyChooseVillaBruno-> {
+            title,
+            subtitle,
+            description,
+            mainImage ${mainImageWithDimensions},
+            slug,
+            "comparisonTable": comparisonTable[] {
+              feature,
+              villaBruno,
+              largeEcoResorts,
+              corcovadoLodges,
+              traditionalHotels,
+              otherVacationRentals,
+              category,
+              sortOrder,
+              isHighlight
+            } | order(sortOrder asc),
+            "keyDifferentiators": keyDifferentiators[] {
+              title,
+              description,
+              icon,
+              sortOrder
+            } | order(sortOrder asc),
+            idealFor,
+            lessSuitableFor
+          }
         })
       },
       []
@@ -565,3 +671,101 @@ export const PRICING_RULES_QUERY = groq`*[_type == 'pricingRules' && _id in $rul
       language
     }
     `
+
+export const ACTIVITY_BLOCK_QUERY = groq`*[_type == 'activityBlock' && language == $language && isPublished == true] | order(displayOrder asc) {
+  title,
+  subtitle,
+  description,
+  mainImage ${mainImageWithDimensions},
+  slug,
+  "activities": activities[] {
+    name,
+    description,
+    season,
+    duration,
+    distanceFromVilla,
+    transportIncluded,
+    difficulty,
+    highlights,
+    icon,
+    isFeatured,
+    sortOrder
+  } | order(sortOrder asc),
+  seoKeywords
+}`
+
+export const WHY_CHOOSE_VILLA_BRUNO_QUERY = groq`*[_type == 'whyChooseVillaBruno' && language == $language && isPublished == true][0] {
+  title,
+  subtitle,
+  description,
+  mainImage ${mainImageWithDimensions},
+  slug,
+  "comparisonTable": comparisonTable[] {
+    feature,
+    villaBruno,
+    largeEcoResorts,
+    corcovadoLodges,
+    traditionalHotels,
+    otherVacationRentals,
+    category,
+    sortOrder,
+    isHighlight
+  } | order(sortOrder asc),
+  "keyDifferentiators": keyDifferentiators[] {
+    title,
+    description,
+    icon,
+    sortOrder
+  } | order(sortOrder asc),
+  idealFor,
+  lessSuitableFor,
+  seoKeywords
+}`
+
+export const LOCATION_PAGE_QUERY = groq`*[_type == 'locationPage' && slug.current == $slug && language == $language][0] {
+  title,
+  subtitle,
+  description,
+  mainImage ${mainImageWithDimensions},
+  slug,
+  coordinates,
+  address,
+  googleMapsUrl,
+  appleMapsUrl,
+  wazeUrl,
+  "directions": directions[] {
+    fromLocation,
+    customFromLabel,
+    transportMode,
+    duration,
+    distance,
+    roadConditions,
+    "stepByStep": stepByStep[] {
+      stepNumber,
+      instruction,
+      landmark
+    } | order(stepNumber asc),
+    tips,
+    costEstimate,
+    bookingRequired,
+    contactForBooking,
+    sortOrder
+  } | order(sortOrder asc),
+  "localTransport": localTransport[] {
+    name,
+    type,
+    description,
+    contact,
+    website,
+    languages
+  },
+  "nearbyAttractions": nearbyAttractions[] {
+    name,
+    description,
+    distance,
+    category,
+    coordinates,
+    image ${mainImageWithDimensions}
+  },
+  seoKeywords
+}`

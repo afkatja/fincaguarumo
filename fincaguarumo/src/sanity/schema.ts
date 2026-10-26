@@ -25,12 +25,18 @@ import { cancellationPoliciesType } from "./schemaTypes/cancellationPoliciesType
 import { logisticsType } from "./schemaTypes/logisticsType"
 import { propertyType } from "./schemaTypes/propertyType"
 import { accommodationType } from "./schemaTypes/accommodationType"
+import { activityBlockType } from "./schemaTypes/activityBlockType"
+import { whyChooseVillaBrunoType } from "./schemaTypes/whyChooseVillaBrunoType"
+import { locationPageType } from "./schemaTypes/locationPageType"
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     homeType,
     propertyType,
     accommodationType,
+    activityBlockType,
+    whyChooseVillaBrunoType,
+    locationPageType,
     blockContentType,
     categoryType,
     postType,

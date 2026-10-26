@@ -39,6 +39,9 @@ export const translatableTypes = [
   "post",
   "home",
   "tour",
+  "activityBlock",
+  "whyChooseVillaBruno",
+  "locationPage",
 ] as const
 export type TranslatableType = (typeof translatableTypes)[number]
 

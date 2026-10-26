@@ -148,6 +148,16 @@ export const structure: StructureResolver = S => {
             .filter('_type == "amenities"')
             .apiVersion("v2025-02-19"),
         ),
+
+      S.listItem()
+        .title("Activity Blocks")
+        .child(getLanguageItems(S, "activityBlock", "Activity Blocks")),
+
+      S.listItem()
+        .title("Why Choose Villa Bruno")
+        .child(
+          getLanguageItems(S, "whyChooseVillaBruno", "Why Choose Villa Bruno"),
+        ),
       S.listItem()
         .title("Pricing Rules")
         .schemaType("pricingRules")
@@ -275,6 +285,8 @@ export const defaultDocumentNode: DefaultDocumentNodeResolver = (
     case "tour":
     case "post":
     case "faq":
+    case "activityBlock":
+    case "whyChooseVillaBruno":
     case "gallery":
     case "category":
     case "author":

@@ -2,10 +2,19 @@ import { notFound } from "next/navigation"
 import { Metadata } from "next"
 
 import { sanityFetch } from "@/sanity/lib/client"
-import { ACCOMMODATION_QUERY } from "@/sanity/lib/queries"
+import {
+  ACCOMMODATION_QUERY,
+  ACTIVITY_BLOCK_QUERY,
+  WHY_CHOOSE_VILLA_BRUNO_QUERY,
+} from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import AccommodationClientPage from "./AccommodationClientPage"
-import { FAQType, SanityImageObject } from "@/types"
+import {
+  ActivityBlock,
+  FAQType,
+  SanityImageObject,
+  WhyChooseData,
+} from "@/types"
 import { PricingRule } from "@/lib/pricingEngine"
 import {
   buildLodgingBusinessSchema,
@@ -163,7 +172,17 @@ export type AccommodationContent = {
   logistics?: Array<{
     title: string
     description: string
-    type?: string
+    category: string
+    checkInTime?: string
+    checkOutTime?: string
+    earlyCheckIn?: boolean
+    earlyCheckInFee?: number
+    lateCheckOut?: boolean
+    lateCheckOutFee?: number
+    instructions?: string
+    contactInfo?: string
+    address?: string
+    distance?: string
   }>
   translations?: Array<{
     language: string
@@ -171,6 +190,52 @@ export type AccommodationContent = {
     title: string
     description: string
   }>
+  activityBlocks?: Array<{
+    title: string
+    subtitle?: string
+    description?: string
+    slug: { current: string }
+    mainImage?: SanityImageObject
+    activities: Array<{
+      name: string
+      description?: string
+      season?: string
+      duration?: string
+      distanceFromVilla?: string
+      transportIncluded?: boolean
+      difficulty?: string
+      highlights?: string[]
+      icon?: string
+      isFeatured?: boolean
+      sortOrder?: number
+    }>
+  }>
+  whyChooseVillaBruno?: {
+    title: string
+    subtitle?: string
+    description?: string
+    slug: { current: string }
+    mainImage?: SanityImageObject
+    comparisonTable: Array<{
+      feature: string
+      villaBruno: string
+      largeEcoResorts?: string
+      corcovadoLodges?: string
+      traditionalHotels?: string
+      otherVacationRentals?: string
+      category?: string
+      sortOrder?: number
+      isHighlight?: boolean
+    }>
+    keyDifferentiators: Array<{
+      title: string
+      description: string
+      icon?: string
+      sortOrder?: number
+    }>
+    idealFor?: string[]
+    lessSuitableFor?: string[]
+  }
 }
 
 export async function generateMetadata({
@@ -282,11 +347,23 @@ const AccommodationPage = async ({
 }) => {
   const { locale } = await params
 
-  const content: AccommodationContent = await sanityFetch({
-    query: ACCOMMODATION_QUERY,
-    params: { slug, language: locale },
-    revalidate: 0,
-  })
+  const [content, activityBlocks, whyChoose] = await Promise.all([
+    sanityFetch<AccommodationContent>({
+      query: ACCOMMODATION_QUERY,
+      params: { slug, language: locale },
+      revalidate: 0,
+    }),
+    sanityFetch<ActivityBlock[]>({
+      query: ACTIVITY_BLOCK_QUERY,
+      params: { language: locale },
+      revalidate: 0,
+    }),
+    sanityFetch<WhyChooseData | null>({
+      query: WHY_CHOOSE_VILLA_BRUNO_QUERY,
+      params: { language: locale },
+      revalidate: 0,
+    }),
+  ])
 
   if (!content?.isPublished) notFound()
 
@@ -302,7 +379,13 @@ const AccommodationPage = async ({
       mainImage={content?.mainImage}
       images={content?.slideshow?.images}
     >
-      <AccommodationClientPage content={content} locale={locale} />
+      <AccommodationClientPage
+        content={content}
+        locale={locale}
+        activityBlocks={activityBlocks}
+        whyChoose={whyChoose}
+      />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
