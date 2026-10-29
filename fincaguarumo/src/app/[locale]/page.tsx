@@ -12,6 +12,7 @@ import {
   staticKnowsAbout,
   staticSameAs,
 } from "@/lib/schema/lodgingBusiness"
+import { orgSchema } from "@/lib/villa-json-ld"
 
 const baseUrl = "https://fincaguarumo.com"
 
@@ -48,7 +49,7 @@ const homePageSchema = buildLodgingBusinessSchema({
 
 const jsonLd = (data: { locale: string }) => ({
   "@context": "https://schema.org",
-  "@graph": [buildWebSiteSchema(data.locale), homePageSchema],
+  "@graph": [buildWebSiteSchema(data.locale), homePageSchema, orgSchema],
 })
 
 export async function generateMetadata({
@@ -63,6 +64,15 @@ export async function generateMetadata({
     params: { language: locale },
     revalidate: 60,
   })
+
+  if (locale !== "en") {
+    return {
+      robots: "noindex, nofollow",
+      alternates: {
+        canonical: baseUrl,
+      },
+    }
+  }
 
   const title = content?.hero_title
     ? `${content.hero_title} - Finca Guarumo`

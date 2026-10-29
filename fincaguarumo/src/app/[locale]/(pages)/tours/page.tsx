@@ -136,27 +136,6 @@ const toursPageJsonLd = (data: {
     },
     corcovadoAttractionSchema,
     golfoDulceAttractionSchema,
-    {
-      "@type": "LodgingBusiness",
-      additionalType: "VacationRental",
-      name: "Villa Bruno at Finca Guarumo",
-      url: `${baseUrl}/villa-bruno`,
-      description:
-        "Base for all tours - off-grid eco-villa with 100% solar power, Starlink WiFi, and exceptional on-property wildlife viewing.",
-      address: {
-        "@type": "PostalAddress",
-        streetAddress: "Calle La Balsa, 6 km from Puerto Jiménez",
-        addressLocality: "Puerto Jiménez",
-        addressRegion: "Puntarenas",
-        postalCode: "60702",
-        addressCountry: "CR",
-      },
-      geo: {
-        "@type": "GeoCoordinates",
-        latitude: 8.496420632614996,
-        longitude: -83.3341457939961,
-      },
-    },
   ],
 })
 

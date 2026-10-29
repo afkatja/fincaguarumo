@@ -22,6 +22,7 @@ import {
   gbpUrl,
   airbnbUrl,
 } from "@/lib/schema/lodgingBusiness"
+import { orgSchema } from "@/lib/villa-json-ld"
 import { getLocalizedUrl } from "@/lib/url"
 
 const slug = "villa-bruno"
@@ -113,7 +114,7 @@ const jsonLd = (data: {
   amenities?: Array<{ title: string; description: string; icon?: string }>
 }) => ({
   "@context": "https://schema.org",
-  ...buildVillaBrunoSchema(data),
+  "@graph": [buildVillaBrunoSchema(data), orgSchema],
 })
 
 export type AccommodationContent = {
