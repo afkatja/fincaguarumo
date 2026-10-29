@@ -230,14 +230,6 @@ export function buildWebSiteSchema(locale: string) {
     url: baseUrl,
     description:
       "Sustainable eco-lodge in Costa Rica's Osa Peninsula offering off-grid luxury accommodation near Corcovado National Park",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${baseUrl}/search?q={search_term_string}`,
-      },
-      queryInput: "required name=search_term_string",
-    },
     publisher: {
       "@type": "Organization",
       name: "Finca Guarumo",
