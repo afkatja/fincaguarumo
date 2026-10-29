@@ -56,18 +56,20 @@ function handleBlogLocaleRedirect(request: NextRequest): NextResponse | null {
   return null
 }
 
-// Handle /en and /en/ redirect to root with 308 (permanent)
+// Strip one or more leading /en segments in a single 308 hop.
+// Covers /en, /en/, /en/villa-bruno, and /en/en/blog/...
 function handleDefaultLocaleRedirect(request: NextRequest): NextResponse | null {
   const pathname = request.nextUrl.pathname
-  
-  // Match /en or /en/ (with optional trailing slash)
-  if (pathname === "/en" || pathname === "/en/") {
-    const redirectUrl = new URL("/", request.url)
-    // Preserve non-tracking search params
-    const cleanUrl = stripTrackingParams(redirectUrl)
-    return NextResponse.redirect(cleanUrl, 308)
-  }
-  return null
+  const segments = pathname.split("/").filter(Boolean)
+  if (segments[0] !== "en") return null
+
+  let i = 0
+  while (segments[i] === "en") i++
+  const rest = segments.slice(i)
+  const targetPath = rest.length === 0 ? "/" : `/${rest.join("/")}`
+  const redirectUrl = new URL(targetPath, request.url)
+  redirectUrl.search = request.nextUrl.search
+  return NextResponse.redirect(stripTrackingParams(redirectUrl), 308)
 }
 
 // Handle tracking parameter stripping
@@ -185,6 +187,6 @@ export default async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Match all paths including admin routes
-    "/((?!api|_next/static|_next/image|images|studio|favicon|assets|robots|_redirects|llms|sitemap.xml).*)",
+    "/((?!api|_next/static|_next/image|images|studio|favicon|assets|robots|_redirects|llms|sitemap.xml|sitemap_index.xml).*)",
   ],
 }
