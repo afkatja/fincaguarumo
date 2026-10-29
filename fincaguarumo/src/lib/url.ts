@@ -46,11 +46,15 @@ export function buildHreflangAlternates(
   return languages
 }
 
+/**
+ * English is the source locale and is always treated as translated,
+ * even when Sanity has no translation.metadata document yet.
+ */
 export function hasTranslation(
   translations: Array<{ language: string; slug?: { current: string } }> | undefined,
   locale: string
 ): boolean {
+  if (locale === "en") return true
   if (!translations) return false
-  if (locale === "en") return true // English is always the source
   return translations.some(t => t.language === locale && t.slug?.current)
 }
