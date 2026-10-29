@@ -32,6 +32,17 @@ const TRANSLATABLE_FIELDS = {
     "featured_content_title",
     "featured_blog_title",
   ],
+  activityBlock: ["children"],
+  whyChooseVillaBruno: ["title", "CTA_button"],
+  locationPage: ["title", "subtitle", "description", "body"],
+  accommodation: [
+    "title",
+    "subtitle",
+    "description",
+    "summary",
+    "body",
+    "highlightFeatures",
+  ],
 }
 
 export async function POST(request: Request) {
