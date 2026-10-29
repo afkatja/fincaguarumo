@@ -50,6 +50,7 @@ function handleBlogLocaleRedirect(request: NextRequest): NextResponse | null {
     if (pathname === `/${locale}/blog` || pathname.startsWith(`/${locale}/blog/`)) {
       const targetPath = pathname.replace(`/${locale}/blog`, "/blog")
       const redirectUrl = new URL(targetPath, request.url)
+      redirectUrl.search = request.nextUrl.search
       return NextResponse.redirect(redirectUrl, 308)
     }
   }

@@ -1,6 +1,4 @@
 import { Metadata } from "next"
-import { locales } from "../../config"
-import { getLocalizedUrl } from "@/lib/url"
 
 const localeMap: Record<string, string> = {
   en: "en_US",
@@ -11,21 +9,7 @@ const localeMap: Record<string, string> = {
 }
 
 export async function generateMetadata({ params }: any): Promise<Metadata> {
-  const { locale, pathname } = await params
-
-  const currentPath = pathname || "/"
-  const isHomepage = currentPath === "/"
-
-  // Build canonical URL using locale-aware helper
-  const canonicalUrl = getLocalizedUrl(currentPath, locale)
-
-  // Build hreflang alternates - only include locales that actually have content
-  // For now, only English has full content; others fall back to English
-  // TODO: Add other locales when translations are complete
-  const alternates: Record<string, string> = {
-    "x-default": getLocalizedUrl(currentPath, "en"),
-    [locale]: canonicalUrl,
-  }
+  const { locale } = await params
 
   return {
     title: {
@@ -41,10 +25,6 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
       shortcut: "/favicon/safari-pinned-tab.svg",
     },
     robots: "index, follow",
-    alternates: {
-      canonical: canonicalUrl,
-      languages: alternates,
-    },
     openGraph: {
       title: "Finca Guarumo",
       description:
@@ -60,7 +40,6 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
       type: "website",
       locale: localeMap[locale] || "en_US",
       siteName: "Finca Guarumo",
-      url: canonicalUrl,
       countryName: "Costa Rica",
     },
     twitter: {

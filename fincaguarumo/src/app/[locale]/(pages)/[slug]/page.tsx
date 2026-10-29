@@ -111,7 +111,6 @@ export async function generateMetadata({
 
   // Build hreflang alternates only for locales with actual translations
   const languages: Record<string, string> = {
-    "x-default": getLocalizedUrl(`/${slug}`, "en"),
     [locale]: canonicalUrl,
   }
 
@@ -121,6 +120,11 @@ export async function generateMetadata({
         languages[t.language] = getLocalizedUrl(`/${t.slug.current}`, t.language)
       }
     }
+  }
+
+  // Set x-default from English translation if it exists
+  if (languages.en) {
+    languages["x-default"] = languages.en
   }
 
   // Use page-specific image if available, fallback to default

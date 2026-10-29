@@ -61,7 +61,6 @@ export async function generateTourMetadata({
 
   // Build hreflang alternates only for locales with actual translations
   const languages: Record<string, string> = {
-    "x-default": getLocalizedUrl(`/tours/${slug}`, "en"),
     [locale]: canonicalUrl,
   }
 
@@ -71,6 +70,11 @@ export async function generateTourMetadata({
         languages[t.language] = getLocalizedUrl(`/tours/${t.slug.current}`, t.language)
       }
     }
+  }
+
+  // Set x-default from English translation if it exists
+  if (languages.en) {
+    languages["x-default"] = languages.en
   }
 
   const ogImageUrl = tour.mainImage?.url

@@ -116,7 +116,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description: content?.description || "Contact Finca Guarumo",
-      images: [content?.mainImage?.url || "/images/fincaguarumo-v4.4.jpg"],
+      images: [content?.mainImage?.url || "/images/finca-guarumo-v4.4.jpg"],
     },
     other: {
       "og:locale": localeMap[locale] || "en_US",

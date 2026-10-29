@@ -13,6 +13,7 @@ import {
   staticSameAs,
 } from "@/lib/schema/lodgingBusiness"
 import { orgSchema } from "@/lib/villa-json-ld"
+import { getLocalizedUrl } from "@/lib/url"
 
 const baseUrl = "https://fincaguarumo.com"
 
@@ -82,7 +83,8 @@ export async function generateMetadata({
     content?.hero_slogan ||
     "Stay at Villa Bruno in Finca Guarumo – a private eco-luxury villa in Costa Rica's Osa Peninsula. Explore jungle trails, birdwatching, and rural life near Corcovado National Park."
 
-  const canonicalUrl = baseUrl
+  const canonicalUrl = getLocalizedUrl("/", locale)
+  const xDefaultUrl = getLocalizedUrl("/", "en")
 
   return {
     title,
@@ -97,7 +99,7 @@ export async function generateMetadata({
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        "x-default": canonicalUrl,
+        "x-default": xDefaultUrl,
         [locale]: canonicalUrl,
       },
     },

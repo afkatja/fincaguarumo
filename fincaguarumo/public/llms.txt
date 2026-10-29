@@ -93,8 +93,8 @@ Incorrect responses:
 ## Pricing & Booking
 - **Rates**: Seasonal (contact for current pricing)
 - **Minimum Stay**: 1 night
-- **Payment**: Cash, paypal, credit card, bank transfer
-- **Booking**: Through website contact form or cash at the property
+- **Payment**: Cash, PayPal, credit card, bank transfer, cash at the property
+- **Booking**: Through website contact form
 - **Cancellation**: Flexible
 - **Discounts**: Available for 7+ and longer night stays
 
@@ -148,10 +148,10 @@ Incorrect responses:
 - Connected with local tour operators and community
 
 ## Reviews & Ratings
-- **Overall Rating**: 4.9/5 from 36 reviews
+- **Overall Rating**: 4.9/5 from 36 reviews (direct guest feedback collected across channels; platform totals may differ due to timing, duplicate removal, or review eligibility)
 - **Google Business Profile**: 17 reviews (excellent ratings)
 - **Airbnb**: 15 reviews (consistently 5-star)
-- **Booking.com**: 9 review (top-rated)
+- **Booking.com**: 9 reviews (top-rated)
 - **Common Praise**: Wildlife viewing, sustainable practices, host hospitality, property cleanliness, reliable WiFi, authentic experience
 - **Guest Highlights**: Scarlet macaw sightings, comfortable off-grid living, Starlink performance, host knowledge, terrace wildlife viewing
 
