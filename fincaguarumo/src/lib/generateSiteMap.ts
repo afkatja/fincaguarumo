@@ -5,6 +5,7 @@ import {
   ALL_PAGES_QUERY,
   POSTS_QUERY,
   TOURS_QUERY,
+  LOCATION_PAGE_QUERY,
 } from "../sanity/lib/queries"
 import { MetadataRoute } from "next"
 import { locales } from "../config"
@@ -24,8 +25,9 @@ const fetchContent = async (): Promise<{
   tours: SanityDocument[]
   pages: SanityDocument[]
   accommodation: SanityDocument
+  locationPage: SanityDocument
 }> => {
-  const [posts, tours, pages, accommodation] = await Promise.all([
+  const [posts, tours, pages, accommodation, locationPage] = await Promise.all([
     sanityFetch({ query: POSTS_QUERY }) as Promise<SanityDocument[]>,
     sanityFetch({ query: TOURS_QUERY, params: { language: "en" } }) as Promise<
       SanityDocument[]
@@ -35,9 +37,13 @@ const fetchContent = async (): Promise<{
       query: ACCOMMODATION_QUERY,
       params: { language: "en", slug: "villa-bruno" },
     }) as Promise<SanityDocument>,
+    sanityFetch({
+      query: LOCATION_PAGE_QUERY,
+      params: { language: "en", slug: "location" },
+    }) as Promise<SanityDocument>,
   ])
 
-  return { posts, tours, pages, accommodation }
+  return { posts, tours, pages, accommodation, locationPage }
 }
 
 function getUrlForLocale(path: string, locale: string): string {
@@ -69,7 +75,7 @@ function safeDate(dateString: string | undefined): Date {
 }
 
 export const generateSitemap = async () => {
-  const { posts, tours, pages, accommodation } = await fetchContent()
+  const { posts, tours, pages, accommodation, locationPage } = await fetchContent()
 
   const urls: MetadataRoute.Sitemap = []
 
@@ -98,6 +104,7 @@ export const generateSitemap = async () => {
     { path: "/tours", priority: 0.85, changeFrequency: "weekly" as const, lastmod: new Date() },
     { path: "/contact", priority: 0.8, changeFrequency: "monthly" as const, lastmod: new Date() },
     { path: "/gallery", priority: 0.7, changeFrequency: "weekly" as const, lastmod: new Date() },
+    { path: "/location", priority: 0.85, changeFrequency: "monthly" as const, lastmod: new Date() },
   ]
 
   for (const page of staticPages) {
@@ -110,6 +117,19 @@ export const generateSitemap = async () => {
       alternates,
       changeFrequency: page.changeFrequency,
       priority: page.priority,
+    })
+  }
+
+  // Location page from Sanity (if published)
+  if (locationPage?.isPublished) {
+    const path = `/location`
+    const alternates = buildAlternates({ en: path })
+    urls.push({
+      url: getUrlForLocale(path, "en"),
+      lastModified: safeDate(locationPage._updatedAt),
+      alternates,
+      changeFrequency: "monthly" as const,
+      priority: 0.85,
     })
   }
 
