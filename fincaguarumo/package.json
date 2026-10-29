@@ -16,6 +16,7 @@
     "i18n:watch": "nodemon --watch src/messages/en.json --exec \"npm run i18n:run\"",
     "i18n:check": "tsx scripts/check-translations.ts",
     "i18n:ai": "tsx scripts/translate-ai.ts",
+    "translate:sanity-ai": "tsx --tsconfig tsconfig.scripts.json scripts/translate-sanity-ai.ts",
     "prepare": "husky",
     "translate": "npm run i18n:run",
     "manual-email": "NODE_ENV=production npx tsc --project tsconfig.build.json && MAILERSEND_FROM_EMAIL='info@fincaguarumo.com' CONTACT_EMAIL='info@fincaguarumo.com' CONTACT_PHONE='+506 87495341' NODE_ENV=production node dist/scripts/send-email.js",
