@@ -53,7 +53,9 @@ function getUrlForLocale(path: string, locale: string): string {
   return `${baseUrl}/${locale}${path}`
 }
 
-function buildAlternates(pathsByLocale: Record<string, string>): MetadataRoute.Sitemap[0]["alternates"] {
+function buildAlternates(
+  pathsByLocale: Record<string, string>,
+): MetadataRoute.Sitemap[0]["alternates"] {
   const languages: Record<string, string> = {}
   for (const locale of locales) {
     const path = pathsByLocale[locale]
@@ -75,7 +77,8 @@ function safeDate(dateString: string | undefined): Date {
 }
 
 export const generateSitemap = async () => {
-  const { posts, tours, pages, accommodation, locationPage } = await fetchContent()
+  const { posts, tours, pages, accommodation, locationPage } =
+    await fetchContent()
 
   const urls: MetadataRoute.Sitemap = []
 
@@ -96,20 +99,47 @@ export const generateSitemap = async () => {
   })
 
   // 2. Static pages - only include English versions since translations don't exist
+  // /villa-bruno and /location are emitted by their dedicated Sanity blocks below
   const staticPages = [
-    { path: "/villa-bruno", priority: 0.9, changeFrequency: "weekly" as const, lastmod: new Date() },
-    { path: "/about", priority: 0.9, changeFrequency: "monthly" as const, lastmod: new Date() },
-    { path: "/faq", priority: 0.85, changeFrequency: "weekly" as const, lastmod: new Date() },
-    { path: "/reviews", priority: 0.9, changeFrequency: "weekly" as const, lastmod: new Date() },
-    { path: "/tours", priority: 0.85, changeFrequency: "weekly" as const, lastmod: new Date() },
-    { path: "/contact", priority: 0.8, changeFrequency: "monthly" as const, lastmod: new Date() },
-    { path: "/gallery", priority: 0.7, changeFrequency: "weekly" as const, lastmod: new Date() },
-    { path: "/location", priority: 0.85, changeFrequency: "monthly" as const, lastmod: new Date() },
+    {
+      path: "/about",
+      priority: 0.9,
+      changeFrequency: "monthly" as const,
+      lastmod: new Date(),
+    },
+    {
+      path: "/faq",
+      priority: 0.85,
+      changeFrequency: "weekly" as const,
+      lastmod: new Date(),
+    },
+    {
+      path: "/reviews",
+      priority: 0.9,
+      changeFrequency: "weekly" as const,
+      lastmod: new Date(),
+    },
+    {
+      path: "/tours",
+      priority: 0.85,
+      changeFrequency: "weekly" as const,
+      lastmod: new Date(),
+    },
+    {
+      path: "/contact",
+      priority: 0.8,
+      changeFrequency: "monthly" as const,
+      lastmod: new Date(),
+    },
+    {
+      path: "/gallery",
+      priority: 0.7,
+      changeFrequency: "weekly" as const,
+      lastmod: new Date(),
+    },
   ]
 
   for (const page of staticPages) {
-    // Check if any non-English locale has this page translated
-    const hasTranslation = pages.some(p => p.slug.current === page.path.replace("/", "") && p.language !== "en")
     const alternates = buildAlternates({ en: page.path })
     urls.push({
       url: getUrlForLocale(page.path, "en"),
