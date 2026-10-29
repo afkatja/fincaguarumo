@@ -92,9 +92,7 @@ const getLanguageItems = (
               )
               .params({ type: schemaType, lang: lang.id })
               .apiVersion("v2025-02-19")
-              .initialValueTemplates([
-                S.initialValueTemplateItem(`${schemaType}-${lang.id}`),
-              ]),
+              .initialValue({ language: lang.id }),
           )
       }),
     )
