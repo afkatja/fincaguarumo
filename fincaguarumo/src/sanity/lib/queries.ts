@@ -62,8 +62,17 @@ export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current) && (l
   mainImage ${mainImageWithUrl},
   _createdAt, _updatedAt, isPublished
 }`
-export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][]{
-  _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished
+export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current) && language == "en"][]{
+  _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished,
+  "translations": *[
+    _type == "translation.metadata" &&
+    ^._id in translations[].value._ref
+  ][0].translations[]{
+    ...(value->{
+      language,
+      slug
+    })
+  }
 }`
 
 export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && language == $language][0] {
