@@ -120,10 +120,14 @@ export const structure: StructureResolver = S => {
       S.listItem()
         .title("Posts")
         .child(getLanguageItems(S, "post", "Posts")),
-
       S.listItem()
         .title("FAQ")
         .child(getLanguageItems(S, "faq", "FAQ")),
+      S.listItem()
+        .title("Location")
+        .child(
+          getTranslationItems(S, "locationPage", "Location", "standalone"),
+        ),
 
       S.divider(),
       // Booking and Property Management

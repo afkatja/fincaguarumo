@@ -4,22 +4,35 @@ import { Button } from "./ui/button"
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
 interface CollapsibleSectionProps {
-  title: string
+  title: React.ReactNode
   children: React.ReactNode
   defaultExpanded?: boolean
+  isExpanded?: boolean
+  onToggle?: () => void
   className?: string
+  displayOnDesktop?: boolean
 }
 
 export const CollapsibleSection = ({
   title,
   children,
   defaultExpanded = false,
+  isExpanded: controlledExpanded,
+  onToggle,
   className = "",
+  displayOnDesktop = false,
 }: CollapsibleSectionProps) => {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  const [uncontrolledExpanded, setUncontrolledExpanded] =
+    useState(defaultExpanded)
+  const isControlled = controlledExpanded !== undefined
+  const isExpanded = isControlled ? controlledExpanded : uncontrolledExpanded
 
   const handleToggle = () => {
-    setIsExpanded(!isExpanded)
+    if (isControlled) {
+      onToggle?.()
+    } else {
+      setUncontrolledExpanded(!uncontrolledExpanded)
+    }
   }
 
   return (
@@ -28,7 +41,7 @@ export const CollapsibleSection = ({
     >
       <Button
         variant="ghost"
-        className="w-full justify-between px-4 py-3 h-auto hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors md:hidden"
+        className={`w-full justify-between px-4 py-3 h-auto hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors hover:translate-y-0 hover:shadow-none ${displayOnDesktop ? "" : "md:hidden"}`}
         onClick={handleToggle}
       >
         <span className="font-medium text-zinc-900 dark:text-zinc-100">
@@ -49,8 +62,10 @@ export const CollapsibleSection = ({
       <div
         className={`transition-all duration-300 ease-in-out ${
           isExpanded
-            ? "max-h-[400px] opacity-100"
-            : "md:max-h-none md:opacity-100 max-h-0 opacity-0 overflow-hidden"
+            ? "max-h-none opacity-100"
+            : displayOnDesktop
+              ? "max-h-0 opacity-0 overflow-hidden"
+              : "md:max-h-none md:opacity-100"
         }`}
       >
         <div className="p-4 pt-0 md:p-0">{children}</div>

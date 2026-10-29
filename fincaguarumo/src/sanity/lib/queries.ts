@@ -723,6 +723,7 @@ export const WHY_CHOOSE_VILLA_BRUNO_QUERY = groq`*[_type == 'whyChooseVillaBruno
 }`
 
 export const LOCATION_PAGE_QUERY = groq`*[_type == 'locationPage' && slug.current == $slug && language == $language][0] {
+  isPublished,
   title,
   subtitle,
   description,
