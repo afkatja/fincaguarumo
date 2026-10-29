@@ -6,11 +6,17 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: ["/"],
-        disallow: ["/studio/", "/login/", "/register/"],
-      },
-      {
-        userAgent: "*",
-        disallow: ["/*.pdf$", "/*.doc$"],
+        disallow: [
+          "/api/",
+          "/studio/",
+          "/login/",
+          "/register/",
+          "/admin/",
+          "/_next/",
+          "/_redirects",
+          "*.pdf$",
+          "*.doc$",
+        ],
       },
     ],
     sitemap: "https://fincaguarumo.com/sitemap.xml",

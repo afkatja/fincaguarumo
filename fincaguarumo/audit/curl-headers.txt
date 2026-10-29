@@ -1,0 +1,334 @@
+===== https://fincaguarumo.com/robots.txt =====
+HTTP/2 200 
+age: 957766
+cache-control: public,max-age=0,must-revalidate
+cache-status: "Next.js"; hit
+cache-status: "Netlify Durable"; fwd=stale; ttl=30578235; stored
+cache-status: "Netlify Edge"; fwd=stale; fwd-status=200; stored
+content-type: text/plain
+date: Mon, 19 Oct 2026 16:28:42 GMT
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc, cookie=__prerender_bypass|__next_preview_data
+server: Netlify
+strict-transport-security: max-age=31536000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-content-type-options: nosniff
+x-nextjs-date: Mon, 19 Oct 2026 16:28:42 GMT
+x-nf-request-id: 01M5AFWT4DKG9N8H3Y4NRE0YRW
+
+===== https://fincaguarumo.com/sitemap.xml =====
+HTTP/2 200 
+age: 1
+cache-control: public,max-age=0,must-revalidate
+cache-status: "Netlify Durable"; fwd=bypass
+cache-status: "Netlify Edge"; fwd=miss; fwd-status=200; stored
+content-type: application/xml
+date: Mon, 19 Oct 2026 16:28:43 GMT
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc, cookie=__prerender_bypass|__next_preview_data
+server: Netlify
+strict-transport-security: max-age=31536000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-content-type-options: nosniff
+x-nf-request-id: 01M5AFWVHKTYRKNHYE6AEEDBQ8
+
+===== https://fincaguarumo.com/sitemap_index.xml =====
+HTTP/2 200 
+age: 0
+cache-control: private,no-cache,no-store,max-age=0,must-revalidate
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200
+content-language: en
+content-type: text/html; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:44 GMT
+link: <https://fincaguarumo.com/sitemap_index.xml>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl/sitemap_index.xml>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es/sitemap_index.xml>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru/sitemap_index.xml>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de/sitemap_index.xml>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/sitemap_index.xml>; rel="alternate"; hreflang="x-default"
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc|accept-encoding, cookie=__prerender_bypass|__next_preview_data
+server: Netlify
+set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-content-type-options: nosniff
+x-middleware-rewrite: /en/sitemap_index.xml
+x-nf-request-id: 01M5AFWWN8HNHXP9XGCE7A9DFP
+x-powered-by: Next.js
+
+===== https://fincaguarumo.com/llms.txt =====
+HTTP/2 200 
+accept-ranges: bytes
+age: 0
+cache-control: public,max-age=0,must-revalidate
+cache-status: "Netlify Edge"; fwd=miss; fwd-status=200; stored
+content-type: text/plain; charset=UTF-8
+date: Mon, 19 Oct 2026 16:28:45 GMT
+etag: "756348f98ad360e37457853591819f20-ssl"
+permissions-policy: geolocation=(), microphone=(), camera=()
+referrer-policy: strict-origin-when-cross-origin
+server: Netlify
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+vary: Accept-Encoding
+x-frame-options: DENY
+x-nf-request-id: 01M5AFWXK71F84H8WA2H4X39QQ
+x-xss-protection: 1; mode=block
+content-length: 9568
+
+===== https://fincaguarumo.com/ =====
+HTTP/2 200 
+age: 0
+cache-control: private,no-cache,no-store,max-age=0,must-revalidate
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200
+content-language: en
+content-type: text/html; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:45 GMT
+link: <https://fincaguarumo.com/>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/>; rel="alternate"; hreflang="x-default"
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc|accept-encoding, cookie=__prerender_bypass|__next_preview_data
+server: Netlify
+set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-content-type-options: nosniff
+x-middleware-rewrite: /en
+x-nf-request-id: 01M5AFWY3AXSE1W984GCT6XCYC
+x-powered-by: Next.js
+
+===== https://fincaguarumo.com/en =====
+HTTP/2 307 
+content-language: en
+date: Mon, 19 Oct 2026 16:28:46 GMT
+location: /
+server: Netlify
+set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+x-middleware-set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+x-nf-request-id: 01M5AFWYTQMWDPHCTZQP4VH01Q
+content-length: 0
+
+HTTP/2 200 
+age: 0
+cache-control: private,no-cache,no-store,max-age=0,must-revalidate
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200
+content-language: en
+content-type: text/html; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:46 GMT
+link: <https://fincaguarumo.com/>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/>; rel="alternate"; hreflang="x-default"
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc|accept-encoding, cookie=__prerender_bypass|__next_preview_data
+server: Netlify
+set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-content-type-options: nosniff
+x-middleware-rewrite: /en
+x-nf-request-id: 01M5AFWYZBW6HXD7T7RH4YDZ8X
+x-powered-by: Next.js
+
+===== https://fincaguarumo.com/en/ =====
+HTTP/2 307 
+content-language: en
+date: Mon, 19 Oct 2026 16:28:46 GMT
+location: /
+server: Netlify
+set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+x-middleware-set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+x-nf-request-id: 01M5AFWZF8079186A0R7TMB2PF
+content-length: 0
+
+HTTP/2 200 
+age: 0
+cache-control: private,no-cache,no-store,max-age=0,must-revalidate
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200
+content-language: en
+content-type: text/html; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:47 GMT
+link: <https://fincaguarumo.com/>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/>; rel="alternate"; hreflang="x-default"
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc|accept-encoding, cookie=__prerender_bypass|__next_preview_data
+server: Netlify
+set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-content-type-options: nosniff
+x-middleware-rewrite: /en
+x-nf-request-id: 01M5AFWZM8706GKZ2GW4EZ7AS4
+x-powered-by: Next.js
+
+===== https://fincaguarumo.com/en/en/blog/osa-peninsula-birdwatching-guide =====
+HTTP/2 307 
+content-language: en
+date: Mon, 19 Oct 2026 16:28:47 GMT
+location: /en/blog/osa-peninsula-birdwatching-guide
+server: Netlify
+set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+x-middleware-set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+x-nf-request-id: 01M5AFX052KXYXTZTPB84WDQQC
+content-length: 0
+
+HTTP/2 307 
+content-language: en
+date: Mon, 19 Oct 2026 16:28:47 GMT
+location: /blog/osa-peninsula-birdwatching-guide
+server: Netlify
+set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+x-middleware-set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+x-nf-request-id: 01M5AFX0A3MH952KK0MHC9SWTF
+content-length: 0
+
+HTTP/2 200 
+age: 1
+cache-control: private,no-cache,no-store,max-age=0,must-revalidate
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200
+content-language: en
+content-type: text/html; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:48 GMT
+link: <https://fincaguarumo.com/blog/osa-peninsula-birdwatching-guide>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl/blog/osa-peninsula-birdwatching-guide>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es/blog/osa-peninsula-birdwatching-guide>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru/blog/osa-peninsula-birdwatching-guide>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de/blog/osa-peninsula-birdwatching-guide>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/blog/osa-peninsula-birdwatching-guide>; rel="alternate"; hreflang="x-default"
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc|accept-encoding, cookie=__prerender_bypass|__next_preview_data
+server: Netlify
+set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-content-type-options: nosniff
+x-middleware-rewrite: /en/blog/osa-peninsula-birdwatching-guide
+x-nf-request-id: 01M5AFX0CVQ90J1BTB9QBWN90W
+x-powered-by: Next.js
+
+===== https://fincaguarumo.com/es/ =====
+HTTP/2 308 
+age: 0
+cache-control: no-cache
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=308; stored
+content-language: es
+content-type: text/plain; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:49 GMT
+link: <https://fincaguarumo.com/>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/>; rel="alternate"; hreflang="x-default"
+location: /es
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc, cookie=__prerender_bypass|__next_preview_data
+refresh: 0;url=/es
+server: Netlify
+set-cookie: NEXT_LOCALE=es; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-nf-request-id: 01M5AFX1NXM3TV5Q5570TQ0RK9
+
+HTTP/2 200 
+age: 0
+cache-control: private,no-cache,no-store,max-age=0,must-revalidate
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200
+content-language: es
+content-type: text/html; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:49 GMT
+link: <https://fincaguarumo.com/>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/>; rel="alternate"; hreflang="x-default"
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc|accept-encoding, cookie=__prerender_bypass|__next_preview_data
+server: Netlify
+set-cookie: NEXT_LOCALE=es; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-content-type-options: nosniff
+x-nf-request-id: 01M5AFX1XRAX40KJSXCA8KSNSM
+x-powered-by: Next.js
+
+===== https://fincaguarumo.com/de/ =====
+HTTP/2 308 
+age: 0
+cache-control: no-cache
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=308; stored
+content-language: de
+content-type: text/plain; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:50 GMT
+link: <https://fincaguarumo.com/>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/>; rel="alternate"; hreflang="x-default"
+location: /de
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc, cookie=__prerender_bypass|__next_preview_data
+refresh: 0;url=/de
+server: Netlify
+set-cookie: NEXT_LOCALE=de; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-nf-request-id: 01M5AFX2H95GHB41TPPPZNHHX6
+
+HTTP/2 200 
+age: 1
+cache-control: private,no-cache,no-store,max-age=0,must-revalidate
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200
+content-language: de
+content-type: text/html; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:51 GMT
+link: <https://fincaguarumo.com/>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/>; rel="alternate"; hreflang="x-default"
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc|accept-encoding, cookie=__prerender_bypass|__next_preview_data
+server: Netlify
+set-cookie: NEXT_LOCALE=de; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-content-type-options: nosniff
+x-nf-request-id: 01M5AFX3126383QNMS5EP5GGC0
+x-powered-by: Next.js
+
+===== https://fincaguarumo.com/nl/ =====
+HTTP/2 308 
+age: 0
+cache-control: no-cache
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=308; stored
+content-language: nl
+content-type: text/plain; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:51 GMT
+link: <https://fincaguarumo.com/>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/>; rel="alternate"; hreflang="x-default"
+location: /nl
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc, cookie=__prerender_bypass|__next_preview_data
+refresh: 0;url=/nl
+server: Netlify
+set-cookie: NEXT_LOCALE=nl; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-nf-request-id: 01M5AFX3YCSWX5CVJA3R9YGJE5
+
+HTTP/2 200 
+age: 0
+cache-control: private,no-cache,no-store,max-age=0,must-revalidate
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200
+content-language: nl
+content-type: text/html; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:51 GMT
+link: <https://fincaguarumo.com/>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/>; rel="alternate"; hreflang="x-default"
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc|accept-encoding, cookie=__prerender_bypass|__next_preview_data
+server: Netlify
+set-cookie: NEXT_LOCALE=nl; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-content-type-options: nosniff
+x-nf-request-id: 01M5AFX44CM4H148Z2DPB8S24J
+x-powered-by: Next.js
+
+===== https://fincaguarumo.com/ru/ =====
+HTTP/2 308 
+age: 0
+cache-control: no-cache
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=308; stored
+content-language: ru
+content-type: text/plain; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:52 GMT
+link: <https://fincaguarumo.com/>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/>; rel="alternate"; hreflang="x-default"
+location: /ru
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc, cookie=__prerender_bypass|__next_preview_data
+refresh: 0;url=/ru
+server: Netlify
+set-cookie: NEXT_LOCALE=ru; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-nf-request-id: 01M5AFX4KMDWS1KPQ1FTCDEG5E
+
+HTTP/2 200 
+age: 0
+cache-control: private,no-cache,no-store,max-age=0,must-revalidate
+cache-status: "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200
+content-language: ru
+content-type: text/html; charset=utf-8
+date: Mon, 19 Oct 2026 16:28:52 GMT
+link: <https://fincaguarumo.com/>; rel="alternate"; hreflang="en", <https://fincaguarumo.com/nl>; rel="alternate"; hreflang="nl", <https://fincaguarumo.com/es>; rel="alternate"; hreflang="es", <https://fincaguarumo.com/ru>; rel="alternate"; hreflang="ru", <https://fincaguarumo.com/de>; rel="alternate"; hreflang="de", <https://fincaguarumo.com/>; rel="alternate"; hreflang="x-default"
+netlify-vary: query=__nextDataReq|_rsc, header=x-nextjs-data|x-next-debug-logging|next-router-prefetch|next-router-segment-prefetch|next-router-state-tree|next-url|rsc|accept-encoding, cookie=__prerender_bypass|__next_preview_data
+server: Netlify
+set-cookie: NEXT_LOCALE=ru; Path=/; SameSite=lax
+strict-transport-security: max-age=31536000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-content-type-options: nosniff
+x-nf-request-id: 01M5AFX4RGQJDAYHPVC66D0PRC
+x-powered-by: Next.js
+

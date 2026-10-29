@@ -5,22 +5,22 @@ import { POSTS_QUERY_RESULT } from "../../../../sanity.types"
 import PagesLayout from "../(pages)/pagesLayout"
 import { SanityDocument } from "next-sanity"
 import { Metadata } from "next"
-import { locales } from "../../../config"
+import { getLocalizedUrl } from "@/lib/url"
 
 // Generate metadata for the blog page
 export async function generateMetadata({
   params,
 }: {
-  params: any
+  params: Promise<{ locale: string }>
 }): Promise<Metadata> {
+  const { locale } = await params
   const pageContent = await sanityFetch<SanityDocument>({
     query: PAGE_QUERY,
     revalidate: 0,
     params: { language: "en", pageName: "blog" },
   })
 
-  const baseUrl = "https://fincaguarumo.com"
-  const canonicalUrl = `${baseUrl}/en/blog`
+  const canonicalUrl = getLocalizedUrl("/blog", locale)
 
   return {
     title: pageContent?.title || "Blog - Finca Guarumo",
@@ -32,7 +32,7 @@ export async function generateMetadata({
         .split(",")
         .map(k => k.trim())
         .filter(Boolean),
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL("https://fincaguarumo.com"),
     robots: "index, follow",
     icons: {
       icon: "/favicon/icon.ico",
@@ -41,6 +41,10 @@ export async function generateMetadata({
     },
     alternates: {
       canonical: canonicalUrl,
+      languages: {
+        "x-default": getLocalizedUrl("/blog", "en"),
+        en: getLocalizedUrl("/blog", "en"),
+      },
     },
     openGraph: {
       title: pageContent?.title || "Blog - Finca Guarumo",
@@ -49,6 +53,7 @@ export async function generateMetadata({
         "Read our latest blog posts about wildlife, sustainability, and life at Finca Guarumo.",
       url: canonicalUrl,
       type: "website",
+      locale: "en_US",
       images: pageContent?.mainImage
         ? [
             {
@@ -70,7 +75,8 @@ export async function generateMetadata({
   }
 }
 
-export default async function Page({ params }: { params: any }) {
+export default async function Page({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
   const pageContent = await sanityFetch<SanityDocument>({
     query: PAGE_QUERY,
     revalidate: 0,
@@ -91,14 +97,14 @@ export default async function Page({ params }: { params: any }) {
 
   return (
     <PagesLayout
-      locale="en"
+      locale={locale}
       pageName="blog"
       title={pageContent?.title}
       subtitle={pageContent?.subtitle}
       mainImage={pageContent?.mainImage}
       description={pageContent?.description}
     >
-      <Posts posts={postsOrdered} locale="en" />
+      <Posts posts={postsOrdered} locale={locale} />
     </PagesLayout>
   )
 }

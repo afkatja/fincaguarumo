@@ -21,7 +21,7 @@ import { generateMetadata } from "./meta"
 import { i18n } from "../../../languages"
 import Header from "../../components/header"
 import { cn } from "../../lib/utils"
-import { jsonLd, orgSchema } from "../../lib/villa-json-ld"
+
 import BookingDialog from "./(pages)/BookingDialog"
 
 export { generateMetadata }
@@ -115,12 +115,6 @@ export default async function Layout({
           </TransitionProvider>
           <Footer />
         </NextIntlClientProvider>
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLd).replace(/</g, "\\u003c")}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(orgSchema).replace(/</g, "\\u003c")}
-        </script>
       </body>
     </html>
   )

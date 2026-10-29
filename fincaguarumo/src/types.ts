@@ -243,3 +243,51 @@ export type IDialog = {
   ok?: IField[]
   cancel?: IField[]
 }
+
+export interface ActivityBlock {
+  title: string
+  subtitle?: string
+  description?: string
+  slug: { current: string }
+  mainImage?: { url: string; alt?: string }
+  activities: Array<{
+    name: string
+    description?: string
+    season?: string
+    duration?: string
+    distanceFromVilla?: string
+    transportIncluded?: boolean
+    difficulty?: string
+    highlights?: string[]
+    icon?: string
+    isFeatured?: boolean
+    sortOrder?: number
+  }>
+}
+
+export interface WhyChooseData {
+  title: string
+  subtitle?: string
+  description?: string
+  slug: { current: string }
+  mainImage?: { url: string; alt?: string }
+  comparisonTable: Array<{
+    feature: string
+    villaBruno: string
+    largeEcoResorts?: string
+    corcovadoLodges?: string
+    traditionalHotels?: string
+    otherVacationRentals?: string
+    category?: string
+    sortOrder?: number
+    isHighlight?: boolean
+  }>
+  keyDifferentiators: Array<{
+    title: string
+    description: string
+    icon?: string
+    sortOrder?: number
+  }>
+  idealFor?: string[]
+  lessSuitableFor?: string[]
+}

@@ -19,14 +19,14 @@ type LocationReviewsMode = "infinite" | "preview"
 
 /**
  * Displays reviews from GBP API and Sanity CMS with pagination support.
- * 
+ *
  * Supports two display modes:
  * - "infinite": Loads all reviews incrementally with "Load more" button (reviews page)
  * - "preview": Shows only initialCount reviews with "Read all reviews" link (home/accommodation pages)
- * 
+ *
  * Combines reviews from GBP API (Google Business Profile) and Sanity CMS,
  * sorted by date (newest first). Uses FadeInObserver for smooth scroll animations.
- * 
+ *
  * @param initialCount - Number of reviews to show initially (default: 8)
  * @param showMoreLink - Whether to show "Load more" or "Read all reviews" link (default: true)
  * @param mode - Display mode: "infinite" for pagination, "preview" for limited preview
@@ -73,7 +73,7 @@ export const LocationReviews = ({
   // Load more - if more reviews available locally, just show them; otherwise fetch more GBP pages
   /**
    * Handles "Load more" button click.
-   * 
+   *
    * Behavior depends on mode:
    * - In preview mode: never calls loadMore, just shows link to reviews page
    * - In infinite mode:
@@ -114,7 +114,6 @@ export const LocationReviews = ({
   const hasMoreToShow = isPreviewMode
     ? allReviews.length > initialCount
     : !isAllLoaded
-  console.log({ allReviewsLength: allReviews.length })
 
   return (
     <div className="py-5 lg:px-40 mt-5">

@@ -93,8 +93,8 @@ const Video = ({
           }`}
           priority
           fetchPriority="high"
-          placeholder="blur"
-          blurDataURL={blurDataURL}
+          {...(blurDataURL && { placeholder: "blur" })}
+          {...(blurDataURL && { blurDataURL })}
         />
       ) : (
         <ImageFallback shouldHideFallback={videoVisible} />

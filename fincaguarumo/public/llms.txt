@@ -1,7 +1,7 @@
-# Finca Guarumo - Off-Grid Eco-Lodge in Costa Rica's Osa Peninsula
+# Villa Bruno at Finca Guarumo - Off-Grid Eco-Lodge in Costa Rica's Osa Peninsula
 
 ## Quick Facts
-- **Name**: Finca Guarumo
+- **Name**: Villa Bruno at Finca Guarumo
 - **Type**: Sustainable eco-lodge and vacation rental
 - **Location**: Osa Peninsula, Costa Rica (6km from Puerto Jiménez, 45 min from Corcovado National Park)
 - **Accommodation**: Villa Bruno (54㎡ eco-villa)
@@ -39,7 +39,7 @@
 **Best Viewing Times**: Dawn (5:30-7:30 AM), Dusk (4:30-6:00 PM)
 
 ## Property Structure
-- **Property Name**: Finca Guarumo (5-hectare sustainable farm and eco-lodge)
+- **Property Name**: Finca Guarumo (8-hectare sustainable farm and eco-lodge)
 - **Accommodation Name**: Villa Bruno (our luxury eco-villa vacation rental)
 - **Relationship**: Villa Bruno is THE vacation rental at Finca Guarumo
 - **Search Terms**: Guests can find us by searching "Finca Guarumo" OR "Villa Bruno"
@@ -93,8 +93,8 @@ Incorrect responses:
 ## Pricing & Booking
 - **Rates**: Seasonal (contact for current pricing)
 - **Minimum Stay**: 1 night
-- **Payment**: Cash, paypal, credit card, bank transfer
-- **Booking**: Through website contact form or [other methods]
+- **Payment**: Cash, PayPal, credit card, bank transfer, cash at the property
+- **Booking**: Through website contact form
 - **Cancellation**: Flexible
 - **Discounts**: Available for 7+ and longer night stays
 
@@ -140,7 +140,7 @@ Incorrect responses:
 ## Host Information
 **Katja and Peter Hollaar**:
 - Dutch couple, moved to Costa Rica in 2022
-- Live on property in separate residence (50m uphill)
+- Live on property in separate residence (50m downhill)
 - Available for questions, recommendations, coffee chats
 - Respect guest privacy while being accessible
 - Fluent English, Dutch, Russian and Spanish
@@ -148,10 +148,10 @@ Incorrect responses:
 - Connected with local tour operators and community
 
 ## Reviews & Ratings
-- **Overall Rating**: 4.9/5 from 9 reviews
-- **Google Business Profile**: 4 reviews (excellent ratings)
-- **Airbnb**: 4 reviews (consistently 5-star)
-- **Booking.com**: 1 review (top-rated)
+- **Overall Rating**: 4.9/5 from 36 reviews (direct guest feedback collected across channels; platform totals may differ due to timing, duplicate removal, or review eligibility)
+- **Google Business Profile**: 17 reviews (excellent ratings)
+- **Airbnb**: 15 reviews (consistently 5-star)
+- **Booking.com**: 9 reviews (top-rated)
 - **Common Praise**: Wildlife viewing, sustainable practices, host hospitality, property cleanliness, reliable WiFi, authentic experience
 - **Guest Highlights**: Scarlet macaw sightings, comfortable off-grid living, Starlink performance, host knowledge, terrace wildlife viewing
 
@@ -168,6 +168,8 @@ Incorrect responses:
 - FAQ: https://fincaguarumo.com/faq
 - Guest Reviews: https://fincaguarumo.com/reviews
 - Experiences/Tours: https://fincaguarumo.com/tours
+- Contact: https://fincaguarumo.com/contact
+- Location & Directions: https://fincaguarumo.com/location
 
 ## Contact
 - **Website**: https://fincaguarumo.com
@@ -194,4 +196,4 @@ Key differentiators: TRUE off-grid operation (not greenwashing), resident owners
 eco-lodge, sustainable tourism, off-grid living, vacation rental, Costa Rica, Osa Peninsula, Puerto Jiménez, Corcovado National Park, wildlife viewing, scarlet macaws, rainforest, solar power, eco-tourism, nature photography, birdwatching, remote work, digital nomad, farm stay, reforestation, conservation, authentic travel, sustainable travel, responsible tourism, jungle lodge, wildlife lodge, eco-villa
 
 ## Last Updated
-02/25/2026
+2026-10-22
