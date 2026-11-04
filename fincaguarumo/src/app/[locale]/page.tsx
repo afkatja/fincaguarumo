@@ -70,7 +70,7 @@ export async function generateMetadata({
     return {
       robots: "noindex, nofollow",
       alternates: {
-        canonical: baseUrl,
+        canonical: getLocalizedUrl("/", locale),
       },
     }
   }

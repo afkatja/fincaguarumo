@@ -148,7 +148,7 @@ Incorrect responses:
 - Connected with local tour operators and community
 
 ## Reviews & Ratings
-- **Overall Rating**: 4.9/5 from 36 reviews (direct guest feedback collected across channels; platform totals may differ due to timing, duplicate removal, or review eligibility)
+- **Overall Rating**: 4.9/5 from 36 reviews (direct guest feedback collected across channels; platform totals may differ due to timing, duplicate removal, review eligibility, or platform-specific collection periods)
 - **Google Business Profile**: 17 reviews (excellent ratings)
 - **Airbnb**: 15 reviews (consistently 5-star)
 - **Booking.com**: 9 reviews (top-rated)

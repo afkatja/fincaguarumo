@@ -1,12 +1,5 @@
 import { Metadata } from "next"
-
-const localeMap: Record<string, string> = {
-  en: "en_US",
-  es: "es_CR",
-  de: "de_DE",
-  nl: "nl_NL",
-  ru: "ru_RU",
-}
+import { localeMap } from "@/lib/schema/lodgingBusiness"
 
 export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { locale } = await params
