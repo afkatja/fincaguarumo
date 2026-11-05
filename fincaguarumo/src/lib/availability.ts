@@ -164,10 +164,7 @@ const SYNC_COOLDOWN = 5 * 60 * 1000 // 5 minutes in milliseconds
 /**
  * Trigger iCal sync with proper error handling and global cooldown
  */
-export async function triggeriCalSync(
-  request?: Request,
-  force = false,
-): Promise<void> {
+export async function triggeriCalSync(force = false): Promise<void> {
   const now = Date.now()
 
   // Check global cooldown (unless forced)
@@ -183,7 +180,10 @@ export async function triggeriCalSync(
   try {
     const { merged } = await runIcalSync(force, 30000)
 
-    console.log("Bookings sync completed successfully, merged ranges:", merged.length)
+    console.log(
+      "Bookings sync completed successfully, merged ranges:",
+      merged.length,
+    )
     lastSyncTime.timestamp = now // Update last sync time only on success
   } catch (syncError) {
     console.warn("Error syncing bookings:", syncError)

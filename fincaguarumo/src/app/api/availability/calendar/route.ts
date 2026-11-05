@@ -11,6 +11,17 @@ import {
  */
 export async function GET() {
   try {
+    // Trigger iCal sync to ensure Supabase is up-to-date with external calendars
+    // Don't fail the request if sync fails - fall back to cached data
+    try {
+      await triggeriCalSync()
+    } catch (syncError) {
+      console.warn(
+        "iCal sync failed, using cached availability data:",
+        syncError,
+      )
+    }
+
     // Fetch unavailable ranges using shared utility (uses cached sync data with cooldown)
     const { availabilityData, bookingsData } = await fetchUnavailableRanges()
 
