@@ -268,6 +268,20 @@ export const accommodationType = defineType({
       ],
       description: "Key features to highlight in the quick info bar",
     }),
+    defineField({
+      name: "activityBlocks",
+      title: "Activity Blocks",
+      type: "array",
+      of: [{ type: "reference", to: { type: "activityBlock" } }],
+      description: "Select activity blocks to display on this accommodation page",
+    }),
+    defineField({
+      name: "whyChooseVillaBruno",
+      title: "Why Choose Villa Bruno",
+      type: "reference",
+      to: { type: "whyChooseVillaBruno" },
+      description: "Select the comparison/differentiator content for this accommodation",
+    }),
   ],
   initialValue: {
     isPublished: true,

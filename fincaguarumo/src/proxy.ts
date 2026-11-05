@@ -9,8 +9,96 @@ const intlMiddleware = createMiddleware({
   localePrefix: "as-needed",
 })
 
+// Tracking parameters to strip for canonical URL
+const TRACKING_PARAMS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "fbclid",
+  "gclid",
+  "msclkid",
+  "ref",
+  "source",
+  "mc_cid",
+  "mc_eid",
+  "_ga",
+  "_gl",
+]
+
+function stripTrackingParams(url: URL): URL {
+  const cleanUrl = new URL(url)
+  for (const param of TRACKING_PARAMS) {
+    cleanUrl.searchParams.delete(param)
+  }
+  // Remove search entirely if empty
+  if (cleanUrl.searchParams.toString() === "") {
+    cleanUrl.search = ""
+  }
+  return cleanUrl
+}
+
+// Blog is English-only - redirect non-English locale prefixes to root
+function handleBlogLocaleRedirect(request: NextRequest): NextResponse | null {
+  const pathname = request.nextUrl.pathname
+  const locale = pathname.split("/")[1]
+  
+  // Check if it's a non-English locale prefix for blog paths
+  if (locales.includes(locale) && locale !== "en") {
+    // Match /{locale}/blog and /{locale}/blog/{slug}
+    if (pathname === `/${locale}/blog` || pathname.startsWith(`/${locale}/blog/`)) {
+      const targetPath = pathname.replace(`/${locale}/blog`, "/blog")
+      const redirectUrl = new URL(targetPath, request.url)
+      redirectUrl.search = request.nextUrl.search
+      return NextResponse.redirect(redirectUrl, 308)
+    }
+  }
+  return null
+}
+
+// Strip one or more leading /en segments in a single 308 hop.
+// Covers /en, /en/, /en/villa-bruno, and /en/en/blog/...
+function handleDefaultLocaleRedirect(request: NextRequest): NextResponse | null {
+  const pathname = request.nextUrl.pathname
+  const segments = pathname.split("/").filter(Boolean)
+  if (segments[0] !== "en") return null
+
+  let i = 0
+  while (segments[i] === "en") i++
+  const rest = segments.slice(i)
+  const targetPath = rest.length === 0 ? "/" : `/${rest.join("/")}`
+  const redirectUrl = new URL(targetPath, request.url)
+  redirectUrl.search = request.nextUrl.search
+  return NextResponse.redirect(stripTrackingParams(redirectUrl), 308)
+}
+
+// Handle tracking parameter stripping
+function handleTrackingParams(request: NextRequest): NextResponse | null {
+  const { searchParams } = request.nextUrl
+  const hasTrackingParams = TRACKING_PARAMS.some(param => searchParams.has(param))
+  
+  if (hasTrackingParams) {
+    const cleanUrl = stripTrackingParams(request.nextUrl)
+    return NextResponse.redirect(cleanUrl, 308)
+  }
+  return null
+}
+
 export default async function proxy(request: NextRequest) {
-  // Handle internationalization first
+  // Handle blog locale redirects BEFORE intl middleware
+  const blogRedirect = handleBlogLocaleRedirect(request)
+  if (blogRedirect) return blogRedirect
+
+  // Handle default locale redirect (/en -> /) with 308
+  const defaultLocaleRedirect = handleDefaultLocaleRedirect(request)
+  if (defaultLocaleRedirect) return defaultLocaleRedirect
+
+  // Handle tracking parameter stripping
+  const trackingRedirect = handleTrackingParams(request)
+  if (trackingRedirect) return trackingRedirect
+
+  // Handle internationalization
   const response = intlMiddleware(request)
 
   const locale = request.nextUrl.pathname.split("/")[1]
@@ -100,6 +188,6 @@ export default async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Match all paths including admin routes
-    "/((?!api|_next/static|_next/image|images|studio|favicon|assets|robots|_redirects|llms|sitemap.xml).*)",
+    "/((?!api|_next/static|_next/image|images|studio|favicon|assets|robots|_redirects|llms|sitemap.xml|sitemap_index.xml).*)",
   ],
 }

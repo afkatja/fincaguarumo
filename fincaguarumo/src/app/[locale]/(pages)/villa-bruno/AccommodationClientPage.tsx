@@ -29,14 +29,21 @@ import { CollapsibleSection } from "@/components/CollapsibleSection"
 import InPageNavigation from "@/components/InPageNavigation"
 import { cn } from "../../../../lib/utils"
 import Loading from "../loading"
-
+import ActivityBlocks from "./ActivityBlocks"
+import WhyChooseVillaBruno from "./WhyChooseVillaBruno"
+import Logistics from "./Logistics"
+import { ActivityBlock, WhyChooseData } from "@/types"
 
 const AccommodationClientPage = ({
   content,
   locale,
+  activityBlocks,
+  whyChoose,
 }: {
   content: AccommodationContent
   locale: string
+  activityBlocks?: ActivityBlock[]
+  whyChoose?: WhyChooseData | null
 }) => {
   const { setBookingType, setBasicDetails } = useBookingCore()
   const t = useTranslations("booking")
@@ -49,6 +56,8 @@ const AccommodationClientPage = ({
     { id: "reviews-summary", label: tPage("reviews") || "Reviews" },
     { id: "about", label: tPage("about") || "About" },
     { id: "full-content", label: tPage("details") || "Details" },
+    { id: "logistics", label: tPage("logistics") || "Logistics" },
+    { id: "thing-to-do", label: tPage("thingsToDo") || "Things to do" },
     { id: "faq", label: tPage("FAQ") || "FAQ" },
     { id: "reviews", label: tPage("allReviews") || "More Reviews" },
   ]
@@ -122,6 +131,32 @@ const AccommodationClientPage = ({
         <RichText body={content?.body} />
       </div>
 
+      {content.logistics && content.logistics.length > 0 && (
+        <div className="max-w-5xl mx-auto my-6">
+          <Title
+            title={tPage("logistics") || "Logistics"}
+            Heading="h2"
+            titleClassName="text-3xl font-bold text-guarumo-primary dark:text-zinc-50"
+            icon={{ title: "Guarumo" }}
+          />
+          <Logistics logistics={content.logistics} locale={locale} />
+        </div>
+      )}
+
+      <div className="w-11/12 mx-auto my-6" id="thing-to-do">
+        <Title
+          title={tPage("thingsToDo") || "Things to do"}
+          Heading="h2"
+          titleClassName="text-3xl font-bold text-guarumo-primary dark:text-zinc-50"
+          icon={{ title: "Guarumo" }}
+        />
+        {activityBlocks && activityBlocks.length > 0 && (
+          <ActivityBlocks blocks={activityBlocks} locale={locale} />
+        )}
+
+        {whyChoose && <WhyChooseVillaBruno data={whyChoose} locale={locale} />}
+      </div>
+
       {/* FAQ Section */}
       <div id="faq" className="mx-auto mt-3 mb-8 flex flex-col py-5 max-w-5xl">
         <Title
@@ -150,7 +185,6 @@ const AccommodationClientPage = ({
         </div>
       </div>
 
-      {/* Reviews with GBP API Comparison */}
       <div id="reviews" className="w-11/12 mx-auto mt-3 mb-8">
         <LocationReviews initialCount={4} mode="preview" />
       </div>
@@ -193,7 +227,7 @@ const AccommodationClientPage = ({
                       {t("bookOnOthers") || "Book on other platforms"}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-[500px] md:max-w-[700px] md:w-[700px]">
+                  <DialogContent className="max-w-125 md:max-w-175 md:w-175">
                     <DialogTitle>
                       {t("bookVilla") || "Book your stay"}
                     </DialogTitle>
@@ -212,8 +246,8 @@ const AccommodationClientPage = ({
           </div>
         </footer>
       )}
-      </ReviewsProvider>
-    )
+    </ReviewsProvider>
+  )
 }
 
 export default AccommodationClientPage

@@ -47,8 +47,12 @@ const HomePage = ({
                 muted
                 playsInline
                 poster={`${content?.mediaPoster?.url}?auto=format`}
-                placeholder="blur"
-                blurDataURL={content?.mediaPoster?.metadata?.lqip}
+                {...(content?.mediaPoster?.metadata?.lqip && {
+                  placeholder: "blur",
+                })}
+                {...(content?.mediaPoster?.metadata?.lqip && {
+                  blurDataURL: content?.mediaPoster?.metadata?.lqip,
+                })}
                 className="object-cover w-full h-full transition-opacity duration-1000"
                 critical
               />
@@ -119,7 +123,11 @@ const HomePage = ({
                 />
                 <ReviewSummary />
               </div>
-              <LocationReviews initialCount={4} showMoreLink={true} mode="preview" />
+              <LocationReviews
+                initialCount={4}
+                showMoreLink={true}
+                mode="preview"
+              />
             </ReviewsProvider>
           </div>
 

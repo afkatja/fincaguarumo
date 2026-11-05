@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation"
 import { sanityFetch } from "@/sanity/lib/client"
 import { DIALOG_QUERY, TOUR_QUERY } from "@/sanity/lib/queries"
 import { IDialog, TTour } from "@/types"
@@ -18,13 +19,22 @@ const Page = async ({
     params: { slug, language: locale },
     revalidate: 0,
   })
+
+  if (!tour || !tour.isPublished) {
+    notFound()
+  }
+
   const dialog = await sanityFetch<IDialog>({
     query: DIALOG_QUERY,
     revalidate: 0,
   })
   tour.dialog = dialog
 
-  return <TourPage tour={tour} locale={locale} />
+  return (
+    <>
+      <TourPage tour={tour} locale={locale} />
+    </>
+  )
 }
 
 export default Page

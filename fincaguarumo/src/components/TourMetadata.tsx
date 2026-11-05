@@ -1,4 +1,4 @@
-const baseUrl = "https://fincaguarumo.com"
+import { getLocalizedUrl } from "@/lib/url"
 
 interface TourData {
   title?: string
@@ -16,14 +16,11 @@ const tourJsonLd = (tour: TourData, locale: string) => ({
   "@type": "TouristTrip",
   name: tour.title,
   description: tour.description,
-  url:
-    locale === "en"
-      ? `${baseUrl}/tours/${tour.slug?.current}`
-      : `${baseUrl}/${locale}/tours/${tour.slug?.current}`,
+  url: getLocalizedUrl(`/tours/${tour.slug?.current}`, locale),
   provider: {
     "@type": "Organization",
     name: "Finca Guarumo",
-    url: baseUrl,
+    url: "https://fincaguarumo.com",
   },
   location: {
     "@type": "Place",

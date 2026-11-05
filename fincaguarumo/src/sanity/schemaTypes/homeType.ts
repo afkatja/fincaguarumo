@@ -41,16 +41,13 @@ export const homeType = defineType({
       type: "file",
       title: "Video",
     }),
+    // MIGRATION NOTE: background_media_poster was previously an array; migrate existing
+    // published home documents (including translations) to a single imageWithMetadata
+    // before deploying. Preserve the first/existing poster image. The field now matches
+    // the imageWithMetadata shape expected by the .asset query.
     defineField({
       name: "background_media_poster",
-      type: "array",
-      of: [
-        { type: "imageWithMetadata", title: "Image with metadata" },
-        { type: "image" },
-      ],
-      options: {
-        layout: "grid",
-      },
+      type: "imageWithMetadata",
       title: "Video poster",
     }),
     defineField({

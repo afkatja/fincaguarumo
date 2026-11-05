@@ -120,10 +120,14 @@ export const structure: StructureResolver = S => {
       S.listItem()
         .title("Posts")
         .child(getLanguageItems(S, "post", "Posts")),
-
       S.listItem()
         .title("FAQ")
         .child(getLanguageItems(S, "faq", "FAQ")),
+      S.listItem()
+        .title("Location")
+        .child(
+          getTranslationItems(S, "locationPage", "Location", "standalone"),
+        ),
 
       S.divider(),
       // Booking and Property Management
@@ -147,6 +151,16 @@ export const structure: StructureResolver = S => {
             .schemaType("amenities")
             .filter('_type == "amenities"')
             .apiVersion("v2025-02-19"),
+        ),
+
+      S.listItem()
+        .title("Activity Blocks")
+        .child(getLanguageItems(S, "activityBlock", "Activity Blocks")),
+
+      S.listItem()
+        .title("Why Choose Villa Bruno")
+        .child(
+          getLanguageItems(S, "whyChooseVillaBruno", "Why Choose Villa Bruno"),
         ),
       S.listItem()
         .title("Pricing Rules")
@@ -275,6 +289,8 @@ export const defaultDocumentNode: DefaultDocumentNodeResolver = (
     case "tour":
     case "post":
     case "faq":
+    case "activityBlock":
+    case "whyChooseVillaBruno":
     case "gallery":
     case "category":
     case "author":
