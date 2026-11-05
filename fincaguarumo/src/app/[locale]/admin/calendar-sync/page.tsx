@@ -253,7 +253,7 @@ export default function CalendarSyncPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ cleanup: false, dryRun: false }),
+        body: JSON.stringify({ cleanup: false, dryRun: false, force: true }),
       })
 
       if (!response.ok) {
@@ -271,6 +271,7 @@ export default function CalendarSyncPage() {
 
       const data = await response.json()
       setSyncStatus("Sync completed")
+
       setSyncedBookingsCount(data.data?.sync?.total || 0)
       setSyncSuccessCount(
         (data.data?.sync?.created || 0) + (data.data?.sync?.updated || 0),
@@ -381,11 +382,15 @@ export default function CalendarSyncPage() {
           {/* Sync Results */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-4">Sync Results</h2>
-            <div data-testid="synced-bookings-count">{syncedBookingsCount}</div>
-            <div data-testid="sync-success-count">{syncSuccessCount}</div>
-            <div data-testid="sync-failed-count">{syncFailedCount}</div>
+            <div data-testid="synced-bookings-count">
+              Bookings: {syncedBookingsCount}
+            </div>
+            <div data-testid="sync-success-count">
+              Success: {syncSuccessCount}
+            </div>
+            <div data-testid="sync-failed-count">Failed: {syncFailedCount}</div>
             <div data-testid="deleted-bookings-count">
-              {deletedBookingsCount}
+              Deleted: {deletedBookingsCount}
             </div>
           </div>
 
