@@ -3,7 +3,6 @@ import type { BlockContent, Home as HomeType } from "../sanity.types"
 import {
   normalizeToNoon,
   parsePropertyDate,
-  toUTCISOString,
 } from "./lib/dateUtils"
 import type { PricingRule } from "./lib/pricingEngine"
 
@@ -104,12 +103,12 @@ export function serializeBookingData(data: BookingData): SerializedBookingData {
     ...data,
     bookingDetails: {
       ...data.bookingDetails,
-      date: toUTCISOString(normalizeToNoon(data.bookingDetails.date)),
+      date: normalizeToNoon(data.bookingDetails.date).toISOString(),
       checkIn: data.bookingDetails.checkIn
-        ? toUTCISOString(normalizeToNoon(data.bookingDetails.checkIn))
+        ? normalizeToNoon(data.bookingDetails.checkIn).toISOString()
         : null,
       checkOut: data.bookingDetails.checkOut
-        ? toUTCISOString(normalizeToNoon(data.bookingDetails.checkOut))
+        ? normalizeToNoon(data.bookingDetails.checkOut).toISOString()
         : null,
     },
   } as SerializedBookingData

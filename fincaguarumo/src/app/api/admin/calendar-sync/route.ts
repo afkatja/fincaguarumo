@@ -30,10 +30,10 @@ export async function GET(request: Request) {
       "/api/calendar-sync",
       process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
     )
-    apiUrl.searchParams.set("secret", CALENDAR_SYNC_SECRET)
 
     const response = await fetchWithTimeout(apiUrl.toString(), {
       method: "GET",
+      headers: { "x-calendar-sync-secret": CALENDAR_SYNC_SECRET },
     })
 
     if (!response.ok) {
@@ -102,11 +102,13 @@ export async function POST(request: Request) {
       "/api/calendar-sync",
       process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
     )
-    apiUrl.searchParams.set("secret", CALENDAR_SYNC_SECRET)
 
     const response = await fetchWithTimeout(apiUrl.toString(), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-calendar-sync-secret": CALENDAR_SYNC_SECRET,
+      },
       body: JSON.stringify(options),
     })
 

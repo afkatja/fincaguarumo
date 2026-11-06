@@ -32,8 +32,8 @@ export interface BookingResponse {
 
 const FEEDS: Record<string, string | undefined> = {
   airbnb: process.env.AIRBNB_ICAL,
-  booking: process.env.BOOKING_ICAL,
-  vrbo: process.env.VRBO_ICAL,
+  // booking: process.env.BOOKING_ICAL,
+  // vrbo: process.env.VRBO_ICAL,
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -69,24 +69,27 @@ async function fetchIcsWithConditional(
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), feedTimeoutMs)
 
-  const res = await fetch(url, { headers, signal: controller.signal })
-  clearTimeout(timeoutId)
+  try {
+    const res = await fetch(url, { headers, signal: controller.signal })
 
-  if (res.status === 304 && !force) {
-    return { changed: false, ics: memoryCache.ics[cacheKey] }
+    if (res.status === 304 && !force) {
+      return { changed: false, ics: memoryCache.ics[cacheKey] }
+    }
+    if (!res.ok) throw new Error(`Failed to fetch iCal (${res.status}), ${url}`)
+
+    const ics = await res.text()
+    memoryCache.ics[cacheKey] = ics
+
+    // Store ETag for future conditional requests
+    const etag = res.headers.get("etag")
+    if (etag) {
+      memoryCache.etag[cacheKey] = etag
+    }
+
+    return { changed: true, ics }
+  } finally {
+    clearTimeout(timeoutId)
   }
-  if (!res.ok) throw new Error(`Failed to fetch iCal (${res.status}), ${url}`)
-
-  const ics = await res.text()
-  memoryCache.ics[cacheKey] = ics
-
-  // Store ETag for future conditional requests
-  const etag = res.headers.get("etag")
-  if (etag) {
-    memoryCache.etag[cacheKey] = etag
-  }
-
-  return { changed: true, ics }
 }
 
 function parseIcsToBookings(
@@ -127,21 +130,21 @@ function parseIcsToBookings(
   }
 
   interface ICalComponent {
-  getFirstPropertyValue(name: string): string | null
-}
+    getFirstPropertyValue(name: string): string | null
+  }
 
-interface OccurrenceItem {
-  component: ICalComponent
-}
+  interface OccurrenceItem {
+    component: ICalComponent
+  }
 
-interface Occurrence {
-  item?: OccurrenceItem
-  component: ICalComponent
-  startDate: { toJSDate: () => Date }
-  endDate: { toJSDate: () => Date }
-}
+  interface Occurrence {
+    item?: OccurrenceItem
+    component: ICalComponent
+    startDate: { toJSDate: () => Date }
+    endDate: { toJSDate: () => Date }
+  }
 
-for (const o of occurrences) {
+  for (const o of occurrences) {
     const occurrence = o as Occurrence
     const component = occurrence.item?.component ?? occurrence.component
     const status = component.getFirstPropertyValue("status")
@@ -338,7 +341,7 @@ async function updateAvailabilityTable(
       const { error: cleanupError } = await supabase
         .from("availability")
         .delete()
-        .lt("end_date", today)
+        .gte("end_date", today)
 
       if (cleanupError) {
         console.error(
@@ -519,7 +522,10 @@ async function cleanupCancelledBookings(
   }
 }
 
-export async function runIcalSync(force = false, feedTimeoutMs = 30000): Promise<{
+export async function runIcalSync(
+  force = false,
+  feedTimeoutMs = 30000,
+): Promise<{
   bookings: BookingResponse[]
   merged: ReturnType<typeof mergeBookings>
 }> {
@@ -556,47 +562,78 @@ export async function runIcalSync(force = false, feedTimeoutMs = 30000): Promise
   for (const [name, url] of feeds) {
     try {
       const key = `ical_${name}`
-      const { ics, changed } = await fetchIcsWithConditional(url!, key, force, feedTimeoutMs)
+      const { ics, changed } = await fetchIcsWithConditional(
+        url!,
+        key,
+        force,
+        feedTimeoutMs,
+      )
 
-      if (!ics || !changed) continue
-      const syncRows = parseIcsToBookings(ics!, name)
+      if (!ics) {
+        console.warn(`No ICS data for ${name}, skipping`)
+        continue
+      }
+
+      const syncRows = parseIcsToBookings(ics, name)
 
       allSyncRows.push(...syncRows)
 
       const bookingResponses = syncRows.map(mapToBookingResponse)
       allBookingResponses.push(...bookingResponses)
 
-      successfulFeeds.add(name)
+      if (changed) {
+        successfulFeeds.add(name)
 
-      let savedCount = 0
-      let skippedCount = 0
-      let errorCount = 0
+        let savedCount = 0
+        let skippedCount = 0
+        let errorCount = 0
 
-      for (const syncRow of syncRows) {
-        try {
-          let uid = syncRow.uid
-          if (!uid) {
-            const hashInput = `${name}-${syncRow.start}-${syncRow.end}`
-            uid = hashIcs(hashInput).substring(0, 32)
-            syncRow.uid = uid
+        for (const syncRow of syncRows) {
+          try {
+            let uid = syncRow.uid
+            if (!uid) {
+              const hashInput = `${name}-${syncRow.start}-${syncRow.end}`
+              uid = hashIcs(hashInput).substring(0, 32)
+              syncRow.uid = uid
+            }
+
+            currentIcalUids.add(uid)
+
+            const result = await saveBookingToSupabase(syncRow)
+
+            if (result) {
+              savedCount++
+            } else {
+              skippedCount++
+            }
+          } catch (saveError) {
+            console.error(`Failed to save booking from ${name}:`, saveError)
+            errorCount++
           }
-
-          currentIcalUids.add(uid)
-
-          const result = await saveBookingToSupabase(syncRow)
-
-          if (result) {
-            savedCount++
-          } else {
-            skippedCount++
+        }
+      } else {
+        console.log(`Feed ${name} returned 304, using cached reservations`)
+        for (const syncRow of syncRows) {
+          if (syncRow.uid) {
+            currentIcalUids.add(syncRow.uid)
           }
-        } catch (saveError) {
-          console.error(`Failed to save booking from ${name}:`, saveError)
-          errorCount++
         }
       }
     } catch (err) {
-      console.error(`Error fetching/parsing ${name}:`, err)
+      console.error(`Error fetching/parsing ${name}, using cached reservations:`, err)
+      const key = `ical_${name}`
+      const cachedIcs = memoryCache.ics[key]
+      if (cachedIcs) {
+        const syncRows = parseIcsToBookings(cachedIcs, name)
+        allSyncRows.push(...syncRows)
+        const bookingResponses = syncRows.map(mapToBookingResponse)
+        allBookingResponses.push(...bookingResponses)
+        for (const syncRow of syncRows) {
+          if (syncRow.uid) {
+            currentIcalUids.add(syncRow.uid)
+          }
+        }
+      }
     }
   }
 

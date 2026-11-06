@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     // Sync with the merged iCal endpoint (handled by global cooldown)
     try {
-      await triggeriCalSync(request)
+      await triggeriCalSync()
     } catch (syncError) {
       console.warn("Error syncing bookings (continuing anyway):", syncError)
       // Continue anyway - we'll check what we have
