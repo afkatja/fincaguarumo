@@ -161,8 +161,12 @@ export function convertRangesToBlockedDates(
 const lastSyncTime = { timestamp: 0 }
 const SYNC_COOLDOWN = 5 * 60 * 1000 // 5 minutes in milliseconds
 
+// In-flight sync lock serializing the full sync operation across concurrent callers
+let inFlightSync: Promise<void> | null = null
+
 /**
- * Trigger iCal sync with proper error handling and global cooldown
+ * Trigger iCal sync with proper error handling, global cooldown, and
+ * serialization of the full sync operation across concurrent callers.
  */
 export async function triggeriCalSync(force = false): Promise<void> {
   const now = Date.now()
@@ -177,18 +181,32 @@ export async function triggeriCalSync(force = false): Promise<void> {
     return
   }
 
-  try {
-    const { merged } = await runIcalSync(force, 30000)
-
-    console.log(
-      "Bookings sync completed successfully, merged ranges:",
-      merged.length,
-    )
-    lastSyncTime.timestamp = now // Update last sync time only on success
-  } catch (syncError) {
-    console.warn("Error syncing bookings:", syncError)
-    throw syncError
+  // If a sync is already in flight, wait for it instead of starting a duplicate
+  if (inFlightSync) {
+    await inFlightSync
+    return
   }
+
+  const runSync = async (): Promise<void> => {
+    try {
+      const { merged } = await runIcalSync(force, 30000)
+
+      console.log(
+        "Bookings sync completed successfully, merged ranges:",
+        merged.length,
+      )
+      lastSyncTime.timestamp = now // Update last sync time only on success
+    } catch (syncError) {
+      console.warn("Error syncing bookings:", syncError)
+      throw syncError
+    } finally {
+      inFlightSync = null
+    }
+  }
+
+  const syncPromise = runSync()
+  inFlightSync = syncPromise
+  await syncPromise
 }
 
 /**

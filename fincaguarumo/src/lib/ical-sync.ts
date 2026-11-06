@@ -69,24 +69,27 @@ async function fetchIcsWithConditional(
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), feedTimeoutMs)
 
-  const res = await fetch(url, { headers, signal: controller.signal })
-  clearTimeout(timeoutId)
+  try {
+    const res = await fetch(url, { headers, signal: controller.signal })
 
-  if (res.status === 304 && !force) {
-    return { changed: false, ics: memoryCache.ics[cacheKey] }
+    if (res.status === 304 && !force) {
+      return { changed: false, ics: memoryCache.ics[cacheKey] }
+    }
+    if (!res.ok) throw new Error(`Failed to fetch iCal (${res.status}), ${url}`)
+
+    const ics = await res.text()
+    memoryCache.ics[cacheKey] = ics
+
+    // Store ETag for future conditional requests
+    const etag = res.headers.get("etag")
+    if (etag) {
+      memoryCache.etag[cacheKey] = etag
+    }
+
+    return { changed: true, ics }
+  } finally {
+    clearTimeout(timeoutId)
   }
-  if (!res.ok) throw new Error(`Failed to fetch iCal (${res.status}), ${url}`)
-
-  const ics = await res.text()
-  memoryCache.ics[cacheKey] = ics
-
-  // Store ETag for future conditional requests
-  const etag = res.headers.get("etag")
-  if (etag) {
-    memoryCache.etag[cacheKey] = etag
-  }
-
-  return { changed: true, ics }
 }
 
 function parseIcsToBookings(
@@ -566,45 +569,71 @@ export async function runIcalSync(
         feedTimeoutMs,
       )
 
-      if (!ics || !changed) continue
-      const syncRows = parseIcsToBookings(ics!, name)
+      if (!ics) {
+        console.warn(`No ICS data for ${name}, skipping`)
+        continue
+      }
+
+      const syncRows = parseIcsToBookings(ics, name)
 
       allSyncRows.push(...syncRows)
 
       const bookingResponses = syncRows.map(mapToBookingResponse)
       allBookingResponses.push(...bookingResponses)
 
-      successfulFeeds.add(name)
+      if (changed) {
+        successfulFeeds.add(name)
 
-      let savedCount = 0
-      let skippedCount = 0
-      let errorCount = 0
+        let savedCount = 0
+        let skippedCount = 0
+        let errorCount = 0
 
-      for (const syncRow of syncRows) {
-        try {
-          let uid = syncRow.uid
-          if (!uid) {
-            const hashInput = `${name}-${syncRow.start}-${syncRow.end}`
-            uid = hashIcs(hashInput).substring(0, 32)
-            syncRow.uid = uid
+        for (const syncRow of syncRows) {
+          try {
+            let uid = syncRow.uid
+            if (!uid) {
+              const hashInput = `${name}-${syncRow.start}-${syncRow.end}`
+              uid = hashIcs(hashInput).substring(0, 32)
+              syncRow.uid = uid
+            }
+
+            currentIcalUids.add(uid)
+
+            const result = await saveBookingToSupabase(syncRow)
+
+            if (result) {
+              savedCount++
+            } else {
+              skippedCount++
+            }
+          } catch (saveError) {
+            console.error(`Failed to save booking from ${name}:`, saveError)
+            errorCount++
           }
-
-          currentIcalUids.add(uid)
-
-          const result = await saveBookingToSupabase(syncRow)
-
-          if (result) {
-            savedCount++
-          } else {
-            skippedCount++
+        }
+      } else {
+        console.log(`Feed ${name} returned 304, using cached reservations`)
+        for (const syncRow of syncRows) {
+          if (syncRow.uid) {
+            currentIcalUids.add(syncRow.uid)
           }
-        } catch (saveError) {
-          console.error(`Failed to save booking from ${name}:`, saveError)
-          errorCount++
         }
       }
     } catch (err) {
-      console.error(`Error fetching/parsing ${name}:`, err)
+      console.error(`Error fetching/parsing ${name}, using cached reservations:`, err)
+      const key = `ical_${name}`
+      const cachedIcs = memoryCache.ics[key]
+      if (cachedIcs) {
+        const syncRows = parseIcsToBookings(cachedIcs, name)
+        allSyncRows.push(...syncRows)
+        const bookingResponses = syncRows.map(mapToBookingResponse)
+        allBookingResponses.push(...bookingResponses)
+        for (const syncRow of syncRows) {
+          if (syncRow.uid) {
+            currentIcalUids.add(syncRow.uid)
+          }
+        }
+      }
     }
   }
 
