@@ -122,9 +122,6 @@ export class GoogleCalendarService {
 
       const eventId = response.data.id
 
-      // Log successful sync
-      await this.logSync(booking.uid, eventId, "success")
-
       console.log(
         `Created Google Calendar event ${eventId} for booking ${booking.uid}`,
       )
@@ -134,7 +131,6 @@ export class GoogleCalendarService {
         `Failed to create calendar event for booking ${booking.uid}:`,
         error,
       )
-      await this.logSync(booking.uid, undefined, "failed", String(error))
       throw error
     }
   }
@@ -153,9 +149,6 @@ export class GoogleCalendarService {
         sendUpdates: "none",
       })
 
-      // Log successful sync
-      await this.logSync(booking.uid, eventId, "success")
-
       console.log(
         `Updated Google Calendar event ${eventId} for booking ${booking.uid}`,
       )
@@ -165,7 +158,6 @@ export class GoogleCalendarService {
         `Failed to update calendar event ${eventId} for booking ${booking.uid}:`,
         error,
       )
-      await this.logSync(booking.uid, eventId, "failed", String(error))
       throw error
     }
   }
@@ -180,9 +172,6 @@ export class GoogleCalendarService {
         eventId: eventId,
       })
 
-      // Log successful deletion
-      await this.logSync(bookingId, eventId, "success")
-
       console.log(
         `Deleted Google Calendar event ${eventId} for booking ${bookingId}`,
       )
@@ -192,7 +181,6 @@ export class GoogleCalendarService {
         `Failed to delete calendar event ${eventId} for booking ${bookingId}:`,
         error,
       )
-      await this.logSync(bookingId, eventId, "failed", String(error))
       throw error
     }
   }
@@ -299,37 +287,6 @@ export class GoogleCalendarService {
         { method: "email" as const, minutes: ALERT_MINUTES },
       ],
     } as any
-  }
-
-  /**
-   * Log sync operation to Supabase
-   */
-  private async logSync(
-    bookingId: string,
-    eventId: string | undefined,
-    status: "success" | "failed" | "pending",
-    errorMessage?: string,
-  ): Promise<void> {
-    try {
-      const logEntry: Omit<SyncLogEntry, "synced_at"> = {
-        booking_id: bookingId,
-        gcal_event_id: eventId,
-        status,
-        error_message: errorMessage,
-      }
-
-      await supabase.from("gcal_sync_log").upsert(
-        {
-          ...logEntry,
-          synced_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "booking_id",
-        },
-      )
-    } catch (error) {
-      console.error("Failed to log sync operation:", error)
-    }
   }
 
   /**
