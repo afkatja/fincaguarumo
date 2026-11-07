@@ -5,6 +5,63 @@ import { Booking, getSanityBookings } from "@/lib/setBookings"
 import bookingToNights from "@/lib/bookingToNights"
 import { createClient } from "@supabase/supabase-js"
 
+/**
+ * Extract date from ical-expander component, handling both DATE and DATE-TIME values.
+ * For DATE values (all-day events), returns YYYY-MM-DD format without timezone conversion.
+ * For DATE-TIME values, returns ISO string.
+ *
+ * The property object from ical-expander has a jCal array structure:
+ *   jCal: [ propertyName, params, valueType, value ]
+ * where valueType is 'date' for all-day events (no timezone conversion needed)
+ * or 'date-time' for timed events (needs timezone conversion).
+ */
+function extractDateFromComponent(
+  component: any,
+  propertyName: "dtstart" | "dtend",
+  fallbackDate?: Date,
+): string {
+  let property
+  try {
+    property = component.getFirstProperty?.(propertyName)
+  } catch {
+    property = undefined
+  }
+  if (!property) {
+    if (fallbackDate) return fallbackDate.toISOString()
+    throw new Error(`Property ${propertyName} not found on component`)
+  }
+
+  // Check jCal array for value type and value
+  // jCal: [ propertyName, params, valueType, value ]
+  const jCal = property.jCal
+  if (jCal && Array.isArray(jCal) && jCal.length >= 4) {
+    const valueType = jCal[2] // 'date' or 'date-time'
+    const value = jCal[3]
+
+    // If it's a DATE value (all-day event), return YYYY-MM-DD without timezone conversion
+    if (valueType === "date") {
+      const dateStr = String(value)
+      if (dateStr.length === 8) {
+        // YYYYMMDD format
+        return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`
+      }
+      if (dateStr.length === 10 && dateStr.includes("-")) {
+        // Already YYYY-MM-DD format
+        return dateStr
+      }
+    }
+  }
+
+  // For DATE-TIME or unknown, use the existing toJSDate conversion
+  try {
+    const dateObj = property.toJSDate()
+    return dateObj.toISOString()
+  } catch {
+    if (fallbackDate) return fallbackDate.toISOString()
+    throw new Error(`Failed to convert ${propertyName} to date`)
+  }
+}
+
 export interface IcsSyncRow {
   uid?: string
   start: string
@@ -109,8 +166,17 @@ function parseIcsToBookings(
   for (const e of events) {
     const status = e.component.getFirstPropertyValue("status")
     if (status && String(status).toUpperCase() === "CANCELLED") continue
-    const start = e.startDate.toJSDate().toISOString()
-    const end = e.endDate.toJSDate().toISOString()
+    // Use extractDateFromComponent with fallback to e.startDate/e.endDate
+    const start = extractDateFromComponent(
+      e.component,
+      "dtstart",
+      e.startDate.toJSDate(),
+    )
+    const end = extractDateFromComponent(
+      e.component,
+      "dtend",
+      e.endDate.toJSDate(),
+    )
     const uid = e.component.getFirstPropertyValue("uid") ?? undefined
     const summary = e.component.getFirstPropertyValue("summary") ?? undefined
 
@@ -131,6 +197,7 @@ function parseIcsToBookings(
 
   interface ICalComponent {
     getFirstPropertyValue(name: string): string | null
+    getFirstProperty(name: string): any
   }
 
   interface OccurrenceItem {
@@ -149,8 +216,17 @@ function parseIcsToBookings(
     const component = occurrence.item?.component ?? occurrence.component
     const status = component.getFirstPropertyValue("status")
     if (status && String(status).toUpperCase() === "CANCELLED") continue
-    const start = o.startDate.toJSDate().toISOString()
-    const end = o.endDate.toJSDate().toISOString()
+    // Use extractDateFromComponent with fallback to occurrence.startDate/endDate
+    const start = extractDateFromComponent(
+      component,
+      "dtstart",
+      occurrence.startDate.toJSDate(),
+    )
+    const end = extractDateFromComponent(
+      component,
+      "dtend",
+      occurrence.endDate.toJSDate(),
+    )
     const uid = component.getFirstPropertyValue("uid") ?? undefined
     const summary = component.getFirstPropertyValue("summary") ?? undefined
     const description =
@@ -331,127 +407,6 @@ async function saveBookingToSupabase(syncRow: IcsSyncRow) {
   }
 }
 
-async function updateAvailabilityTable(
-  bookings: Booking[],
-  maxRetries = 3,
-): Promise<void> {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const today = new Date().toISOString()
-      const { error: cleanupError } = await supabase
-        .from("availability")
-        .delete()
-        .gte("end_date", today)
-
-      if (cleanupError) {
-        console.error(
-          "Error cleaning up old availability entries:",
-          cleanupError,
-        )
-        if (attempt === maxRetries) throw cleanupError
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
-        continue
-      }
-
-      let successCount = 0
-      let errorCount = 0
-
-      for (const booking of bookings) {
-        const startDate = new Date(booking.start)
-        const endDate = new Date(booking.end)
-
-        if (endDate < new Date()) {
-          continue
-        }
-
-        try {
-          const { data: existing } = await supabase
-            .from("availability")
-            .select("id, is_available, reason, booking_uid")
-            .eq("start_date", booking.start)
-            .eq("end_date", booking.end)
-            .maybeSingle()
-
-          if (!existing) {
-            const availabilityRecord: any = {
-              start_date: booking.start,
-              end_date: booking.end,
-              is_available: false,
-              updated_at: new Date().toISOString(),
-            }
-
-            if (booking.source) {
-              availabilityRecord.reason = `Booked via ${booking.source}`
-            }
-            if (booking.uid) {
-              availabilityRecord.booking_uid = booking.uid
-            }
-
-            const { error } = await supabase
-              .from("availability")
-              .insert([availabilityRecord])
-
-            if (error) {
-              console.error(
-                `Error creating availability entry for booking ${booking.uid}:`,
-                error,
-              )
-              errorCount++
-            } else {
-              successCount++
-            }
-          } else if (existing.is_available !== false) {
-            const { error } = await supabase
-              .from("availability")
-              .update({
-                is_available: false,
-                updated_at: new Date().toISOString(),
-                reason: booking.source
-                  ? `Booked via ${booking.source}`
-                  : existing.reason,
-                booking_uid: booking.uid || existing.booking_uid,
-              })
-              .eq("id", existing.id)
-
-            if (error) {
-              console.error(
-                `Error updating availability entry for booking ${booking.uid}:`,
-                error,
-              )
-              errorCount++
-            } else {
-              successCount++
-            }
-          } else {
-            successCount++
-          }
-        } catch (bookingError) {
-          console.error(
-            `Error processing booking ${booking.uid}:`,
-            bookingError,
-          )
-          errorCount++
-        }
-      }
-
-      if (errorCount === 0 || attempt === maxRetries) {
-        return
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
-    } catch (error) {
-      console.error(
-        `Error updating availability table (attempt ${attempt}/${maxRetries}):`,
-        error,
-      )
-      if (attempt === maxRetries) {
-        throw error
-      }
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
-    }
-  }
-}
-
 async function cleanupCancelledBookings(
   currentIcalUids: Set<string>,
   successfulFeedSources: string[],
@@ -499,22 +454,6 @@ async function cleanupCancelledBookings(
     } else {
       console.log(
         `Successfully deleted ${cancelledUids.length} cancelled bookings`,
-      )
-    }
-
-    const { error: deleteAvailabilityError } = await supabase
-      .from("availability")
-      .delete()
-      .in("booking_uid", cancelledUids)
-
-    if (deleteAvailabilityError) {
-      console.error(
-        "Error deleting availability entries for cancelled bookings:",
-        deleteAvailabilityError,
-      )
-    } else {
-      console.log(
-        `Successfully deleted availability entries for ${cancelledUids.length} cancelled bookings`,
       )
     }
   } catch (error) {
@@ -620,7 +559,10 @@ export async function runIcalSync(
         }
       }
     } catch (err) {
-      console.error(`Error fetching/parsing ${name}, using cached reservations:`, err)
+      console.error(
+        `Error fetching/parsing ${name}, using cached reservations:`,
+        err,
+      )
       const key = `ical_${name}`
       const cachedIcs = memoryCache.ics[key]
       if (cachedIcs) {
@@ -661,12 +603,6 @@ export async function runIcalSync(
   const deduped = Object.values(uniqueByUid).concat(withoutUid)
 
   const merged = mergeBookings(deduped)
-
-  try {
-    await updateAvailabilityTable(deduped)
-  } catch (availabilityError) {
-    console.error("Failed to update availability table:", availabilityError)
-  }
 
   return { bookings: allBookingResponses, merged }
 }
