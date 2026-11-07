@@ -1,60 +1,35 @@
 import { NextResponse } from "next/server"
-import { verifyAdminAuth } from "@/lib/auth"
+import { verifyAdminAuth, createSupabaseAdmin } from "@/lib/auth"
 import { calendarSyncService } from "@/lib/calendar-sync"
 import { googleCalendarService } from "@/lib/google-calendar"
-
-// Server-side calendar sync secret (not exposed to client)
-const CALENDAR_SYNC_SECRET = process.env.CALENDAR_SYNC_SECRET
 
 /**
  * Admin-only calendar sync API endpoint
  * Requires admin authentication via JWT token
- *
- * Methods:
- * - GET: Get sync status and statistics
- * - POST: Trigger calendar sync
+ * Calls calendarSyncService directly (no internal HTTP proxying)
  */
 export async function GET(request: Request) {
   try {
-    // Verify admin authentication
     const adminUser = await verifyAdminAuth(request)
 
-    // Get sync statistics using the internal API with server-side secret
-    if (!CALENDAR_SYNC_SECRET) {
-      throw new Error(
-        "CALENDAR_SYNC_SECRET environment variable is not configured",
-      )
-    }
-
-    const apiUrl = new URL(
-      "/api/calendar-sync",
-      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-    )
-
-    const response = await fetchWithTimeout(apiUrl.toString(), {
-      method: "GET",
-      headers: { "x-calendar-sync-secret": CALENDAR_SYNC_SECRET },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Internal sync API failed with status ${response.status}`)
-    }
-
-    const res = await response.json()
-
-    // Fetch recent sync logs
+    const stats = await calendarSyncService.getSyncStats()
+    const calendarAccess = await googleCalendarService.testAccess()
     const recentSyncLogs = await getRecentSyncLogs()
 
     return NextResponse.json({
       status: "success",
       data: {
-        ...res.data,
+        sync: stats,
+        calendar: {
+          accessible: calendarAccess,
+          calendarId: process.env.GOOGLE_CALENDAR_ID,
+        },
+        lastChecked: new Date().toISOString(),
         recentSyncLogs,
       },
       requestedBy: adminUser.email,
     })
   } catch (error: any) {
-    // Handle auth errors specifically
     if (error.status === 401) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -80,10 +55,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    // Verify admin authentication
     const adminUser = await verifyAdminAuth(request)
 
-    // Parse request body for options
     const body = await request.json().catch(() => ({}))
     const options = {
       cleanup: body.cleanup || false,
@@ -91,45 +64,42 @@ export async function POST(request: Request) {
       force: body.force || false,
     }
 
-    // Call the internal calendar sync API with server-side secret
-    if (!CALENDAR_SYNC_SECRET) {
-      throw new Error(
-        "CALENDAR_SYNC_SECRET environment variable is not configured",
-      )
+    if (!options.dryRun) {
+      const calendarAccess = await googleCalendarService.testAccess()
+      if (!calendarAccess) {
+        return NextResponse.json(
+          {
+            error: "Calendar access failed",
+            message:
+              "Cannot access Google Calendar. Check credentials and permissions.",
+          },
+          { status: 503 },
+        )
+      }
     }
 
-    const apiUrl = new URL(
-      "/api/calendar-sync",
-      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-    )
-
-    const response = await fetchWithTimeout(apiUrl.toString(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-calendar-sync-secret": CALENDAR_SYNC_SECRET,
-      },
-      body: JSON.stringify(options),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(
-        errorData.message ||
-          `Internal sync API failed with status ${response.status}`,
-      )
+    let stats
+    if (options.dryRun) {
+      stats = await performDryRun()
+    } else {
+      stats = await calendarSyncService.syncAllBookings()
     }
 
-    const res = await response.json()
+    if (options.cleanup && !options.dryRun) {
+      await calendarSyncService.cleanupOldLogs(90)
+    }
 
     return NextResponse.json({
       status: "success",
-      data: res.data,
-      message: res.message,
+      message: options.dryRun ? "Dry run completed" : "Calendar sync completed",
+      data: {
+        sync: stats,
+        options,
+        completedAt: new Date().toISOString(),
+      },
       triggeredBy: adminUser.email,
     })
   } catch (error: any) {
-    // Handle auth errors specifically
     if (error.status === 401) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -153,7 +123,6 @@ export async function POST(request: Request) {
   }
 }
 
-// Handle unsupported methods
 export async function PUT() {
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 })
 }
@@ -166,39 +135,61 @@ export async function PATCH() {
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 })
 }
 
-// Helper function to fetch recent sync logs
-
-// Helper function to fetch with timeout
-async function fetchWithTimeout(
-  url: string,
-  options: RequestInit = {},
-  timeoutMs = 10000,
-): Promise<Response> {
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
-
+async function performDryRun(): Promise<{
+  total: number
+  created: number
+  updated: number
+  deleted: number
+  errors: number
+  dryRun: boolean
+}> {
   try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-    })
-    clearTimeout(timeoutId)
-    return response
-  } catch (error) {
-    clearTimeout(timeoutId)
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new Error(`Request timeout after ${timeoutMs}ms`)
+    const bookings = await calendarSyncService.fetchBookings()
+    const stats = {
+      total: bookings.length,
+      created: 0,
+      updated: 0,
+      deleted: 0,
+      errors: 0,
+      dryRun: true,
     }
+
+    for (const booking of bookings) {
+      try {
+        if (!booking.uid) {
+          stats.errors++
+          continue
+        }
+
+        if (booking.isTest) {
+          continue
+        }
+
+        if (booking.status === "cancelled" || booking.status === "canceled") {
+          stats.deleted++
+        } else {
+          const syncLog = await calendarSyncService.getSyncLog(booking.uid)
+          if (!syncLog || !syncLog.gcal_event_id) {
+            stats.created++
+          } else {
+            stats.updated++
+          }
+        }
+      } catch {
+        stats.errors++
+      }
+    }
+
+    return stats
+  } catch (error) {
+    console.error("Dry run failed:", error)
     throw error
   }
 }
 
 async function getRecentSyncLogs(limit = 10) {
   try {
-    const { createClient } = await import("@supabase/supabase-js")
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabase = createSupabaseAdmin()
 
     const { data, error } = await supabase
       .from("gcal_sync_log")
@@ -222,7 +213,7 @@ async function getRecentSyncLogs(limit = 10) {
     }
 
     return data || []
-  } catch (error) {
+  } catch {
     return []
   }
 }
