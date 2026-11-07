@@ -72,3 +72,7 @@
 [functions."calendar-sync"]
   schedule = "*/15 * * * *"  # Every 15 minutes
   function = "calendar-sync/calendar-sync"
+
+[functions."ical-sync"]
+  schedule = "*/15 * * * *"  # Every 15 minutes
+  function = "ical-sync/ical-sync"
