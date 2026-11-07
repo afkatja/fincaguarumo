@@ -20,13 +20,20 @@ interface IDatePicker {
   label: string
   selectedDate?: Date
   className?: string
-  disabledDates?: Date[]
+  disabledDates?: (Date | string)[]
   loading?: boolean
   minDate?: Date
   month?: Date
   defaultMonth?: Date
   /** Forwarded to the trigger button for e2e tests */
   triggerTestId?: string
+}
+
+const formatLocalDate = (d: Date): string => {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
 }
 
 const DatePicker = ({
@@ -52,15 +59,19 @@ const DatePicker = ({
     : params.locale || "en"
 
   const setDisabledDates = (date: Date) => {
-    if (date < new Date()) return true
-    if (minDate && date < minDate) return true
-    const dateStr = date.toISOString().split("T")[0]
-    return (disabledDates || []).some(
-      d => {
-        const disabledStr = typeof d === "string" ? d : d.toISOString().split("T")[0]
-        return disabledStr === dateStr
-      },
-    )
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (date < today) return true
+    if (minDate) {
+      const min = new Date(minDate)
+      min.setHours(0, 0, 0, 0)
+      if (date < min) return true
+    }
+    const dateStr = formatLocalDate(date)
+    return (disabledDates || []).some(d => {
+      const disabledStr = typeof d === "string" ? d.slice(0, 10) : formatLocalDate(d)
+      return disabledStr === dateStr
+    })
   }
 
   const loadingLabel = t("loadingCalendar", {

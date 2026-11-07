@@ -18,12 +18,12 @@ const BookingCalendar = ({
   selectedDates: { checkIn?: Date; checkOut?: Date }
   error?: string
   onLoadingChange?: (loading: boolean) => void
-  onBlockedDatesChange?: (blockedDates: Date[]) => void
+  onBlockedDatesChange?: (blockedDates: (Date | string)[]) => void
 }) => {
   const t = useTranslations("booking")
   const [loading, setLoading] = useState(false)
   const [activePopover, setActivePopover] = useState<string | null>(null)
-  const [blockedDates, setBlockedDates] = useState<Date[]>([])
+  const [blockedDates, setBlockedDates] = useState<(Date | string)[]>([])
   const [fetchAttempted, setFetchAttempted] = useState(false)
 
   // Update parent component when loading state changes
@@ -47,24 +47,20 @@ const BookingCalendar = ({
 
     const fetchData = async () => {
       try {
-        // Use the unified availability endpoint that matches the availability checking data
-        const data = await fetch("/api/availability/calendar")
+        const data = await fetch("/api/availability")
         const json = await data.json()
 
         if (!data.ok) {
-          console.error("Error fetching calendar availability:", json.error)
+          console.error("Error fetching availability:", json.error)
           setBlockedDates([])
           setLoading(false)
           return
         }
 
-        // Convert blocked dates from ISO strings to Date objects
-        const blockedDatesArray = (json.blockedDates || []).map(
-          (date: string) => new Date(date),
-        )
-        setBlockedDates(blockedDatesArray)
+        // json.blockedDates is already an array of YYYY-MM-DD strings
+        setBlockedDates(json.blockedDates || [])
       } catch (error) {
-        console.error("Error fetching calendar availability:", error)
+        console.error("Error fetching availability:", error)
         setBlockedDates([])
       } finally {
         setLoading(false)
