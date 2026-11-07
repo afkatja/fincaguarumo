@@ -10,24 +10,27 @@ import { Booking } from "../setBookings"
 
 // Mock Supabase client factory
 const createMockSupabase = () => {
-  const mockEq = jest.fn().mockResolvedValue({ data: [], error: null })
   const mockSingle = jest.fn().mockResolvedValue({ data: null, error: null })
-  const mockSelect = jest.fn().mockReturnValue({
-    eq: mockEq,
-    order: jest.fn().mockReturnValue({
-      limit: jest.fn().mockReturnValue({
-        single: mockSingle,
-      }),
-    }),
-    single: mockSingle,
-  })
+  let resolveData: any = []
+
+  const queryBuilder: any = {}
+  queryBuilder.eq = jest.fn().mockImplementation(() => queryBuilder)
+  queryBuilder.neq = jest.fn().mockImplementation(() => queryBuilder)
+  queryBuilder.not = jest.fn().mockImplementation(() => queryBuilder)
+  queryBuilder.order = jest.fn().mockImplementation(() => queryBuilder)
+  queryBuilder.limit = jest.fn().mockImplementation(() => queryBuilder)
+  queryBuilder.single = mockSingle
+  queryBuilder.then = (resolve: any) =>
+    Promise.resolve({ data: resolveData, error: null }).then(resolve)
+
+  const mockSelect = jest.fn().mockImplementation(() => queryBuilder)
 
   const mockUpsert = jest.fn().mockResolvedValue({
     data: [{ id: "sync-log-456" }],
     error: null,
   })
 
-  const mockFrom = jest.fn().mockReturnValue({
+  const mockFrom = jest.fn().mockImplementation((table: string) => ({
     select: mockSelect,
     insert: jest.fn().mockReturnValue({
       select: jest.fn().mockResolvedValue({
@@ -41,13 +44,23 @@ const createMockSupabase = () => {
         error: null,
       }),
     }),
-  })
+  }))
 
   const mockClient = {
     from: mockFrom,
   }
 
-  return { mockClient, mockEq, mockSingle, mockUpsert, mockFrom, mockSelect }
+  return {
+    mockClient,
+    mockEq: queryBuilder.eq,
+    mockSingle,
+    mockUpsert,
+    mockFrom,
+    mockSelect,
+    setResolveData: (d: any) => {
+      resolveData = d
+    },
+  }
 }
 
 let mockSupabase: ReturnType<typeof createMockSupabase>["mockClient"]
@@ -55,6 +68,7 @@ let mockEq: jest.Mock
 let mockSingle: jest.Mock
 let mockUpsert: jest.Mock
 let mockFrom: jest.Mock
+let setResolveData: (d: any) => void
 
 // Mock the Google Calendar service
 jest.mock("../google-calendar", () => ({
@@ -110,6 +124,7 @@ describe("Calendar Sync Service", () => {
     mockSingle = mockResult.mockSingle
     mockUpsert = mockResult.mockUpsert
     mockFrom = mockResult.mockFrom
+    setResolveData = mockResult.setResolveData
     setTestSupabaseClient(mockSupabase as any)
     setTestSiteUrl("http://localhost:3000")
   })
@@ -120,35 +135,25 @@ describe("Calendar Sync Service", () => {
   })
 
   describe("Background Sync Process (AC1, AC3)", () => {
-    it("should fetch bookings from existing /api/ical/merged endpoint (AC1)", async () => {
-      const mockResponse = {
-        bookings: mockBookings,
-        merged: [
-          {
-            start: "2026-12-15T00:00:00.000Z",
-            end: "2026-12-18T00:00:00.000Z",
-            blocked: [1, 2, 3],
-          },
-        ],
-      }
+    it("should fetch bookings from Supabase bookings table (AC1)", async () => {
+      const mockDbRows = mockBookings.map(b => ({
+        uid: b.uid,
+        check_in: b.start,
+        check_out: b.end,
+        guest_name: b.guestName,
+        source: b.source,
+        email: b.email,
+        phone: b.phone,
+        summary: b.summary,
+      }))
+      setResolveData(mockDbRows)
 
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      })
+      const result = await getCalendarSyncService().fetchBookings()
 
-      const result = await getCalendarSyncService().fetchBookingsFromAPI()
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/ical/merged"),
-        expect.objectContaining({
-          method: "GET",
-          headers: expect.objectContaining({
-            "Content-Type": "application/json",
-          }),
-        }),
-      )
-      expect(result).toEqual(mockResponse.bookings)
+      expect(mockFrom).toHaveBeenCalledWith("bookings")
+      expect(result).toHaveLength(2)
+      expect(result[0].uid).toBe("booking-1")
+      expect(result[0].guestName).toBe("John Doe")
     })
 
     it("should sync bookings to calendar without performance impact (AC3)", async () => {
@@ -371,14 +376,7 @@ describe("Calendar Sync Service", () => {
       googleCalendarService.createEvent.mockResolvedValue("backfill-event-1")
 
       // Reset mocks to default behavior
-      mockEq.mockReset()
       mockSingle.mockReset()
-
-      // Mock Supabase to return no existing sync logs (empty array)
-      mockEq.mockResolvedValue({
-        data: [],
-        error: null,
-      })
 
       // Also need to mock the getSyncLog calls within performInitialBackfill
       mockSingle.mockResolvedValue({
@@ -395,18 +393,21 @@ describe("Calendar Sync Service", () => {
     })
 
     it("should skip already synced bookings during backfill", async () => {
-      const mockExistingSyncs = [
-        {
-          booking_id: "booking-1",
-          status: "success",
-          synced_at: new Date().toISOString(),
-        },
-      ]
+      const mockExistingSync = {
+        booking_id: "booking-1",
+        status: "success",
+        synced_at: new Date().toISOString(),
+      }
 
-      mockEq.mockResolvedValueOnce({
-        data: mockExistingSyncs,
-        error: null,
-      })
+      mockSingle
+        .mockResolvedValueOnce({
+          data: mockExistingSync,
+          error: null,
+        })
+        .mockResolvedValueOnce({
+          data: null,
+          error: { code: "PGRST116" },
+        })
 
       const { googleCalendarService } = require("../google-calendar")
       googleCalendarService.createEvent.mockResolvedValue("new-backfill-event")

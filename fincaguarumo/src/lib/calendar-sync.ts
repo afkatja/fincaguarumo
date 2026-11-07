@@ -143,8 +143,6 @@ export class CalendarSyncService {
     }
 
     for (const booking of bookings) {
-      result.processed++
-
       try {
         // Check if already synced
         const { data: existingSync } = await getSupabaseClient()
@@ -158,6 +156,8 @@ export class CalendarSyncService {
           result.skipped = (result.skipped || 0) + 1
           continue
         }
+
+        result.processed++
 
         // Sync to calendar
         const calendarData = mapBookingToCalendarData(booking)
@@ -242,14 +242,8 @@ export class CalendarSyncService {
     }
 
     try {
-      // Fetch all bookings from the existing merged endpoint
-      const response = await fetch(`${getSiteUrl()}/api/ical/merged`)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch bookings: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      const bookings = data.bookings || []
+      // Fetch all bookings directly from Supabase (no HTTP loopback)
+      const bookings = await this.fetchBookings()
       stats.total = bookings.length
 
       console.log(`Processing ${bookings.length} bookings for calendar sync`)
@@ -533,27 +527,51 @@ export class CalendarSyncService {
   }
 
   /**
-   * Fetch bookings from the existing /api/ical/merged endpoint
+   * Fetch bookings directly from Supabase bookings table (no HTTP loopback)
    */
-  async fetchBookingsFromAPI(): Promise<Booking[]> {
+  async fetchBookings(): Promise<Booking[]> {
     try {
-      const response = await fetch(`${getSiteUrl()}/api/ical/merged`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
+      const { data, error } = await getSupabaseClient()
+        .from("bookings")
+        .select(
+          "uid, check_in, check_out, guest_name, email, phone, source, summary, description, is_test",
+        )
+        .not("is_test", "is", true)
+        .neq("guest_name", "CLOSED - Not available")
+        .order("check_in", { ascending: true })
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch bookings: ${response.statusText}`)
+      if (error) {
+        console.error("Failed to fetch bookings from Supabase:", error)
+        return []
       }
 
-      const data = await response.json()
-      return data.bookings || []
+      const rawBookings: any[] = (data as any[]) || []
+      const filtered = rawBookings.filter((booking: any) => {
+        const guestName = (booking.guest_name || "").toLowerCase()
+        return !guestName.includes("closed - not available")
+      })
+
+      return filtered.map((b: any) => ({
+        uid: b.uid,
+        start: b.check_in,
+        end: b.check_out,
+        guestName: b.guest_name,
+        email: b.email,
+        phone: b.phone,
+        source: b.source,
+        summary: b.summary,
+      }))
     } catch (error) {
-      console.error("Failed to fetch bookings from API:", error)
+      console.error("Failed to fetch bookings from Supabase:", error)
       return []
     }
+  }
+
+  /**
+   * Fetch bookings (delegates to direct Supabase fetch)
+   */
+  async fetchBookingsFromAPI(): Promise<Booking[]> {
+    return this.fetchBookings()
   }
 
   /**

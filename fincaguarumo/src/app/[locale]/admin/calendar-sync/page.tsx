@@ -79,10 +79,18 @@ export default function CalendarSyncPage() {
   const fetchBookings = async () => {
     setLoadingBookings(true)
     try {
-      const response = await fetch("/api/ical/merged")
+      const response = await fetch("/api/availability")
       if (response.ok) {
         const data = await response.json()
-        setBookings(data.bookings || [])
+        const ranges = data.ranges || data.merged || []
+        const bookingsFromRanges = ranges.map((range: any, index: number) => ({
+          uid: range.booking_uid || `booking-${index}`,
+          guestName: range.reason || "Unknown Guest",
+          source: range.reason?.replace("Booked via ", "") || "unknown",
+          start: range.start,
+          end: range.end,
+        }))
+        setBookings(bookingsFromRanges)
       }
     } catch (error) {
       console.error("Failed to fetch bookings:", error)

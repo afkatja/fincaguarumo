@@ -25,7 +25,11 @@ async function selectFirstAvailableCalendarDay(page: Page) {
 test.describe("Accommodation Booking Flow", () => {
   test.beforeEach(async ({ page }) => {
     // Mock calendar API to provide blocked dates
-    await page.route("**/api/availability/calendar", async route => {
+    await page.route("**/api/availability*", async route => {
+      if (route.request().method() === "POST") {
+        await route.fallback()
+        return
+      }
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -177,7 +181,11 @@ test.describe("Accommodation Booking Flow", () => {
 test.describe("Tour Booking Flow", () => {
   test.beforeEach(async ({ page }) => {
     // Mock calendar API for tour dates
-    await page.route("**/api/availability/calendar", async route => {
+    await page.route("**/api/availability*", async route => {
+      if (route.request().method() === "POST") {
+        await route.fallback()
+        return
+      }
       await route.fulfill({
         status: 200,
         contentType: "application/json",
