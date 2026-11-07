@@ -54,8 +54,12 @@ const DatePicker = ({
   const setDisabledDates = (date: Date) => {
     if (date < new Date()) return true
     if (minDate && date < minDate) return true
+    const dateStr = date.toISOString().split("T")[0]
     return (disabledDates || []).some(
-      d => d.toDateString() === date.toDateString(),
+      d => {
+        const disabledStr = typeof d === "string" ? d : d.toISOString().split("T")[0]
+        return disabledStr === dateStr
+      },
     )
   }
 
