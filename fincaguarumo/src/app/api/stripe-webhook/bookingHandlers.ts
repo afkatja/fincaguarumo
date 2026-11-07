@@ -182,56 +182,6 @@ export async function saveBookingToSupabase(
   }
 }
 
-export async function updateAvailability(
-  bookingDetails: BookingDetails,
-  sessionId: string,
-  customerName: string,
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const result = await withRetries(
-      () =>
-        withDatabaseMonitoring("insert", "availability", async () => {
-          const supabaseAdmin = createSupabaseAdmin()
-
-          const { error: availabilityError } = await supabaseAdmin
-            .from("availability")
-            .insert({
-              start_date: bookingDetails.checkIn!.toISOString(),
-              end_date: bookingDetails.checkOut!.toISOString(),
-              is_available: false,
-              reason: `Booked via Direct - ${customerName}`,
-              booking_uid: sessionId,
-              updated_at: new Date().toISOString(),
-            })
-            .select()
-
-          if (availabilityError) {
-            throw new Error(availabilityError.message)
-          }
-
-          return true
-        }),
-      RETRY_CONFIG.availability,
-      "update-availability",
-    )
-
-    if (result.success) {
-      console.log("Availability updated successfully")
-      return { success: true }
-    } else {
-      return {
-        success: false,
-        error:
-          result.error?.message || result.error?.toString() || "Unknown error",
-      }
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error("Error updating availability:", errorMessage)
-    return { success: false, error: errorMessage }
-  }
-}
-
 export async function notifyPartialFailure(
   sessionId: string,
   customerDetails: CustomerDetails,
