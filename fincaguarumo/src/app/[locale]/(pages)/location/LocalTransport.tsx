@@ -137,11 +137,13 @@ export default function LocalTransport({ transport }: LocalTransportProps) {
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 {item.contact && (
                   <a
-                    href={
-                      item.contact.startsWith("http")
-                        ? item.contact
+                  href={
+                    item.contact.startsWith("http")
+                      ? item.contact
+                      : item.contact.includes("@")
+                        ? `mailto:${item.contact}`
                         : `tel:${item.contact.replace(/\s+/g, "")}`
-                    }
+                  }
                     className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
                   >
                     <svg

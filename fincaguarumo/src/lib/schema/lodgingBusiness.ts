@@ -95,8 +95,8 @@ export interface LodgingBusinessConfig {
   starRating: string
   price: number
   priceCurrency: string
-  checkinTime: string
-  checkoutTime: string
+  checkinTime?: string
+  checkoutTime?: string
   validFrom: string
   images: string[]
   knowsAbout?: string[]

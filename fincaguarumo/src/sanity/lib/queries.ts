@@ -593,7 +593,10 @@ export const ACCOMMODATION_QUERY = groq`
       instructions,
       contactInfo,
       address,
-      distance 
+      distance,
+      displayOrder,
+      isImportant,
+      keywords
 },
     "translations": coalesce(
       *[_type == "translation.metadata" && ^._id in translations[].value._ref][0].translations[]{

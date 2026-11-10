@@ -143,19 +143,21 @@ const AccommodationClientPage = ({
         </div>
       )}
 
-      <div className="w-11/12 mx-auto my-6" id="thing-to-do">
-        <Title
-          title={tPage("thingsToDo") || "Things to do"}
-          Heading="h2"
-          titleClassName="text-3xl font-bold text-guarumo-primary dark:text-zinc-50"
-          icon={{ title: "Guarumo" }}
-        />
-        {activityBlocks && activityBlocks.length > 0 && (
-          <ActivityBlocks blocks={activityBlocks} locale={locale} />
-        )}
+      {(activityBlocks && activityBlocks.length > 0) || whyChoose ? (
+        <div className="w-11/12 mx-auto my-6" id="thing-to-do">
+          <Title
+            title={tPage("thingsToDo") || "Things to do"}
+            Heading="h2"
+            titleClassName="text-3xl font-bold text-guarumo-primary dark:text-zinc-50"
+            icon={{ title: "Guarumo" }}
+          />
+          {activityBlocks && activityBlocks.length > 0 && (
+            <ActivityBlocks blocks={activityBlocks} locale={locale} />
+          )}
 
-        {whyChoose && <WhyChooseVillaBruno data={whyChoose} locale={locale} />}
-      </div>
+          {whyChoose && <WhyChooseVillaBruno data={whyChoose} locale={locale} />}
+        </div>
+      ) : null}
 
       {/* FAQ Section */}
       <div id="faq" className="mx-auto mt-3 mb-8 flex flex-col py-5 max-w-5xl">

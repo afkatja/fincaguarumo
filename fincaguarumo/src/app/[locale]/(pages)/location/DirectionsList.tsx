@@ -211,7 +211,7 @@ export default function DirectionsList({ directions }: DirectionsListProps) {
               </div>
             )}
 
-            {direction.bookingRequired && direction.contactForBooking && (
+            {direction.bookingRequired && (
               <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
                 <svg
                   className="h-5 w-5 text-primary"
@@ -232,9 +232,11 @@ export default function DirectionsList({ directions }: DirectionsListProps) {
                       defaultValue: "Advance Booking Required",
                     })}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {direction.contactForBooking}
-                  </p>
+                  {direction.contactForBooking && (
+                    <p className="text-sm text-muted-foreground">
+                      {direction.contactForBooking}
+                    </p>
+                  )}
                 </div>
               </div>
             )}

@@ -5,6 +5,9 @@ import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import { CollapsibleSection } from "@/components/CollapsibleSection"
 import Icon from "@/components/Icon"
+import type icons from "@/components/icons"
+
+type IconName = keyof typeof icons
 
 interface LogisticsItem {
   title: string
@@ -34,7 +37,7 @@ const categoryConfig: Record<
   string,
   {
     label: string
-    icon: string
+    icon: IconName
     color: string
     bgColor: string
   }
@@ -144,7 +147,7 @@ export default function Logistics({ logistics, locale }: LogisticsProps) {
                       )}
                     >
                       <Icon
-                        icon={config.icon as any}
+                        icon={config.icon}
                         className="h-5 w-5"
                         color="var(--color-muted-foreground)"
                       />
