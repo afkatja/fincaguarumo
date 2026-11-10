@@ -45,7 +45,7 @@ const fromLocationLabels: Record<string, string> = {
 }
 
 export default function DirectionsList({ directions }: DirectionsListProps) {
-  const t = useTranslations("location")
+  const t = useTranslations("villaBruno.activities")
   if (!directions || directions.length === 0) {
     return (
       <p className="text-muted-foreground">

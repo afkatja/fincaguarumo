@@ -24,7 +24,7 @@ export default function MapEmbed({
   wazeUrl,
   address,
 }: MapEmbedProps) {
-  const t = useTranslations("location")
+  const t = useTranslations("villaBruno.activities")
 
   const lat = coordinates?.lat ?? 8.496420632614996
   const lng = coordinates?.lng ?? -83.3341457939961

@@ -152,7 +152,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
 export default function NearbyAttractions({
   attractions,
 }: NearbyAttractionsProps) {
-  const t = useTranslations("location")
+  const t = useTranslations("villaBruno.activities")
   if (!attractions || attractions.length === 0) {
     return (
       <p className="text-muted-foreground">

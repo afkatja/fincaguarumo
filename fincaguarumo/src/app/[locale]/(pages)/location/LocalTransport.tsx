@@ -102,7 +102,7 @@ const typeIcons: Record<string, React.ReactNode> = {
 }
 
 export default function LocalTransport({ transport }: LocalTransportProps) {
-  const t = useTranslations("location")
+  const t = useTranslations("villaBruno.activities")
   if (!transport || transport.length === 0) {
     return (
       <p className="text-muted-foreground">
