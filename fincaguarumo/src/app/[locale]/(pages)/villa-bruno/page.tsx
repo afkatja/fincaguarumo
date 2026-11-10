@@ -2,11 +2,7 @@ import { notFound } from "next/navigation"
 import { Metadata } from "next"
 
 import { sanityFetch } from "@/sanity/lib/client"
-import {
-  ACCOMMODATION_QUERY,
-  ACTIVITY_BLOCK_QUERY,
-  WHY_CHOOSE_VILLA_BRUNO_QUERY,
-} from "@/sanity/lib/queries"
+import { ACCOMMODATION_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import AccommodationClientPage from "./AccommodationClientPage"
 import {
@@ -348,23 +344,14 @@ const AccommodationPage = async ({
 }) => {
   const { locale } = await params
 
-  const [content, activityBlocks, whyChoose] = await Promise.all([
-    sanityFetch<AccommodationContent>({
-      query: ACCOMMODATION_QUERY,
-      params: { slug, language: locale },
-      revalidate: 0,
-    }),
-    sanityFetch<ActivityBlock[]>({
-      query: ACTIVITY_BLOCK_QUERY,
-      params: { language: locale },
-      revalidate: 0,
-    }),
-    sanityFetch<WhyChooseData | null>({
-      query: WHY_CHOOSE_VILLA_BRUNO_QUERY,
-      params: { language: locale },
-      revalidate: 0,
-    }),
-  ])
+  const content = await sanityFetch<AccommodationContent>({
+    query: ACCOMMODATION_QUERY,
+    params: { slug, language: locale },
+    revalidate: 0,
+  })
+
+  const activityBlocks = (content?.activityBlocks ?? []) as ActivityBlock[]
+  const whyChoose = (content?.whyChooseVillaBruno ?? null) as WhyChooseData | null
 
   if (!content?.isPublished) notFound()
 
