@@ -7,10 +7,8 @@ import {
   notifyPartialFailure,
   extractBookingDetails,
   type CustomerDetails,
-  type BookingDetails,
 } from "./bookingHandlers"
 import { sendErrorEmail } from "@/lib/sendErrorEmail"
-import { createSupabaseAdmin } from "@/lib/auth"
 import { executeWithIndividualRetries } from "@/lib/monitoring"
 import { RETRY_CONFIG } from "@/lib/monitoring/config"
 
@@ -23,12 +21,6 @@ export async function POST(request: NextRequest) {
     console.error("ERROR: Stripe API key not configured")
     return NextResponse.json(
       { error: "Stripe API key not configured" },
-      { status: 500 },
-    )
-  }
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return NextResponse.json(
-      { error: "Stripe Secret key not configured" },
       { status: 500 },
     )
   }
