@@ -64,9 +64,12 @@ export default function DirectionsList({ directions }: DirectionsListProps) {
           <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
             <div className="flex items-center gap-3">
               <span className="text-lg font-medium">
-                {fromLocationLabels[direction.fromLocation] ||
-                  direction.customFromLabel ||
-                  direction.fromLocation}
+                {direction.fromLocation === "custom" &&
+                direction.customFromLabel
+                  ? direction.customFromLabel
+                  : fromLocationLabels[direction.fromLocation] ||
+                    direction.customFromLabel ||
+                    direction.fromLocation}
               </span>
               <span className="px-2 py-1 text-xs font-medium bg-muted text-muted-foreground rounded-full">
                 {transportModeLabels[direction.transportMode] ||
