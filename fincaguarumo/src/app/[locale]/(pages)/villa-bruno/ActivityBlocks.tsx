@@ -211,7 +211,7 @@ export default function ActivityBlocks({
           </div>
 
           <div className="space-y-4 grid md:grid-cols-2 gap-2">
-            {block.activities
+            {(block.activities ?? [])
               .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
               .map((activity, index) => (
                 <article
