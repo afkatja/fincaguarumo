@@ -191,7 +191,7 @@ const AccommodationClientPage = ({
 
       {/* Booking Footer - Sticky booking options */}
       {content?.showBookingDialog && (
-        <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-dark shadow-sm">
+        <footer className="pt-4 pb-6 sticky bottom-0 bg-gradient-dark shadow-sm z-50">
           <div className="w-11/12 mx-auto">
             <p
               className={cn(

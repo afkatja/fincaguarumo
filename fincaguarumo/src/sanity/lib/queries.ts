@@ -38,10 +38,6 @@ const mainImageWithDimensions = groq`{
     dimensions
   }
 }`
-const imageMetadataOnly = `...,
-  crop,
-  hotspot,
-  "metadata": asset->metadata`
 
 // For gallery/slideshow: supports both imageWithMetadata and artDirectedImage
 const galleryImageProjection = groq`{
@@ -506,11 +502,12 @@ export const ACCOMMODATION_QUERY = groq`
     checkInTime, 
     checkOutTime,
     amenities[]->{ title, description, icon },
-    "activityBlocks": activityBlocks[]-> {
-      ...,
-      isPublished,
-      language
-    }[isPublished == true && language == ^.language] {
+    "activityBlocks": *[
+      _type == "activityBlock" &&
+      _id in ^.activityBlocks[]._ref &&
+      isPublished == true &&
+      language == ^.language
+    ] {
       title,
       subtitle,
       description,
@@ -533,7 +530,7 @@ export const ACCOMMODATION_QUERY = groq`
     "whyChooseVillaBruno": select(
       defined(whyChooseVillaBruno) &&
         whyChooseVillaBruno->isPublished == true &&
-        whyChooseVillaBruno->language == ^.language,
+        whyChooseVillaBruno->language == ^.language =>
       whyChooseVillaBruno-> {
         title,
         subtitle,
@@ -621,11 +618,12 @@ export const ACCOMMODATION_QUERY = groq`
           highlightFeatures,
           checkInTime, 
           checkOutTime,
-          "activityBlocks": activityBlocks[]-> {
-            ...,
-            isPublished,
-            language
-          }[isPublished == true && language == ^.language] {
+          "activityBlocks": *[
+            _type == "activityBlock" &&
+            _id in ^.activityBlocks[]._ref &&
+            isPublished == true &&
+            language == ^.language
+          ] {
             title,
             subtitle,
             description,
@@ -648,7 +646,7 @@ export const ACCOMMODATION_QUERY = groq`
           "whyChooseVillaBruno": select(
             defined(whyChooseVillaBruno) &&
               whyChooseVillaBruno->isPublished == true &&
-              whyChooseVillaBruno->language == ^.language,
+              whyChooseVillaBruno->language == ^.language =>
             whyChooseVillaBruno-> {
               title,
               subtitle,

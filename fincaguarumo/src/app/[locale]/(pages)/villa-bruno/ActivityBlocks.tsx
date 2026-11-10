@@ -181,7 +181,7 @@ export default function ActivityBlocks({
       {blocks.map((block, blockIndex) => (
         <div key={`${block.slug.current}-${blockIndex}`} className="space-y-6">
           <div className="flex gap-2">
-            {block.mainImage?.url && (
+            {block.mainImage && block.mainImage?.url && (
               <div className="relative aspect-video rounded-xl overflow-hidden flex-1">
                 <Image
                   src={block.mainImage.url}

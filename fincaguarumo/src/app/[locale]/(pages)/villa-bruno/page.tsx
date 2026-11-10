@@ -349,11 +349,11 @@ const AccommodationPage = async ({
     params: { slug, language: locale },
     revalidate: 0,
   })
+  if (!content?.isPublished) notFound()
 
   const activityBlocks = (content?.activityBlocks ?? []) as ActivityBlock[]
-  const whyChoose = (content?.whyChooseVillaBruno ?? null) as WhyChooseData | null
-
-  if (!content?.isPublished) notFound()
+  const whyChoose = (content?.whyChooseVillaBruno ??
+    null) as WhyChooseData | null
 
   const canonicalUrl = getLocalizedUrl(`/${slug}`, locale)
 
