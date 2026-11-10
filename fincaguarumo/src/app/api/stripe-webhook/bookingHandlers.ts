@@ -140,7 +140,7 @@ export async function saveBookingToSupabase(
 
           const { data: bookingData, error: bookingError } = await supabaseAdmin
             .from("bookings")
-            .insert({
+            .upsert({
               check_in: bookingDetails.checkIn!.toISOString(),
               check_out: bookingDetails.checkOut!.toISOString(),
               guest_name: customerDetails.name,
@@ -152,7 +152,7 @@ export async function saveBookingToSupabase(
               booking_type: bookingDetails.type,
               total_price: bookingDetails.totalPrice,
               currency: bookingDetails.currency,
-            })
+            }, { onConflict: "uid" })
             .select()
 
           if (bookingError) {
