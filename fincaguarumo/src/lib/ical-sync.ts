@@ -93,9 +93,36 @@ const FEEDS: Record<string, string | undefined> = {
   // vrbo: process.env.VRBO_ICAL,
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+let supabase: ReturnType<typeof createClient> | null = null
+let overrideSupabaseClient: ReturnType<typeof createClient> | null = null
+
+function getSupabaseClient() {
+  if (overrideSupabaseClient) {
+    return overrideSupabaseClient
+  }
+  if (!supabase) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    supabase = createClient(supabaseUrl, supabaseServiceKey)
+  }
+  return supabase
+}
+
+/**
+ * Override the Supabase client for testing purposes
+ * Call this before any ical sync operations in tests
+ */
+export function setTestSupabaseClient(client: ReturnType<typeof createClient>) {
+  overrideSupabaseClient = client
+}
+
+/**
+ * Reset test overrides (call this in test afterEach)
+ */
+export function resetTestOverrides() {
+  overrideSupabaseClient = null
+  supabase = null
+}
 
 const memoryCache: {
   ics: Record<string, string>
@@ -303,6 +330,7 @@ function mapToBookingResponse(syncRow: IcsSyncRow): BookingResponse {
     summary: syncRow.summary,
     source: syncRow.source,
     guestName: syncRow.guestInfo.name,
+    isTest: false,
   }
 }
 
@@ -317,6 +345,7 @@ function mapToBookingForSupabase(syncRow: IcsSyncRow): Booking {
     email: syncRow.guestInfo.email,
     phone: syncRow.guestInfo.phone,
     guests: syncRow.guestInfo.guests,
+    isTest: false,
   }
 }
 
@@ -374,7 +403,7 @@ async function saveBookingToSupabase(syncRow: IcsSyncRow) {
       return null
     }
 
-    const bookingData: any = {
+    const bookingData: Record<string, any> = {
       uid: booking.uid,
       check_in: booking.start,
       check_out: booking.end,
@@ -383,13 +412,15 @@ async function saveBookingToSupabase(syncRow: IcsSyncRow) {
       booking_type: "villa",
       currency: booking.currency || "usd",
       guests: booking.guests || 1,
+      is_test: booking.isTest || false,
     }
 
     if (booking.totalPrice) {
       bookingData.total_price = booking.totalPrice
     }
 
-    const { data, error } = await supabase
+    const client = getSupabaseClient()
+    const { data, error } = await (client as any)
       .from("bookings")
       .upsert([bookingData], { onConflict: "uid" })
       .select()
@@ -399,7 +430,7 @@ async function saveBookingToSupabase(syncRow: IcsSyncRow) {
       return null
     }
 
-    const recordId = data?.[0]?.id
+    const recordId = (data as Array<{ id: string }> | null)?.[0]?.id
     return recordId
   } catch (error) {
     console.error("Error saving booking to Supabase:", error)
@@ -417,7 +448,7 @@ async function cleanupCancelledBookings(
       return
     }
 
-    const { data: existingBookings, error: fetchError } = await supabase
+    const { data: existingBookings, error: fetchError } = await getSupabaseClient()
       .from("bookings")
       .select("uid, source")
       .in("source", successfulFeedSources)
@@ -432,7 +463,7 @@ async function cleanupCancelledBookings(
     }
 
     const cancelledUids: string[] = []
-    for (const booking of existingBookings) {
+    for (const booking of existingBookings as Array<{ uid: string | null; source: string }>) {
       if (booking.uid && !currentIcalUids.has(booking.uid)) {
         cancelledUids.push(booking.uid)
       }
@@ -444,7 +475,7 @@ async function cleanupCancelledBookings(
 
     console.log(`Found ${cancelledUids.length} cancelled bookings to clean up`)
 
-    const { error: deleteBookingsError } = await supabase
+    const { error: deleteBookingsError } = await getSupabaseClient()
       .from("bookings")
       .delete()
       .in("uid", cancelledUids)

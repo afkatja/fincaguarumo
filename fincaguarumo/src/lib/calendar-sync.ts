@@ -536,7 +536,6 @@ export class CalendarSyncService {
         .select(
           "uid, check_in, check_out, guest_name, email, phone, source, summary, description, is_test",
         )
-        .not("is_test", "is", true)
         .neq("guest_name", "CLOSED - Not available")
         .order("check_in", { ascending: true })
 
@@ -560,6 +559,7 @@ export class CalendarSyncService {
         phone: b.phone,
         source: b.source,
         summary: b.summary,
+        isTest: b.is_test,
       }))
     } catch (error) {
       console.error("Failed to fetch bookings from Supabase:", error)
@@ -891,19 +891,21 @@ export async function syncBookingsToCalendar(
                   status: "created",
                   eventId,
                 }
-              } else {
-                // Update existing event
-                const success = await googleCalendarService.updateEvent(
-                  existingSync.gcal_event_id,
-                  calendarData,
-                )
-                if (success) {
-                  syncResult = {
-                    status: "updated",
-                    eventId: existingSync.gcal_event_id,
-                  }
+} else {
+              // Update existing event
+              const success = await googleCalendarService.updateEvent(
+                existingSync.gcal_event_id,
+                calendarData,
+              )
+              if (success) {
+                syncResult = {
+                  status: "updated",
+                  eventId: existingSync.gcal_event_id,
                 }
+              } else {
+                throw new Error("Failed to update calendar event")
               }
+            }
             }
             break // Success, exit retry loop
           } catch (error: any) {
@@ -929,7 +931,7 @@ export async function syncBookingsToCalendar(
       await getCalendarSyncService().recordSyncState(
         booking.uid || "unknown",
         syncResult!.eventId || null,
-        syncResult!.status === "deleted" ? "success" : "success",
+        syncResult!.status === "deleted" ? "cancelled" : "success",
       )
 
       // Update counters based on sync result

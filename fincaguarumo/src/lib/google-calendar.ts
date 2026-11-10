@@ -41,10 +41,36 @@ export interface SyncLogEntry {
   error_message?: string
 }
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+let supabase: ReturnType<typeof createClient> | null = null
+let overrideSupabaseClient: ReturnType<typeof createClient> | null = null
+
+function getSupabaseClient() {
+  if (overrideSupabaseClient) {
+    return overrideSupabaseClient
+  }
+  if (!supabase) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    supabase = createClient(supabaseUrl, supabaseServiceKey)
+  }
+  return supabase
+}
+
+/**
+ * Override the Supabase client for testing purposes
+ * Call this before any calendar operations in tests
+ */
+export function setTestSupabaseClient(client: ReturnType<typeof createClient>) {
+  overrideSupabaseClient = client
+}
+
+/**
+ * Reset test overrides (call this in test afterEach)
+ */
+export function resetTestOverrides() {
+  overrideSupabaseClient = null
+  supabase = null
+}
 
 // Constants
 const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar"
@@ -294,7 +320,7 @@ export class GoogleCalendarService {
    */
   async getSyncLog(bookingId: string): Promise<SyncLogEntry | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabaseClient()
         .from("gcal_sync_log")
         .select("*")
         .eq("booking_id", bookingId)
