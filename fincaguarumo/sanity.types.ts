@@ -12,6 +12,8 @@
  * ---------------------------------------------------------------------------------
  */
 
+export declare const internalGroqTypeReferenceTo: unique symbol;
+
 // Source: schema.json
 export type Logistics = {
   _id: string;
@@ -155,14 +157,7 @@ export type ColumnsBlock = {
           _key: string;
         }>;
         style?:
-          | "normal"
-          | "h1"
-          | "h2"
-          | "h3"
-          | "h4"
-          | "h5"
-          | "h6"
-          | "blockquote";
+          "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
         listItem?: "bullet" | "number";
         markDefs?: Array<{
           href?: string;
@@ -221,6 +216,7 @@ export type Booking = {
   source?: "direct" | "airbnb" | "booking" | "expedia" | "vrbo" | "yourrentals";
   uid: string;
   syncedAt?: string;
+  isTest?: boolean;
 };
 
 export type Dialog = {
@@ -410,6 +406,7 @@ export type MediaTag = {
 export type InternationalizedArrayStringValue = {
   _type: "internationalizedArrayStringValue";
   value?: string;
+  language: string;
 };
 
 export type TranslationMetadata = {
@@ -435,11 +432,32 @@ export type HomeReference = {
   [internalGroqTypeReferenceTo]?: "home";
 };
 
+export type LocationPageReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "locationPage";
+};
+
 export type FaqCategoryReference = {
   _ref: string;
   _type: "reference";
   _weak?: boolean;
   [internalGroqTypeReferenceTo]?: "faqCategory";
+};
+
+export type ActivityBlockReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "activityBlock";
+};
+
+export type WhyChooseVillaBrunoReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "whyChooseVillaBruno";
 };
 
 export type InternationalizedArrayReferenceValue = {
@@ -450,8 +468,130 @@ export type InternationalizedArrayReferenceValue = {
     | TourReference
     | HomeReference
     | FaqReference
+    | LocationPageReference
     | FaqCategoryReference
-    | AccommodationReference;
+    | AccommodationReference
+    | ActivityBlockReference
+    | WhyChooseVillaBrunoReference;
+  language: string;
+};
+
+export type ActivityBlock = {
+  _id: string;
+  _type: "activityBlock";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  slug: Slug;
+  mainImage?: ImageWithMetadata;
+  isPublished?: boolean;
+  displayOrder?: number;
+  activities?: Array<{
+    name: string;
+    description?: string;
+    season?: "year-round" | "dry" | "green" | "whale";
+    duration?: string;
+    distanceFromVilla?: string;
+    transportIncluded?: boolean;
+    difficulty?: "easy" | "moderate" | "challenging";
+    highlights?: Array<string>;
+    icon?: string;
+    isFeatured?: boolean;
+    sortOrder?: number;
+    _type: "activityItem";
+    _key: string;
+  }>;
+  seoKeywords?: Array<string>;
+};
+
+export type LocationPage = {
+  _id: string;
+  _type: "locationPage";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  slug: Slug;
+  mainImage?: ImageWithMetadata;
+  isPublished?: boolean;
+  coordinates?: Geopoint;
+  address?: {
+    street?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    postalCode?: string;
+    formatted?: string;
+  };
+  googleMapsUrl?: string;
+  appleMapsUrl?: string;
+  wazeUrl?: string;
+  directions?: Array<{
+    fromLocation:
+      | "sjo"
+      | "san-jose"
+      | "pjm"
+      | "puerto-jimenez"
+      | "san-vito"
+      | "panama"
+      | "manuel-antonio"
+      | "uvita"
+      | "custom";
+    customFromLabel?: string;
+    transportMode?: "drive" | "flight-transfer" | "shuttle" | "bus" | "4x4";
+    duration?: string;
+    distance?: string;
+    roadConditions?: string;
+    stepByStep?: Array<{
+      stepNumber?: number;
+      instruction?: string;
+      landmark?: string;
+      _type: "step";
+      _key: string;
+    }>;
+    tips?: Array<string>;
+    costEstimate?: string;
+    bookingRequired?: boolean;
+    contactForBooking?: string;
+    sortOrder?: number;
+    _type: "directionItem";
+    _key: string;
+  }>;
+  localTransport?: Array<{
+    name: string;
+    type?: "taxi" | "shuttle" | "rental-car" | "tour-operator" | "bike";
+    description?: string;
+    contact?: string;
+    website?: string;
+    languages?: Array<string>;
+    _type: "localTransportItem";
+    _key: string;
+  }>;
+  nearbyAttractions?: Array<{
+    name: string;
+    description?: string;
+    distance?: string;
+    category?:
+      | "national-park"
+      | "beach"
+      | "wildlife"
+      | "town"
+      | "restaurant"
+      | "adventure"
+      | "cultural";
+    coordinates?: Geopoint;
+    image?: ImageWithMetadata;
+    _type: "nearbyAttraction";
+    _key: string;
+  }>;
+  seoKeywords?: Array<string>;
 };
 
 export type SanityFileAssetReference = {
@@ -479,19 +619,7 @@ export type Home = {
     media?: unknown;
     _type: "file";
   };
-  background_media_poster?: Array<
-    | ({
-        _key: string;
-      } & ImageWithMetadata)
-    | {
-        asset?: SanityImageAssetReference;
-        media?: unknown;
-        hotspot?: SanityImageHotspot;
-        crop?: SanityImageCrop;
-        _type: "image";
-        _key: string;
-      }
-  >;
+  background_media_poster?: ImageWithMetadata;
   featured_content_title?: string;
   featured_blog_title?: string;
   locationDetails?: {
@@ -503,22 +631,6 @@ export type Home = {
       lng?: number;
     };
   };
-};
-
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-};
-
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x: number;
-  y: number;
-  height: number;
-  width: number;
 };
 
 export type GalleryReference = {
@@ -638,6 +750,22 @@ export type Author = {
     _type: "block";
     _key: string;
   }>;
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+};
+
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x: number;
+  y: number;
+  height: number;
+  width: number;
 };
 
 export type Tour = {
@@ -784,12 +912,7 @@ export type Accommodation = {
   bedrooms?: number;
   bathrooms?: number;
   propertyType?:
-    | "villa"
-    | "house"
-    | "apartment"
-    | "studio"
-    | "cabin"
-    | "eco-lodge";
+    "villa" | "house" | "apartment" | "studio" | "cabin" | "eco-lodge";
   location?: {
     address?: string;
     city?: string;
@@ -803,6 +926,53 @@ export type Accommodation = {
     icon?: string;
     _key: string;
   }>;
+  activityBlocks?: Array<
+    {
+      _key: string;
+    } & ActivityBlockReference
+  >;
+  whyChooseVillaBruno?: WhyChooseVillaBrunoReference;
+};
+
+export type WhyChooseVillaBruno = {
+  _id: string;
+  _type: "whyChooseVillaBruno";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  language?: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  slug: Slug;
+  mainImage?: ImageWithMetadata;
+  isPublished?: boolean;
+  displayOrder?: number;
+  comparisonTable?: Array<{
+    feature: string;
+    villaBruno: string;
+    largeEcoResorts?: string;
+    corcovadoLodges?: string;
+    traditionalHotels?: string;
+    otherVacationRentals?: string;
+    category?:
+      "sustainability" | "experience" | "comfort" | "location" | "value";
+    sortOrder?: number;
+    isHighlight?: boolean;
+    _type: "comparisonRow";
+    _key: string;
+  }>;
+  keyDifferentiators?: Array<{
+    title: string;
+    description: string;
+    icon?: string;
+    sortOrder?: number;
+    _type: "differentiator";
+    _key: string;
+  }>;
+  idealFor?: Array<string>;
+  lessSuitableFor?: Array<string>;
+  seoKeywords?: Array<string>;
 };
 
 export type CancellationPolicies = {
@@ -921,14 +1091,14 @@ export type SanityFileAsset = {
   title?: string;
   description?: string;
   altText?: string;
-  sha1hash?: string;
-  extension?: string;
-  mimeType?: string;
-  size?: number;
-  assetId?: string;
+  sha1hash: string;
+  extension: string;
+  mimeType: string;
+  size: number;
+  assetId: string;
   uploadId?: string;
-  path?: string;
-  url?: string;
+  path: string;
+  url: string;
   source?: SanityAssetSourceData;
 };
 
@@ -950,14 +1120,14 @@ export type SanityImageAsset = {
   title?: string;
   description?: string;
   altText?: string;
-  sha1hash?: string;
-  extension?: string;
-  mimeType?: string;
-  size?: number;
-  assetId?: string;
+  sha1hash: string;
+  extension: string;
+  mimeType: string;
+  size: number;
+  assetId: string;
   uploadId?: string;
-  path?: string;
-  url?: string;
+  path: string;
+  url: string;
   metadata?: SanityImageMetadata;
   source?: SanityAssetSourceData;
 };
@@ -991,18 +1161,23 @@ export type AllSanitySchemaTypes =
   | TranslationMetadata
   | InternationalizedArrayReference
   | HomeReference
+  | LocationPageReference
   | FaqCategoryReference
+  | ActivityBlockReference
+  | WhyChooseVillaBrunoReference
   | InternationalizedArrayReferenceValue
+  | ActivityBlock
+  | LocationPage
   | SanityFileAssetReference
   | Home
-  | SanityImageCrop
-  | SanityImageHotspot
   | GalleryReference
   | CategoryReference
   | Page
   | AuthorReference
   | Post
   | Author
+  | SanityImageCrop
+  | SanityImageHotspot
   | Tour
   | Faq
   | PricingRulesReference
@@ -1010,6 +1185,7 @@ export type AllSanitySchemaTypes =
   | CancellationPoliciesReference
   | LogisticsReference
   | Accommodation
+  | WhyChooseVillaBruno
   | CancellationPolicies
   | FaqCategory
   | Gallery
@@ -1020,14 +1196,6 @@ export type AllSanitySchemaTypes =
   | SanityFileAsset
   | SanityAssetSourceData
   | SanityImageAsset;
-
-export declare const internalGroqTypeReferenceTo: unique symbol;
-
-type ArrayOf<T> = Array<
-  T & {
-    _key: string;
-  }
->;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: mainImageWithUrl
@@ -1078,7 +1246,7 @@ export type POSTS_QUERY_RESULT = Array<{
 
 // Source: src/sanity/lib/queries.ts
 // Variable: ALL_PAGES_QUERY
-// Query: *[_type == "page" && defined(slug.current)][]{  _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished}
+// Query: *[_type == "page" && defined(slug.current) && language == "en"][]{  _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished,  "translations": *[    _type == "translation.metadata" &&    ^._id in translations[].value._ref  ][0].translations[]{    ...(value->{      language,      slug    })  }}
 export type ALL_PAGES_QUERY_RESULT = Array<{
   _id: string;
   title: string | null;
@@ -1088,6 +1256,17 @@ export type ALL_PAGES_QUERY_RESULT = Array<{
   _createdAt: string;
   _updatedAt: string;
   isPublished: boolean | null;
+  translations: Array<
+    | {}
+    | {
+        language: string | null;
+        slug: Slug;
+      }
+    | {
+        language: string | null;
+        slug: null;
+      }
+  > | null;
 }>;
 
 // Source: src/sanity/lib/queries.ts
@@ -1379,12 +1558,7 @@ export type POST_QUERY_RESULT = {
               reference: {
                 slug: Slug | null;
                 _type:
-                  | "accommodation"
-                  | "faq"
-                  | "page"
-                  | "post"
-                  | "tour"
-                  | null;
+                  "accommodation" | "faq" | "page" | "post" | "tour" | null;
               };
               _type: "internalLink";
               _key: string;
@@ -1539,12 +1713,7 @@ export type PAGE_QUERY_RESULT = {
               reference: {
                 slug: Slug | null;
                 _type:
-                  | "accommodation"
-                  | "faq"
-                  | "page"
-                  | "post"
-                  | "tour"
-                  | null;
+                  "accommodation" | "faq" | "page" | "post" | "tour" | null;
               };
               _type: "internalLink";
               _key: string;
@@ -1723,6 +1892,15 @@ export type PAGE_QUERY_RESULT = {
         slug: null;
         body: null;
         isPublished: null;
+        faq: null;
+      }
+    | {
+        language: string | null;
+        title: string;
+        subtitle: string | null;
+        slug: Slug;
+        body: null;
+        isPublished: boolean | null;
         faq: null;
       }
     | {
@@ -2229,6 +2407,12 @@ export type TOURS_QUERY_RESULT = Array<{
       }
     | {
         language: string | null;
+        title: string;
+        slug: Slug;
+        description: string | null;
+      }
+    | {
+        language: string | null;
         title: string | null;
         slug: Slug;
         description: string | null;
@@ -2285,6 +2469,12 @@ export type FEATURED_TOURS_QUERY_RESULT = Array<{
         title: string;
         slug: Slug;
         description: string;
+      }
+    | {
+        language: string | null;
+        title: string;
+        slug: Slug;
+        description: string | null;
       }
     | {
         language: string | null;
@@ -2522,6 +2712,13 @@ export type TOUR_QUERY_RESULT = {
         title: string | null;
         slug: null;
         description: null;
+        body: null;
+      }
+    | {
+        language: string | null;
+        title: string;
+        slug: Slug;
+        description: string | null;
         body: null;
       }
     | {
@@ -2825,12 +3022,7 @@ export type ABOUT_QUERY_RESULT = {
               reference: {
                 slug: Slug | null;
                 _type:
-                  | "accommodation"
-                  | "faq"
-                  | "page"
-                  | "post"
-                  | "tour"
-                  | null;
+                  "accommodation" | "faq" | "page" | "post" | "tour" | null;
               };
               _type: "internalLink";
               _key: string;
@@ -3021,9 +3213,14 @@ export type HOME_QUERY_RESULT = {
   featured_blog_title: string | null;
   slug: null;
   mediaUrl: {
-    url: string | null;
+    url: string;
   } | null;
-  mediaPoster: null;
+  mediaPoster: {
+    url: string;
+    metadata: {
+      lqip: string | null;
+    } | null;
+  } | null;
   intro_body: Array<
     | {
         children?: Array<{
@@ -3039,12 +3236,7 @@ export type HOME_QUERY_RESULT = {
               reference: {
                 slug: Slug | null;
                 _type:
-                  | "accommodation"
-                  | "faq"
-                  | "page"
-                  | "post"
-                  | "tour"
-                  | null;
+                  "accommodation" | "faq" | "page" | "post" | "tour" | null;
               };
               _type: "internalLink";
               _key: string;
@@ -3250,9 +3442,14 @@ export type HOME_QUERY_RESULT = {
         featured_blog_title: string | null;
         slug: null;
         mediaUrl: {
-          url: string | null;
+          url: string;
         } | null;
-        mediaPoster: null;
+        mediaPoster: {
+          url: string;
+          metadata: {
+            lqip: string | null;
+          } | null;
+        } | null;
         intro_body: Array<
           | {
               children?: Array<{
@@ -3495,26 +3692,21 @@ export type FAQ_QUERY_RESULT = Array<{
 
 // Source: src/sanity/lib/queries.ts
 // Variable: BOOKINGS_QUERY
-// Query: *[  _type == "booking" &&  dateTime(checkOut) > dateTime(now()) &&  !(_id in path("drafts.**"))][]{  uid, checkIn, checkOut, guestName, source, email, phone, guests, totalPrice, currency, syncedAt}
+// Query: *[  _type == "booking" &&  dateTime(checkOut) > dateTime(now()) &&  !(_id in path("drafts.**"))][]{  uid, checkIn, checkOut, guestName, source, email, phone, guests, totalPrice, currency, syncedAt, isTest}
 export type BOOKINGS_QUERY_RESULT = Array<{
   uid: string;
   checkIn: string | null;
   checkOut: string;
   guestName: string | null;
   source:
-    | "airbnb"
-    | "booking"
-    | "direct"
-    | "expedia"
-    | "vrbo"
-    | "yourrentals"
-    | null;
+    "airbnb" | "booking" | "direct" | "expedia" | "vrbo" | "yourrentals" | null;
   email: string | null;
   phone: string | null;
   guests: number | null;
   totalPrice: number | null;
   currency: "crc" | "eur" | "usd" | null;
   syncedAt: string | null;
+  isTest: boolean | null;
 }>;
 
 // Source: src/sanity/lib/queries.ts
@@ -3536,7 +3728,7 @@ export type REVIEWS_QUERY_RESULT = Array<{
 
 // Source: src/sanity/lib/queries.ts
 // Variable: ACCOMMODATION_QUERY
-// Query: *[_type == "accommodation" && slug.current == $slug && language == $language][0] {    title, subtitle, description,    summary,    mainImage {  ...,  crop,  hotspot,  "metadata": asset->metadata},    body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })    },     language,     slug,     isPublished,     showBookingOptions,     showBookingDialog,    slideshow->{      "images": images[]{  _type,  ...select(    _type == "artDirectedImage" => {      "desktop": desktop {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "tablet": tablet {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "mobile": mobile {  ...,  crop,  hotspot,  "metadata": asset->metadata}    },    _type == "imageWithMetadata" || _type == "image" =>       {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }}  )}    },    faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },     capacity,     bedrooms,     bathrooms,     propertyType,     location,     highlightFeatures,    checkInTime,     checkOutTime,    amenities[]->{ title, description, icon },    'pricingRules': *[      _type == "accommodation" &&      language == "en" &&      slug.current == ^.slug.current      ][0].pricingRules[]-> {         title,         description,         ruleType,        season,        startDate,        endDate,        basePrice,        percentage,        fixedAmount,        minimumNights,        isActive,        displayOrder,        language    },    paymentMethods[]->{ title, description, type },    cancellationPolicy->{ title, description, rules },    logistics[]->{ title, description, type },    "translations": coalesce(      *[_type == "translation.metadata" && ^._id in translations[].value._ref][0].translations[]{        ...(value->{          language,          title,          subtitle,          description,          slug,          body[]{            ...,            ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })          },          showBookingOptions,          showBookingDialog,          faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },          capacity,           bedrooms,           bathrooms,           propertyType,           location,           highlightFeatures,          checkInTime,           checkOutTime        })      },      []    )  }
+// Query: *[_type == "accommodation" && slug.current == $slug && language == $language][0] {    title, subtitle, description,    summary,    mainImage {  ...,  crop,  hotspot,  "metadata": asset->metadata},    body[]{      ...,      ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })    },     language,     slug,     isPublished,     showBookingOptions,     showBookingDialog,    slideshow->{      "images": images[]{  _type,  ...select(    _type == "artDirectedImage" => {      "desktop": desktop {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "tablet": tablet {  ...,  crop,  hotspot,  "metadata": asset->metadata},      "mobile": mobile {  ...,  crop,  hotspot,  "metadata": asset->metadata}    },    _type == "imageWithMetadata" || _type == "image" =>       {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }}  )}    },    faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },     capacity,     bedrooms,     bathrooms,     propertyType,     location,     highlightFeatures,    checkInTime,     checkOutTime,    amenities[]->{ title, description, icon },    "activityBlocks": *[      _type == "activityBlock" &&      _id in ^.activityBlocks[]._ref &&      isPublished == true &&      language == ^.language    ] {      title,      subtitle,      description,      mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},      slug,      "activities": activities[] {        name,        description,        season,        duration,        distanceFromVilla,        transportIncluded,        difficulty,        highlights,        icon,        isFeatured,        sortOrder      } | order(sortOrder asc)    } | order(displayOrder asc),    "whyChooseVillaBruno": select(      defined(whyChooseVillaBruno) &&        whyChooseVillaBruno->isPublished == true &&        whyChooseVillaBruno->language == ^.language =>      whyChooseVillaBruno-> {        title,        subtitle,        description,        mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},        slug,        "comparisonTable": comparisonTable[] {          feature,          villaBruno,          largeEcoResorts,          corcovadoLodges,          traditionalHotels,          otherVacationRentals,          category,          sortOrder,          isHighlight        } | order(sortOrder asc),        "keyDifferentiators": keyDifferentiators[] {          title,          description,          icon,          sortOrder        } | order(sortOrder asc),        idealFor,        lessSuitableFor      },      null    ),    'pricingRules': *[      _type == "accommodation" &&      language == "en" &&      slug.current == ^.slug.current      ][0].pricingRules[]-> {         title,         description,         ruleType,        season,        startDate,        endDate,        basePrice,        percentage,        fixedAmount,        minimumNights,        isActive,        displayOrder,        language    },    paymentMethods[]->{ title, description, type },    cancellationPolicy->{ title, description, rules },    logistics[]->{       title,      description,      category,      checkInTime,      checkOutTime,      earlyCheckIn,      earlyCheckInFee,      lateCheckOut,      lateCheckOutFee,      instructions,      contactInfo,      address,      distance },    "translations": coalesce(      *[_type == "translation.metadata" && ^._id in translations[].value._ref][0].translations[]{        ...(value->{          language,          title,          subtitle,          description,          slug,          body[]{            ...,            ...select(  _type == "imageWithMetadata" || _type == "image" => {    ...,    crop,    hotspot,    "url": asset->url,    "metadata": asset->metadata {      lqip,      dimensions    }  })          },          showBookingOptions,          showBookingDialog,          faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },          capacity,           bedrooms,           bathrooms,           propertyType,           location,           highlightFeatures,          checkInTime,           checkOutTime,          "activityBlocks": *[            _type == "activityBlock" &&            _id in ^.activityBlocks[]._ref &&            isPublished == true &&            language == ^.language          ] {            title,            subtitle,            description,            mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},            slug,            "activities": activities[] {              name,              description,              season,              duration,              distanceFromVilla,              transportIncluded,              difficulty,              highlights,              icon,              isFeatured,              sortOrder            } | order(sortOrder asc)          } | order(displayOrder asc),          "whyChooseVillaBruno": select(            defined(whyChooseVillaBruno) &&              whyChooseVillaBruno->isPublished == true &&              whyChooseVillaBruno->language == ^.language =>            whyChooseVillaBruno-> {              title,              subtitle,              description,              mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},              slug,              "comparisonTable": comparisonTable[] {                feature,                villaBruno,                largeEcoResorts,                corcovadoLodges,                traditionalHotels,                otherVacationRentals,                category,                sortOrder,                isHighlight              } | order(sortOrder asc),              "keyDifferentiators": keyDifferentiators[] {                title,                description,                icon,                sortOrder              } | order(sortOrder asc),              idealFor,              lessSuitableFor            },            null          )        })      },      []    )  }
 export type ACCOMMODATION_QUERY_RESULT = {
   title: string;
   subtitle: string | null;
@@ -3736,13 +3928,7 @@ export type ACCOMMODATION_QUERY_RESULT = {
   bedrooms: number | null;
   bathrooms: number | null;
   propertyType:
-    | "apartment"
-    | "cabin"
-    | "eco-lodge"
-    | "house"
-    | "studio"
-    | "villa"
-    | null;
+    "apartment" | "cabin" | "eco-lodge" | "house" | "studio" | "villa" | null;
   location: {
     address?: string;
     city?: string;
@@ -3763,6 +3949,88 @@ export type ACCOMMODATION_QUERY_RESULT = {
     description: string;
     icon: string | null;
   }> | null;
+  activityBlocks: Array<{
+    title: string;
+    subtitle: string | null;
+    description: string | null;
+    mainImage: {
+      _type: "imageWithMetadata";
+      asset: SanityImageAssetReference | null;
+      media?: unknown;
+      hotspot: SanityImageHotspot | null;
+      crop: SanityImageCrop | null;
+      alt: string | null;
+      author?: string;
+      caption?: string;
+      sourceUrl?: string;
+      url: string | null;
+      metadata: {
+        lqip: string | null;
+        dimensions: SanityImageDimensions | null;
+      } | null;
+    } | null;
+    slug: Slug;
+    activities: Array<{
+      name: string;
+      description: string | null;
+      season: "dry" | "green" | "whale" | "year-round" | null;
+      duration: string | null;
+      distanceFromVilla: string | null;
+      transportIncluded: boolean | null;
+      difficulty: "challenging" | "easy" | "moderate" | null;
+      highlights: Array<string> | null;
+      icon: string | null;
+      isFeatured: boolean | null;
+      sortOrder: number | null;
+    }> | null;
+  }>;
+  whyChooseVillaBruno: {
+    title: string;
+    subtitle: string | null;
+    description: string | null;
+    mainImage: {
+      _type: "imageWithMetadata";
+      asset: SanityImageAssetReference | null;
+      media?: unknown;
+      hotspot: SanityImageHotspot | null;
+      crop: SanityImageCrop | null;
+      alt: string | null;
+      author?: string;
+      caption?: string;
+      sourceUrl?: string;
+      url: string | null;
+      metadata: {
+        lqip: string | null;
+        dimensions: SanityImageDimensions | null;
+      } | null;
+    } | null;
+    slug: Slug;
+    comparisonTable: Array<{
+      feature: string;
+      villaBruno: string;
+      largeEcoResorts: string | null;
+      corcovadoLodges: string | null;
+      traditionalHotels: string | null;
+      otherVacationRentals: string | null;
+      category:
+        | "comfort"
+        | "experience"
+        | "location"
+        | "sustainability"
+        | "value"
+        | null;
+      sortOrder: number | null;
+      isHighlight: boolean | null;
+    }> | null;
+    keyDifferentiators: Array<{
+      title: string;
+      description: string;
+      icon: string | null;
+      sortOrder: number | null;
+    }> | null;
+    idealFor: Array<string> | null;
+    lessSuitableFor: Array<string> | null;
+  } | null;
   pricingRules: Array<{
     title: string;
     description: string;
@@ -3791,386 +4059,28 @@ export type ACCOMMODATION_QUERY_RESULT = {
   logistics: Array<{
     title: string;
     description: string;
-    type: null;
+    category:
+      | "checkin_checkout"
+      | "emergency"
+      | "house_rules"
+      | "local_area"
+      | "services"
+      | "transportation";
+    checkInTime: string | null;
+    checkOutTime: string | null;
+    earlyCheckIn: boolean | null;
+    earlyCheckInFee: number | null;
+    lateCheckOut: boolean | null;
+    lateCheckOutFee: number | null;
+    instructions: string | null;
+    contactInfo: string | null;
+    address: string | null;
+    distance: string | null;
   }> | null;
   translations:
     | Array<never>
     | Array<
         | {}
-        | {
-            language: string | null;
-            title: string;
-            subtitle: null;
-            description: null;
-            slug: Slug;
-            body: null;
-            showBookingOptions: null;
-            showBookingDialog: null;
-            faq: null;
-            capacity: null;
-            bedrooms: null;
-            bathrooms: null;
-            propertyType: null;
-            location: null;
-            highlightFeatures: null;
-            checkInTime: null;
-            checkOutTime: null;
-          }
-        | {
-            language: string | null;
-            title: string | null;
-            subtitle: string | null;
-            description: null;
-            slug: null;
-            body: null;
-            showBookingOptions: null;
-            showBookingDialog: null;
-            faq: null;
-            capacity: null;
-            bedrooms: null;
-            bathrooms: null;
-            propertyType: null;
-            location: null;
-            highlightFeatures: null;
-            checkInTime: null;
-            checkOutTime: null;
-          }
-        | {
-            language: string | null;
-            title: string | null;
-            subtitle: null;
-            description: null;
-            slug: Slug;
-            body: Array<
-              | {
-                  children?: Array<{
-                    marks?: Array<string>;
-                    text?: string;
-                    _type: "span";
-                    _key: string;
-                  }>;
-                  style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
-                  listItem?: "bullet";
-                  markDefs?: Array<
-                    | {
-                        reference?:
-                          | AccommodationReference
-                          | FaqReference
-                          | PageReference
-                          | PostReference
-                          | TourReference;
-                        _type: "internalLink";
-                        _key: string;
-                      }
-                    | {
-                        href?: string;
-                        blank?: boolean;
-                        _type: "link";
-                        _key: string;
-                      }
-                  >;
-                  level?: number;
-                  _type: "block";
-                  _key: string;
-                }
-              | {
-                  _key: string;
-                  _type: "columnsBlock";
-                  columnCount?: "2" | "3";
-                  content?: Array<
-                    | ({
-                        _key: string;
-                      } & ImageWithMetadata)
-                    | {
-                        children?: Array<{
-                          marks?: Array<string>;
-                          text?: string;
-                          _type: "span";
-                          _key: string;
-                        }>;
-                        style?:
-                          | "blockquote"
-                          | "h1"
-                          | "h2"
-                          | "h3"
-                          | "h4"
-                          | "h5"
-                          | "h6"
-                          | "normal";
-                        listItem?: "bullet" | "number";
-                        markDefs?: Array<{
-                          href?: string;
-                          _type: "link";
-                          _key: string;
-                        }>;
-                        level?: number;
-                        _type: "block";
-                        _key: string;
-                      }
-                  >;
-                }
-              | {
-                  _key: string;
-                  _type: "imageWithMetadata";
-                  asset?: SanityImageAssetReference;
-                  media?: unknown;
-                  hotspot: SanityImageHotspot | null;
-                  crop: SanityImageCrop | null;
-                  alt?: string;
-                  author?: string;
-                  caption?: string;
-                  sourceUrl?: string;
-                  url: string | null;
-                  metadata: {
-                    lqip: string | null;
-                    dimensions: SanityImageDimensions | null;
-                  } | null;
-                }
-            > | null;
-            showBookingOptions: null;
-            showBookingDialog: null;
-            faq: Array<{
-              question: string;
-              answerFormat: "blockContent" | "text" | null;
-              answer: string | null;
-              answerBlockContent: BlockContent | null;
-              slug: Slug;
-              keywords: Array<string> | null;
-              showOnVillaBruno: boolean | null;
-              category: {
-                title: string;
-                slug: Slug;
-              };
-            }> | null;
-            capacity: null;
-            bedrooms: null;
-            bathrooms: null;
-            propertyType: null;
-            location: null;
-            highlightFeatures: null;
-            checkInTime: null;
-            checkOutTime: null;
-          }
-        | {
-            language: string | null;
-            title: string | null;
-            subtitle: null;
-            description: string | null;
-            slug: Slug;
-            body: Array<
-              | {
-                  children?: Array<{
-                    marks?: Array<string>;
-                    text?: string;
-                    _type: "span";
-                    _key: string;
-                  }>;
-                  style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
-                  listItem?: "bullet";
-                  markDefs?: Array<
-                    | {
-                        reference?:
-                          | AccommodationReference
-                          | FaqReference
-                          | PageReference
-                          | PostReference
-                          | TourReference;
-                        _type: "internalLink";
-                        _key: string;
-                      }
-                    | {
-                        href?: string;
-                        blank?: boolean;
-                        _type: "link";
-                        _key: string;
-                      }
-                  >;
-                  level?: number;
-                  _type: "block";
-                  _key: string;
-                }
-              | {
-                  _key: string;
-                  _type: "columnsBlock";
-                  columnCount?: "2" | "3";
-                  content?: Array<
-                    | ({
-                        _key: string;
-                      } & ImageWithMetadata)
-                    | {
-                        children?: Array<{
-                          marks?: Array<string>;
-                          text?: string;
-                          _type: "span";
-                          _key: string;
-                        }>;
-                        style?:
-                          | "blockquote"
-                          | "h1"
-                          | "h2"
-                          | "h3"
-                          | "h4"
-                          | "h5"
-                          | "h6"
-                          | "normal";
-                        listItem?: "bullet" | "number";
-                        markDefs?: Array<{
-                          href?: string;
-                          _type: "link";
-                          _key: string;
-                        }>;
-                        level?: number;
-                        _type: "block";
-                        _key: string;
-                      }
-                  >;
-                }
-              | {
-                  _key: string;
-                  _type: "imageWithMetadata";
-                  asset?: SanityImageAssetReference;
-                  media?: unknown;
-                  hotspot: SanityImageHotspot | null;
-                  crop: SanityImageCrop | null;
-                  alt?: string;
-                  author?: string;
-                  caption?: string;
-                  sourceUrl?: string;
-                  url: string | null;
-                  metadata: {
-                    lqip: string | null;
-                    dimensions: SanityImageDimensions | null;
-                  } | null;
-                }
-            > | null;
-            showBookingOptions: null;
-            showBookingDialog: null;
-            faq: null;
-            capacity: null;
-            bedrooms: null;
-            bathrooms: null;
-            propertyType: null;
-            location: string | null;
-            highlightFeatures: null;
-            checkInTime: null;
-            checkOutTime: null;
-          }
-        | {
-            language: string | null;
-            title: string | null;
-            subtitle: string | null;
-            description: string | null;
-            slug: Slug;
-            body: Array<
-              | {
-                  children?: Array<{
-                    marks?: Array<string>;
-                    text?: string;
-                    _type: "span";
-                    _key: string;
-                  }>;
-                  style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
-                  listItem?: "bullet";
-                  markDefs?: Array<
-                    | {
-                        reference?:
-                          | AccommodationReference
-                          | FaqReference
-                          | PageReference
-                          | PostReference
-                          | TourReference;
-                        _type: "internalLink";
-                        _key: string;
-                      }
-                    | {
-                        href?: string;
-                        blank?: boolean;
-                        _type: "link";
-                        _key: string;
-                      }
-                  >;
-                  level?: number;
-                  _type: "block";
-                  _key: string;
-                }
-              | {
-                  _key: string;
-                  _type: "columnsBlock";
-                  columnCount?: "2" | "3";
-                  content?: Array<
-                    | ({
-                        _key: string;
-                      } & ImageWithMetadata)
-                    | {
-                        children?: Array<{
-                          marks?: Array<string>;
-                          text?: string;
-                          _type: "span";
-                          _key: string;
-                        }>;
-                        style?:
-                          | "blockquote"
-                          | "h1"
-                          | "h2"
-                          | "h3"
-                          | "h4"
-                          | "h5"
-                          | "h6"
-                          | "normal";
-                        listItem?: "bullet" | "number";
-                        markDefs?: Array<{
-                          href?: string;
-                          _type: "link";
-                          _key: string;
-                        }>;
-                        level?: number;
-                        _type: "block";
-                        _key: string;
-                      }
-                  >;
-                }
-              | {
-                  _key: string;
-                  _type: "imageWithMetadata";
-                  asset?: SanityImageAssetReference;
-                  media?: unknown;
-                  hotspot: SanityImageHotspot | null;
-                  crop: SanityImageCrop | null;
-                  alt?: string;
-                  author?: string;
-                  caption?: string;
-                  sourceUrl?: string;
-                  url: string | null;
-                  metadata: {
-                    lqip: string | null;
-                    dimensions: SanityImageDimensions | null;
-                  } | null;
-                }
-            > | null;
-            showBookingOptions: null;
-            showBookingDialog: null;
-            faq: Array<{
-              question: string;
-              answerFormat: "blockContent" | "text" | null;
-              answer: string | null;
-              answerBlockContent: BlockContent | null;
-              slug: Slug;
-              keywords: Array<string> | null;
-              showOnVillaBruno: boolean | null;
-              category: {
-                title: string;
-                slug: Slug;
-              };
-            }> | null;
-            capacity: null;
-            bedrooms: null;
-            bathrooms: null;
-            propertyType: null;
-            location: null;
-            highlightFeatures: null;
-            checkInTime: null;
-            checkOutTime: null;
-          }
         | {
             language: string | null;
             title: string;
@@ -4304,6 +4214,493 @@ export type ACCOMMODATION_QUERY_RESULT = {
             }> | null;
             checkInTime: string | null;
             checkOutTime: string | null;
+            activityBlocks: Array<{
+              title: string;
+              subtitle: string | null;
+              description: string | null;
+              mainImage: {
+                _type: "imageWithMetadata";
+                asset: SanityImageAssetReference | null;
+                media?: unknown;
+                hotspot: SanityImageHotspot | null;
+                crop: SanityImageCrop | null;
+                alt: string | null;
+                author?: string;
+                caption?: string;
+                sourceUrl?: string;
+                url: string | null;
+                metadata: {
+                  lqip: string | null;
+                  dimensions: SanityImageDimensions | null;
+                } | null;
+              } | null;
+              slug: Slug;
+              activities: Array<{
+                name: string;
+                description: string | null;
+                season: "dry" | "green" | "whale" | "year-round" | null;
+                duration: string | null;
+                distanceFromVilla: string | null;
+                transportIncluded: boolean | null;
+                difficulty: "challenging" | "easy" | "moderate" | null;
+                highlights: Array<string> | null;
+                icon: string | null;
+                isFeatured: boolean | null;
+                sortOrder: number | null;
+              }> | null;
+            }>;
+            whyChooseVillaBruno: {
+              title: string;
+              subtitle: string | null;
+              description: string | null;
+              mainImage: {
+                _type: "imageWithMetadata";
+                asset: SanityImageAssetReference | null;
+                media?: unknown;
+                hotspot: SanityImageHotspot | null;
+                crop: SanityImageCrop | null;
+                alt: string | null;
+                author?: string;
+                caption?: string;
+                sourceUrl?: string;
+                url: string | null;
+                metadata: {
+                  lqip: string | null;
+                  dimensions: SanityImageDimensions | null;
+                } | null;
+              } | null;
+              slug: Slug;
+              comparisonTable: Array<{
+                feature: string;
+                villaBruno: string;
+                largeEcoResorts: string | null;
+                corcovadoLodges: string | null;
+                traditionalHotels: string | null;
+                otherVacationRentals: string | null;
+                category:
+                  | "comfort"
+                  | "experience"
+                  | "location"
+                  | "sustainability"
+                  | "value"
+                  | null;
+                sortOrder: number | null;
+                isHighlight: boolean | null;
+              }> | null;
+              keyDifferentiators: Array<{
+                title: string;
+                description: string;
+                icon: string | null;
+                sortOrder: number | null;
+              }> | null;
+              idealFor: Array<string> | null;
+              lessSuitableFor: Array<string> | null;
+            } | null;
+          }
+        | {
+            language: string | null;
+            title: string;
+            subtitle: null;
+            description: null;
+            slug: Slug;
+            body: null;
+            showBookingOptions: null;
+            showBookingDialog: null;
+            faq: null;
+            capacity: null;
+            bedrooms: null;
+            bathrooms: null;
+            propertyType: null;
+            location: null;
+            highlightFeatures: null;
+            checkInTime: null;
+            checkOutTime: null;
+            activityBlocks: Array<never>;
+            whyChooseVillaBruno: null;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            subtitle: string | null;
+            description: null;
+            slug: null;
+            body: null;
+            showBookingOptions: null;
+            showBookingDialog: null;
+            faq: null;
+            capacity: null;
+            bedrooms: null;
+            bathrooms: null;
+            propertyType: null;
+            location: null;
+            highlightFeatures: null;
+            checkInTime: null;
+            checkOutTime: null;
+            activityBlocks: Array<never>;
+            whyChooseVillaBruno: null;
+          }
+        | {
+            language: string | null;
+            title: string;
+            subtitle: string | null;
+            description: string | null;
+            slug: Slug;
+            body: null;
+            showBookingOptions: null;
+            showBookingDialog: null;
+            faq: null;
+            capacity: null;
+            bedrooms: null;
+            bathrooms: null;
+            propertyType: null;
+            location: null;
+            highlightFeatures: null;
+            checkInTime: null;
+            checkOutTime: null;
+            activityBlocks: Array<never>;
+            whyChooseVillaBruno: null;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            subtitle: null;
+            description: null;
+            slug: Slug;
+            body: Array<
+              | {
+                  children?: Array<{
+                    marks?: Array<string>;
+                    text?: string;
+                    _type: "span";
+                    _key: string;
+                  }>;
+                  style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+                  listItem?: "bullet";
+                  markDefs?: Array<
+                    | {
+                        reference?:
+                          | AccommodationReference
+                          | FaqReference
+                          | PageReference
+                          | PostReference
+                          | TourReference;
+                        _type: "internalLink";
+                        _key: string;
+                      }
+                    | {
+                        href?: string;
+                        blank?: boolean;
+                        _type: "link";
+                        _key: string;
+                      }
+                  >;
+                  level?: number;
+                  _type: "block";
+                  _key: string;
+                }
+              | {
+                  _key: string;
+                  _type: "columnsBlock";
+                  columnCount?: "2" | "3";
+                  content?: Array<
+                    | ({
+                        _key: string;
+                      } & ImageWithMetadata)
+                    | {
+                        children?: Array<{
+                          marks?: Array<string>;
+                          text?: string;
+                          _type: "span";
+                          _key: string;
+                        }>;
+                        style?:
+                          | "blockquote"
+                          | "h1"
+                          | "h2"
+                          | "h3"
+                          | "h4"
+                          | "h5"
+                          | "h6"
+                          | "normal";
+                        listItem?: "bullet" | "number";
+                        markDefs?: Array<{
+                          href?: string;
+                          _type: "link";
+                          _key: string;
+                        }>;
+                        level?: number;
+                        _type: "block";
+                        _key: string;
+                      }
+                  >;
+                }
+              | {
+                  _key: string;
+                  _type: "imageWithMetadata";
+                  asset?: SanityImageAssetReference;
+                  media?: unknown;
+                  hotspot: SanityImageHotspot | null;
+                  crop: SanityImageCrop | null;
+                  alt?: string;
+                  author?: string;
+                  caption?: string;
+                  sourceUrl?: string;
+                  url: string | null;
+                  metadata: {
+                    lqip: string | null;
+                    dimensions: SanityImageDimensions | null;
+                  } | null;
+                }
+            > | null;
+            showBookingOptions: null;
+            showBookingDialog: null;
+            faq: Array<{
+              question: string;
+              answerFormat: "blockContent" | "text" | null;
+              answer: string | null;
+              answerBlockContent: BlockContent | null;
+              slug: Slug;
+              keywords: Array<string> | null;
+              showOnVillaBruno: boolean | null;
+              category: {
+                title: string;
+                slug: Slug;
+              };
+            }> | null;
+            capacity: null;
+            bedrooms: null;
+            bathrooms: null;
+            propertyType: null;
+            location: null;
+            highlightFeatures: null;
+            checkInTime: null;
+            checkOutTime: null;
+            activityBlocks: Array<never>;
+            whyChooseVillaBruno: null;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            subtitle: null;
+            description: string | null;
+            slug: Slug;
+            body: Array<
+              | {
+                  children?: Array<{
+                    marks?: Array<string>;
+                    text?: string;
+                    _type: "span";
+                    _key: string;
+                  }>;
+                  style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+                  listItem?: "bullet";
+                  markDefs?: Array<
+                    | {
+                        reference?:
+                          | AccommodationReference
+                          | FaqReference
+                          | PageReference
+                          | PostReference
+                          | TourReference;
+                        _type: "internalLink";
+                        _key: string;
+                      }
+                    | {
+                        href?: string;
+                        blank?: boolean;
+                        _type: "link";
+                        _key: string;
+                      }
+                  >;
+                  level?: number;
+                  _type: "block";
+                  _key: string;
+                }
+              | {
+                  _key: string;
+                  _type: "columnsBlock";
+                  columnCount?: "2" | "3";
+                  content?: Array<
+                    | ({
+                        _key: string;
+                      } & ImageWithMetadata)
+                    | {
+                        children?: Array<{
+                          marks?: Array<string>;
+                          text?: string;
+                          _type: "span";
+                          _key: string;
+                        }>;
+                        style?:
+                          | "blockquote"
+                          | "h1"
+                          | "h2"
+                          | "h3"
+                          | "h4"
+                          | "h5"
+                          | "h6"
+                          | "normal";
+                        listItem?: "bullet" | "number";
+                        markDefs?: Array<{
+                          href?: string;
+                          _type: "link";
+                          _key: string;
+                        }>;
+                        level?: number;
+                        _type: "block";
+                        _key: string;
+                      }
+                  >;
+                }
+              | {
+                  _key: string;
+                  _type: "imageWithMetadata";
+                  asset?: SanityImageAssetReference;
+                  media?: unknown;
+                  hotspot: SanityImageHotspot | null;
+                  crop: SanityImageCrop | null;
+                  alt?: string;
+                  author?: string;
+                  caption?: string;
+                  sourceUrl?: string;
+                  url: string | null;
+                  metadata: {
+                    lqip: string | null;
+                    dimensions: SanityImageDimensions | null;
+                  } | null;
+                }
+            > | null;
+            showBookingOptions: null;
+            showBookingDialog: null;
+            faq: null;
+            capacity: null;
+            bedrooms: null;
+            bathrooms: null;
+            propertyType: null;
+            location: string | null;
+            highlightFeatures: null;
+            checkInTime: null;
+            checkOutTime: null;
+            activityBlocks: Array<never>;
+            whyChooseVillaBruno: null;
+          }
+        | {
+            language: string | null;
+            title: string | null;
+            subtitle: string | null;
+            description: string | null;
+            slug: Slug;
+            body: Array<
+              | {
+                  children?: Array<{
+                    marks?: Array<string>;
+                    text?: string;
+                    _type: "span";
+                    _key: string;
+                  }>;
+                  style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "normal";
+                  listItem?: "bullet";
+                  markDefs?: Array<
+                    | {
+                        reference?:
+                          | AccommodationReference
+                          | FaqReference
+                          | PageReference
+                          | PostReference
+                          | TourReference;
+                        _type: "internalLink";
+                        _key: string;
+                      }
+                    | {
+                        href?: string;
+                        blank?: boolean;
+                        _type: "link";
+                        _key: string;
+                      }
+                  >;
+                  level?: number;
+                  _type: "block";
+                  _key: string;
+                }
+              | {
+                  _key: string;
+                  _type: "columnsBlock";
+                  columnCount?: "2" | "3";
+                  content?: Array<
+                    | ({
+                        _key: string;
+                      } & ImageWithMetadata)
+                    | {
+                        children?: Array<{
+                          marks?: Array<string>;
+                          text?: string;
+                          _type: "span";
+                          _key: string;
+                        }>;
+                        style?:
+                          | "blockquote"
+                          | "h1"
+                          | "h2"
+                          | "h3"
+                          | "h4"
+                          | "h5"
+                          | "h6"
+                          | "normal";
+                        listItem?: "bullet" | "number";
+                        markDefs?: Array<{
+                          href?: string;
+                          _type: "link";
+                          _key: string;
+                        }>;
+                        level?: number;
+                        _type: "block";
+                        _key: string;
+                      }
+                  >;
+                }
+              | {
+                  _key: string;
+                  _type: "imageWithMetadata";
+                  asset?: SanityImageAssetReference;
+                  media?: unknown;
+                  hotspot: SanityImageHotspot | null;
+                  crop: SanityImageCrop | null;
+                  alt?: string;
+                  author?: string;
+                  caption?: string;
+                  sourceUrl?: string;
+                  url: string | null;
+                  metadata: {
+                    lqip: string | null;
+                    dimensions: SanityImageDimensions | null;
+                  } | null;
+                }
+            > | null;
+            showBookingOptions: null;
+            showBookingDialog: null;
+            faq: Array<{
+              question: string;
+              answerFormat: "blockContent" | "text" | null;
+              answer: string | null;
+              answerBlockContent: BlockContent | null;
+              slug: Slug;
+              keywords: Array<string> | null;
+              showOnVillaBruno: boolean | null;
+              category: {
+                title: string;
+                slug: Slug;
+              };
+            }> | null;
+            capacity: null;
+            bedrooms: null;
+            bathrooms: null;
+            propertyType: null;
+            location: null;
+            highlightFeatures: null;
+            checkInTime: null;
+            checkOutTime: null;
+            activityBlocks: Array<never>;
+            whyChooseVillaBruno: null;
           }
       >;
 } | null;
@@ -4327,6 +4724,200 @@ export type PRICING_RULES_QUERY_RESULT = Array<{
   language: string | null;
 }>;
 
+// Source: src/sanity/lib/queries.ts
+// Variable: ACTIVITY_BLOCK_QUERY
+// Query: *[_type == 'activityBlock' && language == $language && isPublished == true] | order(displayOrder asc) {  title,  subtitle,  description,  mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},  slug,  "activities": activities[] {    name,    description,    season,    duration,    distanceFromVilla,    transportIncluded,    difficulty,    highlights,    icon,    isFeatured,    sortOrder  } | order(sortOrder asc),  seoKeywords}
+export type ACTIVITY_BLOCK_QUERY_RESULT = Array<{
+  title: string;
+  subtitle: string | null;
+  description: string | null;
+  mainImage: {
+    _type: "imageWithMetadata";
+    asset: SanityImageAssetReference | null;
+    media?: unknown;
+    hotspot: SanityImageHotspot | null;
+    crop: SanityImageCrop | null;
+    alt: string | null;
+    author?: string;
+    caption?: string;
+    sourceUrl?: string;
+    url: string | null;
+    metadata: {
+      lqip: string | null;
+      dimensions: SanityImageDimensions | null;
+    } | null;
+  } | null;
+  slug: Slug;
+  activities: Array<{
+    name: string;
+    description: string | null;
+    season: "dry" | "green" | "whale" | "year-round" | null;
+    duration: string | null;
+    distanceFromVilla: string | null;
+    transportIncluded: boolean | null;
+    difficulty: "challenging" | "easy" | "moderate" | null;
+    highlights: Array<string> | null;
+    icon: string | null;
+    isFeatured: boolean | null;
+    sortOrder: number | null;
+  }> | null;
+  seoKeywords: Array<string> | null;
+}>;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: WHY_CHOOSE_VILLA_BRUNO_QUERY
+// Query: *[_type == 'whyChooseVillaBruno' && language == $language && isPublished == true][0] {  title,  subtitle,  description,  mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},  slug,  "comparisonTable": comparisonTable[] {    feature,    villaBruno,    largeEcoResorts,    corcovadoLodges,    traditionalHotels,    otherVacationRentals,    category,    sortOrder,    isHighlight  } | order(sortOrder asc),  "keyDifferentiators": keyDifferentiators[] {    title,    description,    icon,    sortOrder  } | order(sortOrder asc),  idealFor,  lessSuitableFor,  seoKeywords}
+export type WHY_CHOOSE_VILLA_BRUNO_QUERY_RESULT = {
+  title: string;
+  subtitle: string | null;
+  description: string | null;
+  mainImage: {
+    _type: "imageWithMetadata";
+    asset: SanityImageAssetReference | null;
+    media?: unknown;
+    hotspot: SanityImageHotspot | null;
+    crop: SanityImageCrop | null;
+    alt: string | null;
+    author?: string;
+    caption?: string;
+    sourceUrl?: string;
+    url: string | null;
+    metadata: {
+      lqip: string | null;
+      dimensions: SanityImageDimensions | null;
+    } | null;
+  } | null;
+  slug: Slug;
+  comparisonTable: Array<{
+    feature: string;
+    villaBruno: string;
+    largeEcoResorts: string | null;
+    corcovadoLodges: string | null;
+    traditionalHotels: string | null;
+    otherVacationRentals: string | null;
+    category:
+      "comfort" | "experience" | "location" | "sustainability" | "value" | null;
+    sortOrder: number | null;
+    isHighlight: boolean | null;
+  }> | null;
+  keyDifferentiators: Array<{
+    title: string;
+    description: string;
+    icon: string | null;
+    sortOrder: number | null;
+  }> | null;
+  idealFor: Array<string> | null;
+  lessSuitableFor: Array<string> | null;
+  seoKeywords: Array<string> | null;
+} | null;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: LOCATION_PAGE_QUERY
+// Query: *[_type == 'locationPage' && slug.current == $slug && language == $language][0] {  isPublished,  title,  subtitle,  description,  mainImage {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }},  slug,  coordinates,  address,  googleMapsUrl,  appleMapsUrl,  wazeUrl,  "directions": directions[] {    fromLocation,    customFromLabel,    transportMode,    duration,    distance,    roadConditions,    "stepByStep": stepByStep[] {      stepNumber,      instruction,      landmark    } | order(stepNumber asc),    tips,    costEstimate,    bookingRequired,    contactForBooking,    sortOrder  } | order(sortOrder asc),  "localTransport": localTransport[] {    name,    type,    description,    contact,    website,    languages  },  "nearbyAttractions": nearbyAttractions[] {    name,    description,    distance,    category,    coordinates,    image {  ...,  alt,  crop,  hotspot,  asset,  "url": asset->url,  "metadata": asset->metadata {    lqip,    dimensions  }}  },  seoKeywords}
+export type LOCATION_PAGE_QUERY_RESULT = {
+  isPublished: boolean | null;
+  title: string;
+  subtitle: string | null;
+  description: string | null;
+  mainImage: {
+    _type: "imageWithMetadata";
+    asset: SanityImageAssetReference | null;
+    media?: unknown;
+    hotspot: SanityImageHotspot | null;
+    crop: SanityImageCrop | null;
+    alt: string | null;
+    author?: string;
+    caption?: string;
+    sourceUrl?: string;
+    url: string | null;
+    metadata: {
+      lqip: string | null;
+      dimensions: SanityImageDimensions | null;
+    } | null;
+  } | null;
+  slug: Slug;
+  coordinates: Geopoint | null;
+  address: {
+    street?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    postalCode?: string;
+    formatted?: string;
+  } | null;
+  googleMapsUrl: string | null;
+  appleMapsUrl: string | null;
+  wazeUrl: string | null;
+  directions: Array<{
+    fromLocation:
+      | "custom"
+      | "manuel-antonio"
+      | "panama"
+      | "pjm"
+      | "puerto-jimenez"
+      | "san-jose"
+      | "san-vito"
+      | "sjo"
+      | "uvita";
+    customFromLabel: string | null;
+    transportMode:
+      "4x4" | "bus" | "drive" | "flight-transfer" | "shuttle" | null;
+    duration: string | null;
+    distance: string | null;
+    roadConditions: string | null;
+    stepByStep: Array<{
+      stepNumber: number | null;
+      instruction: string | null;
+      landmark: string | null;
+    }> | null;
+    tips: Array<string> | null;
+    costEstimate: string | null;
+    bookingRequired: boolean | null;
+    contactForBooking: string | null;
+    sortOrder: number | null;
+  }> | null;
+  localTransport: Array<{
+    name: string;
+    type: "bike" | "rental-car" | "shuttle" | "taxi" | "tour-operator" | null;
+    description: string | null;
+    contact: string | null;
+    website: string | null;
+    languages: Array<string> | null;
+  }> | null;
+  nearbyAttractions: Array<{
+    name: string;
+    description: string | null;
+    distance: string | null;
+    category:
+      | "adventure"
+      | "beach"
+      | "cultural"
+      | "national-park"
+      | "restaurant"
+      | "town"
+      | "wildlife"
+      | null;
+    coordinates: Geopoint | null;
+    image: {
+      _type: "imageWithMetadata";
+      asset: SanityImageAssetReference | null;
+      media?: unknown;
+      hotspot: SanityImageHotspot | null;
+      crop: SanityImageCrop | null;
+      alt: string | null;
+      author?: string;
+      caption?: string;
+      sourceUrl?: string;
+      url: string | null;
+      metadata: {
+        lqip: string | null;
+        dimensions: SanityImageDimensions | null;
+      } | null;
+    } | null;
+  }> | null;
+  seoKeywords: Array<string> | null;
+} | null;
+
 // Query TypeMap
 import "@sanity/client";
 declare module "@sanity/client" {
@@ -4336,7 +4927,7 @@ declare module "@sanity/client" {
     '{\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}': MainImageWithDimensionsResult;
     '{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n}': GalleryImageProjectionResult;
     '*[_type == "post" && defined(slug.current) && (language == "en" || !defined(language))][0...32]{\n  _id, title, slug, \n  mainImage {\n  ...,\n  crop,\n  hotspot,\n  "url": asset->url,\n  "metadata": asset->metadata\n},\n  _createdAt, _updatedAt, isPublished\n}': POSTS_QUERY_RESULT;
-    '*[_type == "page" && defined(slug.current)][]{\n  _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished\n}': ALL_PAGES_QUERY_RESULT;
+    '*[_type == "page" && defined(slug.current) && language == "en"][]{\n  _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished,\n  "translations": *[\n    _type == "translation.metadata" &&\n    ^._id in translations[].value._ref\n  ][0].translations[]{\n    ...(value->{\n      language,\n      slug\n    })\n  }\n}': ALL_PAGES_QUERY_RESULT;
     '*[_type == "page" && slug.current == $slug && language == $language][0] {\n  title, subtitle, description,\n  mainImage {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n  body[]{\n    ...,\n    ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n  }, language, slug, isPublished, showBookingOptions, showBookingDialog,\n  slideshow->{\n    "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n}\n  },\n  price, faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },\n  "translations": coalesce(\n    *[_type == "translation" && ^._id in translations[].value._ref][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        subtitle,\n        description,\n        slug,\n        body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n        showBookingOptions,\n        showBookingDialog,\n        faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} }\n      })\n    },\n    []\n  )\n}': PAGES_QUERY_RESULT;
     '\n  *[_type == \'post\' && defined(slug.current) && $category in categories[]->title && language == $language] {\n    title,\n    slug,\n    isPublished,\n    mainImage {\n  ...,\n  crop,\n  hotspot,\n  "url": asset->url,\n  "metadata": asset->metadata\n},\n    \'category\': *[_type == \'category\' && title == $category],\n    "translations": *[\n      _type == "translation.metadata" && \n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        title,\n        slug\n      })\n    }\n  }\n': FEATURED_POSTS_QUERY_RESULT;
     '*[_type == "post" && slug.current == $slug && (language == "en" || !defined(language))][0]{\n  title, \n  description,\n  publishedAt,\n  tldr,\n  "faq":coalesce(faq[]->{\n    question,\n    answerFormat,\n    answer,\n    answerBlockContent,\n    slug,\n    keywords,\n    showOnVillaBruno,\n    category->{\n      title,\n      slug,\n      language\n    }\n  }, []),\n  body[]{\n    ...,\n    ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n    markDefs[] {\n        ...,\n        _type == "internalLink" => {\n          ...,\n          "reference": {\n            "slug": reference->slug,\n            "_type": reference->_type\n          }\n        }\n      },\n    columnsBlock {\n      columnCount,\n      content[]{\n        ...,\n        ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n      }\n    }\n  },\n  mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}, \n  openGraph {\n    title,\n    description,\n    url,\n    image {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  },\n  language, isPublished, slug\n}': POST_QUERY_RESULT;
@@ -4350,9 +4941,12 @@ declare module "@sanity/client" {
     '\n  *[_type==\'home\' && language == $language][0] {\n    hero_title,\n    hero_slogan,\n    hero_body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n    },\n    subtitle,\n    language,\n    featured_content_title,\n    featured_blog_title,\n    slug,\n    \'mediaUrl\': background_media.asset->{url},\n    \'mediaPoster\': background_media_poster.asset->{\n      url,\n      metadata {\n        lqip\n      }\n    },\n    intro_body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n      markDefs[] {\n        ...,\n        _type == "internalLink" => {\n          ...,\n          "reference": {\n            "slug": reference->slug,\n            "_type": reference->_type\n          }\n        }\n      }\n    },\n    locationDetails,\n    \'translations\': *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        hero_title,\n        hero_slogan,\n        hero_body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n        },\n        subtitle,\n        language,\n        featured_content_title,\n        featured_blog_title,\n        slug,\n        \'mediaUrl\': background_media.asset->{url},\n        \'mediaPoster\': background_media_poster.asset->{\n          url,\n          metadata {\n            lqip\n          }\n        },\n        intro_body[]{\n          ...,\n          ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n),\n          markDefs[] {\n            ...,\n            _type == "internalLink" => {\n              ...,\n              "slug": @.reference-> slug\n            }\n          }\n        },\n        locationDetails\n      })\n    }\n  }\n': HOME_QUERY_RESULT;
     '\n  *[_type == \'gallery\' && $category in categories[] -> title][0] {\n    title,\n    "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n}\n  }\n': GALLERY_QUERY_RESULT;
     '\n  *[_type == \'faq\' && language == $language] | order(displayOrder asc) {\n    category->{title, slug, language}, question, answerFormat, answer, answerBlockContent, keywords, showOnVillaBruno, slug, language,\n    "translations": *[\n      _type == "translation.metadata" &&\n      ^._id in translations[].value._ref\n    ][0].translations[]{\n      ...(value->{\n        language,\n        category->{title, slug, language}, question, answerFormat, answer, answerBlockContent, keywords, showOnVillaBruno, slug\n      })\n    }\n  }\n': FAQ_QUERY_RESULT;
-    '*[\n  _type == "booking" &&\n  dateTime(checkOut) > dateTime(now()) &&\n  !(_id in path("drafts.**"))\n][]{\n  uid, checkIn, checkOut, guestName, source, email, phone, guests, totalPrice, currency, syncedAt\n}': BOOKINGS_QUERY_RESULT;
+    '*[\n  _type == "booking" &&\n  dateTime(checkOut) > dateTime(now()) &&\n  !(_id in path("drafts.**"))\n][]{\n  uid, checkIn, checkOut, guestName, source, email, phone, guests, totalPrice, currency, syncedAt, isTest\n}': BOOKINGS_QUERY_RESULT;
     '*[_type == "review"][] | order(date desc){\n  _id,\n  platform,\n  author,\n  rating,\n  date,\n  reviewText,\n  photoUrl\n}': REVIEWS_QUERY_RESULT;
-    '\n  *[_type == "accommodation" && slug.current == $slug && language == $language][0] {\n    title, subtitle, description,\n    summary,\n    mainImage {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n    body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n    }, \n    language, \n    slug, \n    isPublished, \n    showBookingOptions, \n    showBookingDialog,\n    slideshow->{\n      "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n}\n    },\n    faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} }, \n    capacity, \n    bedrooms, \n    bathrooms, \n    propertyType, \n    location, \n    highlightFeatures,\n    checkInTime, \n    checkOutTime,\n    amenities[]->{ title, description, icon },\n    \'pricingRules\': *[\n      _type == "accommodation" &&\n      language == "en" &&\n      slug.current == ^.slug.current\n      ][0].pricingRules[]-> { \n        title, \n        description, \n        ruleType,\n        season,\n        startDate,\n        endDate,\n        basePrice,\n        percentage,\n        fixedAmount,\n        minimumNights,\n        isActive,\n        displayOrder,\n        language\n    },\n    paymentMethods[]->{ title, description, type },\n    cancellationPolicy->{ title, description, rules },\n    logistics[]->{ title, description, type },\n    "translations": coalesce(\n      *[_type == "translation.metadata" && ^._id in translations[].value._ref][0].translations[]{\n        ...(value->{\n          language,\n          title,\n          subtitle,\n          description,\n          slug,\n          body[]{\n            ...,\n            ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n          },\n          showBookingOptions,\n          showBookingDialog,\n          faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },\n          capacity, \n          bedrooms, \n          bathrooms, \n          propertyType, \n          location, \n          highlightFeatures,\n          checkInTime, \n          checkOutTime\n        })\n      },\n      []\n    )\n  }\n': ACCOMMODATION_QUERY_RESULT;
+    '\n  *[_type == "accommodation" && slug.current == $slug && language == $language][0] {\n    title, subtitle, description,\n    summary,\n    mainImage {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n    body[]{\n      ...,\n      ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n    }, \n    language, \n    slug, \n    isPublished, \n    showBookingOptions, \n    showBookingDialog,\n    slideshow->{\n      "images": images[]{\n  _type,\n  ...select(\n    _type == "artDirectedImage" => {\n      "desktop": desktop {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "tablet": tablet {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n},\n      "mobile": mobile {\n  ...,\n  crop,\n  hotspot,\n  "metadata": asset->metadata\n}\n    },\n    _type == "imageWithMetadata" || _type == "image" => \n      {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  )\n}\n    },\n    faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} }, \n    capacity, \n    bedrooms, \n    bathrooms, \n    propertyType, \n    location, \n    highlightFeatures,\n    checkInTime, \n    checkOutTime,\n    amenities[]->{ title, description, icon },\n    "activityBlocks": *[\n      _type == "activityBlock" &&\n      _id in ^.activityBlocks[]._ref &&\n      isPublished == true &&\n      language == ^.language\n    ] {\n      title,\n      subtitle,\n      description,\n      mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n},\n      slug,\n      "activities": activities[] {\n        name,\n        description,\n        season,\n        duration,\n        distanceFromVilla,\n        transportIncluded,\n        difficulty,\n        highlights,\n        icon,\n        isFeatured,\n        sortOrder\n      } | order(sortOrder asc)\n    } | order(displayOrder asc),\n    "whyChooseVillaBruno": select(\n      defined(whyChooseVillaBruno) &&\n        whyChooseVillaBruno->isPublished == true &&\n        whyChooseVillaBruno->language == ^.language =>\n      whyChooseVillaBruno-> {\n        title,\n        subtitle,\n        description,\n        mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n},\n        slug,\n        "comparisonTable": comparisonTable[] {\n          feature,\n          villaBruno,\n          largeEcoResorts,\n          corcovadoLodges,\n          traditionalHotels,\n          otherVacationRentals,\n          category,\n          sortOrder,\n          isHighlight\n        } | order(sortOrder asc),\n        "keyDifferentiators": keyDifferentiators[] {\n          title,\n          description,\n          icon,\n          sortOrder\n        } | order(sortOrder asc),\n        idealFor,\n        lessSuitableFor\n      },\n      null\n    ),\n    \'pricingRules\': *[\n      _type == "accommodation" &&\n      language == "en" &&\n      slug.current == ^.slug.current\n      ][0].pricingRules[]-> { \n        title, \n        description, \n        ruleType,\n        season,\n        startDate,\n        endDate,\n        basePrice,\n        percentage,\n        fixedAmount,\n        minimumNights,\n        isActive,\n        displayOrder,\n        language\n    },\n    paymentMethods[]->{ title, description, type },\n    cancellationPolicy->{ title, description, rules },\n    logistics[]->{ \n      title,\n      description,\n      category,\n      checkInTime,\n      checkOutTime,\n      earlyCheckIn,\n      earlyCheckInFee,\n      lateCheckOut,\n      lateCheckOutFee,\n      instructions,\n      contactInfo,\n      address,\n      distance \n},\n    "translations": coalesce(\n      *[_type == "translation.metadata" && ^._id in translations[].value._ref][0].translations[]{\n        ...(value->{\n          language,\n          title,\n          subtitle,\n          description,\n          slug,\n          body[]{\n            ...,\n            ...select(\n  _type == "imageWithMetadata" || _type == "image" => {\n    ...,\n    crop,\n    hotspot,\n    "url": asset->url,\n    "metadata": asset->metadata {\n      lqip,\n      dimensions\n    }\n  }\n)\n          },\n          showBookingOptions,\n          showBookingDialog,\n          faq[]->{ question, answerFormat, answer, answerBlockContent, slug, keywords, showOnVillaBruno, category->{title, slug} },\n          capacity, \n          bedrooms, \n          bathrooms, \n          propertyType, \n          location, \n          highlightFeatures,\n          checkInTime, \n          checkOutTime,\n          "activityBlocks": *[\n            _type == "activityBlock" &&\n            _id in ^.activityBlocks[]._ref &&\n            isPublished == true &&\n            language == ^.language\n          ] {\n            title,\n            subtitle,\n            description,\n            mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n},\n            slug,\n            "activities": activities[] {\n              name,\n              description,\n              season,\n              duration,\n              distanceFromVilla,\n              transportIncluded,\n              difficulty,\n              highlights,\n              icon,\n              isFeatured,\n              sortOrder\n            } | order(sortOrder asc)\n          } | order(displayOrder asc),\n          "whyChooseVillaBruno": select(\n            defined(whyChooseVillaBruno) &&\n              whyChooseVillaBruno->isPublished == true &&\n              whyChooseVillaBruno->language == ^.language =>\n            whyChooseVillaBruno-> {\n              title,\n              subtitle,\n              description,\n              mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n},\n              slug,\n              "comparisonTable": comparisonTable[] {\n                feature,\n                villaBruno,\n                largeEcoResorts,\n                corcovadoLodges,\n                traditionalHotels,\n                otherVacationRentals,\n                category,\n                sortOrder,\n                isHighlight\n              } | order(sortOrder asc),\n              "keyDifferentiators": keyDifferentiators[] {\n                title,\n                description,\n                icon,\n                sortOrder\n              } | order(sortOrder asc),\n              idealFor,\n              lessSuitableFor\n            },\n            null\n          )\n        })\n      },\n      []\n    )\n  }\n': ACCOMMODATION_QUERY_RESULT;
     "*[_type == 'pricingRules' && _id in $rulesIds][] { \n      title, \n      description, \n      ruleType,\n      season,\n      startDate,\n      endDate,\n      basePrice,\n      percentage,\n      fixedAmount,\n      minimumNights,\n      isActive,\n      displayOrder,\n      language\n    }\n    ": PRICING_RULES_QUERY_RESULT;
+    '*[_type == \'activityBlock\' && language == $language && isPublished == true] | order(displayOrder asc) {\n  title,\n  subtitle,\n  description,\n  mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n},\n  slug,\n  "activities": activities[] {\n    name,\n    description,\n    season,\n    duration,\n    distanceFromVilla,\n    transportIncluded,\n    difficulty,\n    highlights,\n    icon,\n    isFeatured,\n    sortOrder\n  } | order(sortOrder asc),\n  seoKeywords\n}': ACTIVITY_BLOCK_QUERY_RESULT;
+    '*[_type == \'whyChooseVillaBruno\' && language == $language && isPublished == true][0] {\n  title,\n  subtitle,\n  description,\n  mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n},\n  slug,\n  "comparisonTable": comparisonTable[] {\n    feature,\n    villaBruno,\n    largeEcoResorts,\n    corcovadoLodges,\n    traditionalHotels,\n    otherVacationRentals,\n    category,\n    sortOrder,\n    isHighlight\n  } | order(sortOrder asc),\n  "keyDifferentiators": keyDifferentiators[] {\n    title,\n    description,\n    icon,\n    sortOrder\n  } | order(sortOrder asc),\n  idealFor,\n  lessSuitableFor,\n  seoKeywords\n}': WHY_CHOOSE_VILLA_BRUNO_QUERY_RESULT;
+    '*[_type == \'locationPage\' && slug.current == $slug && language == $language][0] {\n  isPublished,\n  title,\n  subtitle,\n  description,\n  mainImage {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n},\n  slug,\n  coordinates,\n  address,\n  googleMapsUrl,\n  appleMapsUrl,\n  wazeUrl,\n  "directions": directions[] {\n    fromLocation,\n    customFromLabel,\n    transportMode,\n    duration,\n    distance,\n    roadConditions,\n    "stepByStep": stepByStep[] {\n      stepNumber,\n      instruction,\n      landmark\n    } | order(stepNumber asc),\n    tips,\n    costEstimate,\n    bookingRequired,\n    contactForBooking,\n    sortOrder\n  } | order(sortOrder asc),\n  "localTransport": localTransport[] {\n    name,\n    type,\n    description,\n    contact,\n    website,\n    languages\n  },\n  "nearbyAttractions": nearbyAttractions[] {\n    name,\n    description,\n    distance,\n    category,\n    coordinates,\n    image {\n  ...,\n  alt,\n  crop,\n  hotspot,\n  asset,\n  "url": asset->url,\n  "metadata": asset->metadata {\n    lqip,\n    dimensions\n  }\n}\n  },\n  seoKeywords\n}': LOCATION_PAGE_QUERY_RESULT;
   }
 }

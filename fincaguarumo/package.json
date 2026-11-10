@@ -22,6 +22,8 @@
     "migrate:villa-bruno": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/migrate-villa-bruno-to-accommodation.ts",
     "migrate:villa-bruno:dry-run": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/migrate-villa-bruno-to-accommodation.ts --dry-run",
     "migrate:reviews": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/migrate-reviews.ts",
+    "migrate:home-poster": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/migrate-home-poster.ts",
+    "migrate:home-poster:dry-run": "npx tsx --tsconfig tsconfig.scripts.json --require dotenv/config scripts/migrate-home-poster.ts --dry-run",
     "eval": "npx tsx --require dotenv/config test-evaluation.js",
     "test": "jest",
     "test:watch": "jest --watch",
