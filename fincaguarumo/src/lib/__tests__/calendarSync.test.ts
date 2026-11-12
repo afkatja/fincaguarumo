@@ -9,19 +9,48 @@ import {
 import { Booking } from "../setBookings"
 
 // Mock Supabase client factory
+type DbBookingRow = {
+  uid: string | null
+  check_in: string | null
+  check_out: string | null
+  guest_name: string | null
+  source: string | null
+  email: string | null
+  phone: string | null
+  summary: string | null
+  description: string | null
+  is_test: boolean | null
+}
+
+type QueryResult = { data: DbBookingRow[] | null; error: any | null }
+
 const createMockSupabase = () => {
   const mockSingle = jest.fn().mockResolvedValue({ data: null, error: null })
-  let resolveData: any = []
+  let resolveData: DbBookingRow[] = []
+  let queryError: any | null = null
 
-  const queryBuilder: any = {}
-  queryBuilder.eq = jest.fn().mockImplementation(() => queryBuilder)
-  queryBuilder.neq = jest.fn().mockImplementation(() => queryBuilder)
-  queryBuilder.not = jest.fn().mockImplementation(() => queryBuilder)
-  queryBuilder.order = jest.fn().mockImplementation(() => queryBuilder)
-  queryBuilder.limit = jest.fn().mockImplementation(() => queryBuilder)
-  queryBuilder.single = mockSingle
-  queryBuilder.then = (resolve: any) =>
-    Promise.resolve({ data: resolveData, error: null }).then(resolve)
+  const queryBuilder: {
+    eq: jest.Mock
+    neq: jest.Mock
+    not: jest.Mock
+    order: jest.Mock
+    limit: jest.Mock
+    range: jest.Mock
+    single: jest.Mock
+    then: (resolve: (value: QueryResult) => unknown) => Promise<unknown>
+  } = {
+    eq: jest.fn().mockImplementation(() => queryBuilder),
+    neq: jest.fn().mockImplementation(() => queryBuilder),
+    not: jest.fn().mockImplementation(() => queryBuilder),
+    order: jest.fn().mockImplementation(() => queryBuilder),
+    limit: jest.fn().mockImplementation(() => queryBuilder),
+    range: jest.fn().mockImplementation(() =>
+      Promise.resolve({ data: resolveData, error: queryError }),
+    ),
+    single: mockSingle,
+    then: (resolve: any) =>
+      Promise.resolve({ data: resolveData, error: queryError }).then(resolve),
+  }
 
   const mockSelect = jest.fn().mockImplementation(() => queryBuilder)
 
@@ -57,8 +86,11 @@ const createMockSupabase = () => {
     mockUpsert,
     mockFrom,
     mockSelect,
-    setResolveData: (d: any) => {
+    setResolveData: (d: DbBookingRow[]) => {
       resolveData = d
+    },
+    setQueryError: (e: any | null) => {
+      queryError = e
     },
   }
 }
@@ -68,7 +100,8 @@ let mockEq: jest.Mock
 let mockSingle: jest.Mock
 let mockUpsert: jest.Mock
 let mockFrom: jest.Mock
-let setResolveData: (d: any) => void
+let setResolveData: (d: DbBookingRow[]) => void = () => {}
+let setQueryError: (e: any | null) => void = () => {}
 
 // Mock the Google Calendar service
 jest.mock("../google-calendar", () => ({
@@ -125,8 +158,10 @@ describe("Calendar Sync Service", () => {
     mockUpsert = mockResult.mockUpsert
     mockFrom = mockResult.mockFrom
     setResolveData = mockResult.setResolveData
+    setQueryError = mockResult.setQueryError
     setTestSupabaseClient(mockSupabase as any)
     setTestSiteUrl("http://localhost:3000")
+    setQueryError(null)
   })
 
   afterEach(() => {
@@ -136,16 +171,20 @@ describe("Calendar Sync Service", () => {
 
   describe("Background Sync Process (AC1, AC3)", () => {
     it("should fetch bookings from Supabase bookings table (AC1)", async () => {
-      const mockDbRows = mockBookings.map(b => ({
-        uid: b.uid,
-        check_in: b.start,
-        check_out: b.end,
-        guest_name: b.guestName,
-        source: b.source,
-        email: b.email,
-        phone: b.phone,
-        summary: b.summary,
-      }))
+      const mockDbRows: DbBookingRow[] = mockBookings.map((b, i) =>
+        ({
+          uid: (b.uid ?? null) as string | null,
+          check_in: b.start,
+          check_out: b.end,
+          guest_name: (b.guestName ?? null) as string | null,
+          source: (b.source ?? null) as string | null,
+          email: (b.email ?? null) as string | null,
+          phone: (b.phone ?? null) as string | null,
+          summary: (b.summary ?? null) as string | null,
+          description: null,
+          is_test: i === 1,
+        }) as DbBookingRow,
+      )
       setResolveData(mockDbRows)
 
       const result = await getCalendarSyncService().fetchBookings()
@@ -154,6 +193,8 @@ describe("Calendar Sync Service", () => {
       expect(result).toHaveLength(2)
       expect(result[0].uid).toBe("booking-1")
       expect(result[0].guestName).toBe("John Doe")
+      expect(result[0].isTest).toBe(false)
+      expect(result[1].isTest).toBe(true)
     })
 
     it("should sync bookings to calendar without performance impact (AC3)", async () => {
@@ -288,14 +329,12 @@ describe("Calendar Sync Service", () => {
   })
 
   describe("Error Handling and Retry Logic (Edge Cases)", () => {
-    it("should handle API failures gracefully", async () => {
-      ;(global.fetch as jest.Mock).mockRejectedValueOnce(
-        new Error("Network error"),
-      )
+    it("should propagate Supabase query errors instead of returning an empty list", async () => {
+      setQueryError(new Error("Supabase query failed"))
 
-      const result = await getCalendarSyncService().fetchBookingsFromAPI()
-
-      expect(result).toEqual([])
+      await expect(
+        getCalendarSyncService().fetchBookingsFromAPI(),
+      ).rejects.toThrow("Supabase query failed")
     })
 
     it("should implement exponential backoff for calendar API failures", async () => {

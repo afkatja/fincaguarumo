@@ -24,6 +24,9 @@ const BookingCalendar = ({
   const [loading, setLoading] = useState(false)
   const [activePopover, setActivePopover] = useState<string | null>(null)
   const [blockedDates, setBlockedDates] = useState<(Date | string)[]>([])
+  const [checkoutBlockedDates, setCheckoutBlockedDates] = useState<
+    (Date | string)[]
+  >([])
   const [fetchAttempted, setFetchAttempted] = useState(false)
 
   // Update parent component when loading state changes
@@ -57,11 +60,14 @@ const BookingCalendar = ({
           return
         }
 
-        // json.blockedDates is already an array of YYYY-MM-DD strings
+        // json.blockedDates is for the check-in picker;
+        // json.checkoutBlockedDates allows checkout on a check-in date.
         setBlockedDates(json.blockedDates || [])
+        setCheckoutBlockedDates(json.checkoutBlockedDates || [])
       } catch (error) {
         console.error("Error fetching availability:", error)
         setBlockedDates([])
+        setCheckoutBlockedDates([])
       } finally {
         setLoading(false)
       }
@@ -103,7 +109,7 @@ const BookingCalendar = ({
               onSelectDate(date, "check-out")
               setActivePopover(null)
             }}
-            disabledDates={blockedDates}
+            disabledDates={checkoutBlockedDates}
             loading={loading}
             minDate={selectedDates.checkIn}
             defaultMonth={selectedDates.checkIn || new Date()}

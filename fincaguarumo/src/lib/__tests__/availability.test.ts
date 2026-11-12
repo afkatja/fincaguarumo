@@ -41,6 +41,7 @@ const mockBookingsData = [
 ]
 
 let mockQueryBuilder: any
+let appliedFilters: string[] = []
 
 jest.mock("../../lib/auth", () => ({
   createSupabaseAdmin: () => ({
@@ -50,19 +51,33 @@ jest.mock("../../lib/auth", () => ({
 
 describe("Availability Service", () => {
   beforeEach(() => {
+    appliedFilters = []
     mockQueryBuilder = {
       select: jest.fn().mockReturnThis(),
       gte: jest.fn().mockReturnThis(),
-      not: jest.fn().mockReturnThis(),
-      neq: jest.fn().mockReturnThis(),
-      order: jest.fn().mockImplementation(() =>
-        Promise.resolve({
-          data: mockBookingsData.filter(
-            b => !b.is_test && b.guest_name !== "CLOSED - Not available",
-          ),
-          error: null,
-        }),
-      ),
+      not: jest.fn((col: string, op: string, val: unknown) => {
+        appliedFilters.push(`not:${col}:${op}:${JSON.stringify(val)}`)
+        return mockQueryBuilder
+      }),
+      neq: jest.fn((col: string, val: unknown) => {
+        appliedFilters.push(`neq:${col}:${JSON.stringify(val)}`)
+        return mockQueryBuilder
+      }),
+      order: jest.fn().mockReturnThis(),
+      range: jest.fn().mockImplementation(() => {
+        let data = [...mockBookingsData]
+        if (
+          appliedFilters.some(f => f === "not:is_test:is:true")
+        ) {
+          data = data.filter(b => b.is_test !== true)
+        }
+        if (
+          appliedFilters.some(f => f === 'neq:guest_name:"CLOSED - Not available"')
+        ) {
+          data = data.filter(b => b.guest_name !== "CLOSED - Not available")
+        }
+        return Promise.resolve({ data, error: null })
+      }),
     }
   })
 
@@ -84,6 +99,14 @@ describe("Availability Service", () => {
         booking_uid: "direct-1",
         reason: "Booked via direct",
       })
+
+      // Ensure the query requests the required exclusions; removing either
+      // production filter must cause this test to fail.
+      expect(mockQueryBuilder.not).toHaveBeenCalledWith("is_test", "is", true)
+      expect(mockQueryBuilder.neq).toHaveBeenCalledWith(
+        "guest_name",
+        "CLOSED - Not available",
+      )
 
       // Ensure the 18-month CLOSED block is not included
       expect(ranges.some(r => r.booking_uid?.includes("booking.com"))).toBe(false)

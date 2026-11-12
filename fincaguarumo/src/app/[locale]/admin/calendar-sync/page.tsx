@@ -9,6 +9,16 @@ const MAX_BOOKINGS_DISPLAY = 10
 const MAX_SYNC_LOGS_DISPLAY = 3
 const MAX_RETRIES = 2
 
+type AdminBooking = {
+  uid?: string
+  guest_name?: string | null
+  email?: string | null
+  phone?: string | null
+  source?: string | null
+  check_in?: string | null
+  check_out?: string | null
+}
+
 export default function CalendarSyncPage() {
   const { session, loading: authLoading, getAccessToken } = useSupabaseAuth()
   const [syncStatus, setSyncStatus] = useState<string>("idle")
@@ -79,16 +89,30 @@ export default function CalendarSyncPage() {
   const fetchBookings = async () => {
     setLoadingBookings(true)
     try {
-      const response = await fetch("/api/availability")
+      if (authLoading) {
+        return
+      }
+      const accessToken = await getAccessToken()
+      if (!accessToken) {
+        console.error("User not authenticated")
+        return
+      }
+
+      const response = await fetch("/api/bookings", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
       if (response.ok) {
-        const data = await response.json()
-        const ranges = data.ranges || data.merged || []
-        const bookingsFromRanges = ranges.map((range: any, index: number) => ({
-          uid: range.booking_uid || `booking-${index}`,
-          guestName: range.reason || "Unknown Guest",
-          source: range.reason?.replace("Booked via ", "") || "unknown",
-          start: range.start,
-          end: range.end,
+        const data = (await response.json()) as AdminBooking[]
+        const bookingsFromRanges = data.map((booking: AdminBooking, index: number) => ({
+          uid: booking.uid || `booking-${index}`,
+          guestName: booking.guest_name || "Unknown Guest",
+          source: booking.source || "unknown",
+          email: booking.email || undefined,
+          phone: booking.phone || undefined,
+          start: booking.check_in || undefined,
+          end: booking.check_out || undefined,
         }))
         setBookings(bookingsFromRanges)
       }

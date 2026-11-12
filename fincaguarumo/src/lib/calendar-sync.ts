@@ -11,6 +11,7 @@ type Booking = {
   start: string
   end: string
   summary?: string
+  description?: string
   source?: string
   guestName?: string
   status?: string
@@ -530,7 +531,24 @@ export class CalendarSyncService {
    * Fetch bookings directly from Supabase bookings table (no HTTP loopback)
    */
   async fetchBookings(): Promise<Booking[]> {
-    try {
+    type DbBookingRow = {
+      uid: string | null
+      check_in: string | null
+      check_out: string | null
+      guest_name: string | null
+      email: string | null
+      phone: string | null
+      source: string | null
+      summary: string | null
+      description: string | null
+      is_test: boolean | null
+    }
+
+    const pageSize = 1000
+    let offset = 0
+    const allRows: DbBookingRow[] = []
+
+    for (;;) {
       const { data, error } = await getSupabaseClient()
         .from("bookings")
         .select(
@@ -538,33 +556,36 @@ export class CalendarSyncService {
         )
         .neq("guest_name", "CLOSED - Not available")
         .order("check_in", { ascending: true })
+        .range(offset, offset + pageSize - 1)
 
       if (error) {
         console.error("Failed to fetch bookings from Supabase:", error)
-        return []
+        throw error
       }
 
-      const rawBookings: any[] = (data as any[]) || []
-      const filtered = rawBookings.filter((booking: any) => {
-        const guestName = (booking.guest_name || "").toLowerCase()
-        return !guestName.includes("closed - not available")
-      })
-
-      return filtered.map((b: any) => ({
-        uid: b.uid,
-        start: b.check_in,
-        end: b.check_out,
-        guestName: b.guest_name,
-        email: b.email,
-        phone: b.phone,
-        source: b.source,
-        summary: b.summary,
-        isTest: b.is_test,
-      }))
-    } catch (error) {
-      console.error("Failed to fetch bookings from Supabase:", error)
-      return []
+      const page = (data || []) as DbBookingRow[]
+      allRows.push(...page)
+      if (page.length < pageSize) break
+      offset += pageSize
     }
+
+    const filtered = allRows.filter((booking: DbBookingRow) => {
+      const guestName = (booking.guest_name || "").toLowerCase()
+      return !guestName.includes("closed - not available")
+    })
+
+    return filtered.map((b: DbBookingRow): Booking => ({
+      uid: b.uid ?? undefined,
+      start: b.check_in ?? "",
+      end: b.check_out ?? "",
+      guestName: b.guest_name ?? undefined,
+      email: b.email ?? undefined,
+      phone: b.phone ?? undefined,
+      source: b.source ?? undefined,
+      summary: b.summary ?? undefined,
+      description: b.description ?? undefined,
+      isTest: b.is_test ?? false,
+    }))
   }
 
   /**

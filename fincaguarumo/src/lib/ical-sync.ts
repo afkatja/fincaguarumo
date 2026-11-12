@@ -243,17 +243,11 @@ function parseIcsToBookings(
     const component = occurrence.item?.component ?? occurrence.component
     const status = component.getFirstPropertyValue("status")
     if (status && String(status).toUpperCase() === "CANCELLED") continue
-    // Use extractDateFromComponent with fallback to occurrence.startDate/endDate
-    const start = extractDateFromComponent(
-      component,
-      "dtstart",
-      occurrence.startDate.toJSDate(),
-    )
-    const end = extractDateFromComponent(
-      component,
-      "dtend",
-      occurrence.endDate.toJSDate(),
-    )
+    // Derive recurring all-day event dates from the occurrence's own
+    // startDate/endDate so the series component's DTSTART/DTEND cannot
+    // override each expanded occurrence's dates.
+    const start = occurrence.startDate.toJSDate().toISOString().slice(0, 10)
+    const end = occurrence.endDate.toJSDate().toISOString().slice(0, 10)
     const uid = component.getFirstPropertyValue("uid") ?? undefined
     const summary = component.getFirstPropertyValue("summary") ?? undefined
     const description =
@@ -494,7 +488,7 @@ async function cleanupCancelledBookings(
 
 export async function runIcalSync(
   force = false,
-  feedTimeoutMs = 30000,
+  feedTimeoutMs = 20000,
 ): Promise<{
   bookings: BookingResponse[]
   merged: ReturnType<typeof mergeBookings>

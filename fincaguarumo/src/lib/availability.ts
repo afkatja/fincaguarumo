@@ -30,20 +30,39 @@ export interface AvailabilityCheckResult {
 export async function fetchUnavailableRanges(): Promise<DateRange[]> {
   try {
     const today = new Date().toISOString().slice(0, 10)
-    const { data: bookingsData, error: bookingsError } = await supabaseAdmin
-      .from("bookings")
-      .select("uid, check_in, check_out, source, guest_name, is_test")
-      .gte("check_out", today)
-      .not("is_test", "is", true)
-      .neq("guest_name", "CLOSED - Not available")
-      .order("check_in", { ascending: true })
+    const pageSize = 1000
+    let offset = 0
+    const allBookings: Array<{
+      uid: string | null
+      check_in: string
+      check_out: string
+      source: string | null
+      guest_name: string | null
+      is_test: boolean | null
+    }> = []
 
-    if (bookingsError) {
-      console.error("Error fetching bookings data:", bookingsError)
-      throw bookingsError
+    for (;;) {
+      const { data, error } = await supabaseAdmin
+        .from("bookings")
+        .select("uid, check_in, check_out, source, guest_name, is_test")
+        .gte("check_out", today)
+        .not("is_test", "is", true)
+        .neq("guest_name", "CLOSED - Not available")
+        .order("check_in", { ascending: true })
+        .range(offset, offset + pageSize - 1)
+
+      if (error) {
+        console.error("Error fetching bookings data:", error)
+        throw error
+      }
+
+      const page = (data || []) as typeof allBookings[number][]
+      allBookings.push(...page)
+      if (page.length < pageSize) break
+      offset += pageSize
     }
 
-    const filtered = (bookingsData || []).filter(booking => {
+    const filtered = allBookings.filter(booking => {
       const guestName = (booking.guest_name || "").toLowerCase()
       return !guestName.includes("closed - not available")
     })
@@ -51,7 +70,7 @@ export async function fetchUnavailableRanges(): Promise<DateRange[]> {
     const ranges: DateRange[] = filtered.map(booking => ({
       start: booking.check_in.slice(0, 10),
       end: booking.check_out.slice(0, 10),
-      booking_uid: booking.uid,
+      booking_uid: booking.uid ?? undefined,
       reason: booking.source
         ? `Booked via ${booking.source}`
         : `Booked via Direct - ${booking.guest_name || "Guest"}`,
@@ -105,8 +124,8 @@ export function convertRangesToBlockedDates(
   const seenDates = new Set<string>()
 
   for (const range of ranges) {
-    const startStr = range.start || (range as any).start_date
-    const endStr = range.end || (range as any).end_date
+    const startStr = range.start || (range as AvailabilityRange).start_date
+    const endStr = range.end || (range as AvailabilityRange).end_date
     if (!startStr || !endStr) continue
 
     const [y, m, d] = startStr.slice(0, 10).split("-").map(Number)
@@ -116,6 +135,46 @@ export function convertRangesToBlockedDates(
     const endDate = new Date(Date.UTC(endY, endM - 1, endD))
 
     while (cur < endDate) {
+      const dateStr = cur.toISOString().slice(0, 10)
+      if (!seenDates.has(dateStr)) {
+        seenDates.add(dateStr)
+        blockedDates.push(dateStr)
+      }
+      cur.setUTCDate(cur.getUTCDate() + 1)
+    }
+  }
+
+  blockedDates.sort()
+  return blockedDates
+}
+
+/**
+ * Convert date ranges to individual blocked dates for the checkout picker.
+ * Blocks dates strictly after a booking's check-in through its check-out date
+ * (inclusive), so a guest may check out on another booking's check-in date
+ * (back-to-back) while dates during another booking's stay remain restricted.
+ */
+export function convertRangesToCheckoutBlockedDates(
+  ranges: DateRange[] | null,
+): string[] {
+  if (!ranges || !ranges.length) return []
+
+  const blockedDates: string[] = []
+  const seenDates = new Set<string>()
+
+  for (const range of ranges) {
+    const startStr = range.start || (range as AvailabilityRange).start_date
+    const endStr = range.end || (range as AvailabilityRange).end_date
+    if (!startStr || !endStr) continue
+
+    const [y, m, d] = startStr.slice(0, 10).split("-").map(Number)
+    const [endY, endM, endD] = endStr.slice(0, 10).split("-").map(Number)
+
+    // Start one day after check-in so checkout on a check-in date is allowed.
+    const cur = new Date(Date.UTC(y, m - 1, d + 1))
+    const endDate = new Date(Date.UTC(endY, endM - 1, endD))
+
+    while (cur <= endDate) {
       const dateStr = cur.toISOString().slice(0, 10)
       if (!seenDates.has(dateStr)) {
         seenDates.add(dateStr)

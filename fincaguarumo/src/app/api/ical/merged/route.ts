@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server"
 import { runIcalSync } from "@/lib/ical-sync"
+import crypto from "crypto"
 
 const CRON_SECRET = process.env.CALENDAR_SYNC_SECRET
 
 function constantTimeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) {
-    return false
-  }
-  let result = 0
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  }
-  return result === 0
+  const hashA = crypto.createHash("sha256").update(a).digest()
+  const hashB = crypto.createHash("sha256").update(b).digest()
+  return crypto.timingSafeEqual(hashA, hashB)
 }
 
 function validateCronSecret(providedSecret: string | null): boolean {

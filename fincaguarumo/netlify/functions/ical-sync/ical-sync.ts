@@ -16,18 +16,19 @@ export default async (request: Request, context: Context) => {
         body: JSON.stringify({ error: "Server configuration error" }),
       }
     }
-    if (secret !== CRON_SECRET) {
+    if (secret && secret !== CRON_SECRET) {
       console.error("Unauthorized iCal sync attempt")
       return Response.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const siteUrl = process.env.URL || "https://fincaguarumo.netlify.app"
-    const syncUrl = `${siteUrl}/api/ical/merged?force=true&secret=${CRON_SECRET}`
+    const syncUrl = `${siteUrl}/api/ical/merged?force=true`
 
     const apiResponse = await fetch(syncUrl, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "x-calendar-sync-secret": CRON_SECRET,
       },
     })
 

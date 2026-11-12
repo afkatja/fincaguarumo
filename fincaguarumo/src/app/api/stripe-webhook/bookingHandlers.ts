@@ -3,6 +3,7 @@ import { setBookings } from "../../../lib/setBookings"
 import { sendErrorEmail } from "../../../lib/sendErrorEmail"
 import { parsePropertyDate, formatForEmail } from "../../../lib/dateUtils"
 import { createSupabaseAdmin } from "@/lib/auth"
+import { isTestBooking } from "@/lib/testBookingDetection"
 import type { BookingType } from "@/types"
 import Stripe from "stripe"
 import { withRetries } from "@/lib/monitoring"
@@ -140,19 +141,27 @@ export async function saveBookingToSupabase(
 
           const { data: bookingData, error: bookingError } = await supabaseAdmin
             .from("bookings")
-            .upsert({
-              check_in: bookingDetails.checkIn!.toISOString(),
-              check_out: bookingDetails.checkOut!.toISOString(),
-              guest_name: customerDetails.name,
-              email: customerDetails.email,
-              phone: customerDetails.phoneNumber,
-              source: "direct",
-              uid: sessionId,
-              guests: bookingDetails.guests,
-              booking_type: bookingDetails.type,
-              total_price: bookingDetails.totalPrice,
-              currency: bookingDetails.currency,
-            }, { onConflict: "uid" })
+            .upsert(
+              {
+                check_in: bookingDetails.checkIn!.toISOString(),
+                check_out: bookingDetails.checkOut!.toISOString(),
+                guest_name: customerDetails.name,
+                email: customerDetails.email,
+                phone: customerDetails.phoneNumber,
+                source: "direct",
+                uid: sessionId,
+                guests: bookingDetails.guests,
+                booking_type: bookingDetails.type,
+                total_price: bookingDetails.totalPrice,
+                currency: bookingDetails.currency,
+                is_test: isTestBooking(
+                  sessionId,
+                  customerDetails.name,
+                  customerDetails.email,
+                ),
+              },
+              { onConflict: "uid" },
+            )
             .select()
 
           if (bookingError) {

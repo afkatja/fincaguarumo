@@ -81,6 +81,24 @@ export async function POST(request: Request) {
     let stats
     if (options.dryRun) {
       stats = await performDryRun()
+    } else if (!options.force && !(await calendarSyncService.shouldRunSync())) {
+      return NextResponse.json({
+        status: "skipped",
+        message: "Sync not due yet",
+        data: {
+          sync: {
+            total: 0,
+            created: 0,
+            updated: 0,
+            deleted: 0,
+            errors: 0,
+            skipped: true,
+          },
+          options,
+        },
+        completedAt: new Date().toISOString(),
+        triggeredBy: adminUser.email,
+      })
     } else {
       stats = await calendarSyncService.syncAllBookings()
     }
@@ -162,10 +180,17 @@ async function performDryRun(): Promise<{
         }
 
         if (booking.isTest) {
+          stats.deleted++
           continue
         }
 
-        if (booking.status === "cancelled" || booking.status === "canceled") {
+        const summary = (booking.summary || "").toLowerCase()
+        const isCancelled =
+          booking.status === "cancelled" ||
+          booking.status === "canceled" ||
+          /\bcancelled\b|\bcanceled\b|\bdeleted\b/.test(summary)
+
+        if (isCancelled) {
           stats.deleted++
         } else {
           const syncLog = await calendarSyncService.getSyncLog(booking.uid)
