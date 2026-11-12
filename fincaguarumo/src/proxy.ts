@@ -188,6 +188,6 @@ export default async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Match all paths including admin routes
-    "/((?!api|_next/static|_next/image|images|studio|favicon|assets|robots|_redirects|llms|sitemap.xml|sitemap_index.xml).*)",
+    "/((?!api|_next/static|_next/image|images|studio|favicon|assets|robots|_redirects|llms|sitemap).*)",
   ],
 }
