@@ -132,7 +132,7 @@ export function buildLodgingBusinessSchema(config: LodgingBusinessConfig) {
 
   return {
     "@type": "LodgingBusiness",
-    additionalType: "VacationRental",
+    additionalType: ["VacationRental", "TouristDestination"],
     name,
     identifier,
     alternateName,

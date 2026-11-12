@@ -479,6 +479,8 @@ export const ACCOMMODATION_QUERY = groq`
   *[_type == "accommodation" && slug.current == $slug && language == $language][0] {
     title, subtitle, description,
     summary,
+    _createdAt,
+    _updatedAt,
     mainImage ${mainImageMetadataOnly},
     body[]{
       ...,

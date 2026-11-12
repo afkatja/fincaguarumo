@@ -81,4 +81,8 @@ export const orgSchema = {
     "https://www.facebook.com/fincaguarumoosa",
     "https://maps.app.goo.gl/rqjLyadSSE4F9AMk7",
   ],
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": "https://fincaguarumo.com/villa-bruno",
+  },
 }

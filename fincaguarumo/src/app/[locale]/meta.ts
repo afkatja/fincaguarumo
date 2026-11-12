@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
     },
     metadataBase: new URL("https://fincaguarumo.com"),
     description:
-      "Stay at Villa Bruno in Finca Guarumo – a private eco-luxury villa in Costa Rica's Osa Peninsula. Explore jungle trails, birdwatching, and rural life near Corcovado National Park.",
+      "Stay at Villa Bruno on Finca Guarumo – a private eco-luxury villa in Costa Rica's Osa Peninsula. Explore jungle trails, birdwatching, and rural life near Corcovado National Park.",
     icons: {
       icon: "/favicon/icon.ico",
       apple: "/favicon/apple-touch-icon.png",
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
           url: "/images/finca-guarumo-v4.4.jpg",
           width: 1200,
           height: 630,
-          alt: "Finca Guarumo - Eco-Villa in Costa Rica's Osa Peninsula",
+          alt: "Villa Bruno, an eco-villa at Finca Guarumo, Osa Peninsula, Costa Rica — solar-powered sustainable accommodation near Corcovado National Park, birdwatching and jungle trails",
         },
       ],
       type: "website",
@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
       images: [
         {
           url: "/images/finca-guarumo-v4.4.jpg",
-          alt: "Finca Guarumo – Villa Bruno jungle view",
+          alt: "Villa Bruno, an eco-villa at Finca Guarumo, Osa Peninsula, Costa Rica — solar-powered sustainable accommodation near Corcovado National Park, birdwatching and jungle trails",
         },
       ],
     },

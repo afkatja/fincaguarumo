@@ -17,6 +17,11 @@ import {
   localeMap,
   gbpUrl,
   airbnbUrl,
+  staticAddress,
+  staticGeo,
+  staticKnowsAbout,
+  staticAmenities,
+  staticSameAs,
 } from "@/lib/schema/lodgingBusiness"
 import { orgSchema } from "@/lib/villa-json-ld"
 import { getLocalizedUrl } from "@/lib/url"
@@ -124,6 +129,8 @@ export type AccommodationContent = {
   isPublished: boolean
   showBookingOptions: boolean
   showBookingDialog: boolean
+  _createdAt?: string
+  _updatedAt?: string
   slideshow: {
     images: SanityImageObject[]
   }
@@ -287,7 +294,66 @@ export async function generateMetadata({
     : "/images/finca-guarumo-v4.4.jpg"
   const ogImageAlt = getImageAlt(content?.mainImage)
     ? getImageAlt(content.mainImage)
-    : `${content?.title || "Villa Bruno"} - Eco-Villa in Costa Rica`
+    : `Villa Bruno, an eco-villa featuring a terrace with ocean view, on Osa Peninsula, Costa Rica. Solar-powered sustainable accommodation near Corcovado National Park`
+
+  const speakableContent =
+    content?.summary ||
+    "Villa Bruno is a solar-powered eco-villa on Costa Rica's Osa Peninsula, offering birdwatching, jungle trails, and sustainable luxury accommodation near Corcovado National Park."
+
+  const condensedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        name: "Finca Guarumo",
+        url: "https://fincaguarumo.com",
+        description:
+          "Sustainable eco-lodge in Costa Rica's Osa Peninsula offering off-grid luxury accommodation near Corcovado National Park",
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Puerto Jiménez",
+          addressRegion: "Puntarenas",
+          addressCountry: "CR",
+        },
+        geo: {
+          "@type": "GeoCoordinates",
+          latitude: 8.496420632614996,
+          longitude: -83.3341457939961,
+        },
+        sameAs: [
+          "https://www.instagram.com/fincaguarumo.osa",
+          "https://www.facebook.com/fincaguarumoosa",
+          "https://maps.app.goo.gl/rqjLyadSSE4F9AMk7",
+        ],
+      },
+      {
+        "@type": "LodgingBusiness",
+        name: "Villa Bruno",
+        identifier: "villa-bruno-finca-guarumo",
+        additionalType: ["VacationRental", "TouristDestination"],
+        description:
+          "Villa Bruno is a solar-powered eco-villa on Costa Rica's Osa Peninsula near Puerto Jiménez and Corcovado National Park, offering wildlife viewing, birdwatching tours, and sustainable luxury accommodation for up to 4 guests.",
+        url: canonicalUrl,
+        address: staticAddress,
+        geo: staticGeo,
+        knowsAbout: staticKnowsAbout,
+        occupancy: {
+          "@type": "QuantitativeValue",
+          maxValue: 4,
+        },
+        amenityFeature: staticAmenities.map(a => ({
+          "@type": "LocationFeatureSpecification",
+          name: a.name,
+          value: a.value,
+        })),
+        sameAs: staticSameAs,
+        mainEntityOfPage: {
+          "@type": "WebPage",
+          "@id": canonicalUrl,
+        },
+      },
+    ],
+  }
 
   return {
     title,
@@ -308,7 +374,7 @@ export async function generateMetadata({
       description,
       url: canonicalUrl,
       siteName: "Finca Guarumo",
-      type: "website",
+      type: "article",
       locale: localeMap[locale] || "en_US",
       images: [
         {
@@ -333,6 +399,14 @@ export async function generateMetadata({
     },
     other: {
       "og:locale": localeMap[locale] || "en_US",
+      "name:speakable": speakableContent,
+      ...(content?._createdAt
+        ? { "article:publishedTime": content._createdAt }
+        : {}),
+      ...(content?._updatedAt
+        ? { "article:modifiedTime": content._updatedAt }
+        : {}),
+      "application-LD+json": JSON.stringify(condensedSchema),
     },
   }
 }
