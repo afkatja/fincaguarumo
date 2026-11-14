@@ -488,7 +488,7 @@ async function cleanupCancelledBookings(
 
 export async function runIcalSync(
   force = false,
-  feedTimeoutMs = 20000,
+  feedTimeoutMs = 10000,
 ): Promise<{
   bookings: BookingResponse[]
   merged: ReturnType<typeof mergeBookings>
