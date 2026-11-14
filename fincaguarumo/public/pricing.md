@@ -67,8 +67,8 @@
   "validThrough": "2027-12-31",
   "eligibleQuantity": {
     "@type": "QuantitativeValue",
-    "minValue": 1,
-    "maxValue": 4,
+    "minValue": 2,
+    "maxValue": 28,
     "unitCode": "DAY"
   },
   "eligibleTransactionVolume": {

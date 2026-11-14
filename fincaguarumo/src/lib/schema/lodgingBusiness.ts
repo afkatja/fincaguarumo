@@ -95,8 +95,8 @@ export interface LodgingBusinessConfig {
   starRating: string
   price: number
   priceCurrency: string
-  checkinTime: string
-  checkoutTime: string
+  checkinTime?: string
+  checkoutTime?: string
   validFrom: string
   images: string[]
   knowsAbout?: string[]
@@ -132,7 +132,7 @@ export function buildLodgingBusinessSchema(config: LodgingBusinessConfig) {
 
   return {
     "@type": "LodgingBusiness",
-    additionalType: "VacationRental",
+    additionalType: ["VacationRental", "TouristDestination"],
     name,
     identifier,
     alternateName,
@@ -230,14 +230,6 @@ export function buildWebSiteSchema(locale: string) {
     url: baseUrl,
     description:
       "Sustainable eco-lodge in Costa Rica's Osa Peninsula offering off-grid luxury accommodation near Corcovado National Park",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${baseUrl}/search?q={search_term_string}`,
-      },
-      queryInput: "required name=search_term_string",
-    },
     publisher: {
       "@type": "Organization",
       name: "Finca Guarumo",

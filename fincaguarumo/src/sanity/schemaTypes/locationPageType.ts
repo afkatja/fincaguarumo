@@ -32,10 +32,10 @@ export const locationPageType = defineType({
       name: "slug",
       type: "slug",
       options: {
-        source: "title",
         maxLength: 96,
         isUnique: isUniqueOtherThanLanguage,
       },
+      initialValue: { current: "location" },
       validation: rule =>
         rule
           .required()

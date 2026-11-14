@@ -181,7 +181,7 @@ export default function ActivityBlocks({
       {blocks.map((block, blockIndex) => (
         <div key={`${block.slug.current}-${blockIndex}`} className="space-y-6">
           <div className="flex gap-2">
-            {block.mainImage?.url && (
+            {block.mainImage && block.mainImage?.url && (
               <div className="relative aspect-video rounded-xl overflow-hidden flex-1">
                 <Image
                   src={block.mainImage.url}
@@ -211,7 +211,7 @@ export default function ActivityBlocks({
           </div>
 
           <div className="space-y-4 grid md:grid-cols-2 gap-2">
-            {block.activities
+            {(block.activities ?? [])
               .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
               .map((activity, index) => (
                 <article

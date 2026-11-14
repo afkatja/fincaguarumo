@@ -198,5 +198,10 @@
     "readLess": "Lee menos",
     "loadMoreReviews": "Cargar más reseñas",
     "readAllReviews": "Leea todas las reseñas."
+  },
+  "villaBruno": {
+    "activities": {
+      "title": "Ubicación y direcciones"
+    }
   }
 }

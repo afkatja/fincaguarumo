@@ -242,6 +242,11 @@ export default function WhyChooseVillaBruno({
                       defaultValue: "Traditional Hotels",
                     })}
                   </th>
+                  <th className="px-4 py-3 text-center font-semibold border-r border-border">
+                    {t("otherVacationRentals", {
+                      defaultValue: "Other Vacation Rentals",
+                    })}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -283,6 +288,9 @@ export default function WhyChooseVillaBruno({
                       </td>
                       <td className="px-4 py-3 text-center text-muted-foreground">
                         {row.traditionalHotels || "—"}
+                      </td>
+                      <td className="px-4 py-3 text-center text-muted-foreground">
+                        {row.otherVacationRentals || "—"}
                       </td>
                     </tr>
                   ))}

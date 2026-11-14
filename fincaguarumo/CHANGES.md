@@ -21,8 +21,8 @@ Implemented all Phase 2 fixes based on the technical SEO audit. All changes are 
 | `/` | 200 (English) | 200 (English, canonical) |
 | `/en` | 307 → `/` | 308 → `/` (via middleware) |
 | `/en/` | 307 → `/` | 308 → `/` (via middleware) |
-| `/en/en/*` | 307 chain | 308 → `/en/*` → 308 → `/` |
-| `/es/blog` | 308 → `/en/blog` | 308 → `/en/blog` |
+| `/en/en/*` | 307 chain | 308 → `/*` (single-hop to root-equivalent) |
+| `/es/blog` | 308 → `/en/blog` | 308 → `/blog` |
 | `/es/*` | 308 → `/es` | 308 → `/es` (serves English - needs translation) |
 
 ---
@@ -30,9 +30,16 @@ Implemented all Phase 2 fixes based on the technical SEO audit. All changes are 
 ## B. Noindex Cleanup
 
 ### robots.ts
-- Disallow: `/api/`, `/studio/`, `/login/`, `/register/`, `/admin/`, `/_next/`, `/_redirects`, `*.pdf$`, `*.doc$`
+- Disallow: `/api/`
+- Disallow: `/studio/`
+- Disallow: `/login/`
+- Disallow: `/register/`
+- Disallow: `/admin/`
+- Disallow: `/_next/`
+- Disallow: `/_redirects`
+- Disallow: `*.pdf$`
+- Disallow: `*.doc$`
 - Allow: all public pages
-- Explicit rules for Googlebot, Bingbot, GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot
 
 ### Sitemap
 - Only includes 200 OK, indexable URLs
@@ -90,7 +97,7 @@ Implemented all Phase 2 fixes based on the technical SEO audit. All changes are 
 ### src/lib/generateSiteMap.ts
 - Generates from Sanity + routes
 - Only indexable, 200, canonical URLs
-- Accurate `lastmod` from Sanity `_updatedAt`
+- `lastmod` from Sanity `_updatedAt` for Sanity-sourced URLs (posts, tours, pages, accommodation); current date for root and static entries
 - Hreflang alternates only for existing translations
 - No double-locale URLs (`/en/en/...`)
 - No non-English locale URLs without translations
@@ -120,31 +127,15 @@ Sitemap: https://fincaguarumo.com/sitemap.xml
 ```txt
 User-agent: *
 Allow: /
-Disallow: /api/, /studio/, /login/, /register/, /admin/, /_next/, /_redirects, *.pdf$, *.doc$
-
-User-agent: Googlebot
-Allow: /
-Disallow: /api/, /studio/, /admin/, /_next/
-
-User-agent: Bingbot
-Allow: /
-Disallow: /api/, /studio/, /admin/, /_next/
-
-User-agent: GPTBot
-Allow: /
-Disallow: /api/, /studio/, /admin/, /_next/
-
-User-agent: OAI-SearchBot
-Allow: /
-Disallow: /api/, /studio/, /admin/, /_next/
-
-User-agent: ClaudeBot
-Allow: /
-Disallow: /api/, /studio/, /admin/, /_next/
-
-User-agent: PerplexityBot
-Allow: /
-Disallow: /api/, /studio/, /admin/, /_next/
+Disallow: /api/
+Disallow: /studio/
+Disallow: /login/
+Disallow: /register/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /_redirects
+Disallow: *.pdf$
+Disallow: *.doc$
 
 Sitemap: https://fincaguarumo.com/sitemap.xml
 ```
@@ -286,15 +277,16 @@ https://fincaguarumo.com/blog/{slug}  (for each published post)
 ```
 
 ### Priority 4 - Verify Redirects (should be 308 single-hop)
+All non-English `/xx/blog*` paths must redirect directly to `/blog*` (not via `/en/blog*`). The `/en/en/*` double-locale path must redirect in a single 308 hop to its root-equivalent `/*` path.
 ```
 https://fincaguarumo.com/en           → 308 → https://fincaguarumo.com/
 https://fincaguarumo.com/en/          → 308 → https://fincaguarumo.com/
-https://fincaguarumo.com/en/en/*      → 308 → https://fincaguarumo.com/en/*
-https://fincaguarumo.com/es/blog      → 308 → https://fincaguarumo.com/en/blog
-https://fincaguarumo.com/es/blog/*    → 308 → https://fincaguarumo.com/en/blog/*
-https://fincaguarumo.com/ru/blog      → 308 → https://fincaguarumo.com/en/blog
-https://fincaguarumo.com/de/blog      → 308 → https://fincaguarumo.com/en/blog
-https://fincaguarumo.com/nl/blog      → 308 → https://fincaguarumo.com/en/blog
+https://fincaguarumo.com/en/en/*      → 308 → https://fincaguarumo.com/*
+https://fincaguarumo.com/es/blog      → 308 → https://fincaguarumo.com/blog
+https://fincaguarumo.com/es/blog/*    → 308 → https://fincaguarumo.com/blog/*
+https://fincaguarumo.com/ru/blog      → 308 → https://fincaguarumo.com/blog
+https://fincaguarumo.com/de/blog      → 308 → https://fincaguarumo.com/blog
+https://fincaguarumo.com/nl/blog      → 308 → https://fincaguarumo.com/blog
 https://fincaguarumo.com/es/          → 308 → https://fincaguarumo.com/es
 https://fincaguarumo.com/de/          → 308 → https://fincaguarumo.com/de
 https://fincaguarumo.com/nl/          → 308 → https://fincaguarumo.com/nl

@@ -198,5 +198,10 @@
     "readLess": "Читайте меньше",
     "loadMoreReviews": "Зарядить еще отзывы",
     "readAllReviews": "Читайте все отзывы."
+  },
+  "villaBruno": {
+    "activities": {
+      "title": "Местоположение и проезд"
+    }
   }
 }

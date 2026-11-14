@@ -2,11 +2,7 @@ import { notFound } from "next/navigation"
 import { Metadata } from "next"
 
 import { sanityFetch } from "@/sanity/lib/client"
-import {
-  ACCOMMODATION_QUERY,
-  ACTIVITY_BLOCK_QUERY,
-  WHY_CHOOSE_VILLA_BRUNO_QUERY,
-} from "@/sanity/lib/queries"
+import { ACCOMMODATION_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import AccommodationClientPage from "./AccommodationClientPage"
 import {
@@ -21,7 +17,13 @@ import {
   localeMap,
   gbpUrl,
   airbnbUrl,
+  staticAddress,
+  staticGeo,
+  staticKnowsAbout,
+  staticAmenities,
+  staticSameAs,
 } from "@/lib/schema/lodgingBusiness"
+import { orgSchema } from "@/lib/villa-json-ld"
 import { getLocalizedUrl } from "@/lib/url"
 
 const slug = "villa-bruno"
@@ -58,13 +60,13 @@ function buildVillaBrunoSchema(data: {
       "Villa Bruno, off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
     url: data.url,
     floorSizeValue: 56,
-    occupancyMax: 4,
+    occupancyMax: data.capacity ?? 4,
     reviewCount: 36,
     starRating: "5",
     price: 117.0,
     priceCurrency: "USD",
-    checkinTime: data.checkInTime || "2026-11-01T15:00:00+00:00",
-    checkoutTime: data.checkOutTime || "2026-11-01T11:00:00+00:00",
+    checkinTime: data.checkInTime,
+    checkoutTime: data.checkOutTime,
     validFrom: "2026-01-01",
     images: [
       "https://fincaguarumo.com/images/villa-bruno-exterior.jpg",
@@ -113,7 +115,7 @@ const jsonLd = (data: {
   amenities?: Array<{ title: string; description: string; icon?: string }>
 }) => ({
   "@context": "https://schema.org",
-  ...buildVillaBrunoSchema(data),
+  "@graph": [buildVillaBrunoSchema(data), orgSchema],
 })
 
 export type AccommodationContent = {
@@ -127,6 +129,8 @@ export type AccommodationContent = {
   isPublished: boolean
   showBookingOptions: boolean
   showBookingDialog: boolean
+  _createdAt?: string
+  _updatedAt?: string
   slideshow: {
     images: SanityImageObject[]
   }
@@ -290,7 +294,66 @@ export async function generateMetadata({
     : "/images/finca-guarumo-v4.4.jpg"
   const ogImageAlt = getImageAlt(content?.mainImage)
     ? getImageAlt(content.mainImage)
-    : `${content?.title || "Villa Bruno"} - Eco-Villa in Costa Rica`
+    : `Villa Bruno, an eco-villa featuring a terrace with ocean view, on Osa Peninsula, Costa Rica. Solar-powered sustainable accommodation near Corcovado National Park`
+
+  const speakableContent =
+    content?.summary ||
+    "Villa Bruno is a solar-powered eco-villa on Costa Rica's Osa Peninsula, offering birdwatching, jungle trails, and sustainable luxury accommodation near Corcovado National Park."
+
+  const condensedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        name: "Finca Guarumo",
+        url: "https://fincaguarumo.com",
+        description:
+          "Sustainable eco-lodge in Costa Rica's Osa Peninsula offering off-grid luxury accommodation near Corcovado National Park",
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Puerto Jiménez",
+          addressRegion: "Puntarenas",
+          addressCountry: "CR",
+        },
+        geo: {
+          "@type": "GeoCoordinates",
+          latitude: 8.496420632614996,
+          longitude: -83.3341457939961,
+        },
+        sameAs: [
+          "https://www.instagram.com/fincaguarumo.osa",
+          "https://www.facebook.com/fincaguarumoosa",
+          "https://maps.app.goo.gl/rqjLyadSSE4F9AMk7",
+        ],
+      },
+      {
+        "@type": "LodgingBusiness",
+        name: "Villa Bruno",
+        identifier: "villa-bruno-finca-guarumo",
+        additionalType: ["VacationRental", "TouristDestination"],
+        description:
+          "Villa Bruno is a solar-powered eco-villa on Costa Rica's Osa Peninsula near Puerto Jiménez and Corcovado National Park, offering wildlife viewing, birdwatching tours, and sustainable luxury accommodation for up to 4 guests.",
+        url: canonicalUrl,
+        address: staticAddress,
+        geo: staticGeo,
+        knowsAbout: staticKnowsAbout,
+        occupancy: {
+          "@type": "QuantitativeValue",
+          maxValue: 4,
+        },
+        amenityFeature: staticAmenities.map(a => ({
+          "@type": "LocationFeatureSpecification",
+          name: a.name,
+          value: a.value,
+        })),
+        sameAs: staticSameAs,
+        mainEntityOfPage: {
+          "@type": "WebPage",
+          "@id": canonicalUrl,
+        },
+      },
+    ],
+  }
 
   return {
     title,
@@ -311,7 +374,7 @@ export async function generateMetadata({
       description,
       url: canonicalUrl,
       siteName: "Finca Guarumo",
-      type: "website",
+      type: "article",
       locale: localeMap[locale] || "en_US",
       images: [
         {
@@ -336,6 +399,14 @@ export async function generateMetadata({
     },
     other: {
       "og:locale": localeMap[locale] || "en_US",
+      "name:speakable": speakableContent,
+      ...(content?._createdAt
+        ? { "article:publishedTime": content._createdAt }
+        : {}),
+      ...(content?._updatedAt
+        ? { "article:modifiedTime": content._updatedAt }
+        : {}),
+      "application-LD+json": JSON.stringify(condensedSchema),
     },
   }
 }
@@ -347,25 +418,16 @@ const AccommodationPage = async ({
 }) => {
   const { locale } = await params
 
-  const [content, activityBlocks, whyChoose] = await Promise.all([
-    sanityFetch<AccommodationContent>({
-      query: ACCOMMODATION_QUERY,
-      params: { slug, language: locale },
-      revalidate: 0,
-    }),
-    sanityFetch<ActivityBlock[]>({
-      query: ACTIVITY_BLOCK_QUERY,
-      params: { language: locale },
-      revalidate: 0,
-    }),
-    sanityFetch<WhyChooseData | null>({
-      query: WHY_CHOOSE_VILLA_BRUNO_QUERY,
-      params: { language: locale },
-      revalidate: 0,
-    }),
-  ])
-
+  const content = await sanityFetch<AccommodationContent>({
+    query: ACCOMMODATION_QUERY,
+    params: { slug, language: locale },
+    revalidate: 0,
+  })
   if (!content?.isPublished) notFound()
+
+  const activityBlocks = (content?.activityBlocks ?? []) as ActivityBlock[]
+  const whyChoose = (content?.whyChooseVillaBruno ??
+    null) as WhyChooseData | null
 
   const canonicalUrl = getLocalizedUrl(`/${slug}`, locale)
 

@@ -38,10 +38,6 @@ const mainImageWithDimensions = groq`{
     dimensions
   }
 }`
-const imageMetadataOnly = `...,
-  crop,
-  hotspot,
-  "metadata": asset->metadata`
 
 // For gallery/slideshow: supports both imageWithMetadata and artDirectedImage
 const galleryImageProjection = groq`{
@@ -62,8 +58,17 @@ export const POSTS_QUERY = groq`*[_type == "post" && defined(slug.current) && (l
   mainImage ${mainImageWithUrl},
   _createdAt, _updatedAt, isPublished
 }`
-export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current)][]{
-  _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished
+export const ALL_PAGES_QUERY = groq`*[_type == "page" && defined(slug.current) && language == "en"][]{
+  _id, title, slug, subtitle, body, _createdAt, _updatedAt, isPublished,
+  "translations": *[
+    _type == "translation.metadata" &&
+    ^._id in translations[].value._ref
+  ][0].translations[]{
+    ...(value->{
+      language,
+      slug
+    })
+  }
 }`
 
 export const PAGES_QUERY = groq`*[_type == "page" && slug.current == $slug && language == $language][0] {
@@ -474,6 +479,8 @@ export const ACCOMMODATION_QUERY = groq`
   *[_type == "accommodation" && slug.current == $slug && language == $language][0] {
     title, subtitle, description,
     summary,
+    _createdAt,
+    _updatedAt,
     mainImage ${mainImageMetadataOnly},
     body[]{
       ...,
@@ -497,7 +504,12 @@ export const ACCOMMODATION_QUERY = groq`
     checkInTime, 
     checkOutTime,
     amenities[]->{ title, description, icon },
-    "activityBlocks": activityBlocks[]-> {
+    "activityBlocks": *[
+      _type == "activityBlock" &&
+      _id in ^.activityBlocks[]._ref &&
+      isPublished == true &&
+      language == ^.language
+    ] {
       title,
       subtitle,
       description,
@@ -517,32 +529,38 @@ export const ACCOMMODATION_QUERY = groq`
         sortOrder
       } | order(sortOrder asc)
     } | order(displayOrder asc),
-    "whyChooseVillaBruno": whyChooseVillaBruno-> {
-      title,
-      subtitle,
-      description,
-      mainImage ${mainImageWithDimensions},
-      slug,
-      "comparisonTable": comparisonTable[] {
-        feature,
-        villaBruno,
-        largeEcoResorts,
-        corcovadoLodges,
-        traditionalHotels,
-        otherVacationRentals,
-        category,
-        sortOrder,
-        isHighlight
-      } | order(sortOrder asc),
-      "keyDifferentiators": keyDifferentiators[] {
+    "whyChooseVillaBruno": select(
+      defined(whyChooseVillaBruno) &&
+        whyChooseVillaBruno->isPublished == true &&
+        whyChooseVillaBruno->language == ^.language =>
+      whyChooseVillaBruno-> {
         title,
+        subtitle,
         description,
-        icon,
-        sortOrder
-      } | order(sortOrder asc),
-      idealFor,
-      lessSuitableFor
-    },
+        mainImage ${mainImageWithDimensions},
+        slug,
+        "comparisonTable": comparisonTable[] {
+          feature,
+          villaBruno,
+          largeEcoResorts,
+          corcovadoLodges,
+          traditionalHotels,
+          otherVacationRentals,
+          category,
+          sortOrder,
+          isHighlight
+        } | order(sortOrder asc),
+        "keyDifferentiators": keyDifferentiators[] {
+          title,
+          description,
+          icon,
+          sortOrder
+        } | order(sortOrder asc),
+        idealFor,
+        lessSuitableFor
+      },
+      null
+    ),
     'pricingRules': *[
       _type == "accommodation" &&
       language == "en" &&
@@ -577,7 +595,10 @@ export const ACCOMMODATION_QUERY = groq`
       instructions,
       contactInfo,
       address,
-      distance 
+      distance,
+      displayOrder,
+      isImportant,
+      keywords
 },
     "translations": coalesce(
       *[_type == "translation.metadata" && ^._id in translations[].value._ref][0].translations[]{
@@ -602,7 +623,12 @@ export const ACCOMMODATION_QUERY = groq`
           highlightFeatures,
           checkInTime, 
           checkOutTime,
-          "activityBlocks": activityBlocks[]-> {
+          "activityBlocks": *[
+            _type == "activityBlock" &&
+            _id in ^.activityBlocks[]._ref &&
+            isPublished == true &&
+            language == ^.language
+          ] {
             title,
             subtitle,
             description,
@@ -622,32 +648,38 @@ export const ACCOMMODATION_QUERY = groq`
               sortOrder
             } | order(sortOrder asc)
           } | order(displayOrder asc),
-          "whyChooseVillaBruno": whyChooseVillaBruno-> {
-            title,
-            subtitle,
-            description,
-            mainImage ${mainImageWithDimensions},
-            slug,
-            "comparisonTable": comparisonTable[] {
-              feature,
-              villaBruno,
-              largeEcoResorts,
-              corcovadoLodges,
-              traditionalHotels,
-              otherVacationRentals,
-              category,
-              sortOrder,
-              isHighlight
-            } | order(sortOrder asc),
-            "keyDifferentiators": keyDifferentiators[] {
+          "whyChooseVillaBruno": select(
+            defined(whyChooseVillaBruno) &&
+              whyChooseVillaBruno->isPublished == true &&
+              whyChooseVillaBruno->language == ^.language =>
+            whyChooseVillaBruno-> {
               title,
+              subtitle,
               description,
-              icon,
-              sortOrder
-            } | order(sortOrder asc),
-            idealFor,
-            lessSuitableFor
-          }
+              mainImage ${mainImageWithDimensions},
+              slug,
+              "comparisonTable": comparisonTable[] {
+                feature,
+                villaBruno,
+                largeEcoResorts,
+                corcovadoLodges,
+                traditionalHotels,
+                otherVacationRentals,
+                category,
+                sortOrder,
+                isHighlight
+              } | order(sortOrder asc),
+              "keyDifferentiators": keyDifferentiators[] {
+                title,
+                description,
+                icon,
+                sortOrder
+              } | order(sortOrder asc),
+              idealFor,
+              lessSuitableFor
+            },
+            null
+          )
         })
       },
       []

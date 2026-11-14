@@ -87,7 +87,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description: content?.description || "Gallery - Finca Guarumo",
-      images: [getImageUrl(content?.mainImage) || "/images/fincaguarumo-v4.4.jpg"],
+      images: [getImageUrl(content?.mainImage) || "/images/finca-guarumo-v4.4.jpg"],
     },
     other: {
       "og:locale": localeMap[locale] || "en_US",

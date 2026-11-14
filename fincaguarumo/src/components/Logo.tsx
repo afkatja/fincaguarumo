@@ -8,7 +8,7 @@ const Logo = () => {
 
   if (featureFlags.USE_TRAVEL_PROUD_LOGO) {
     return (
-      <Link href="/" className="block py-3 lg:h-full" prefetch>
+      <Link href="/" className="block py-3 h-full lg:h-full" prefetch>
         <Image
           src="/images/travel-proud-logo.png"
           alt="Travel Proud Logo"

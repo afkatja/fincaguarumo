@@ -198,5 +198,10 @@
     "readLess": "Lees minder",
     "loadMoreReviews": "Laad meer beoordelingen",
     "readAllReviews": "Lees alle beoordelingen"
+  },
+  "villaBruno": {
+    "activities": {
+      "title": "Locatie & route"
+    }
   }
 }

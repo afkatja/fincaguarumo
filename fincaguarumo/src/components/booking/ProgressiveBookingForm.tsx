@@ -42,7 +42,7 @@ export default function ProgressiveBookingForm({
   const [currentStep, setCurrentStep] = useState<BookingStep>("dates")
   const [dateError, setDateError] = useState("")
   const [calendarLoading, setCalendarLoading] = useState(false)
-  const [blockedDates, setBlockedDates] = useState<Date[]>([])
+  const [blockedDates, setBlockedDates] = useState<(Date | string)[]>([])
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [isStepValid, setIsStepValid] = useState<Record<BookingStep, boolean>>({
     dates: false,

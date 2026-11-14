@@ -1,8 +1,7 @@
 "use client"
-import { Link, usePathname } from "@/navigation"
+import { Link } from "@/navigation"
 import React from "react"
 import Icon from "./Icon"
-import { getLocalizedPath } from "@/lib/url"
 
 import { navItems } from "./SocialNav"
 
@@ -15,9 +14,6 @@ type FooterLink = {
 }
 
 const Footer = () => {
-  const pathname = usePathname()
-  const locale = pathname.split("/")[1] || "en"
-
   const links: FooterLink[] = [
     {
       title: "Calle Altos Corozal, La Balsa, Puerto Jimenez, Osa, Costa Rica",
@@ -28,7 +24,7 @@ const Footer = () => {
     },
     {
       title: "Sustainability commitment",
-      href: getLocalizedPath("/about#sustainability", locale),
+      href: "/about#sustainability",
       icon: "Guarumo",
       className: "col-span-4",
     },

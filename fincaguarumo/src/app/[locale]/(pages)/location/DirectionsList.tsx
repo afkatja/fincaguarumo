@@ -45,7 +45,7 @@ const fromLocationLabels: Record<string, string> = {
 }
 
 export default function DirectionsList({ directions }: DirectionsListProps) {
-  const t = useTranslations("location")
+  const t = useTranslations("villaBruno.activities")
   if (!directions || directions.length === 0) {
     return (
       <p className="text-muted-foreground">
@@ -64,9 +64,12 @@ export default function DirectionsList({ directions }: DirectionsListProps) {
           <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
             <div className="flex items-center gap-3">
               <span className="text-lg font-medium">
-                {fromLocationLabels[direction.fromLocation] ||
-                  direction.customFromLabel ||
-                  direction.fromLocation}
+                {direction.fromLocation === "custom" &&
+                direction.customFromLabel
+                  ? direction.customFromLabel
+                  : fromLocationLabels[direction.fromLocation] ||
+                    direction.customFromLabel ||
+                    direction.fromLocation}
               </span>
               <span className="px-2 py-1 text-xs font-medium bg-muted text-muted-foreground rounded-full">
                 {transportModeLabels[direction.transportMode] ||
@@ -208,7 +211,7 @@ export default function DirectionsList({ directions }: DirectionsListProps) {
               </div>
             )}
 
-            {direction.bookingRequired && direction.contactForBooking && (
+            {direction.bookingRequired && (
               <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
                 <svg
                   className="h-5 w-5 text-primary"
@@ -229,9 +232,11 @@ export default function DirectionsList({ directions }: DirectionsListProps) {
                       defaultValue: "Advance Booking Required",
                     })}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {direction.contactForBooking}
-                  </p>
+                  {direction.contactForBooking && (
+                    <p className="text-sm text-muted-foreground">
+                      {direction.contactForBooking}
+                    </p>
+                  )}
                 </div>
               </div>
             )}

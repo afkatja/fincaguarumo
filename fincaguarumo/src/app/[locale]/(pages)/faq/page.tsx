@@ -34,7 +34,6 @@ const jsonLd = (faqs: FAQType[], lastModified?: string) => ({
       text: getFAQAnswerText(faq),
     },
   })),
-  displayOrder: "alphabetical",
 })
 
 export async function generateMetadata({

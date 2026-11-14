@@ -12,6 +12,8 @@ import {
   staticKnowsAbout,
   staticSameAs,
 } from "@/lib/schema/lodgingBusiness"
+import { orgSchema } from "@/lib/villa-json-ld"
+import { getLocalizedUrl } from "@/lib/url"
 
 const baseUrl = "https://fincaguarumo.com"
 
@@ -48,7 +50,7 @@ const homePageSchema = buildLodgingBusinessSchema({
 
 const jsonLd = (data: { locale: string }) => ({
   "@context": "https://schema.org",
-  "@graph": [buildWebSiteSchema(data.locale), homePageSchema],
+  "@graph": [buildWebSiteSchema(data.locale), homePageSchema, orgSchema],
 })
 
 export async function generateMetadata({
@@ -64,6 +66,15 @@ export async function generateMetadata({
     revalidate: 60,
   })
 
+  if (locale !== "en") {
+    return {
+      robots: "noindex, nofollow",
+      alternates: {
+        canonical: getLocalizedUrl("/", locale),
+      },
+    }
+  }
+
   const title = content?.hero_title
     ? `${content.hero_title} - Finca Guarumo`
     : "Finca Guarumo"
@@ -72,7 +83,8 @@ export async function generateMetadata({
     content?.hero_slogan ||
     "Stay at Villa Bruno in Finca Guarumo – a private eco-luxury villa in Costa Rica's Osa Peninsula. Explore jungle trails, birdwatching, and rural life near Corcovado National Park."
 
-  const canonicalUrl = baseUrl
+  const canonicalUrl = getLocalizedUrl("/", locale)
+  const xDefaultUrl = getLocalizedUrl("/", "en")
 
   return {
     title,
@@ -87,7 +99,7 @@ export async function generateMetadata({
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        "x-default": canonicalUrl,
+        "x-default": xDefaultUrl,
         [locale]: canonicalUrl,
       },
     },

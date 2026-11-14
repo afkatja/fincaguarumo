@@ -86,7 +86,7 @@ export async function generateMetadata({
     }
   }
 
-  const t = await getTranslations("location")
+  const t = await getTranslations("villaBruno.activities")
   const title =
     content?.title || t("title", { defaultValue: "Location & Directions" })
 
@@ -161,7 +161,7 @@ const LocationPage = async ({
 
   if (!content?.isPublished) notFound()
 
-  const t = await getTranslations("location")
+  const t = await getTranslations("villaBruno.activities")
 
   return (
     <Layout

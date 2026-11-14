@@ -1,31 +1,8 @@
 import { Metadata } from "next"
-import { locales } from "../../config"
-import { getLocalizedUrl } from "@/lib/url"
-
-const localeMap: Record<string, string> = {
-  en: "en_US",
-  es: "es_CR",
-  de: "de_DE",
-  nl: "nl_NL",
-  ru: "ru_RU",
-}
+import { localeMap } from "@/lib/schema/lodgingBusiness"
 
 export async function generateMetadata({ params }: any): Promise<Metadata> {
-  const { locale, pathname } = await params
-
-  const currentPath = pathname || "/"
-  const isHomepage = currentPath === "/"
-
-  // Build canonical URL using locale-aware helper
-  const canonicalUrl = getLocalizedUrl(currentPath, locale)
-
-  // Build hreflang alternates - only include locales that actually have content
-  // For now, only English has full content; others fall back to English
-  // TODO: Add other locales when translations are complete
-  const alternates: Record<string, string> = {
-    "x-default": getLocalizedUrl(currentPath, "en"),
-    [locale]: canonicalUrl,
-  }
+  const { locale } = await params
 
   return {
     title: {
@@ -34,17 +11,13 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
     },
     metadataBase: new URL("https://fincaguarumo.com"),
     description:
-      "Stay at Villa Bruno in Finca Guarumo – a private eco-luxury villa in Costa Rica's Osa Peninsula. Explore jungle trails, birdwatching, and rural life near Corcovado National Park.",
+      "Stay at Villa Bruno on Finca Guarumo – a private eco-luxury villa in Costa Rica's Osa Peninsula. Explore jungle trails, birdwatching, and rural life near Corcovado National Park.",
     icons: {
       icon: "/favicon/icon.ico",
       apple: "/favicon/apple-touch-icon.png",
       shortcut: "/favicon/safari-pinned-tab.svg",
     },
     robots: "index, follow",
-    alternates: {
-      canonical: canonicalUrl,
-      languages: alternates,
-    },
     openGraph: {
       title: "Finca Guarumo",
       description:
@@ -54,13 +27,12 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
           url: "/images/finca-guarumo-v4.4.jpg",
           width: 1200,
           height: 630,
-          alt: "Finca Guarumo - Eco-Villa in Costa Rica's Osa Peninsula",
+          alt: "Villa Bruno, an eco-villa at Finca Guarumo, Osa Peninsula, Costa Rica — solar-powered sustainable accommodation near Corcovado National Park, birdwatching and jungle trails",
         },
       ],
       type: "website",
       locale: localeMap[locale] || "en_US",
       siteName: "Finca Guarumo",
-      url: canonicalUrl,
       countryName: "Costa Rica",
     },
     twitter: {
@@ -72,7 +44,7 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
       images: [
         {
           url: "/images/finca-guarumo-v4.4.jpg",
-          alt: "Finca Guarumo – Villa Bruno jungle view",
+          alt: "Villa Bruno, an eco-villa at Finca Guarumo, Osa Peninsula, Costa Rica — solar-powered sustainable accommodation near Corcovado National Park, birdwatching and jungle trails",
         },
       ],
     },
