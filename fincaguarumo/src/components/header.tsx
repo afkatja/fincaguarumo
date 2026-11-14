@@ -7,6 +7,7 @@ import { i18n } from "../../languages"
 import navigation from "../lib/navigation"
 import Logo from "./Logo"
 import HeaderBookButton from "./HeaderBookButton"
+import { getLocalizedPath } from "@/lib/url"
 
 const Header = async ({
   locale,
@@ -19,7 +20,7 @@ const Header = async ({
     return {
       ...lang,
       language: lang.id,
-      path: `/${lang.id}`,
+      path: getLocalizedPath("/", lang.id),
     }
   })
 

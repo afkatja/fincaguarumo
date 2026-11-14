@@ -5,7 +5,6 @@ import Breadcrumbs from "../../../../components/Breadcrumbs"
 import Title from "../../../../components/Title"
 import RichText from "../../../../components/RichText"
 import PagesLayout from "../../(pages)/pagesLayout"
-import BlogMetadata from "../../../../components/BlogMetadata"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
 import Icon from "../../../../components/Icon"
@@ -32,7 +31,6 @@ export function Post({
   const tPage = useTranslations("page")
   return (
     <>
-      <BlogMetadata post={post} />
       <PagesLayout
         locale={locale}
         pageName={slug?.current as string}

@@ -7,18 +7,21 @@ import { generateBlogMetadata } from "./metadata"
 
 export { generateBlogMetadata as generateMetadata }
 
-export default async function Page({ params }: { params: any }) {
-  const { slug } = await params
+export default async function Page({ params }: { params: Promise<{ locale: string; slug: string }> }) {
+  const { locale, slug } = await params
   const post = await sanityFetch<POST_QUERY_RESULT>({
     query: POST_QUERY,
     params: { slug },
     revalidate: 0,
   })
-  if (!post) return notFound()
+  if (!post || !post.isPublished) notFound()
 
-  if (!post?.isPublished) notFound()
+  // TypeScript narrows the type after notFound()
+  const publishedPost = post!
 
   return (
-    <Post post={post} parent={{ title: "Blog", href: "blog" }} locale="en" />
+    <>
+      <Post post={publishedPost} parent={{ title: "Blog", href: "blog" }} locale="en" />
+    </>
   )
 }

@@ -5,41 +5,117 @@ import { sanityFetch } from "@/sanity/lib/client"
 import { ACCOMMODATION_QUERY } from "@/sanity/lib/queries"
 import Layout from "../pagesLayout"
 import AccommodationClientPage from "./AccommodationClientPage"
-import { FAQType, SanityImageObject } from "@/types"
+import {
+  ActivityBlock,
+  FAQType,
+  SanityImageObject,
+  WhyChooseData,
+} from "@/types"
 import { PricingRule } from "@/lib/pricingEngine"
+import {
+  buildLodgingBusinessSchema,
+  localeMap,
+  gbpUrl,
+  airbnbUrl,
+  staticAddress,
+  staticGeo,
+  staticKnowsAbout,
+  staticAmenities,
+  staticSameAs,
+} from "@/lib/schema/lodgingBusiness"
+import { orgSchema } from "@/lib/villa-json-ld"
+import { getLocalizedUrl } from "@/lib/url"
 
 const slug = "villa-bruno"
 
-const jsonLd = (data: { title: string; slug: { current: string } }) => ({
+function getImageUrl(image: SanityImageObject | undefined): string {
+  if (!image) return ""
+  return (image as any).url || ""
+}
+
+function getImageAlt(image: SanityImageObject | undefined): string {
+  if (!image) return ""
+  return (image as any).alt || ""
+}
+
+function buildVillaBrunoSchema(data: {
+  title: string
+  slug: { current: string }
+  description?: string
+  locale: string
+  url: string
+  mainImage?: SanityImageObject
+  capacity?: number
+  bedrooms?: number
+  bathrooms?: number
+  checkInTime?: string
+  checkOutTime?: string
+  amenities?: Array<{ title: string; description: string; icon?: string }>
+}) {
+  return buildLodgingBusinessSchema({
+    name: data.title,
+    identifier: `villa-bruno-finca-guarumo`,
+    description:
+      data.description ||
+      "Villa Bruno, off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
+    url: data.url,
+    floorSizeValue: 56,
+    occupancyMax: data.capacity ?? 4,
+    reviewCount: 36,
+    starRating: "5",
+    price: 117.0,
+    priceCurrency: "USD",
+    checkinTime: data.checkInTime,
+    checkoutTime: data.checkOutTime,
+    validFrom: "2026-01-01",
+    images: [
+      "https://fincaguarumo.com/images/villa-bruno-exterior.jpg",
+      "https://fincaguarumo.com/images/villa-bruno-interior.webp",
+      "https://fincaguarumo.com/images/villa-bruno-terrace.jpg",
+      "https://fincaguarumo.com/images/villa-bruno-bedroom.jpg",
+      "https://fincaguarumo.com/images/villa-bruno-kitchen.jpg",
+      "https://fincaguarumo.com/images/villa-bruno-bathroom.jpg",
+      "https://fincaguarumo.com/images/villa-bruno-wildlife.jpg",
+      "https://fincaguarumo.com/images/villa-bruno-sunset.jpg",
+    ],
+    knowsAbout: [
+      "Eco-tourism",
+      "Wildlife viewing",
+      "Sustainable travel",
+      "Corcovado National Park",
+      "Birdwatching",
+      "Rainforest conservation",
+      "Farm-to-table dining",
+      "Local organic produce",
+    ],
+    sameAs: [
+      "https://www.instagram.com/fincaguarumo.osa",
+      "https://www.facebook.com/fincaguarumoosa",
+      "https://www.youtube.com/@FincaGuarumo",
+      gbpUrl,
+      airbnbUrl,
+    ],
+    hasMap: gbpUrl,
+    mainImage: data.mainImage,
+  })
+}
+
+const jsonLd = (data: {
+  title: string
+  slug: { current: string }
+  description?: string
+  locale: string
+  url: string
+  mainImage?: SanityImageObject
+  capacity?: number
+  bedrooms?: number
+  bathrooms?: number
+  checkInTime?: string
+  checkOutTime?: string
+  amenities?: Array<{ title: string; description: string; icon?: string }>
+}) => ({
   "@context": "https://schema.org",
-  "@type": "LodgingBusiness",
-  name: `${data.title} - Finca Guarumo`,
-  alternateName: ["Villa Bruno", "Villa Bruno at Finca Guarumo"],
-  partOf: {
-    "@type": "Organization",
-    name: "Finca Guarumo",
-    url: "https://fincaguarumo.com",
-  },
-  branchOf: {
-    "@type": "Organization",
-    name: "Finca Guarumo",
-  },
-  description:
-    "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing",
-  url: `https://fincaguarumo.com/${slug}`,
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "Puerto Jiménez",
-    addressRegion: "Puntarenas",
-    addressCountry: "CR",
-  },
-  amenityFeature: [
-    { "@type": "LocationFeatureSpecification", name: "Solar Power" },
-    { "@type": "LocationFeatureSpecification", name: "Starlink Internet" },
-    { "@type": "LocationFeatureSpecification", name: "Wildlife Viewing" },
-  ],
-  numberOfRooms: 1,
-  maximumAttendeeCapacity: 4,
+  "@graph": [buildVillaBrunoSchema(data), orgSchema],
 })
 
 export type AccommodationContent = {
@@ -53,6 +129,8 @@ export type AccommodationContent = {
   isPublished: boolean
   showBookingOptions: boolean
   showBookingDialog: boolean
+  _createdAt?: string
+  _updatedAt?: string
   slideshow: {
     images: SanityImageObject[]
   }
@@ -98,14 +176,76 @@ export type AccommodationContent = {
   logistics?: Array<{
     title: string
     description: string
-    type?: string
+    category: string
+    checkInTime?: string
+    checkOutTime?: string
+    earlyCheckIn?: boolean
+    earlyCheckInFee?: number
+    lateCheckOut?: boolean
+    lateCheckOutFee?: number
+    instructions?: string
+    contactInfo?: string
+    address?: string
+    distance?: string
   }>
+  translations?: Array<{
+    language: string
+    slug: { current: string }
+    title: string
+    description: string
+  }>
+  activityBlocks?: Array<{
+    title: string
+    subtitle?: string
+    description?: string
+    slug: { current: string }
+    mainImage?: SanityImageObject
+    activities: Array<{
+      name: string
+      description?: string
+      season?: string
+      duration?: string
+      distanceFromVilla?: string
+      transportIncluded?: boolean
+      difficulty?: string
+      highlights?: string[]
+      icon?: string
+      isFeatured?: boolean
+      sortOrder?: number
+    }>
+  }>
+  whyChooseVillaBruno?: {
+    title: string
+    subtitle?: string
+    description?: string
+    slug: { current: string }
+    mainImage?: SanityImageObject
+    comparisonTable: Array<{
+      feature: string
+      villaBruno: string
+      largeEcoResorts?: string
+      corcovadoLodges?: string
+      traditionalHotels?: string
+      otherVacationRentals?: string
+      category?: string
+      sortOrder?: number
+      isHighlight?: boolean
+    }>
+    keyDifferentiators: Array<{
+      title: string
+      description: string
+      icon?: string
+      sortOrder?: number
+    }>
+    idealFor?: string[]
+    lessSuitableFor?: string[]
+  }
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: any
+  params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
 
@@ -115,9 +255,13 @@ export async function generateMetadata({
     revalidate: 0,
   })
 
-  const baseUrl = "https://fincaguarumo.com"
-  const canonicalUrl =
-    locale === "en" ? `${baseUrl}/${slug}` : `${baseUrl}/${locale}/${slug}`
+  if (!content?.isPublished) {
+    return {
+      robots: "noindex, nofollow",
+    }
+  }
+
+  const canonicalUrl = getLocalizedUrl(`/${slug}`, locale)
 
   const title = content?.title
     ? `${content?.title} - Finca Guarumo`
@@ -125,20 +269,96 @@ export async function generateMetadata({
 
   const description = content?.description
     ? content?.description
-    : "Off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing"
+    : "Villa Bruno, off-grid eco-villa in Costa Rica's Osa Peninsula with 100% solar power and wildlife viewing"
 
-  // Enhanced keywords for accommodation pages
-  const keywords =
-    `eco-villa, sustainable accommodation, Costa Rica, Osa Peninsula, Villa Bruno, eco-luxury, solar power, off-grid, wildlife viewing, Corcovado National Park, Puerto Jimenez, jungle retreat, nature vacation, sustainable travel, eco-tourism, birdwatching, rainforest accommodation, luxury villa, private villa, romantic getaway, nature immersion, regenerative tourism, solar powered villa, eco-lodge Costa Rica, sustainable hospitality, green travel, carbon neutral accommodation, wildlife sanctuary, biodiversity hotspot, pristine nature, exclusive retreat, eco-friendly lodging`
-      .split(",")
-      .map(k => k.trim())
-      .filter(Boolean)
+  // Build hreflang alternates only for locales with actual translations
+  const languages: Record<string, string> = {
+    "x-default": getLocalizedUrl(`/${slug}`, "en"),
+    [locale]: canonicalUrl,
+  }
+
+  if (content.translations) {
+    for (const t of content.translations) {
+      if (t.language && t.language !== locale && t.slug?.current) {
+        languages[t.language] = getLocalizedUrl(
+          `/${t.slug.current}`,
+          t.language,
+        )
+      }
+    }
+  }
+
+  // Use page-specific image if available, fallback to default
+  const ogImageUrl = getImageUrl(content?.mainImage)
+    ? getImageUrl(content.mainImage)
+    : "/images/finca-guarumo-v4.4.jpg"
+  const ogImageAlt = getImageAlt(content?.mainImage)
+    ? getImageAlt(content.mainImage)
+    : `Villa Bruno, an eco-villa featuring a terrace with ocean view, on Osa Peninsula, Costa Rica. Solar-powered sustainable accommodation near Corcovado National Park`
+
+  const speakableContent =
+    content?.summary ||
+    "Villa Bruno is a solar-powered eco-villa on Costa Rica's Osa Peninsula, offering birdwatching, jungle trails, and sustainable luxury accommodation near Corcovado National Park."
+
+  const condensedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        name: "Finca Guarumo",
+        url: "https://fincaguarumo.com",
+        description:
+          "Sustainable eco-lodge in Costa Rica's Osa Peninsula offering off-grid luxury accommodation near Corcovado National Park",
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Puerto Jiménez",
+          addressRegion: "Puntarenas",
+          addressCountry: "CR",
+        },
+        geo: {
+          "@type": "GeoCoordinates",
+          latitude: 8.496420632614996,
+          longitude: -83.3341457939961,
+        },
+        sameAs: [
+          "https://www.instagram.com/fincaguarumo.osa",
+          "https://www.facebook.com/fincaguarumoosa",
+          "https://maps.app.goo.gl/rqjLyadSSE4F9AMk7",
+        ],
+      },
+      {
+        "@type": "LodgingBusiness",
+        name: "Villa Bruno",
+        identifier: "villa-bruno-finca-guarumo",
+        additionalType: ["VacationRental", "TouristDestination"],
+        description:
+          "Villa Bruno is a solar-powered eco-villa on Costa Rica's Osa Peninsula near Puerto Jiménez and Corcovado National Park, offering wildlife viewing, birdwatching tours, and sustainable luxury accommodation for up to 4 guests.",
+        url: canonicalUrl,
+        address: staticAddress,
+        geo: staticGeo,
+        knowsAbout: staticKnowsAbout,
+        occupancy: {
+          "@type": "QuantitativeValue",
+          maxValue: 4,
+        },
+        amenityFeature: staticAmenities.map(a => ({
+          "@type": "LocationFeatureSpecification",
+          name: a.name,
+          value: a.value,
+        })),
+        sameAs: staticSameAs,
+        mainEntityOfPage: {
+          "@type": "WebPage",
+          "@id": canonicalUrl,
+        },
+      },
+    ],
+  }
 
   return {
     title,
     description,
-    keywords,
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL("https://fincaguarumo.com"),
     robots: "index, follow",
     icons: {
       icon: "/favicon/icon.ico",
@@ -147,44 +367,69 @@ export async function generateMetadata({
     },
     alternates: {
       canonical: canonicalUrl,
-      languages: {
-        "x-default": `${baseUrl}/${slug}`,
-        ...Object.fromEntries(
-          ["en", "es", "ru", "de", "nl"].map(loc => [
-            loc,
-            loc === "en" ? `${baseUrl}/${slug}` : `${baseUrl}/${loc}/${slug}`,
-          ]),
-        ),
-      },
+      languages,
     },
     openGraph: {
       title,
       description,
       url: canonicalUrl,
       siteName: "Finca Guarumo",
-      type: "website",
+      type: "article",
+      locale: localeMap[locale] || "en_US",
       images: [
         {
-          url: "/images/finca-guarumo-v4.4.jpg",
+          url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: `${content?.title || "Finca Guarumo"} - Eco-Villa in Costa Rica`,
+          alt: ogImageAlt,
         },
       ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: "@fincaguarumo",
+      title,
+      description,
+      images: [
+        {
+          url: ogImageUrl,
+          alt: ogImageAlt,
+        },
+      ],
+    },
+    other: {
+      "og:locale": localeMap[locale] || "en_US",
+      "name:speakable": speakableContent,
+      ...(content?._createdAt
+        ? { "article:publishedTime": content._createdAt }
+        : {}),
+      ...(content?._updatedAt
+        ? { "article:modifiedTime": content._updatedAt }
+        : {}),
+      "application-LD+json": JSON.stringify(condensedSchema),
     },
   }
 }
 
-const AccommodationPage = async ({ params }: { params: any }) => {
+const AccommodationPage = async ({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) => {
   const { locale } = await params
 
-  const content: AccommodationContent = await sanityFetch({
+  const content = await sanityFetch<AccommodationContent>({
     query: ACCOMMODATION_QUERY,
     params: { slug, language: locale },
     revalidate: 0,
   })
-
   if (!content?.isPublished) notFound()
+
+  const activityBlocks = (content?.activityBlocks ?? []) as ActivityBlock[]
+  const whyChoose = (content?.whyChooseVillaBruno ??
+    null) as WhyChooseData | null
+
+  const canonicalUrl = getLocalizedUrl(`/${slug}`, locale)
 
   return (
     <Layout
@@ -196,12 +441,34 @@ const AccommodationPage = async ({ params }: { params: any }) => {
       mainImage={content?.mainImage}
       images={content?.slideshow?.images}
     >
-      <AccommodationClientPage content={content} locale={locale} />
-      <script type="application/ld+json">
-        {JSON.stringify(
-          jsonLd({ title: content?.title, slug: content?.slug }),
-        ).replace(/</g, "\\u003c")}
-      </script>
+      <AccommodationClientPage
+        content={content}
+        locale={locale}
+        activityBlocks={activityBlocks}
+        whyChoose={whyChoose}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            jsonLd({
+              title: content?.title,
+              slug: content?.slug,
+              description: content?.description,
+              locale,
+              url: canonicalUrl,
+              mainImage: content?.mainImage,
+              capacity: content?.capacity,
+              bedrooms: content?.bedrooms,
+              bathrooms: content?.bathrooms,
+              checkInTime: content?.checkInTime,
+              checkOutTime: content?.checkOutTime,
+              amenities: content?.amenities,
+            }),
+          ).replace(/</g, "\\u003c"),
+        }}
+      />
     </Layout>
   )
 }
