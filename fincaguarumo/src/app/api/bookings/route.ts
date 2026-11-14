@@ -24,7 +24,7 @@ function createAuthenticatedSupabaseClient(request: Request) {
 
 /**
  * POST: Create a new booking
- * Also updates the availability table to mark dates as unavailable
+ * Availability is derived from bookings table (no separate availability table)
  * Requires authentication and authorization
  */
 export async function POST(request: Request) {
@@ -80,38 +80,6 @@ export async function POST(request: Request) {
     if (error) {
       console.error("Error creating booking:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    // Also update availability table to mark these dates as unavailable
-    try {
-      const availabilityRecord: any = {
-        start_date: bookingData.checkIn,
-        end_date: bookingData.checkOut,
-        is_available: false,
-        updated_at: new Date().toISOString(),
-      }
-
-      // Add optional fields if they might exist
-      if (bookingData.uid) {
-        availabilityRecord.booking_uid = bookingData.uid
-      }
-      if (bookingData.guestName) {
-        availabilityRecord.reason = `Booked via ${bookingData.source || "Direct"} - ${bookingData.guestName}`
-      }
-
-      const { error: availabilityError } = await supabase
-        .from("availability")
-        .insert([availabilityRecord])
-
-      if (availabilityError) {
-        // If upsert fails due to missing columns, log but don't fail
-        console.error("Error updating availability:", availabilityError)
-      } else {
-        console.log("Availability updated for new booking")
-      }
-    } catch (availabilityError) {
-      console.error("Error updating availability:", availabilityError)
-      // Don't fail the request if availability update fails
     }
 
     return NextResponse.json(data)
@@ -439,7 +407,7 @@ export async function PATCH(request: Request) {
 
 /**
  * DELETE: Delete a booking
- * Also removes the corresponding availability entry
+ * Availability is derived from bookings table (no separate availability table)
  * Requires authentication and authorization
  */
 export async function DELETE(request: Request) {
@@ -501,18 +469,6 @@ export async function DELETE(request: Request) {
     if (error) {
       console.error("Error deleting booking:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    // Also delete the availability entry if we have the uid
-    if (bookingUid) {
-      try {
-        await supabase
-          .from("availability")
-          .delete()
-          .eq("booking_uid", bookingUid)
-      } catch (availabilityError) {
-        console.error("Error deleting availability:", availabilityError)
-      }
     }
 
     return NextResponse.json({ success: true })

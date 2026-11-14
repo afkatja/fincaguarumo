@@ -117,7 +117,7 @@ describe('Monitoring System', () => {
       recordDatabaseOperation({
         success: true,
         operation: 'update',
-        table: 'availability',
+        table: 'bookings',
         timestamp: new Date()
       })
 
