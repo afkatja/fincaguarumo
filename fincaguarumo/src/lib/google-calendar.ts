@@ -41,10 +41,36 @@ export interface SyncLogEntry {
   error_message?: string
 }
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+let supabase: ReturnType<typeof createClient> | null = null
+let overrideSupabaseClient: ReturnType<typeof createClient> | null = null
+
+function getSupabaseClient() {
+  if (overrideSupabaseClient) {
+    return overrideSupabaseClient
+  }
+  if (!supabase) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    supabase = createClient(supabaseUrl, supabaseServiceKey)
+  }
+  return supabase
+}
+
+/**
+ * Override the Supabase client for testing purposes
+ * Call this before any calendar operations in tests
+ */
+export function setTestSupabaseClient(client: ReturnType<typeof createClient>) {
+  overrideSupabaseClient = client
+}
+
+/**
+ * Reset test overrides (call this in test afterEach)
+ */
+export function resetTestOverrides() {
+  overrideSupabaseClient = null
+  supabase = null
+}
 
 // Constants
 const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar"
@@ -122,9 +148,6 @@ export class GoogleCalendarService {
 
       const eventId = response.data.id
 
-      // Log successful sync
-      await this.logSync(booking.uid, eventId, "success")
-
       console.log(
         `Created Google Calendar event ${eventId} for booking ${booking.uid}`,
       )
@@ -134,7 +157,6 @@ export class GoogleCalendarService {
         `Failed to create calendar event for booking ${booking.uid}:`,
         error,
       )
-      await this.logSync(booking.uid, undefined, "failed", String(error))
       throw error
     }
   }
@@ -153,9 +175,6 @@ export class GoogleCalendarService {
         sendUpdates: "none",
       })
 
-      // Log successful sync
-      await this.logSync(booking.uid, eventId, "success")
-
       console.log(
         `Updated Google Calendar event ${eventId} for booking ${booking.uid}`,
       )
@@ -165,7 +184,6 @@ export class GoogleCalendarService {
         `Failed to update calendar event ${eventId} for booking ${booking.uid}:`,
         error,
       )
-      await this.logSync(booking.uid, eventId, "failed", String(error))
       throw error
     }
   }
@@ -180,9 +198,6 @@ export class GoogleCalendarService {
         eventId: eventId,
       })
 
-      // Log successful deletion
-      await this.logSync(bookingId, eventId, "success")
-
       console.log(
         `Deleted Google Calendar event ${eventId} for booking ${bookingId}`,
       )
@@ -192,7 +207,6 @@ export class GoogleCalendarService {
         `Failed to delete calendar event ${eventId} for booking ${bookingId}:`,
         error,
       )
-      await this.logSync(bookingId, eventId, "failed", String(error))
       throw error
     }
   }
@@ -302,42 +316,11 @@ export class GoogleCalendarService {
   }
 
   /**
-   * Log sync operation to Supabase
-   */
-  private async logSync(
-    bookingId: string,
-    eventId: string | undefined,
-    status: "success" | "failed" | "pending",
-    errorMessage?: string,
-  ): Promise<void> {
-    try {
-      const logEntry: Omit<SyncLogEntry, "synced_at"> = {
-        booking_id: bookingId,
-        gcal_event_id: eventId,
-        status,
-        error_message: errorMessage,
-      }
-
-      await supabase.from("gcal_sync_log").upsert(
-        {
-          ...logEntry,
-          synced_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "booking_id",
-        },
-      )
-    } catch (error) {
-      console.error("Failed to log sync operation:", error)
-    }
-  }
-
-  /**
    * Get existing sync log for a booking
    */
   async getSyncLog(bookingId: string): Promise<SyncLogEntry | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabaseClient()
         .from("gcal_sync_log")
         .select("*")
         .eq("booking_id", bookingId)
@@ -355,6 +338,33 @@ export class GoogleCalendarService {
     } catch (error) {
       console.error(`Failed to get sync log for booking ${bookingId}:`, error)
       return null
+    }
+  }
+
+  /**
+   * Record sync state in gcal_sync_log (established sync-state mechanism)
+   */
+  async recordSyncState(
+    bookingId: string,
+    eventId: string | null,
+    status: "success" | "failed" | "pending" = "success",
+    errorMessage?: string,
+  ): Promise<void> {
+    try {
+      const logEntry = {
+        booking_id: bookingId,
+        gcal_event_id: eventId,
+        status,
+        error_message: errorMessage,
+        synced_at: new Date().toISOString(),
+      }
+
+      await (getSupabaseClient() as any)
+        .from("gcal_sync_log")
+        .upsert(logEntry, { onConflict: "booking_id" })
+    } catch (error) {
+      console.error("Failed to record sync state:", error)
+      throw error
     }
   }
 
@@ -504,6 +514,11 @@ export async function syncBookingToCalendar(booking: BookingData): Promise<{
   if (!syncLog || !syncLog.gcal_event_id) {
     // Create new event
     const eventId = await createCalendarEvent(booking)
+
+    // Record the created event's ID so subsequent calls update instead of duplicating
+    if (eventId) {
+      await service.recordSyncState(booking.uid, eventId, "success")
+    }
 
     return {
       eventId: eventId || undefined,

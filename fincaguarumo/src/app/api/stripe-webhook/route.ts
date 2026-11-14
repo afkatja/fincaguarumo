@@ -4,14 +4,11 @@ import {
   sendBookingConfirmationEmail,
   saveBookingToSanity,
   saveBookingToSupabase,
-  updateAvailability,
   notifyPartialFailure,
   extractBookingDetails,
   type CustomerDetails,
-  type BookingDetails,
 } from "./bookingHandlers"
 import { sendErrorEmail } from "@/lib/sendErrorEmail"
-import { createSupabaseAdmin } from "@/lib/auth"
 import { executeWithIndividualRetries } from "@/lib/monitoring"
 import { RETRY_CONFIG } from "@/lib/monitoring/config"
 
@@ -24,12 +21,6 @@ export async function POST(request: NextRequest) {
     console.error("ERROR: Stripe API key not configured")
     return NextResponse.json(
       { error: "Stripe API key not configured" },
-      { status: 500 },
-    )
-  }
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return NextResponse.json(
-      { error: "Stripe Secret key not configured" },
       { status: 500 },
     )
   }
@@ -143,12 +134,6 @@ export async function POST(request: NextRequest) {
               saveBookingToSupabase(customerDetails, bookingDetails, id),
             config: RETRY_CONFIG.supabase,
           },
-          {
-            name: "update-availability",
-            fn: () =>
-              updateAvailability(bookingDetails, id, customerDetails.name),
-            config: RETRY_CONFIG.availability,
-          },
         ]
 
         const results = await executeWithIndividualRetries(operations)
@@ -195,37 +180,11 @@ export async function POST(request: NextRequest) {
         // Extract booking metadata from expired session
         const { metadata } = session
         if (metadata?.checkIn && metadata?.checkOut) {
-          try {
-            const supabaseAdmin = createSupabaseAdmin()
-
-            // Release any reserved availability for the expired session
-            const { error } = await supabaseAdmin
-              .from("availability")
-              .delete()
-              .eq("booking_uid", session.id)
-
-            if (error) {
-              console.error(
-                "Failed to release availability for expired session:",
-                {
-                  sessionId: session.id,
-                  error: error.message,
-                },
-              )
-            } else {
-              console.log("Released availability for expired session:", {
-                sessionId: session.id,
-                checkIn: metadata.checkIn,
-                checkOut: metadata.checkOut,
-              })
-            }
-          } catch (error) {
-            // Log error but don't throw to prevent webhook retries
-            console.error("Error processing expired session:", {
-              sessionId: session.id,
-              error: error instanceof Error ? error.message : String(error),
-            })
-          }
+          console.log("Checkout session expired, no booking was created:", {
+            sessionId: session.id,
+            checkIn: metadata.checkIn,
+            checkOut: metadata.checkOut,
+          })
         }
         // Always return success for this event to prevent webhook retries
         return NextResponse.json({

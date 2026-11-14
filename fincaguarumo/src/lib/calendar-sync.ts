@@ -11,6 +11,7 @@ type Booking = {
   start: string
   end: string
   summary?: string
+  description?: string
   source?: string
   guestName?: string
   status?: string
@@ -143,8 +144,6 @@ export class CalendarSyncService {
     }
 
     for (const booking of bookings) {
-      result.processed++
-
       try {
         // Check if already synced
         const { data: existingSync } = await getSupabaseClient()
@@ -158,6 +157,8 @@ export class CalendarSyncService {
           result.skipped = (result.skipped || 0) + 1
           continue
         }
+
+        result.processed++
 
         // Sync to calendar
         const calendarData = mapBookingToCalendarData(booking)
@@ -242,14 +243,8 @@ export class CalendarSyncService {
     }
 
     try {
-      // Fetch all bookings from the existing merged endpoint
-      const response = await fetch(`${getSiteUrl()}/api/ical/merged`)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch bookings: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      const bookings = data.bookings || []
+      // Fetch all bookings directly from Supabase (no HTTP loopback)
+      const bookings = await this.fetchBookings()
       stats.total = bookings.length
 
       console.log(`Processing ${bookings.length} bookings for calendar sync`)
@@ -533,27 +528,71 @@ export class CalendarSyncService {
   }
 
   /**
-   * Fetch bookings from the existing /api/ical/merged endpoint
+   * Fetch bookings directly from Supabase bookings table (no HTTP loopback)
    */
-  async fetchBookingsFromAPI(): Promise<Booking[]> {
-    try {
-      const response = await fetch(`${getSiteUrl()}/api/ical/merged`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
+  async fetchBookings(): Promise<Booking[]> {
+    type DbBookingRow = {
+      uid: string | null
+      check_in: string | null
+      check_out: string | null
+      guest_name: string | null
+      email: string | null
+      phone: string | null
+      source: string | null
+      summary: string | null
+      description: string | null
+      is_test: boolean | null
+    }
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch bookings: ${response.statusText}`)
+    const pageSize = 1000
+    let offset = 0
+    const allRows: DbBookingRow[] = []
+
+    for (;;) {
+      const { data, error } = await getSupabaseClient()
+        .from("bookings")
+        .select(
+          "uid, check_in, check_out, guest_name, email, phone, source, summary, description, is_test",
+        )
+        .neq("guest_name", "CLOSED - Not available")
+        .order("check_in", { ascending: true })
+        .range(offset, offset + pageSize - 1)
+
+      if (error) {
+        console.error("Failed to fetch bookings from Supabase:", error)
+        throw error
       }
 
-      const data = await response.json()
-      return data.bookings || []
-    } catch (error) {
-      console.error("Failed to fetch bookings from API:", error)
-      return []
+      const page = (data || []) as DbBookingRow[]
+      allRows.push(...page)
+      if (page.length < pageSize) break
+      offset += pageSize
     }
+
+    const filtered = allRows.filter((booking: DbBookingRow) => {
+      const guestName = (booking.guest_name || "").toLowerCase()
+      return !guestName.includes("closed - not available")
+    })
+
+    return filtered.map((b: DbBookingRow): Booking => ({
+      uid: b.uid ?? undefined,
+      start: b.check_in ?? "",
+      end: b.check_out ?? "",
+      guestName: b.guest_name ?? undefined,
+      email: b.email ?? undefined,
+      phone: b.phone ?? undefined,
+      source: b.source ?? undefined,
+      summary: b.summary ?? undefined,
+      description: b.description ?? undefined,
+      isTest: b.is_test ?? false,
+    }))
+  }
+
+  /**
+   * Fetch bookings (delegates to direct Supabase fetch)
+   */
+  async fetchBookingsFromAPI(): Promise<Booking[]> {
+    return this.fetchBookings()
   }
 
   /**
@@ -873,19 +912,21 @@ export async function syncBookingsToCalendar(
                   status: "created",
                   eventId,
                 }
-              } else {
-                // Update existing event
-                const success = await googleCalendarService.updateEvent(
-                  existingSync.gcal_event_id,
-                  calendarData,
-                )
-                if (success) {
-                  syncResult = {
-                    status: "updated",
-                    eventId: existingSync.gcal_event_id,
-                  }
+} else {
+              // Update existing event
+              const success = await googleCalendarService.updateEvent(
+                existingSync.gcal_event_id,
+                calendarData,
+              )
+              if (success) {
+                syncResult = {
+                  status: "updated",
+                  eventId: existingSync.gcal_event_id,
                 }
+              } else {
+                throw new Error("Failed to update calendar event")
               }
+            }
             }
             break // Success, exit retry loop
           } catch (error: any) {
@@ -911,7 +952,7 @@ export async function syncBookingsToCalendar(
       await getCalendarSyncService().recordSyncState(
         booking.uid || "unknown",
         syncResult!.eventId || null,
-        syncResult!.status === "deleted" ? "success" : "success",
+        syncResult!.status === "deleted" ? "cancelled" : "success",
       )
 
       // Update counters based on sync result

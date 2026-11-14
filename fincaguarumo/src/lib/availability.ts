@@ -1,66 +1,82 @@
-import { createClient } from "@supabase/supabase-js"
 import { createSupabaseAdmin } from "../lib/auth"
-import { runIcalSync } from "./ical-sync"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
 const supabaseAdmin = createSupabaseAdmin()
 
-export interface AvailabilityRange {
-  start_date: string
-  end_date: string
-  is_available: boolean
-  reason?: string
+export interface DateRange {
+  start: string // YYYY-MM-DD
+  end: string // YYYY-MM-DD
   booking_uid?: string
+  reason?: string
 }
 
-export interface BookingRange {
-  check_in: string
-  check_out: string
+// For backwards compatibility with any existing callers
+export interface AvailabilityRange extends DateRange {
+  start_date?: string
+  end_date?: string
+  is_available?: boolean
 }
 
 export interface AvailabilityCheckResult {
   isAvailable: boolean
-  conflictingRanges: AvailabilityRange[]
-  bookingConflicts: BookingRange[]
+  conflictingRanges: DateRange[]
+  bookingConflicts: DateRange[]
 }
 
 /**
- * Fetch all unavailable ranges from both availability and bookings tables
+ * Fetch all unavailable ranges from bookings table (single source of truth)
+ * Slices dates at DB boundary to return date-only ranges (YYYY-MM-DD).
+ * Excludes test bookings and the 18-month "CLOSED - Not available" block.
  */
-export async function fetchUnavailableRanges(): Promise<{
-  availabilityData: AvailabilityRange[] | null
-  bookingsData: BookingRange[] | null
-}> {
+export async function fetchUnavailableRanges(): Promise<DateRange[]> {
   try {
-    // Fetch from availability table
-    const { data: availabilityData, error: availabilityError } = await supabase
-      .from("availability")
-      .select("*")
-      .eq("is_available", false)
-      .order("start_date", { ascending: true })
+    const today = new Date().toISOString().slice(0, 10)
+    const pageSize = 1000
+    let offset = 0
+    const allBookings: Array<{
+      uid: string | null
+      check_in: string
+      check_out: string
+      source: string | null
+      guest_name: string | null
+      is_test: boolean | null
+    }> = []
 
-    if (availabilityError) {
-      console.error("Error fetching availability data:", availabilityError)
-      throw availabilityError
+    for (;;) {
+      const { data, error } = await supabaseAdmin
+        .from("bookings")
+        .select("uid, check_in, check_out, source, guest_name, is_test")
+        .gte("check_out", today)
+        .not("is_test", "is", true)
+        .neq("guest_name", "CLOSED - Not available")
+        .order("check_in", { ascending: true })
+        .range(offset, offset + pageSize - 1)
+
+      if (error) {
+        console.error("Error fetching bookings data:", error)
+        throw error
+      }
+
+      const page = (data || []) as typeof allBookings[number][]
+      allBookings.push(...page)
+      if (page.length < pageSize) break
+      offset += pageSize
     }
 
-    // Fetch from bookings table as fallback
-    const { data: bookingsData, error: bookingsError } = await supabase
-      .from("bookings")
-      .select("check_in, check_out")
-      .order("check_in", { ascending: true })
+    const filtered = allBookings.filter(booking => {
+      const guestName = (booking.guest_name || "").toLowerCase()
+      return !guestName.includes("closed - not available")
+    })
 
-    if (bookingsError) {
-      console.error("Error fetching bookings data:", bookingsError)
-      throw bookingsError
-    }
+    const ranges: DateRange[] = filtered.map(booking => ({
+      start: booking.check_in.slice(0, 10),
+      end: booking.check_out.slice(0, 10),
+      booking_uid: booking.uid ?? undefined,
+      reason: booking.source
+        ? `Booked via ${booking.source}`
+        : `Booked via Direct - ${booking.guest_name || "Guest"}`,
+    }))
 
-    return {
-      availabilityData: availabilityData || null,
-      bookingsData: bookingsData || null,
-    }
+    return ranges
   } catch (error) {
     console.error("Error fetching unavailable ranges:", error)
     throw error
@@ -69,34 +85,26 @@ export async function fetchUnavailableRanges(): Promise<{
 
 /**
  * Check if a date range is available
+ * Uses direct string comparison on YYYY-MM-DD without Date objects
  */
 export async function checkAvailabilityRange(
   checkIn: string,
   checkOut: string,
 ): Promise<AvailabilityCheckResult> {
   try {
-    const { availabilityData, bookingsData } = await fetchUnavailableRanges()
+    const reqStart = checkIn.slice(0, 10)
+    const reqEnd = checkOut.slice(0, 10)
 
-    // Filter availability data for overlapping ranges
-    const conflictingRanges =
-      availabilityData?.filter(
-        range => range.start_date <= checkOut && range.end_date >= checkIn,
-      ) || []
+    const ranges = await fetchUnavailableRanges()
 
-    // Filter bookings data for overlapping ranges
-    const bookingConflicts =
-      bookingsData?.filter(
-        booking => booking.check_in <= checkOut && booking.check_out >= checkIn,
-      ) || []
-
-    const isUnavailable = conflictingRanges.length > 0
-    const hasBookingConflict = bookingConflicts.length > 0
-    const isAvailable = !isUnavailable && !hasBookingConflict
+    const conflictingRanges = ranges.filter(
+      range => range.start < reqEnd && range.end > reqStart,
+    )
 
     return {
-      isAvailable,
+      isAvailable: conflictingRanges.length === 0,
       conflictingRanges,
-      bookingConflicts,
+      bookingConflicts: [],
     }
   } catch (error) {
     console.error("Error checking availability range:", error)
@@ -105,55 +113,78 @@ export async function checkAvailabilityRange(
 }
 
 /**
- * Convert date ranges to individual blocked dates array
+ * Convert date ranges to individual blocked dates array (YYYY-MM-DD strings)
  */
 export function convertRangesToBlockedDates(
-  availabilityData: AvailabilityRange[] | null,
-  bookingsData: BookingRange[] | null,
-): Date[] {
-  const blockedDates: Date[] = []
+  ranges: DateRange[] | null,
+): string[] {
+  if (!ranges || !ranges.length) return []
 
-  // Process availability table data
-  if (availabilityData) {
-    for (const range of availabilityData) {
-      const start = new Date(range.start_date)
-      const end = new Date(range.end_date)
+  const blockedDates: string[] = []
+  const seenDates = new Set<string>()
 
-      // Add all dates in the range to blocked dates
-      const currentDate = new Date(start)
-      while (currentDate < end) {
-        blockedDates.push(new Date(currentDate))
-        currentDate.setDate(currentDate.getDate() + 1)
+  for (const range of ranges) {
+    const startStr = range.start || (range as AvailabilityRange).start_date
+    const endStr = range.end || (range as AvailabilityRange).end_date
+    if (!startStr || !endStr) continue
+
+    const [y, m, d] = startStr.slice(0, 10).split("-").map(Number)
+    const [endY, endM, endD] = endStr.slice(0, 10).split("-").map(Number)
+
+    const cur = new Date(Date.UTC(y, m - 1, d))
+    const endDate = new Date(Date.UTC(endY, endM - 1, endD))
+
+    while (cur < endDate) {
+      const dateStr = cur.toISOString().slice(0, 10)
+      if (!seenDates.has(dateStr)) {
+        seenDates.add(dateStr)
+        blockedDates.push(dateStr)
       }
+      cur.setUTCDate(cur.getUTCDate() + 1)
     }
   }
 
-  // Process bookings table data as fallback
-  if (bookingsData) {
-    for (const booking of bookingsData) {
-      const start = new Date(booking.check_in)
-      const end = new Date(booking.check_out)
+  blockedDates.sort()
+  return blockedDates
+}
 
-      // Add all dates in the range to blocked dates
-      const currentDate = new Date(start)
-      while (currentDate < end) {
-        // Check if date is already in blockedDates to avoid duplicates
-        const dateStr = currentDate.toISOString().split("T")[0]
-        if (
-          !blockedDates.some(
-            date => date.toISOString().split("T")[0] === dateStr,
-          )
-        ) {
-          blockedDates.push(new Date(currentDate))
-        }
-        currentDate.setDate(currentDate.getDate() + 1)
+/**
+ * Convert date ranges to individual blocked dates for the checkout picker.
+ * Blocks dates strictly after a booking's check-in through its check-out date
+ * (inclusive), so a guest may check out on another booking's check-in date
+ * (back-to-back) while dates during another booking's stay remain restricted.
+ */
+export function convertRangesToCheckoutBlockedDates(
+  ranges: DateRange[] | null,
+): string[] {
+  if (!ranges || !ranges.length) return []
+
+  const blockedDates: string[] = []
+  const seenDates = new Set<string>()
+
+  for (const range of ranges) {
+    const startStr = range.start || (range as AvailabilityRange).start_date
+    const endStr = range.end || (range as AvailabilityRange).end_date
+    if (!startStr || !endStr) continue
+
+    const [y, m, d] = startStr.slice(0, 10).split("-").map(Number)
+    const [endY, endM, endD] = endStr.slice(0, 10).split("-").map(Number)
+
+    // Start one day after check-in so checkout on a check-in date is allowed.
+    const cur = new Date(Date.UTC(y, m - 1, d + 1))
+    const endDate = new Date(Date.UTC(endY, endM - 1, endD))
+
+    while (cur <= endDate) {
+      const dateStr = cur.toISOString().slice(0, 10)
+      if (!seenDates.has(dateStr)) {
+        seenDates.add(dateStr)
+        blockedDates.push(dateStr)
       }
+      cur.setUTCDate(cur.getUTCDate() + 1)
     }
   }
 
-  // Sort blocked dates
-  blockedDates.sort((a, b) => a.getTime() - b.getTime())
-
+  blockedDates.sort()
   return blockedDates
 }
 
@@ -161,7 +192,6 @@ export function convertRangesToBlockedDates(
 const lastSyncTime = { timestamp: 0 }
 const SYNC_COOLDOWN = 5 * 60 * 1000 // 5 minutes in milliseconds
 
-// In-flight sync lock serializing the full sync operation across concurrent callers
 let inFlightSync: Promise<void> | null = null
 
 /**
@@ -181,7 +211,6 @@ export async function triggeriCalSync(force = false): Promise<void> {
     return
   }
 
-  // If a sync is already in flight, wait for it instead of starting a duplicate
   if (inFlightSync) {
     await inFlightSync
     return
@@ -189,13 +218,13 @@ export async function triggeriCalSync(force = false): Promise<void> {
 
   const runSync = async (): Promise<void> => {
     try {
+      const { runIcalSync } = await import("./ical-sync")
       const { merged } = await runIcalSync(force, 30000)
-
       console.log(
         "Bookings sync completed successfully, merged ranges:",
         merged.length,
       )
-      lastSyncTime.timestamp = now // Update last sync time only on success
+      lastSyncTime.timestamp = now
     } catch (syncError) {
       console.warn("Error syncing bookings:", syncError)
       throw syncError
@@ -207,84 +236,4 @@ export async function triggeriCalSync(force = false): Promise<void> {
   const syncPromise = runSync()
   inFlightSync = syncPromise
   await syncPromise
-}
-
-/**
- * Update availability table with new range
- */
-export async function updateAvailabilityTable(
-  startDate: string,
-  endDate: string,
-  isAvailable: boolean,
-  reason?: string,
-  bookingUid?: string,
-) {
-  try {
-    // Check if this range already exists
-    const { data: existing } = await supabaseAdmin
-      .from("availability")
-      .select("id")
-      .eq("start_date", startDate)
-      .eq("end_date", endDate)
-      .maybeSingle()
-
-    // Build update/insert data
-    const availabilityData: any = {
-      is_available: isAvailable,
-      updated_at: new Date().toISOString(),
-    }
-
-    if (reason !== undefined) {
-      availabilityData.reason = reason
-    }
-    if (bookingUid !== undefined) {
-      availabilityData.booking_uid = bookingUid
-    }
-
-    let result
-
-    if (existing) {
-      // Update existing entry
-      const { data, error } = await supabaseAdmin
-        .from("availability")
-        .update(availabilityData)
-        .eq("id", existing.id)
-        .select()
-
-      if (error) {
-        throw error
-      }
-      result = data
-    } else {
-      // Create new entry
-      const insertData: any = {
-        start_date: startDate,
-        end_date: endDate,
-        is_available: isAvailable,
-        updated_at: new Date().toISOString(),
-      }
-
-      if (reason !== undefined) {
-        insertData.reason = reason
-      }
-      if (bookingUid !== undefined) {
-        insertData.booking_uid = bookingUid
-      }
-
-      const { data, error } = await supabaseAdmin
-        .from("availability")
-        .insert(insertData)
-        .select()
-
-      if (error) {
-        throw error
-      }
-      result = data
-    }
-
-    return result
-  } catch (error) {
-    console.error("Error updating availability table:", error)
-    throw error
-  }
 }

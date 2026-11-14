@@ -36,8 +36,8 @@ export const BOOKINGS_TABLE_COLUMNS = {
   // Migration 014 addition
   external_reservation_id: 'text', // External platform reservation ID (nullable)
   
-  // NOT in bookings table (only in availability table):
-  // created_at, updated_at
+  // Migration 021 addition
+  is_test: 'boolean',              // Whether this is a test booking (default: false)
 } as const
 
 /**
@@ -60,6 +60,7 @@ export type BookingsTableRow = {
   description: string | null
   synced_at: string | null
   external_reservation_id: string | null
+  is_test: boolean
 }
 
 /**
@@ -78,6 +79,7 @@ export const BOOKINGS_ADMIN_SELECT_COLUMNS = [
   'total_price',
   'external_reservation_id',
   'synced_at',
+  'is_test',
 ] as const
 
 /**

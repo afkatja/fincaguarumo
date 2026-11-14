@@ -10,8 +10,15 @@ interface AvailabilityPreviewProps {
   bookingType: "villa" | "tour"
   className?: string
   calendarLoading?: boolean
-  blockedDates?: Date[] // Add blocked dates from calendar
+  blockedDates?: (Date | string)[] // Add blocked dates from calendar
   onAvailabilityChange?: (isAvailable: boolean | null) => void
+}
+
+const formatLocalDate = (d: Date): string => {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
 }
 
 interface AvailabilityStatus {
@@ -61,14 +68,18 @@ export default function AvailabilityPreview({
         // Check availability using blocked dates from calendar
         // This eliminates the redundant API call
         const currentDate = new Date(checkIn)
+        currentDate.setHours(0, 0, 0, 0)
+        const checkOutDate = new Date(checkOut)
+        checkOutDate.setHours(0, 0, 0, 0)
         let hasConflict = false
 
-        while (currentDate < checkOut && !hasConflict) {
-          const dateStr = currentDate.toISOString().split("T")[0]
+        while (currentDate < checkOutDate && !hasConflict) {
+          const dateStr = formatLocalDate(currentDate)
           if (
-            blockedDates.some(
-              date => date.toISOString().split("T")[0] === dateStr,
-            )
+            blockedDates.some(d => {
+              const str = typeof d === "string" ? d.slice(0, 10) : formatLocalDate(d)
+              return str === dateStr
+            })
           ) {
             hasConflict = true
           }
