@@ -137,7 +137,7 @@ async function retryWithBackoff<T>(
 
       if (attempt < options.maxRetries) {
         const delay = options.baseDelayMs * Math.pow(2, attempt)
-        console.log(
+        console.error(
           `⚠️  Translation attempt ${attempt + 1} failed, retrying in ${delay}ms: ${lastError.message}`,
         )
         await sleep(delay)
@@ -300,12 +300,24 @@ async function translateWithDeepL(
     translateOptions.formality = options.deeplFormality
   }
 
-  const result = await translator.translateText(
-    text,
-    deeplSourceLang,
-    deeplTargetLang,
-    translateOptions,
-  )
+  let result: deepl.TextResult
+  try {
+    result = await translator.translateText(
+      text,
+      deeplSourceLang,
+      deeplTargetLang,
+      translateOptions,
+    )
+  } catch (error) {
+    console.error("❌ [DeepL] translateText API call failed", {
+      sourceLang,
+      targetLang,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    })
+    throw error
+  }
+
   return result.text
 }
 
