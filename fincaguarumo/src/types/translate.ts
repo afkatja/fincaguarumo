@@ -1,7 +1,7 @@
-import { TRANSLATABLE_FIELDS } from "../config/translatable-fields"
+import { FIELDS_CONFIG } from "../config/translatable-fields"
 import { locales } from "../config"
 
-export type TranslatableDocType = keyof typeof TRANSLATABLE_FIELDS
+export type TranslatableDocType = keyof typeof FIELDS_CONFIG
 export type Locale = (typeof locales)[number]
 
 export interface TranslateRequest {
