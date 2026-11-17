@@ -33,7 +33,9 @@ export function TranslateTool() {
   const [documents, setDocuments] = useState<TranslatableDoc[]>([])
   const [selectedDoc, setSelectedDoc] = useState<TranslatableDoc | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
+  const [isCopying, setIsCopying] = useState(false)
   const [message, setMessage] = useState("")
+  const [copyMessage, setCopyMessage] = useState("")
   const client = useClient({
     apiVersion: process.env.NEXT_PUBLIC_SANITY_STUDIO_API_VERSION!,
   })
@@ -100,6 +102,41 @@ export function TranslateTool() {
     setIsTranslating(false)
   }
 
+  const handleCopyFields = async () => {
+    if (!selectedDoc) return
+
+    setIsCopying(true)
+    setCopyMessage("")
+
+    try {
+      const response = await fetch("/api/copy-fields", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          docId: selectedDoc._id,
+          docType: selectedDoc._type,
+          targetLanguages: targetLanguages,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setCopyMessage(
+          `Copied fields to ${result.copied} language(s)${
+            result.skipped > 0 ? `, ${result.skipped} already complete` : ""
+          }`,
+        )
+      } else {
+        setCopyMessage(`Error: ${result.error}`)
+      }
+    } catch (error) {
+      setCopyMessage(`Error: ${error}`)
+    }
+
+    setIsCopying(false)
+  }
+
   const groupedDocs = documents.reduce<Record<string, TranslatableDoc[]>>(
     (acc, doc) => {
       const type = doc._type
@@ -126,6 +163,7 @@ export function TranslateTool() {
             setSelectedDoc(doc)
           }}
         >
+          <option value="">Select a document...</option>
           {Object.keys(typeLabels).map(type => {
             const docs = groupedDocs[type]
             if (!docs || docs.length === 0) return null
@@ -150,11 +188,17 @@ export function TranslateTool() {
           tone="primary"
           onClick={handleTranslate}
           disabled={
-            !selectedDoc ||
-            isTranslating ||
-            missingLanguages.length === 0
+            !selectedDoc || isTranslating || missingLanguages.length === 0
           }
           icon={isTranslating ? Spinner : undefined}
+        />
+
+        <Button
+          text={`Copy fields as-is to ${targetLanguageNames.join(", ")}`}
+          tone="neutral"
+          onClick={handleCopyFields}
+          disabled={!selectedDoc || isCopying}
+          icon={isCopying ? Spinner : undefined}
         />
 
         {message && (
@@ -163,6 +207,15 @@ export function TranslateTool() {
             style={{ color: message.includes("Error") ? "red" : "green" }}
           >
             {message}
+          </Text>
+        )}
+
+        {copyMessage && (
+          <Text
+            size={1}
+            style={{ color: copyMessage.includes("Error") ? "red" : "green" }}
+          >
+            {copyMessage}
           </Text>
         )}
       </Stack>
