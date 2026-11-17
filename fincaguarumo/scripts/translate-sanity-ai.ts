@@ -1,7 +1,10 @@
 import "dotenv/config"
 import { createClient } from "next-sanity"
 import { languages } from "../src/config.js"
-import { TRANSLATABLE_FIELDS, COPY_AS_IS_FIELDS } from "../src/config/translatable-fields.js"
+import {
+  getTranslatableFields,
+  getCopyAsIsFields,
+} from "../src/config/translatable-fields.js"
 import { translateWithRetry, getDefaultOptions, type TranslationOptions } from "../src/sanity/lib/translateText.js"
 import { isPortableText, portableTextToPlain, plainToPortableText } from "../src/sanity/lib/portableTextHelper.js"
 
@@ -180,8 +183,8 @@ async function translateSanityAI(
           )
 
           // Build base fields (non-translatable fields to copy as-is)
-          const translatableFieldSet = new Set(TRANSLATABLE_FIELDS[type] || [])
-          const copyAsIsFieldSet = new Set(COPY_AS_IS_FIELDS[type] || [])
+          const translatableFieldSet = new Set(getTranslatableFields(type))
+          const copyAsIsFieldSet = new Set(getCopyAsIsFields(type))
 
           // Get all fields from the source doc, separate translatable vs copy-as-is
           const baseFields: { [key: string]: any } = {}

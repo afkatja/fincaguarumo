@@ -94,15 +94,22 @@ describe("/api/translate", () => {
       expect(data.error).toBe("Translation not configured for document type: unknownType")
     })
 
-    it("should return 400 when source document has no slug", async () => {
-      mockClient.fetch.mockResolvedValueOnce({ _id: "doc123", _type: "page" })
+    it("should proceed when source document has no slug", async () => {
+      const sourceDoc = { _id: "doc123", _type: "page", title: "Test" }
+
+      mockClient.fetch
+        .mockResolvedValueOnce(sourceDoc)
+        .mockResolvedValueOnce(null)
+      mockTranslateWithRetry.mockResolvedValue({ translatedText: "Título", provider: "google-cloud" })
+      mockClient.create.mockResolvedValueOnce({ _id: "new123", _type: "page", language: "es" })
 
       const request = createMockRequest({ docId: "doc123", docType: "page" })
       const response = await POST(request)
       const data = await response.json()
 
-      expect(response.status).toBe(400)
-      expect(data.error).toBe("Source document must have a slug")
+      expect(response.status).toBe(200)
+      const createCall = mockClient.create.mock.calls[0][0]
+      expect(createCall.slug).toBeUndefined()
     })
 
     it("should skip translation when already exists and complete", async () => {
