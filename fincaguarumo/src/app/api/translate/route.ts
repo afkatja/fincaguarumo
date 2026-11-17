@@ -1,12 +1,22 @@
 import { createClient } from "next-sanity"
 import { NextResponse } from "next/server"
 import { locales } from "../../../config"
-import translateText from "../../../sanity/lib/translateText"
+import { translateWithRetry, getDefaultOptions } from "../../../sanity/lib/translateText"
 import {
   isPortableText,
   plainToPortableText,
   portableTextToPlain,
 } from "../../../sanity/lib/portableTextHelper"
+import { TRANSLATABLE_FIELDS } from "../../../config/translatable-fields"
+import type {
+  TranslateRequest,
+  TranslateResponse,
+  TranslateResult,
+  TranslateError,
+  TranslatableDocType,
+  Locale,
+} from "../../../types/translate"
+import type { TranslationOptions } from "../../../sanity/lib/translateText"
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
@@ -16,33 +26,13 @@ const client = createClient({
   apiVersion: process.env.SANITY_STUDIO_API_VERSION,
 })
 
-const TRANSLATABLE_FIELDS = {
-  faq: ["question", "answer"],
-  page: ["title", "subtitle", "description", "body"],
-  post: ["title", "body"],
-  tour: ["title", "description", "body"],
-  home: [
-    "title",
-    "hero_title",
-    "hero_slogan",
-    "hero_body",
-    "subtitle",
-    "description",
-    "intro_body",
-    "featured_content_title",
-    "featured_blog_title",
-  ],
-  activityBlock: ["children"],
-  whyChooseVillaBruno: ["title", "CTA_button"],
-  locationPage: ["title", "subtitle", "description", "body"],
-  accommodation: [
-    "title",
-    "subtitle",
-    "description",
-    "summary",
-    "body",
-    "highlightFeatures",
-  ],
+// Helper to get translation options with optional per-request provider override
+function getTranslationOptions(overrideProvider?: string): TranslationOptions {
+  const defaultOptions = getDefaultOptions()
+  if (overrideProvider) {
+    return { ...defaultOptions, provider: overrideProvider as TranslationOptions["provider"] }
+  }
+  return defaultOptions
 }
 
 export async function POST(request: Request) {
@@ -51,12 +41,8 @@ export async function POST(request: Request) {
     docType,
     sourceLanguage = "en",
     targetLanguages = locales.filter(lang => lang !== sourceLanguage),
-  }: {
-    docId: string
-    docType: keyof typeof TRANSLATABLE_FIELDS
-    sourceLanguage?: string
-    targetLanguages?: string[]
-  } = await request.json()
+    provider, // Optional provider override
+  }: TranslateRequest & { provider?: string } = await request.json()
 
   try {
     // Validate input
@@ -122,8 +108,11 @@ export async function POST(request: Request) {
       language: sourceLanguage,
     })
 
-    const results = []
-    const errors = []
+    // Get translation options with optional provider override
+    const translationOptions = getTranslationOptions(provider)
+
+    const results: TranslateResult[] = []
+    const errors: TranslateError[] = []
     const createdDocIds = [docId] // Track all document IDs for translation.metadata
 
     for (const targetLang of uniqueTargetLanguages) {
@@ -189,20 +178,22 @@ export async function POST(request: Request) {
                   continue
                 }
 
-                const translatedText = await translateText(
+                const { translatedText } = await translateWithRetry(
                   plainText,
                   sourceLanguage,
-                  targetLang
+                  targetLang,
+                  translationOptions
                 )
                 translatedFields[field] = plainToPortableText(
                   fieldValue,
                   translatedText
                 )
               } else if (typeof fieldValue === "string") {
-                const translatedText = await translateText(
+                const { translatedText } = await translateWithRetry(
                   fieldValue,
                   sourceLanguage,
-                  targetLang
+                  targetLang,
+                  translationOptions
                 )
                 translatedFields[field] = translatedText
               } else {

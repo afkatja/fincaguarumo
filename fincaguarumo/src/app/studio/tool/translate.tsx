@@ -2,26 +2,63 @@
 import { useState, useEffect } from "react"
 import { Button, Text, Select, Spinner, Stack, Box } from "@sanity/ui"
 import { useClient } from "sanity"
-import { locales } from "../../../config"
-import { SanityDocument } from "next-sanity"
+import { locales, languages } from "../../../config"
 import {
-  getUntranslatedDocumentsQuery,
+  getTranslatableDocumentsQuery,
   translatableTypes,
 } from "../../../sanity/lib/translationQueries"
 
+interface TranslatableDoc {
+  _id: string
+  _type: string
+  _updatedAt?: string
+  displayTitle: string
+  translationCount: number
+  translatedLanguages: string[]
+}
+
+const typeLabels: Record<string, string> = {
+  home: "Homepage",
+  accommodation: "Accommodations",
+  page: "Pages",
+  post: "Blog Posts",
+  whyChooseVillaBruno: "Why Choose Villa Bruno",
+  locationPage: "Location Pages",
+  faq: "FAQ",
+  tour: "Tours",
+  activityBlock: "Activity Blocks",
+}
+
 export function TranslateTool() {
-  const [documents, setDocuments] = useState<SanityDocument[]>([])
-  const [selectedDoc, setSelectedDoc] = useState<SanityDocument | null>(null)
+  const [documents, setDocuments] = useState<TranslatableDoc[]>([])
+  const [selectedDoc, setSelectedDoc] = useState<TranslatableDoc | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
   const [message, setMessage] = useState("")
   const client = useClient({
     apiVersion: process.env.NEXT_PUBLIC_SANITY_STUDIO_API_VERSION!,
   })
 
+  const targetLanguages = locales.filter(lang => lang !== "en")
+
+  const targetLanguageNames = targetLanguages.map(lang => {
+    const match = languages.find(l => l.value === lang)
+    return match ? match.title : lang
+  })
+
+  const missingLanguages = selectedDoc
+    ? targetLanguages.filter(
+        lang => !selectedDoc.translatedLanguages.includes(lang),
+      )
+    : targetLanguages
+
+  const missingLanguageNames = missingLanguages.map(lang => {
+    const match = languages.find(l => l.value === lang)
+    return match ? match.title : lang
+  })
+
   useEffect(() => {
-    // Fetch documents that need translation
     const fetchDocuments = async () => {
-      const docs = await client.fetch(getUntranslatedDocumentsQuery, {
+      const docs = await client.fetch(getTranslatableDocumentsQuery, {
         types: translatableTypes,
       })
       setDocuments(docs)
@@ -43,7 +80,7 @@ export function TranslateTool() {
         body: JSON.stringify({
           docId: selectedDoc._id,
           docType: selectedDoc._type,
-          targetLanguages: locales.filter(lang => lang !== "en"), // Exclude source language
+          targetLanguages: missingLanguages,
         }),
       })
 
@@ -51,7 +88,7 @@ export function TranslateTool() {
 
       if (result.success) {
         setMessage(
-          `Successfully translated to ${result.translations.length} languages`
+          `Successfully translated to ${result.translations.length} languages`,
         )
       } else {
         setMessage(`Error: ${result.error}`)
@@ -62,6 +99,16 @@ export function TranslateTool() {
 
     setIsTranslating(false)
   }
+
+  const groupedDocs = documents.reduce<Record<string, TranslatableDoc[]>>(
+    (acc, doc) => {
+      const type = doc._type
+      if (!acc[type]) acc[type] = []
+      acc[type].push(doc)
+      return acc
+    },
+    {},
+  )
 
   return (
     <Box padding={4}>
@@ -79,19 +126,34 @@ export function TranslateTool() {
             setSelectedDoc(doc)
           }}
         >
-          {documents.map(doc => (
-            <option key={doc._id} value={doc._id}>
-              {doc.displayTitle} ({doc._type}) - {doc.hasTranslations}{" "}
-              translations
-            </option>
-          ))}
+          {Object.keys(typeLabels).map(type => {
+            const docs = groupedDocs[type]
+            if (!docs || docs.length === 0) return null
+            return (
+              <optgroup key={type} label={typeLabels[type]}>
+                {docs.map(doc => (
+                  <option key={doc._id} value={doc._id}>
+                    {doc.displayTitle} — {doc.translationCount} translation(s)
+                  </option>
+                ))}
+              </optgroup>
+            )
+          })}
         </Select>
 
         <Button
-          text="Translate to Spanish, Dutch, Russian & German"
+          text={
+            missingLanguages.length > 0
+              ? `Translate to ${missingLanguageNames.join(", ")}`
+              : "All translations complete"
+          }
           tone="primary"
           onClick={handleTranslate}
-          disabled={!selectedDoc || isTranslating}
+          disabled={
+            !selectedDoc ||
+            isTranslating ||
+            missingLanguages.length === 0
+          }
           icon={isTranslating ? Spinner : undefined}
         />
 

@@ -42,14 +42,15 @@ export const translatableTypes = [
   "activityBlock",
   "whyChooseVillaBruno",
   "locationPage",
+  "accommodation",
 ] as const
 export type TranslatableType = (typeof translatableTypes)[number]
 
 /**
- * Query to get all untranslated documents
+ * Query to get all translatable documents with translation counts
  */
-export const getUntranslatedDocumentsQuery = `
-  *[_type in $types && language == "en" && ${hasNoTranslationsQuery}] {
+export const getTranslatableDocumentsQuery = `
+  *[_type in $types && language == "en"] {
     _id,
     _type,
     title,
@@ -69,6 +70,13 @@ export const getUntranslatedDocumentsQuery = `
       hero_title, 
       question, 
       "Untitled"
-    )
+    ),
+    "translationCount": count(*[
+      (_type == "translation.metadata" && ^._id in translations[].value._ref) ||
+      (_type == ^._type && language != "en" && slug.current == ^.slug.current)
+    ]),
+    "translatedLanguages": *[
+      _type == ^._type && language != "en" && slug.current == ^.slug.current
+    ][].language
   }
 `

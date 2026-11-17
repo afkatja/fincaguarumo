@@ -91,8 +91,7 @@ const getLanguageItems = (
                 `_type == $type && (language == $lang${defaultLanguageFilter})`,
               )
               .params({ type: schemaType, lang: lang.id })
-              .apiVersion("v2025-02-19")
-              .initialValue({ language: lang.id }),
+              .apiVersion("v2025-02-19"),
           )
       }),
     )
@@ -102,10 +101,9 @@ export const structure: StructureResolver = S => {
   const list = S.list()
     .title("Content")
     .items([
-      // Document-level translations
       S.listItem()
         .title("Homepage")
-        .child(getTranslationItems(S, "home", "Home", "standalone")),
+        .child(getLanguageItems(S, "home", "Home")),
       S.listItem()
         .title("Pages")
         .child(getLanguageItems(S, "page", "Pages")),

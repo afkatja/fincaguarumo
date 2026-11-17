@@ -2,93 +2,22 @@ import "dotenv/config"
 import { createClient } from "next-sanity"
 import { languages } from "../src/config.js"
 import { TRANSLATABLE_FIELDS, COPY_AS_IS_FIELDS } from "../src/config/translatable-fields.js"
+import { translateWithRetry, getDefaultOptions, type TranslationOptions } from "../src/sanity/lib/translateText.js"
+import { isPortableText, portableTextToPlain, plainToPortableText } from "../src/sanity/lib/portableTextHelper.js"
 
-type TranslateProvider = "google" | "ollama" | "libretranslate" | "huggingface"
-
-interface TranslateOptions {
-  provider: TranslateProvider
-  ollamaHost?: string
-  ollamaModel?: string
-  libretranslateUrl?: string
-  huggingfaceToken?: string
-  huggingfaceModel?: string
+interface DocInfo {
+  _id: string
+  _type: string
+  slug: string | null
+  language: string
+  [key: string]: any
 }
 
-const DEFAULT_PROVIDER: TranslateProvider = "google"
-
-function getProvider(): TranslateProvider {
-  return (
-    (process.env.TRANSLATION_PROVIDER as TranslateProvider) || DEFAULT_PROVIDER
-  )
-}
-
-function getOptions(): TranslateOptions {
-  return {
-    provider: getProvider(),
-    ollamaHost: process.env.OLLAMA_HOST || "http://localhost:11434",
-    ollamaModel: process.env.OLLAMA_MODEL || "llama3.2",
-    libretranslateUrl:
-      process.env.LIBRETRANSLATE_URL || "https://libretranslate.com/translate",
-    huggingfaceToken: process.env.HUGGINGFACE_TOKEN,
-    huggingfaceModel:
-      process.env.HUGGINGFACE_MODEL || "meta-llama/Meta-Llama-3.1-8B-Instruct",
-  }
-}
-
-/**
- * Check if a field value is Portable Text (blockContent)
- */
-function isPortableText(fieldValue: any): fieldValue is any {
-  return (
-    fieldValue &&
-    typeof fieldValue === "object" &&
-    fieldValue._type === "blockContent"
-  )
-}
-
-/**
- * Convert Portable Text to plain text for translation
- */
-function portableTextToPlain(fieldValue: any): string {
-  if (!fieldValue || !fieldValue.children) return ""
-
-  return fieldValue.children
-    .map((child: any) => {
-      if (child.text) return child.text
-      return ""
-    })
-    .join(" ")
-}
-
-/**
- * Convert plain text back to Portable Text
- */
-function plainToPortableText(originalFieldValue: any, translatedText: string): any {
-  // If the original was empty, return empty
-  if (!originalFieldValue) return originalFieldValue
-
-  // Replace the text content while preserving the blockContent structure
-  const children = (originalFieldValue.children || []).map(
-    (child: any) => {
-      // Replace text child with translated text
-      if (child._type === "span" && child.text) {
-        return { ...child, text: translatedText }
-      }
-      return child
-    },
-  )
-
-  return { ...originalFieldValue, children }
-}
-
-/**
- * Translate a single field value
- */
-async function translateFieldValue(
+export async function translateFieldValue(
   value: any,
   sourceLanguage: string,
   targetLanguage: string,
-  options: TranslateOptions,
+  options: TranslationOptions,
 ): Promise<any> {
   if (value === null || value === undefined) return value
 
@@ -100,28 +29,38 @@ async function translateFieldValue(
       return value
     }
 
-    const translatedText = await autoTranslate(plainText, targetLanguage, options)
-    if (!translatedText) {
-      console.error(`❌ Failed to translate Portable Text`)
+    try {
+      const { translatedText } = await translateWithRetry(plainText, sourceLanguage, targetLanguage, options)
+      if (!translatedText) {
+        console.error(`❌ Failed to translate Portable Text`)
+        return value
+      }
+
+      console.log(`✅ Translated Portable Text field`)
+      return plainToPortableText(value, translatedText)
+    } catch (error) {
+      console.error(`❌ Failed to translate Portable Text`, error)
       return value
     }
-
-    console.log(`✅ Translated Portable Text field`)
-    return plainToPortableText(value, translatedText)
   }
 
   // String fields
   if (typeof value === "string") {
     if (!value.trim()) return value
 
-    const translatedText = await autoTranslate(value, targetLanguage, options)
-    if (!translatedText) {
-      console.error(`❌ Failed to translate string field: ${value}`)
+    try {
+      const { translatedText } = await translateWithRetry(value, sourceLanguage, targetLanguage, options)
+      if (!translatedText) {
+        console.error(`❌ Failed to translate string field: ${value}`)
+        return value
+      }
+
+      console.log(`✅ Translated string field`)
+      return translatedText
+    } catch (error) {
+      console.error(`❌ Failed to translate string field: ${value}`, error)
       return value
     }
-
-    console.log(`✅ Translated string field`)
-    return translatedText
   }
 
   // Array fields (like highlightFeatures) - translate each string element
@@ -129,10 +68,11 @@ async function translateFieldValue(
     const translatedItems: any[] = []
     for (const item of value) {
       if (typeof item === "string") {
-        const translated = await autoTranslate(item, targetLanguage, options)
-        if (translated) {
-          translatedItems.push(translated)
-        } else {
+        try {
+          const { translatedText } = await translateWithRetry(item, sourceLanguage, targetLanguage, options)
+          translatedItems.push(translatedText || item)
+        } catch (error) {
+          console.error(`❌ Failed to translate array string item`, error)
           translatedItems.push(item)
         }
       } else if (typeof item === "object" && item !== null) {
@@ -140,8 +80,13 @@ async function translateFieldValue(
         const translatedObj: any = {}
         for (const [key, val] of Object.entries(item)) {
           if (typeof val === "string") {
-            const translated = await autoTranslate(val, targetLanguage, options)
-            translatedObj[key] = translated || val
+            try {
+              const { translatedText } = await translateWithRetry(val, sourceLanguage, targetLanguage, options)
+              translatedObj[key] = translatedText || val
+            } catch (error) {
+              console.error(`❌ Failed to translate object field ${key}`, error)
+              translatedObj[key] = val
+            }
           } else {
             translatedObj[key] = val
           }
@@ -159,156 +104,10 @@ async function translateFieldValue(
 }
 
 /**
- * Auto-translate text using the configured provider
- */
-async function autoTranslate(
-  text: string,
-  target: string,
-  options: TranslateOptions,
-): Promise<string | null> {
-  console.log("Translating with...", options.provider)
-
-  switch (options.provider) {
-    case "ollama":
-      return translateWithOllama(text, target, options)
-    case "libretranslate":
-      return translateWithLibreTranslate(text, target, options)
-    case "huggingface":
-      return translateWithHuggingFace(text, target, options)
-    case "google":
-    default: {
-      const { translate } = await import("@vitalets/google-translate-api")
-      try {
-        const res = await translate(text, { to: target })
-        return res.text
-      } catch (err) {
-        console.error("Google translate error:", err)
-        return null
-      }
-    }
-  }
-}
-
-/**
- * Translate with Ollama
- */
-async function translateWithOllama(
-  text: string,
-  target: string,
-  options: TranslateOptions,
-): Promise<string | null> {
-  const prompt = `Translate the following text to ${target}. Return ONLY the translation, no explanations:\n\n${text}`
-
-  try {
-    const res = await fetch(`${options.ollamaHost}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: options.ollamaModel,
-        prompt,
-        stream: false,
-        options: { temperature: 0.1 },
-      }),
-    })
-
-    if (!res.ok) throw new Error(`Ollama error: ${res.statusText}`)
-
-    const data = await res.json()
-    return data.response?.trim() || null
-  } catch (err) {
-    console.error("Ollama translation error:", err)
-    return null
-  }
-}
-
-/**
- * Translate with LibreTranslate
- */
-async function translateWithLibreTranslate(
-  text: string,
-  target: string,
-  options: TranslateOptions,
-): Promise<string | null> {
-  try {
-    const res = await fetch(`${options.libretranslateUrl}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        q: text,
-        source: "en",
-        target: target,
-        format: "text",
-      }),
-    })
-
-    if (!res.ok) throw new Error(`LibreTranslate error: ${res.statusText}`)
-
-    const data = await res.json()
-    return data.translatedText || null
-  } catch (err) {
-    console.error("LibreTranslate error:", err)
-    return null
-  }
-}
-
-/**
- * Translate with Hugging Face
- */
-async function translateWithHuggingFace(
-  text: string,
-  target: string,
-  options: TranslateOptions,
-): Promise<string | null> {
-  if (!options.huggingfaceToken) {
-    console.warn("Hugging Face token not set")
-    return null
-  }
-
-  const prompt = `Translate to ${target}: "${text}"\nTranslation:`
-
-  try {
-    const res = await fetch(
-      `https://api-inference.huggingface.co/models/${options.huggingfaceModel}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${options.huggingfaceToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: 100,
-            temperature: 0.1,
-            return_full_text: false,
-          },
-        }),
-      },
-    )
-
-    if (!res.ok) throw new Error(`HuggingFace error: ${res.statusText}`)
-
-    const data = await res.json()
-    return data[0]?.generated_text?.trim() || null
-  } catch (err) {
-    console.error("HuggingFace translation error:", err)
-    return null
-  }
-}
-
-interface DocInfo {
-  _id: string
-  _type: string
-  slug: string | null
-  language: string
-  [key: string]: any
-}
-
-/**
  * Main translation function
  */
 async function translateSanityAI(
-  options: TranslateOptions = getOptions(),
+  options: TranslationOptions = getDefaultOptions(),
 ): Promise<void> {
   const client = createClient({
     projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
@@ -344,11 +143,12 @@ async function translateSanityAI(
 
     // Fetch all English documents of this type
     const enDocs = await client.fetch(
-      `*[_type == "$type" && language == "en" && defined(slug.current)]{
+      `*[_type == $type && language == "en" && defined(slug.current)]{
         _id,
         slug,
         _rev
       }`,
+      { type },
     )
 
     console.log(`  Found ${enDocs.length} English documents`)
@@ -371,8 +171,9 @@ async function translateSanityAI(
         try {
           // Check if translation already exists
           const existingDoc = await client.fetch(
-            `*[_type == "$type" && slug.current == $slug && language == $targetCode][0]`,
+            `*[_type == $type && slug.current == $slug && language == $targetCode][0]`,
             {
+              type,
               slug: enDoc.slug?.current,
               targetCode,
             },
