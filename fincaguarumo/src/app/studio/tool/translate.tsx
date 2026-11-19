@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, type ChangeEvent } from "react"
 import { Button, Text, Select, Spinner, Stack, Box } from "@sanity/ui"
 import { useClient } from "sanity"
 import { locales, languages } from "../../../config"
@@ -58,14 +58,27 @@ export function TranslateTool() {
     return match ? match.title : lang
   })
 
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      const docs = await client.fetch(getTranslatableDocumentsQuery, {
-        types: translatableTypes,
-      })
-      setDocuments(docs)
-    }
+  const fetchDocuments = async () => {
+    const docs = await client.fetch(getTranslatableDocumentsQuery, {
+      types: translatableTypes,
+    })
+    setDocuments(docs)
+  }
 
+  // Refresh the selected document's discovery data so the button reflects
+  // current translation completeness after an action completes.
+  const refreshSelectedDoc = async () => {
+    const docs = await client.fetch(getTranslatableDocumentsQuery, {
+      types: translatableTypes,
+    })
+    setDocuments(docs)
+    if (selectedDoc) {
+      const refreshed = docs.find((d: TranslatableDoc) => d._id === selectedDoc._id)
+      if (refreshed) setSelectedDoc(refreshed)
+    }
+  }
+
+  useEffect(() => {
     fetchDocuments()
   }, [client])
 
@@ -92,6 +105,7 @@ export function TranslateTool() {
         setMessage(
           `Successfully translated to ${result.translations.length} languages`,
         )
+        await refreshSelectedDoc()
       } else {
         setMessage(`Error: ${result.error}`)
       }
@@ -127,8 +141,20 @@ export function TranslateTool() {
             result.skipped > 0 ? `, ${result.skipped} already complete` : ""
           }`,
         )
+        await refreshSelectedDoc()
       } else {
-        setCopyMessage(`Error: ${result.error}`)
+        const messages: string[] = []
+        if (result.error) messages.push(result.error)
+        if (result.errors?.length) {
+          messages.push(
+            ...result.errors.map(
+              (e: { language: string; error: string }) =>
+                `${e.language}: ${e.error}`,
+            ),
+          )
+        }
+        setCopyMessage(`Error: ${messages.join("; ") || "Copy failed"}`)
+        await refreshSelectedDoc()
       }
     } catch (error) {
       setCopyMessage(`Error: ${error}`)
@@ -157,7 +183,7 @@ export function TranslateTool() {
         <Select
           placeholder="Select a document to translate"
           value={selectedDoc?._id || ""}
-          onChange={event => {
+          onChange={(event: ChangeEvent<HTMLSelectElement>) => {
             const target = event.target as HTMLSelectElement
             const doc = documents.find(d => d._id === target.value) || null
             setSelectedDoc(doc)
@@ -188,7 +214,7 @@ export function TranslateTool() {
           tone="primary"
           onClick={handleTranslate}
           disabled={
-            !selectedDoc || isTranslating || missingLanguages.length === 0
+            !selectedDoc || isTranslating || isCopying || missingLanguages.length === 0
           }
           icon={isTranslating ? Spinner : undefined}
         />
@@ -197,14 +223,14 @@ export function TranslateTool() {
           text={`Copy fields as-is to ${targetLanguageNames.join(", ")}`}
           tone="neutral"
           onClick={handleCopyFields}
-          disabled={!selectedDoc || isCopying}
+          disabled={!selectedDoc || isCopying || isTranslating}
           icon={isCopying ? Spinner : undefined}
         />
 
         {message && (
           <Text
             size={1}
-            style={{ color: message.includes("Error") ? "red" : "green" }}
+            className={message.includes("Error") ? "text-red-500 dark:text-red-400" : "text-green-500 dark:text-green-400"}
           >
             {message}
           </Text>
@@ -213,7 +239,7 @@ export function TranslateTool() {
         {copyMessage && (
           <Text
             size={1}
-            style={{ color: copyMessage.includes("Error") ? "red" : "green" }}
+            className={copyMessage.includes("Error") ? "text-red-500 dark:text-red-400" : "text-green-500 dark:text-green-400"}
           >
             {copyMessage}
           </Text>
