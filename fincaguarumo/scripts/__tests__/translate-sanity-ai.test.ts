@@ -4,30 +4,6 @@ jest.mock("next-sanity", () => ({
 
 jest.mock("@/sanity/lib/translateText")
 jest.mock("@/sanity/lib/portableTextHelper")
-jest.mock("@/config/translatable-fields", () => ({
-  TRANSLATABLE_FIELDS: {
-    faq: ["question", "answer"],
-    page: ["title", "subtitle", "description", "body"],
-    post: ["title", "body"],
-    tour: ["title", "description", "body"],
-    home: ["title", "hero_title", "hero_slogan", "hero_body", "subtitle", "description", "intro_body", "featured_content_title", "featured_blog_title"],
-    activityBlock: ["title", "subtitle", "description"],
-    whyChooseVillaBruno: ["title", "subtitle", "description"],
-    locationPage: ["title", "subtitle", "description", "body"],
-    accommodation: ["title", "subtitle", "description", "summary", "body", "highlightFeatures"],
-  },
-  COPY_AS_IS_FIELDS: {
-    faq: ["category", "keywords", "showOnVillaBruno", "priority", "relatedQuestions"],
-    page: ["slug", "mainImage", "slideshow", "categories", "faq", "isPublished", "showFAQ"],
-    post: ["slug", "author", "mainImage", "categories", "publishedAt", "openGraph"],
-    tour: ["slug", "mainImage", "slideshow", "body", "geo", "duration"],
-    home: ["slug", "mainImage", "background_media", "background_media_poster", "locationDetails", "isPublished", "showBookingOptions", "showBookingDialog", "showFAQ", "featured_content_title", "featured_blog_title"],
-    activityBlock: ["slug", "mainImage", "isPublished", "displayOrder", "activities", "seoKeywords"],
-    whyChooseVillaBruno: ["slug", "mainImage", "isPublished", "displayOrder", "comparisonTable", "keyDifferentiators", "idealFor", "lessSuitableFor", "seoKeywords"],
-    locationPage: ["slug", "mainImage", "background_media"],
-    accommodation: ["slug", "mainImage", "slideshow", "categories", "amenities", "pricingRules", "paymentMethods", "cancellationPolicy", "logistics", "checkInTime", "checkOutTime", "capacity", "bedrooms", "bathrooms", "propertyType", "location", "highlightFeatures", "isPublished", "showBookingOptions", "showFAQ"],
-  },
-}))
 jest.mock("@/config", () => ({
   languages: [
     { value: "en", title: "English", isDefault: true },
@@ -39,6 +15,11 @@ jest.mock("@/config", () => ({
 }))
 
 import { translateFieldValue } from "../translate-sanity-ai"
+import {
+  FIELDS_CONFIG,
+  TRANSLATABLE_FIELDS,
+  COPY_AS_IS_FIELDS,
+} from "@/config/translatable-fields"
 import { translateWithRetry } from "@/sanity/lib/translateText"
 import { isPortableText, portableTextToPlain, plainToPortableText } from "@/sanity/lib/portableTextHelper"
 
@@ -70,28 +51,40 @@ describe("translate-sanity-ai CLI script", () => {
       expect(await translateFieldValue(undefined, "en", "es", mockOptions)).toBeUndefined()
     })
 
-    it("should translate Portable Text fields", async () => {
-      // Use the format expected by the shared isPortableText helper (_type === "block")
+    it("should translate Portable Text fields preserving structure", async () => {
       const portableTextValue: Array<{ _type: string; _key: string; children: Array<{ _type: string; _key: string; text: string; marks: string[] }> }> = [
         { _type: "block", _key: "block1", children: [{ _type: "span", _key: "span1", text: "Hello world", marks: [] }] },
       ]
 
       mockIsPortableText.mockReturnValue(true)
-      mockPortableTextToPlain.mockReturnValue("Hello world")
       mockTranslateWithRetry.mockResolvedValue({ translatedText: "Hola mundo", provider: "google-cloud" })
-      mockPlainToPortableText.mockReturnValue([{ _type: "block", children: [{ _type: "span", text: "Hola mundo" }] }])
 
       const result = await translateFieldValue(portableTextValue, "en", "es", mockOptions)
 
       expect(mockIsPortableText).toHaveBeenCalledWith(portableTextValue)
-      expect(mockPortableTextToPlain).toHaveBeenCalledWith(portableTextValue)
       expect(mockTranslateWithRetry).toHaveBeenCalledWith("Hello world", "en", "es", mockOptions)
-      expect(mockPlainToPortableText).toHaveBeenCalled()
-      expect(result[0].children[0].text).toBe("Hola mundo")
+      const translated = result as unknown[]
+      expect(
+        (translated[0] as { children: Array<{ text: string }> }).children[0]
+          .text,
+      ).toBe("Hola mundo")
+    })
+
+    it("should copy a single empty Portable Text block as-is without translating", async () => {
+      const portableTextValue: Array<{ _type: string; _key: string; children: Array<{ _type: string; _key: string; text: string; marks: string[] }> }> = [
+        { _type: "block", _key: "block1", children: [{ _type: "span", _key: "span1", text: "", marks: [] }] },
+      ]
+
+      mockIsPortableText.mockReturnValue(true)
+
+      const result = await translateFieldValue(portableTextValue, "en", "es", mockOptions)
+
+      expect(mockTranslateWithRetry).not.toHaveBeenCalled()
+      expect(result).toEqual(portableTextValue)
     })
 
     it("should copy empty Portable Text as-is", async () => {
-      const portableTextValue: any[] = []
+      const portableTextValue: never[] = []
 
       mockIsPortableText.mockReturnValue(false) // Empty array returns false
 
@@ -163,19 +156,18 @@ describe("translate-sanity-ai CLI script", () => {
       expect(await translateFieldValue({ key: "value" }, "en", "es", mockOptions)).toEqual({ key: "value" })
     })
 
-    it("should handle translation errors and return original value", async () => {
+    it("should propagate translation errors so the caller can omit the field", async () => {
       mockIsPortableText.mockReturnValue(false)
       mockTranslateWithRetry.mockRejectedValueOnce(new Error("Translation failed"))
 
-      const result = await translateFieldValue("Hello", "en", "es", mockOptions)
-
-      expect(result).toBe("Hello")
+      await expect(
+        translateFieldValue("Hello", "en", "es", mockOptions),
+      ).rejects.toThrow("Translation failed")
     })
   })
 
   describe("Configuration", () => {
     it("should have correct translatable types", () => {
-      const { TRANSLATABLE_FIELDS } = require("@/config/translatable-fields")
       const expectedTypes = [
         "faq",
         "page",
@@ -194,12 +186,18 @@ describe("translate-sanity-ai CLI script", () => {
       })
     })
 
-    it("should have copy-as-is fields for each type", () => {
-      const { COPY_AS_IS_FIELDS } = require("@/config/translatable-fields")
-
+    it("should have copy-as-is fields for each type and exclude translatable fields", () => {
       expect(COPY_AS_IS_FIELDS).toHaveProperty("page")
       expect(COPY_AS_IS_FIELDS.page).toContain("slug")
       expect(COPY_AS_IS_FIELDS.page).toContain("mainImage")
+
+      Object.keys(FIELDS_CONFIG).forEach(type => {
+        const translatable = new Set(TRANSLATABLE_FIELDS[type] ?? [])
+        const copyAsIs = new Set(COPY_AS_IS_FIELDS[type] ?? [])
+        copyAsIs.forEach(field => {
+          expect(translatable.has(field)).toBe(false)
+        })
+      })
     })
   })
 })

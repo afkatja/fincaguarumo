@@ -1,95 +1,152 @@
 import "dotenv/config"
 import { createClient } from "next-sanity"
+import type { PortableTextBlock } from "@portabletext/types"
 import { languages } from "../src/config.js"
 import {
   getTranslatableFields,
   getCopyAsIsFields,
 } from "../src/config/translatable-fields.js"
 import { translateWithRetry, getDefaultOptions, type TranslationOptions } from "../src/sanity/lib/translateText.js"
-import { isPortableText, portableTextToPlain, plainToPortableText } from "../src/sanity/lib/portableTextHelper.js"
+import { isPortableText, portableTextToPlain } from "../src/sanity/lib/portableTextHelper.js"
 
 interface DocInfo {
   _id: string
   _type: string
-  slug: string | null
+  slug: { _type: "slug"; current: string } | null
   language: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
-export async function translateFieldValue(
-  value: any,
+type SanityDoc = {
+  _id: string
+  [key: string]: unknown
+}
+
+type WritePayload = {
+  [key: string]: unknown
+}
+
+/**
+ * Translate Portable Text blocks span by span, preserving blocks, span marks,
+ * and annotations. Non-translatable content (non-span children, empty spans)
+ * is left unchanged; blocks are never collapsed into unmarked spans.
+ */
+async function translatePortableTextBlocks(
+  blocks: PortableTextBlock[],
   sourceLanguage: string,
   targetLanguage: string,
   options: TranslationOptions,
-): Promise<any> {
+): Promise<PortableTextBlock[]> {
+  const hasTranslatableText = blocks.some(
+    (block) =>
+      block._type === "block" &&
+      Array.isArray(block.children) &&
+      block.children.some(
+        (child) =>
+          child._type === "span" &&
+          typeof child.text === "string" &&
+          child.text.trim().length > 0,
+      ),
+  )
+  if (!hasTranslatableText) {
+    console.log("⚠️  Field is empty, copying original")
+    return blocks
+  }
+
+  return Promise.all(
+    blocks.map(async (block) => {
+      if (block._type !== "block" || !Array.isArray(block.children)) {
+        return block
+      }
+      return {
+        ...block,
+        children: await Promise.all(
+          block.children.map(async (child) => {
+            if (child._type !== "span" || typeof child.text !== "string") {
+              return child
+            }
+            if (!child.text.trim()) return child
+            try {
+              const { translatedText } = await translateWithRetry(
+                child.text,
+                sourceLanguage,
+                targetLanguage,
+                options,
+              )
+              if (!translatedText) return child
+              return { ...child, text: translatedText }
+            } catch (error) {
+              console.error(`❌ Failed to translate Portable Text span`, error)
+              throw error
+            }
+          }),
+        ),
+      }
+    }),
+  )
+}
+
+/**
+ * Translate a single field value. Returns the value as-is for null/undefined
+ * or empty input (a skip, not a failure). Throws on provider failure so the
+ * caller can recognise a failed translation and omit it from the patch.
+ */
+export async function translateFieldValue(
+  value: unknown,
+  sourceLanguage: string,
+  targetLanguage: string,
+  options: TranslationOptions,
+): Promise<unknown> {
   if (value === null || value === undefined) return value
 
   // Portable Text (blockContent) fields
   if (isPortableText(value)) {
-    const plainText = portableTextToPlain(value)
-    if (plainText && !plainText.trim()) {
-      console.log("⚠️  Field is empty, copying original")
-      return value
-    }
-
-    try {
-      const { translatedText } = await translateWithRetry(plainText, sourceLanguage, targetLanguage, options)
-      if (!translatedText) {
-        console.error(`❌ Failed to translate Portable Text`)
-        return value
-      }
-
-      console.log(`✅ Translated Portable Text field`)
-      return plainToPortableText(value, translatedText)
-    } catch (error) {
-      console.error(`❌ Failed to translate Portable Text`, error)
-      return value
-    }
+    return translatePortableTextBlocks(
+      value as PortableTextBlock[],
+      sourceLanguage,
+      targetLanguage,
+      options,
+    )
   }
 
   // String fields
   if (typeof value === "string") {
     if (!value.trim()) return value
-
-    try {
-      const { translatedText } = await translateWithRetry(value, sourceLanguage, targetLanguage, options)
-      if (!translatedText) {
-        console.error(`❌ Failed to translate string field: ${value}`)
-        return value
-      }
-
-      console.log(`✅ Translated string field`)
-      return translatedText
-    } catch (error) {
-      console.error(`❌ Failed to translate string field: ${value}`, error)
-      return value
+    const { translatedText } = await translateWithRetry(
+      value,
+      sourceLanguage,
+      targetLanguage,
+      options,
+    )
+    if (!translatedText) {
+      throw new Error(`Failed to translate string field: ${value}`)
     }
+    return translatedText
   }
 
   // Array fields (like highlightFeatures) - translate each string element
   if (Array.isArray(value)) {
-    const translatedItems: any[] = []
+    const translatedItems: unknown[] = []
     for (const item of value) {
       if (typeof item === "string") {
-        try {
-          const { translatedText } = await translateWithRetry(item, sourceLanguage, targetLanguage, options)
-          translatedItems.push(translatedText || item)
-        } catch (error) {
-          console.error(`❌ Failed to translate array string item`, error)
-          translatedItems.push(item)
-        }
+        const { translatedText } = await translateWithRetry(
+          item,
+          sourceLanguage,
+          targetLanguage,
+          options,
+        )
+        translatedItems.push(translatedText || item)
       } else if (typeof item === "object" && item !== null) {
-        // For objects within arrays (e.g., highlightFeatures with title/description/icon)
-        const translatedObj: any = {}
+        const translatedObj: Record<string, unknown> = {}
         for (const [key, val] of Object.entries(item)) {
           if (typeof val === "string") {
-            try {
-              const { translatedText } = await translateWithRetry(val, sourceLanguage, targetLanguage, options)
-              translatedObj[key] = translatedText || val
-            } catch (error) {
-              console.error(`❌ Failed to translate object field ${key}`, error)
-              translatedObj[key] = val
-            }
+            const { translatedText } = await translateWithRetry(
+              val,
+              sourceLanguage,
+              targetLanguage,
+              options,
+            )
+            translatedObj[key] = translatedText || val
           } else {
             translatedObj[key] = val
           }
@@ -104,6 +161,29 @@ export async function translateFieldValue(
 
   // Fallback: return as-is
   return value
+}
+
+function fieldHasValue(value: unknown): boolean {
+  if (value === null || value === undefined) return false
+  if (typeof value === "string") return value.trim().length > 0
+  if (Array.isArray(value)) return value.length > 0
+  return true
+}
+
+function fieldToPlain(value: unknown): string {
+  if (value === null || value === undefined) return ""
+  if (typeof value === "string") return value
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value)
+  }
+  if (Array.isArray(value)) return value.map(fieldToPlain).join("||")
+  if (isPortableText(value)) return portableTextToPlain(value as PortableTextBlock[])
+  if (typeof value === "object") return JSON.stringify(value)
+  return String(value)
+}
+
+function fieldValueChanged(source: unknown, target: unknown): boolean {
+  return fieldToPlain(source) !== fieldToPlain(target)
 }
 
 /**
@@ -122,11 +202,14 @@ async function translateSanityAI(
 
   // Filter languages: exclude English, get all others
   const targetLanguages = languages.filter(
-    lang => lang.value !== "en"
+    lang => lang.value !== "en",
   )
 
   console.log("🌍 Starting bulk translation...")
-  console.log("Target languages:", targetLanguages.map(l => `${l.value} (${l.title})`))
+  console.log(
+    "Target languages:",
+    targetLanguages.map(l => `${l.value} (${l.title})`),
+  )
 
   // Translatable types based on the plan
   const translatableTypes = [
@@ -144,15 +227,13 @@ async function translateSanityAI(
   for (const type of translatableTypes) {
     console.log(`\n📄 Processing type: ${type}`)
 
-    // Fetch all English documents of this type
-    const enDocs = await client.fetch(
-      `*[_type == $type && language == "en" && defined(slug.current)]{
-        _id,
-        slug,
-        _rev
-      }`,
+    // Fetch all English documents of this type (all fields needed to populate
+    // fieldsToTranslate and baseFields; system fields are excluded from the
+    // write payload separately).
+    const enDocs = (await client.fetch(
+      `*[_type == $type && language == "en" && defined(slug.current)]`,
       { type },
-    )
+    )) as DocInfo[]
 
     console.log(`  Found ${enDocs.length} English documents`)
 
@@ -172,22 +253,21 @@ async function translateSanityAI(
 
       for (const enDoc of enDocs) {
         try {
-          // Check if translation already exists
-          const existingDoc = await client.fetch(
+          // Check if translation already exists for this source + target
+          const existingDoc = (await client.fetch(
             `*[_type == $type && slug.current == $slug && language == $targetCode][0]`,
             {
               type,
               slug: enDoc.slug?.current,
               targetCode,
             },
-          )
+          )) as SanityDoc | null
 
-          // Build base fields (non-translatable fields to copy as-is)
+          // Build base fields (copy-as-is) and list of translatable fields
           const translatableFieldSet = new Set(getTranslatableFields(type))
           const copyAsIsFieldSet = new Set(getCopyAsIsFields(type))
 
-          // Get all fields from the source doc, separate translatable vs copy-as-is
-          const baseFields: { [key: string]: any } = {}
+          const baseFields: WritePayload = {}
           const fieldsToTranslate: string[] = []
 
           const allFields = Object.entries(enDoc).filter(
@@ -197,10 +277,8 @@ async function translateSanityAI(
 
           for (const [key, value] of allFields) {
             if (copyAsIsFieldSet.has(key)) {
-              // Copy as-is
               baseFields[key] = value
             } else if (translatableFieldSet.has(key)) {
-              // Translate this field
               fieldsToTranslate.push(key)
             } else {
               // Unknown field - copy as-is for safety
@@ -208,12 +286,18 @@ async function translateSanityAI(
             }
           }
 
+          // Translate only missing or source-changed fields; preserve
+          // completed, unchanged target fields (including reviewed translations).
+          const fieldsNeedingTranslation = existingDoc
+            ? fieldsToTranslate.filter(
+                (field) =>
+                  !fieldHasValue(existingDoc[field]) ||
+                  fieldValueChanged(enDoc[field], existingDoc[field]),
+              )
+            : fieldsToTranslate
+
           // Check if translation already exists and is complete
-          if (
-            existingDoc &&
-            fieldsToTranslate.length === 0 &&
-            Object.keys(baseFields).length > 0
-          ) {
+          if (existingDoc && fieldsNeedingTranslation.length === 0) {
             console.log(
               `    ⚠️  Translation for ${targetCode} already exists and is complete (doc: ${enDoc._id})`,
             )
@@ -222,9 +306,9 @@ async function translateSanityAI(
           }
 
           // Translate the required fields
-          const translatedFields: { [key: string]: any } = {}
+          const translatedFields: WritePayload = {}
 
-          for (const field of fieldsToTranslate) {
+          for (const field of fieldsNeedingTranslation) {
             if (enDoc[field] !== undefined && enDoc[field] !== null) {
               try {
                 const translated = await translateFieldValue(
@@ -236,37 +320,37 @@ async function translateSanityAI(
 
                 // Handle highlightFeatures array specially - it's an array of objects
                 if (field === "highlightFeatures" && Array.isArray(translated)) {
-                  translatedFields[field] = translated as any[]
+                  translatedFields[field] = translated
                 } else {
                   translatedFields[field] = translated
                 }
                 console.log(`    ✅ Translated ${field}`)
               } catch (error) {
-                console.error(
-                  `❌ Failed to translate ${field}:`,
-                  error,
-                )
+                console.error(`❌ Failed to translate ${field}:`, error)
               }
             }
           }
 
           // Also translate openGraph fields if present
-          if (enDoc.openGraph) {
+          if (enDoc.openGraph && typeof enDoc.openGraph === "object") {
             const ogFields: string[] = []
-            if (enDoc.openGraph.title) ogFields.push("title")
-            if (enDoc.openGraph.description) ogFields.push("description")
+            const openGraph = enDoc.openGraph as Record<string, unknown>
+            if (openGraph.title) ogFields.push("title")
+            if (openGraph.description) ogFields.push("description")
 
             for (const field of ogFields) {
               try {
                 const translated = await translateFieldValue(
-                  enDoc.openGraph[field] as string,
+                  openGraph[field],
                   "en",
                   targetCode,
                   options,
                 )
-                ;(translatedFields.openGraph = translatedFields.openGraph || {})[
-                  field
-                ] = translated as string
+                const ogBlock: Record<string, unknown> =
+                  (translatedFields.openGraph as Record<string, unknown> | undefined) ??
+                  {}
+                ogBlock[field] = translated
+                translatedFields.openGraph = ogBlock
                 console.log(`    ✅ Translated openGraph.${field}`)
               } catch (error) {
                 console.error(
@@ -277,23 +361,52 @@ async function translateSanityAI(
             }
           }
 
+          // Merge translated openGraph over base openGraph so translated title
+          // and description take precedence while copied image and URL remain.
+          let mergedOpenGraph: unknown
+          if (
+            baseFields.openGraph &&
+            translatedFields.openGraph &&
+            typeof baseFields.openGraph === "object" &&
+            typeof translatedFields.openGraph === "object"
+          ) {
+            mergedOpenGraph = {
+              ...baseFields.openGraph,
+              ...translatedFields.openGraph,
+            }
+          } else {
+            mergedOpenGraph =
+              translatedFields.openGraph ?? baseFields.openGraph
+          }
+
           // Create or update the translated document
-          let translatedDoc: any
+          let translatedDoc: SanityDoc | null = null
 
           if (existingDoc) {
             // Update existing translation
-            translatedDoc = await client
+            const setPayload: WritePayload = {
+              ...baseFields,
+              ...translatedFields,
+              language: targetCode,
+            }
+            if (mergedOpenGraph !== undefined) {
+              setPayload.openGraph = mergedOpenGraph
+            }
+            translatedDoc = (await client
               .patch(existingDoc._id)
-              .set({
-                ...translatedFields,
-                language: targetCode,
-                ...baseFields,
-              })
-              .commit()
-            console.log(`    🔄 Updated existing translation: ${translatedDoc._id}`)
+              .set(setPayload)
+              .commit()) as SanityDoc
+            console.log(
+              `    🔄 Updated existing translation: ${translatedDoc._id}`,
+            )
           } else {
             // Create new translation
-            translatedDoc = await client.create({
+            const createPayload: {
+              _type: string
+              language: string
+              slug: { _type: "slug"; current: string }
+              [key: string]: unknown
+            } = {
               _type: type,
               language: targetCode,
               slug: {
@@ -302,58 +415,67 @@ async function translateSanityAI(
               },
               ...baseFields,
               ...translatedFields,
-            })
+            }
+            if (mergedOpenGraph !== undefined) {
+              createPayload.openGraph = mergedOpenGraph
+            }
+            translatedDoc = (await client.create(createPayload)) as SanityDoc
             console.log(`    📝 Created new translation: ${translatedDoc._id}`)
           }
 
           translatedDocIds.push(translatedDoc._id)
 
+          // Update translation metadata for this source document, merging the
+          // new target-language reference with any existing language references
+          // rather than replacing metadata with unrelated translated documents.
+          try {
+            const existingMetadata = (await client.fetch(
+              `*[_type == "translation.metadata" && $docId in translations[].value._ref][0]`,
+              { docId: enDoc._id },
+            )) as SanityDoc | null
+
+            const translationRef = {
+              _key: translatedDoc._id,
+              _type: "reference",
+              value: { _type: "reference", _ref: translatedDoc._id },
+            }
+
+            const existingTranslations =
+              (existingMetadata?.translations as unknown[]) ?? []
+            const filtered = existingTranslations.filter(
+              (r: unknown) =>
+                (r as { value?: { _ref?: string } })?.value?._ref !==
+                translatedDoc._id,
+            )
+            const translations = [...filtered, translationRef]
+
+            if (existingMetadata) {
+              await client
+                .patch(existingMetadata._id)
+                .set({ translations })
+                .commit()
+              console.log(
+                `✅ Updated translation.metadata: ${existingMetadata._id}`,
+              )
+            } else {
+              const metadata = await client.create({
+                _type: "translation.metadata",
+                translations,
+              })
+              console.log(`✅ Created translation.metadata: ${metadata._id}`)
+            }
+          } catch (error) {
+            console.error(
+              "⚠️  Failed to update translation metadata:",
+              error,
+            )
+            // Don't fail the whole operation if metadata update fails
+          }
         } catch (error) {
           console.error(
             `❌ Error processing document ${enDoc._id} to ${targetCode}:`,
             error,
           )
-        }
-      }
-
-      // Update or create translation.metadata document
-      if (translatedDocIds.length > 1) {
-        try {
-          console.log("🔗 Updating translation metadata...")
-
-          // Check if translation.metadata already exists
-          const existingMetadata = await client.fetch(
-            `*[_type == "translation.metadata" && $docId in translations[].value._ref][0]`,
-            { docId: enDocs[0]._id },
-          )
-
-          const translationRefs = translatedDocIds.map(id => ({
-            _key: id,
-            _type: "reference",
-            _ref: id,
-          }))
-
-          if (existingMetadata) {
-            await client
-              .patch(existingMetadata._id)
-              .set({ translations: translationRefs })
-              .commit()
-            console.log(
-              `✅ Updated translation.metadata: ${existingMetadata._id}`,
-            )
-          } else {
-            const metadata = await client.create({
-              _type: "translation.metadata",
-              translations: translationRefs,
-            })
-            console.log(`✅ Created translation.metadata: ${metadata._id}`)
-          }
-        } catch (error) {
-          console.error(
-            "⚠️  Failed to update translation metadata:",
-            error,
-          )
-          // Don't fail the whole operation if metadata update fails
         }
       }
 
@@ -367,7 +489,7 @@ async function translateSanityAI(
 }
 
 // Run the script when invoked directly
-if (process.argv[1] === new URL(import.meta.url).pathname || require.main === module) {
+if (process.argv[1].includes("translate-sanity-ai.ts")) {
   translateSanityAI()
     .catch(err => {
       console.error("Bulk translation failed:", err)
