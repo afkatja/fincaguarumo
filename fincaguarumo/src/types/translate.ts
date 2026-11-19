@@ -1,5 +1,6 @@
 import { FIELDS_CONFIG } from "../config/translatable-fields"
 import { locales } from "../config"
+import type { TranslationProvider } from "../sanity/lib/translateText"
 
 export type TranslatableDocType = keyof typeof FIELDS_CONFIG
 export type Locale = (typeof locales)[number]
@@ -9,7 +10,7 @@ export interface TranslateRequest {
   docType: TranslatableDocType
   sourceLanguage?: Locale
   targetLanguages?: Locale[]
-  provider?: string // Optional provider override (google-cloud, google-free, ollama, libretranslate, huggingface)
+  provider?: TranslationProvider
 }
 
 export interface TranslateResult {
@@ -39,5 +40,5 @@ export interface SanityDocument {
   _rev: string
   _createdAt: string
   _updatedAt: string
-  [key: string]: any
+  [key: string]: unknown
 }
