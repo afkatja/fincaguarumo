@@ -30,6 +30,7 @@ describe("translateText", () => {
   describe("getDefaultOptions", () => {
     it("should return default options with google-cloud provider", async () => {
       process.env.TRANSLATION_PROVIDER = "google-cloud"
+      process.env.GOOGLE_CLOUD_API_KEY_TEST = "test-key"
       const { getDefaultOptions } = await getTranslateModule()
       const options = getDefaultOptions()
       expect(options.provider).toBe("google-cloud")
@@ -102,9 +103,10 @@ describe("translateText", () => {
         json: async () => ({ error: { message: "Invalid API key" } }),
       })
 
-      await expect(translateText("Hello", "en", "es", { maxRetries: 0 })).rejects.toThrow(
-        "Google Cloud Translate API error: Invalid API key"
-      )
+      await expect(
+        translateText("Hello", "en", "es", { maxRetries: 2, baseDelayMs: 1 }),
+      ).rejects.toThrow("Google Cloud Translate API error: Invalid API key")
+      expect(global.fetch).toHaveBeenCalledTimes(1)
     })
 
     it("should throw when API key is missing", async () => {

@@ -4,6 +4,7 @@ import { locales } from "../../../config"
 import {
   translateWithRetry,
   getDefaultOptions,
+  validateProviderOptions,
 } from "../../../sanity/lib/translateText"
 import {
   isPortableText,
@@ -29,16 +30,19 @@ const client = createClient({
   apiVersion: process.env.SANITY_STUDIO_API_VERSION,
 })
 
-// Helper to get translation options with optional per-request provider override
+// Helper to get translation options with optional per-request provider override.
+// Overrides are merged before provider validation so the effective provider
+// (and its required credentials) is always validated.
 function getTranslationOptions(overrideProvider?: string): TranslationOptions {
   const defaultOptions = getDefaultOptions()
-  if (overrideProvider) {
-    return {
-      ...defaultOptions,
-      provider: overrideProvider as TranslationOptions["provider"],
-    }
-  }
-  return defaultOptions
+  const merged = overrideProvider
+    ? {
+        ...defaultOptions,
+        provider: overrideProvider as TranslationOptions["provider"],
+      }
+    : defaultOptions
+  validateProviderOptions(merged)
+  return merged
 }
 
 export async function POST(request: Request) {
@@ -119,16 +123,34 @@ export async function POST(request: Request) {
 
     for (const targetLang of uniqueTargetLanguages) {
       try {
-        // Check if translation already exists by slug + language, or by type + language for no-slug types
-        const existingDoc = sourceSlug
-          ? await client.fetch(
-              `*[_type == $docType && slug.current == $slug && language == $targetLang][0]`,
-              { docType, slug: sourceSlug, targetLang },
+        // Look up a target-language document linked to the specific source
+        // document, not any document of the same type and language.
+        let existingDoc: Record<string, unknown> | null = null
+        if (sourceSlug) {
+          existingDoc = await client.fetch(
+            `*[_type == $docType && slug.current == $slug && language == $targetLang][0]`,
+            { docType, slug: sourceSlug, targetLang },
+          )
+        } else {
+          const metadata: Record<string, unknown> | null =
+            await client.fetch(
+              `*[_type == "translation.metadata" && $docId in translations[].value._ref][0]`,
+              { docId },
             )
-          : await client.fetch(
-              `*[_type == $docType && language == $targetLang][0]`,
-              { docType, targetLang },
+          const linkedIds = (metadata?.translations as unknown[])
+            ?.map(
+              (r: unknown) =>
+                (r as { value?: { _ref?: string } })?.value?._ref,
             )
+            .filter(Boolean) ?? []
+          existingDoc =
+            linkedIds.length > 0
+              ? await client.fetch(
+                  `*[_type == $docType && _id in $ids && language == $targetLang][0]`,
+                  { ids: linkedIds, targetLang },
+                )
+              : null
+        }
 
         // Get base fields (non-translatable fields)
         const baseFields = Object.fromEntries(
@@ -145,7 +167,7 @@ export async function POST(request: Request) {
         console.log(`🔄 Translating to ${targetLang}...`)
 
         // Translate fields
-        const translatedFields: { [key: string]: any } = {}
+        const translatedFields: { [key: string]: unknown } = {}
         const fieldsToUpdate = existingDoc
           ? fieldsToTranslate.filter(
               field =>
@@ -163,9 +185,9 @@ export async function POST(request: Request) {
             language: targetLang,
             skipped: true,
             reason: "Translation already exists",
-            docId: existingDoc._id,
+            docId: existingDoc._id as string,
           })
-          createdDocIds.push(existingDoc._id)
+          createdDocIds.push(existingDoc._id as string)
           continue
         }
 
@@ -222,7 +244,7 @@ export async function POST(request: Request) {
           )
 
           const updatedDoc = await client
-            .patch(existingDoc._id)
+            .patch(existingDoc._id as string)
             .set({
               ...translatedFields,
               _type: docType,
@@ -282,17 +304,39 @@ export async function POST(request: Request) {
           { docId },
         )
 
-        const translationRefs = createdDocIds.map(id => ({
-          _key: id,
-          _type: "reference",
-          _ref: id,
-        }))
+        // Successful target references use the value._ref shape to match the
+        // metadata lookup. Merge them with existing references so locales not
+        // requested in this call (including ones that previously failed) are
+        // preserved rather than replaced.
+        const successfulRefs = createdDocIds
+          .filter(Boolean)
+          .map(id => ({
+            _key: id,
+            _type: "reference",
+            value: { _type: "reference", _ref: id },
+          }))
 
         if (existingMetadata) {
+          const existingTranslations = (existingMetadata?.translations as unknown[]) ?? []
+          const existingRefs = existingTranslations.filter(
+            (r: unknown) =>
+              Boolean((r as { value?: { _ref?: string } })?.value?._ref),
+          )
+          const mergedRefs = [
+            ...existingRefs.filter(
+              (r: unknown) =>
+                !successfulRefs.some(
+                  (s) =>
+                    s.value._ref !==
+                    (r as { value?: { _ref?: string } })?.value?._ref,
+                ),
+            ),
+            ...successfulRefs,
+          ]
           // Update existing metadata
           await client
             .patch(existingMetadata._id)
-            .set({ translations: translationRefs })
+            .set({ translations: mergedRefs })
             .commit()
           console.log(
             `✅ Updated translation.metadata: ${existingMetadata._id}`,
@@ -301,7 +345,7 @@ export async function POST(request: Request) {
           // Create new metadata
           const metadata = await client.create({
             _type: "translation.metadata",
-            translations: translationRefs,
+            translations: successfulRefs,
           })
           console.log(`✅ Created translation.metadata: ${metadata._id}`)
         }

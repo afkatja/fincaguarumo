@@ -1,4 +1,3 @@
-import "dotenv/config"
 import * as deepl from "deepl-node"
 
 export type TranslationProvider =
@@ -15,6 +14,7 @@ export interface TranslationOptions {
   ollamaHost?: string
   ollamaModel?: string
   libretranslateUrl?: string
+  libretranslateApiKey?: string
   huggingfaceToken?: string
   huggingfaceModel?: string
   deeplAuthKey?: string
@@ -26,6 +26,19 @@ export interface TranslationOptions {
 export interface TranslationResult {
   translatedText: string
   provider: TranslationProvider
+}
+
+/**
+ * Error thrown for failures that must not be retried (configuration errors,
+ * 4xx client errors other than 408/429, empty provider responses).
+ */
+export class NonRetryableError extends Error {
+  readonly retryable = false
+
+  constructor(message: string) {
+    super(message)
+    this.name = "NonRetryableError"
+  }
 }
 
 export function getDefaultOptions(): TranslationOptions {
@@ -42,6 +55,7 @@ export function getDefaultOptions(): TranslationOptions {
     ollamaModel: process.env.OLLAMA_MODEL || "llama3.2",
     libretranslateUrl:
       process.env.LIBRETRANSLATE_URL || "https://libretranslate.com/translate",
+    libretranslateApiKey: process.env.LIBRETRANSLATE_API_KEY,
     huggingfaceToken: process.env.HUGGINGFACE_TOKEN,
     huggingfaceModel:
       process.env.HUGGINGFACE_MODEL || "meta-llama/Meta-Llama-3.1-8B-Instruct",
@@ -52,13 +66,16 @@ export function getDefaultOptions(): TranslationOptions {
     baseDelayMs: 1000,
   }
 
-  // Validate required env vars per provider
-  validateProviderOptions(options)
-
   return options
 }
 
-function validateProviderOptions(options: TranslationOptions): void {
+/**
+ * Validate the effective provider and its required credentials after any
+ * request/call overrides have been merged. google-free requests do not
+ * require a Google Cloud key. Providers that require credentials still raise
+ * clear errors when they are missing.
+ */
+export function validateProviderOptions(options: TranslationOptions): void {
   switch (options.provider) {
     case "google-cloud": {
       if (!options.googleCloudApiKey) {
@@ -133,7 +150,19 @@ async function retryWithBackoff<T>(
     try {
       return await fn()
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error))
+      const err =
+        error instanceof Error ? error : new Error(String(error))
+
+      // Non-retryable errors (configuration, 4xx, empty responses) are
+      // rethrown immediately without retrying.
+      if (
+        err instanceof NonRetryableError ||
+        (err as { retryable?: boolean }).retryable === false
+      ) {
+        throw err
+      }
+
+      lastError = err
 
       if (attempt < options.maxRetries) {
         const delay = options.baseDelayMs * Math.pow(2, attempt)
@@ -169,9 +198,14 @@ async function translateWithGoogleCloud(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
-    throw new Error(
-      `Google Cloud Translate API error: ${error.error?.message || response.statusText}`,
-    )
+    const msg = `Google Cloud Translate API error: ${error.error?.message || response.statusText}`
+    const status = response.status
+    const isClientError = status >= 400 && status < 500
+    // 4xx errors are not retried except 408 (timeout) and 429 (rate limit).
+    if (isClientError && status !== 408 && status !== 429) {
+      throw new NonRetryableError(msg)
+    }
+    throw new Error(msg)
   }
 
   const data = await response.json()
@@ -211,7 +245,11 @@ async function translateWithOllama(
   }
 
   const data = await response.json()
-  return data.response?.trim() || ""
+  const translated = data.response?.trim()
+  if (!translated) {
+    throw new NonRetryableError("Ollama returned an empty translation")
+  }
+  return translated
 }
 
 async function translateWithLibreTranslate(
@@ -220,15 +258,22 @@ async function translateWithLibreTranslate(
   targetLang: string,
   options: TranslationOptions,
 ): Promise<string> {
+  const body: Record<string, unknown> = {
+    q: text,
+    source: sourceLang,
+    target: targetLang,
+    format: "text",
+  }
+  // Include the API key only when configured, preserving requests to keyless
+  // instances.
+  if (options.libretranslateApiKey) {
+    body.api_key = options.libretranslateApiKey
+  }
+
   const response = await fetch(options.libretranslateUrl!, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      q: text,
-      source: sourceLang,
-      target: targetLang,
-      format: "text",
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!response.ok) {
@@ -236,7 +281,11 @@ async function translateWithLibreTranslate(
   }
 
   const data = await response.json()
-  return data.translatedText || ""
+  const translated = data.translatedText
+  if (!translated) {
+    throw new NonRetryableError("LibreTranslate returned an empty translation")
+  }
+  return translated
 }
 
 async function translateWithHuggingFace(
@@ -250,6 +299,12 @@ async function translateWithHuggingFace(
 
   const prompt = `Translate to ${targetLang}: "${text}"\nTranslation:`
 
+  // Scale max_new_tokens with input length instead of truncating translations
+  // at a fixed 100 tokens. A translation is typically similar in length to the
+  // source text (roughly 4 chars per token).
+  const estimatedTokens = Math.max(1, Math.ceil(text.length / 4))
+  const maxNewTokens = Math.min(1024, Math.max(64, estimatedTokens + 64))
+
   const response = await fetch(
     `https://api-inference.huggingface.co/models/${options.huggingfaceModel}`,
     {
@@ -261,7 +316,7 @@ async function translateWithHuggingFace(
       body: JSON.stringify({
         inputs: prompt,
         parameters: {
-          max_new_tokens: 100,
+          max_new_tokens: maxNewTokens,
           temperature: 0.1,
           return_full_text: false,
         },
@@ -274,7 +329,18 @@ async function translateWithHuggingFace(
   }
 
   const data = await response.json()
-  return data[0]?.generated_text?.trim() || ""
+  const generated = data[0]?.generated_text?.trim()
+  if (!generated) {
+    throw new NonRetryableError("Hugging Face returned an empty translation")
+  }
+  // Detect length-limit termination so the translation fails rather than being
+  // saved as complete.
+  if (data[0]?.details?.finish_reason === "length") {
+    throw new NonRetryableError(
+      "Hugging Face translation truncated at length limit",
+    )
+  }
+  return generated
 }
 
 async function translateWithDeepL(
@@ -360,7 +426,10 @@ export async function translateText(
   targetLang: string,
   options?: Partial<TranslationOptions>,
 ): Promise<string> {
+  // Merge any request/call overrides before validating the effective provider
+  // and its required credentials.
   const mergedOptions = { ...getDefaultOptions(), ...options }
+  validateProviderOptions(mergedOptions)
 
   return retryWithBackoff(
     () => translateWithProvider(text, sourceLang, targetLang, mergedOptions),
@@ -378,6 +447,7 @@ export async function translateWithRetry(
   options?: Partial<TranslationOptions>,
 ): Promise<TranslationResult> {
   const mergedOptions = { ...getDefaultOptions(), ...options }
+  validateProviderOptions(mergedOptions)
   const translatedText = await translateText(
     text,
     sourceLang,

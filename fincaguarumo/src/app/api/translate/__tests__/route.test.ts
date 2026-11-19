@@ -37,7 +37,7 @@ describe("/api/translate", () => {
     process.env.SANITY_STUDIO_API_VERSION = "2024-01-01"
   })
 
-  const createMockRequest = (body: Record<string, any>) =>
+  const createMockRequest = (body: Record<string, unknown>) =>
     new Request("http://localhost/api/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
