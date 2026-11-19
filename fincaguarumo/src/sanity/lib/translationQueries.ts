@@ -11,23 +11,33 @@
 export const hasTranslationQuery = `(
   _type == "translation.metadata" && $id in translations[].value._ref
 ) || (
-  _type == $type && language == $lang && slug.current == *[_id == $id][0].slug.current
+  _type == $type && language == $lang && defined(slug.current) && slug.current == *[_id == $id][0].slug.current
 )`
 
 /**
  * Query to count existing translations for a document
+ *
+ * Counts distinct counterpart documents (slug-matched targets plus documents
+ * referenced through translation.metadata), excluding the metadata container
+ * itself. Slugless documents cannot match.
  */
 export const translationCountQuery = `count(*[
-  (_type == "translation.metadata" && ^._id in translations[].value._ref) ||
-  (_type == ^._type && language != "en" && slug.current == ^.slug.current)
+  _type != "translation.metadata" && _id in (
+    *[_type == ^._type && language != "en" && defined(slug.current) && defined(^.slug.current) && slug.current == ^.slug.current]._id
+    +
+    *[_type == "translation.metadata" && ^._id in translations[].value._ref].translations[].value._ref
+  )
 ])`
 
 /**
  * Query to check if a document has no translations
  */
 export const hasNoTranslationsQuery = `!defined(*[
-  (_type == "translation.metadata" && ^._id in translations[].value._ref) ||
-  (_type == ^._type && language != "en" && slug.current == ^.slug.current)
+  _type != "translation.metadata" && _id in (
+    *[_type == ^._type && language != "en" && defined(slug.current) && defined(^.slug.current) && slug.current == ^.slug.current]._id
+    +
+    *[_type == "translation.metadata" && ^._id in translations[].value._ref].translations[].value._ref
+  )
 ][0]._id)`
 
 /**
@@ -72,11 +82,14 @@ export const getTranslatableDocumentsQuery = `
       "Untitled"
     ),
     "translationCount": count(*[
-      (_type == "translation.metadata" && ^._id in translations[].value._ref) ||
-      (_type == ^._type && language != "en" && slug.current == ^.slug.current)
+      _type != "translation.metadata" && _id in (
+        *[_type == ^._type && language != "en" && defined(slug.current) && defined(^.slug.current) && slug.current == ^.slug.current]._id
+        +
+        *[_type == "translation.metadata" && ^._id in translations[].value._ref].translations[].value._ref
+      )
     ]),
     "translatedLanguages": *[
-      _type == ^._type && language != "en" && slug.current == ^.slug.current
+      _type == ^._type && language != "en" && defined(slug.current) && defined(^.slug.current) && slug.current == ^.slug.current
     ][].language
   }
 `
