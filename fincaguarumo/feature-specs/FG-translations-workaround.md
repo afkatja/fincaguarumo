@@ -89,35 +89,32 @@ npm run translate:sanity-ai
 TRANSLATION_PROVIDER=google npm run translate:sanity-ai
 ```
 
-### Config File: `src/config/translatable-fields.js`
+### Config File: `src/config/translatable-fields.ts`
 
-New centralized config with:
+New centralized config with per-field treatments (`"translate"` or `"copyAsIs"`)
+in `FIELDS_CONFIG`:
 
-```js
-export const TRANSLATABLE_FIELDS = {
-  faq: ["question", "answer"],
-  page: ["title", "subtitle", "description", "body"],
-  post: ["title", "body"],
-  tour: ["title", "description", "body"],
-  home: [...],
-  activityBlock: ["children"],
-  whyChooseVillaBruno: ["title", "CTA_button"],
-  locationPage: ["title", "subtitle", "description", "body"],
-  accommodation: ["title", "subtitle", "description", "summary", "body", "highlightFeatures"],
-}
-
-export const COPY_AS_IS_FIELDS = {
-  faq: ["category", "keywords", ...],
-  page: ["slug", "mainImage", ...],
-  post: ["slug", "author", ...],
-  tour: ["slug", "mainImage", ...],
-  home: [...],
-  activityBlock: [],
-  whyChooseVillaBruno: [],
-  locationPage: ["slug", "mainImage", ...],
-  accommodation: [...],
+```ts
+export const FIELDS_CONFIG = {
+  faq: {
+    question: "translate",
+    answer: "translate",
+    category: "copyAsIs",
+    // ...
+  },
+  page: {
+    title: "translate",
+    slug: "copyAsIs",
+    mainImage: "copyAsIs",
+    // ...
+  },
+  // one entry per document type
 }
 ```
+
+Fields not listed default to `"copyAsIs"`; underscore-prefixed fields,
+`language`, and `slug` are handled separately by the routes. Add each new
+document type once here with its per-field treatment.
 
 ---
 
@@ -133,7 +130,7 @@ npm run translate:sanity-ai
 TRANSLATION_PROVIDER=ollama npm run translate:sanity-ai
 
 # Run with libretranslate (hosted)
-LIBRETRANSLATE_URL=https://libretranslate.com npm run translate:sanity-ai
+TRANSLATION_PROVIDER=libretranslate LIBRETRANSLATE_URL=https://libretranslate.com/translate npm run translate:sanity-ai
 ```
 
 ### What the Script Does
@@ -175,40 +172,28 @@ Target languages: [ 'nl (Nederlands)', 'ru (Русский)', 'es (Español)', '
 
 When adding a new schema type to the translations system, follow these steps:
 
-### 1. Add to `TRANSLATABLE_FIELDS` in `src/config/translatable-fields.js`
+### 1. Add to `FIELDS_CONFIG` in `src/config/translatable-fields.ts`
 
-```js
-// Add the new schema type with its translatable fields
-myType: ["field1", "field2", "field3"],
+Add the new schema type once, with per-field `"translate"` or `"copyAsIs"`
+treatments:
+
+```ts
+myType: {
+  title: "translate",
+  slug: "copyAsIs",
+  mainImage: "copyAsIs",
+  // ...
+},
 ```
 
-### 2. Add to `COPY_AS_IS_FIELDS` in `src/config/translatable-fields.js`
-
-```js
-// Add the non-translatable fields for the new schema type
-myType: ["slug", "mainImage", "someFieldToCopy"],
-```
-
-### 3. Add to the translatable types list in `scripts/translate-sanity-ai.ts`
+### 2. Add to the translatable types list in `scripts/translate-sanity-ai.ts`
 
 ```js
 // Add to the translatableTypes array
 "myType",
 ```
 
-### 4. (Optional) Add API route support
-
-If the new type should also be translatable via the `/api/translate` endpoint, add its fields to `TRANSLATABLE_FIELDS` there as well:
-
-```js
-// In src/app/api/translate/route.ts
-const TRANSLATABLE_FIELDS = {
-  // ... existing types
-  myType: ["field1", "field2"],
-}
-```
-
-### 5. Re-run the script
+### 3. Re-run the script
 
 ```bash
 npm run translate:sanity-ai

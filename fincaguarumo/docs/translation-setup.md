@@ -11,7 +11,7 @@ The translation system supports 6 providers via the `TRANSLATION_PROVIDER` envir
 | Google Cloud Translate | `google-cloud` | Paid API | Excellent | Production, high-quality needs |
 | Google Free (unofficial) | `google-free` | Free | Good | Development, testing |
 | Ollama (local LLM) | `ollama` | Free (local) | Good | Privacy, offline, local control |
-| LibreTranslate | `libretranslate` | Free (hosted/self-hosted) | Good | No API key needed |
+| LibreTranslate | `libretranslate` | Free (hosted/self-hosted) | Good | Optional API key |
 | Hugging Face Inference | `huggingface` | Free tier / Paid | Variable | Open models, experimentation |
 | DeepL | `deepl` | Paid API | Excellent | Production, highest quality |
 
@@ -105,6 +105,9 @@ Free, open-source translation API. Can use the public instance or self-host.
 ```bash
 # Optional - defaults to public instance
 LIBRETRANSLATE_URL=https://libretranslate.com/translate
+
+# Optional - API key for instances that require one (only sent when set)
+# LIBRETRANSLATE_API_KEY=your_key_here
 
 # Or self-hosted:
 # LIBRETRANSLATE_URL=https://your-libretranslate-instance.com/translate
@@ -232,13 +235,16 @@ TRANSLATION_PROVIDER=google-cloud
 
 ## Validation
 
-The system validates required environment variables at startup. If a required variable is missing, you'll see a clear error message:
+Provider credentials are validated on the first translation call (through
+`getDefaultOptions` → `validateProviderOptions`), not at startup. If a required
+variable is missing for the effective provider, you'll see a clear error message:
 
 ```
 Error: Google Cloud Translate API key not configured. Set NEXT_PUBLIC_GOOGLE_CLOUD_API_KEY (production) or GOOGLE_CLOUD_API_KEY_TEST (development).
 ```
 
-This prevents silent failures during translation.
+This prevents silent failures during translation. `google-free` requests do not
+require a Google Cloud key.
 
 ---
 
@@ -257,7 +263,9 @@ To add/remove languages, update `languages.ts` and re-run translations.
 
 ## Translatable Document Types
 
-Currently configured (in `src/config/translatable-fields.js` and `scripts/translate-sanity-ai.ts`):
+Translatable types and their per-field treatments (`translate` / `copyAsIs`)
+are defined in `FIELDS_CONFIG` in `src/config/translatable-fields.ts`:
+
 - `page`
 - `post`
 - `tour`
@@ -268,4 +276,5 @@ Currently configured (in `src/config/translatable-fields.js` and `scripts/transl
 - `locationPage`
 - `accommodation`
 
-To add a new type, see [Feature Spec: Translations Workaround](../feature-specs/FG-translations-workaround.md#4-adding-a-new-document-type).
+To add a new type, list its fields once in `FIELDS_CONFIG` (see
+[Feature Spec: Translations Workaround](../feature-specs/FG-translations-workaround.md#4-adding-a-new-document-type). The translate and copy-fields routes derive their field sets from this config.
