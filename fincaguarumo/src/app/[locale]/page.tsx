@@ -66,15 +66,6 @@ export async function generateMetadata({
     revalidate: 60,
   })
 
-  if (locale !== "en") {
-    return {
-      robots: "noindex, nofollow",
-      alternates: {
-        canonical: getLocalizedUrl("/", locale),
-      },
-    }
-  }
-
   const title = content?.hero_title
     ? `${content.hero_title} - Finca Guarumo`
     : "Finca Guarumo"
