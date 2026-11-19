@@ -1,7 +1,12 @@
 import { createClient } from "next-sanity"
 import { NextResponse } from "next/server"
 import { locales } from "../../../config"
-import { getCopyAsIsFields } from "../../../config/translatable-fields"
+import { verifyAdminAuth } from "@/lib/auth"
+import {
+  FIELDS_CONFIG,
+  getTranslatableFields,
+  getCopyAsIsFields,
+} from "../../../config/translatable-fields"
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
@@ -35,17 +40,41 @@ type CopyError = {
 }
 
 export async function POST(request: Request) {
-  const {
-    docId,
-    docType,
-    sourceLanguage = "en",
-    targetLanguages = locales.filter(lang => lang !== sourceLanguage),
-  }: {
+  // Require admin authentication before parsing the body or any Sanity writes.
+  try {
+    await verifyAdminAuth(request)
+  } catch (error) {
+    const status = (error as { status?: number })?.status
+    if (status === 401) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+    }
+    if (status === 403) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 })
+    }
+    return NextResponse.json(
+      { error: "Admin authentication failed" },
+      { status: 500 },
+    )
+  }
+
+  let body: {
     docId: string
     docType: string
     sourceLanguage?: string
     targetLanguages?: string[]
-  } = await request.json()
+  }
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
+  }
+
+  const {
+    docId,
+    docType,
+    sourceLanguage = "en",
+    targetLanguages,
+  } = body
 
   try {
     if (!docId || !docType) {
@@ -55,23 +84,45 @@ export async function POST(request: Request) {
       )
     }
 
-    const uniqueTargetLanguages = [...new Set(targetLanguages)].filter(
-      lang => lang !== sourceLanguage,
-    )
+    // Validate targetLanguages: an array of valid string locale identifiers
+    // drawn from the configured locales. Reject strings and arrays containing
+    // unsupported locales.
+    const resolvedTargetLanguages: string[] = []
+    if (targetLanguages === undefined) {
+      resolvedTargetLanguages.push(
+        ...locales.filter(lang => lang !== sourceLanguage),
+      )
+    } else {
+      if (!Array.isArray(targetLanguages)) {
+        return NextResponse.json(
+          { error: "targetLanguages must be an array of locale identifiers" },
+          { status: 400 },
+        )
+      }
+      for (const lang of targetLanguages) {
+        if (typeof lang !== "string") {
+          return NextResponse.json(
+            { error: "targetLanguages must be an array of string locale identifiers" },
+            { status: 400 },
+          )
+        }
+        if (!locales.includes(lang)) {
+          return NextResponse.json(
+            { error: `Unsupported locale: ${lang}` },
+            { status: 400 },
+          )
+        }
+        if (lang !== sourceLanguage) {
+          resolvedTargetLanguages.push(lang)
+        }
+      }
+    }
+
+    const uniqueTargetLanguages = [...new Set(resolvedTargetLanguages)]
 
     if (uniqueTargetLanguages.length === 0) {
       return NextResponse.json(
         { error: "No valid target languages specified" },
-        { status: 400 },
-      )
-    }
-
-    const copyAsIsFields = getCopyAsIsFields(docType)
-    if (!copyAsIsFields || copyAsIsFields.length === 0) {
-      return NextResponse.json(
-        {
-          error: `No copy-as-is fields configured for document type: ${docType}`,
-        },
         { status: 400 },
       )
     }
@@ -87,6 +138,32 @@ export async function POST(request: Request) {
 
     const sourceSlug = sourceDoc.slug?.current
 
+    // Build the copy-as-is field set: configured copy-as-is fields plus any
+    // source document field not listed in FIELDS_CONFIG (default copy-as-is),
+    // excluding translatable fields, underscore-prefixed fields, language and
+    // slug to match translate behaviour.
+    const translatableSet = new Set(getTranslatableFields(docType))
+    const configuredFields = (
+      FIELDS_CONFIG as unknown as Record<string, Record<string, unknown>>
+    )[docType]
+    const copyFieldsSet = new Set<string>(getCopyAsIsFields(docType))
+    for (const key of Object.keys(sourceDoc)) {
+      if (key.startsWith("_") || key === "language" || key === "slug") continue
+      if (translatableSet.has(key)) continue
+      if (configuredFields && key in configuredFields) continue
+      copyFieldsSet.add(key)
+    }
+    const copyFields = [...copyFieldsSet]
+
+    if (copyFields.length === 0) {
+      return NextResponse.json(
+        {
+          error: `No copy-as-is fields configured for document type: ${docType}`,
+        },
+        { status: 400 },
+      )
+    }
+
     const results: CopyResult[] = []
     const errors: CopyError[] = []
 
@@ -97,13 +174,28 @@ export async function POST(request: Request) {
               `*[_type == $docType && slug.current == $slug && language == $targetLang][0]`,
               { docType, slug: sourceSlug, targetLang },
             )
-          : await client.fetch(
-              `*[_type == $docType && language == $targetLang][0]`,
-              { docType, targetLang },
-            )
+          : await (async () => {
+              const metadata: Record<string, unknown> | null =
+                await client.fetch(
+                  `*[_type == "translation.metadata" && $docId in translations[].value._ref][0]`,
+                  { docId },
+                )
+              const linkedIds = (metadata?.translations as unknown[])
+                ?.map(
+                  (r: unknown) =>
+                    (r as { value?: { _ref?: string } })?.value?._ref,
+                )
+                .filter(Boolean) ?? []
+              return linkedIds.length > 0
+                ? await client.fetch(
+                    `*[_type == $docType && _id in $ids && language == $targetLang][0]`,
+                    { ids: linkedIds, targetLang },
+                  )
+                : null
+            })()
 
         const fieldsToCopy: { [key: string]: unknown } = {}
-        for (const field of copyAsIsFields) {
+        for (const field of copyFields) {
           const sourceValue = sourceDoc[field]
           if (sourceValue === undefined || sourceValue === null) continue
           const targetValue = existingDoc ? existingDoc[field] : undefined
