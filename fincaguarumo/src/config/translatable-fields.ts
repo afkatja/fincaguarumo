@@ -18,7 +18,7 @@ export type FieldTreatment = "translate" | "copyAsIs"
 
 export type FieldsConfig = Record<string, Record<string, FieldTreatment>>
 
-export const FIELDS_CONFIG: FieldsConfig = {
+export const FIELDS_CONFIG = {
   faq: {
     question: "translate",
     answer: "translate",
@@ -145,11 +145,13 @@ export const FIELDS_CONFIG: FieldsConfig = {
   },
 }
 
+export type TranslatableDocType = keyof typeof FIELDS_CONFIG
+
 /**
  * Returns the fields that should be translated for a given document type.
  */
 export function getTranslatableFields(docType: string): string[] {
-  const config = FIELDS_CONFIG[docType]
+  const config = (FIELDS_CONFIG as unknown as Record<string, Record<string, FieldTreatment>>)[docType]
   if (!config) return []
   return Object.entries(config)
     .filter(([, treatment]) => treatment === "translate")
@@ -160,7 +162,7 @@ export function getTranslatableFields(docType: string): string[] {
  * Returns the fields that should be copied as-is for a given document type.
  */
 export function getCopyAsIsFields(docType: string): string[] {
-  const config = FIELDS_CONFIG[docType]
+  const config = (FIELDS_CONFIG as unknown as Record<string, Record<string, FieldTreatment>>)[docType]
   if (!config) return []
   return Object.entries(config)
     .filter(([, treatment]) => treatment === "copyAsIs")
@@ -175,7 +177,11 @@ export function getFieldTreatment(
   docType: string,
   field: string,
 ): FieldTreatment {
-  return FIELDS_CONFIG[docType]?.[field] ?? "copyAsIs"
+  return (
+    (FIELDS_CONFIG as unknown as Record<string, Record<string, FieldTreatment>>)[
+      docType
+    ]?.[field] ?? "copyAsIs"
+  )
 }
 
 /**
