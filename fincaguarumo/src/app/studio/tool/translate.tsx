@@ -37,6 +37,7 @@ const typeLabels: Record<string, string> = {
 
 export function TranslateTool() {
   const [documents, setDocuments] = useState<TranslatableDoc[]>([])
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(true)
   const [selectedDoc, setSelectedDoc] = useState<TranslatableDoc | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
   const [isCopying, setIsCopying] = useState(false)
@@ -47,11 +48,6 @@ export function TranslateTool() {
   })
 
   const targetLanguages = locales.filter(lang => lang !== "en")
-
-  const targetLanguageNames = targetLanguages.map(lang => {
-    const match = languages.find(l => l.value === lang)
-    return match ? match.title : lang
-  })
 
   const missingLanguages = selectedDoc
     ? targetLanguages.filter(lang => {
@@ -76,11 +72,31 @@ export function TranslateTool() {
     return match ? match.title : lang
   })
 
+  // Languages without a translated document yet, i.e. languages the copy-as-is
+  // fields still need to be copied to.
+  const missingCopyLanguages = selectedDoc
+    ? targetLanguages.filter(
+        lang => !selectedDoc.translatedLanguages.some(tl => tl.language === lang),
+      )
+    : targetLanguages
+
+  const missingCopyLanguageNames = missingCopyLanguages.map(lang => {
+    const match = languages.find(l => l.value === lang)
+    return match ? match.title : lang
+  })
+
   const fetchDocuments = async () => {
-    const docs = await client.fetch(getTranslatableDocumentsQuery, {
-      types: translatableTypes,
-    })
-    setDocuments(docs)
+    setIsLoadingDocuments(true)
+    try {
+      const docs = await client.fetch(getTranslatableDocumentsQuery, {
+        types: translatableTypes,
+      })
+      setDocuments(docs)
+    } catch (error) {
+      setMessage(`Error loading documents: ${error}`)
+    } finally {
+      setIsLoadingDocuments(false)
+    }
   }
 
   // Refresh the selected document's discovery data so the button reflects
@@ -198,30 +214,39 @@ export function TranslateTool() {
           Auto-translate Documents
         </Text>
 
-        <Select
-          placeholder="Select a document to translate"
-          value={selectedDoc?._id || ""}
-          onChange={(event: ChangeEvent<HTMLSelectElement>) => {
-            const target = event.target as HTMLSelectElement
-            const doc = documents.find(d => d._id === target.value) || null
-            setSelectedDoc(doc)
-          }}
-        >
-          <option value="">Select a document...</option>
-          {Object.keys(typeLabels).map(type => {
-            const docs = groupedDocs[type]
-            if (!docs || docs.length === 0) return null
-            return (
-              <optgroup key={type} label={typeLabels[type]}>
-                {docs.map(doc => (
-                  <option key={doc._id} value={doc._id}>
-                    {doc.displayTitle} — {doc.translationCount} translation(s)
-                  </option>
-                ))}
-              </optgroup>
-            )
-          })}
-        </Select>
+        {isLoadingDocuments && documents.length === 0 ? (
+          <Stack space={2} padding={4}>
+            <Spinner />
+            <Text size={1} muted>
+              Loading documents…
+            </Text>
+          </Stack>
+        ) : (
+          <Select
+            placeholder="Select a document to translate"
+            value={selectedDoc?._id || ""}
+            onChange={(event: ChangeEvent<HTMLSelectElement>) => {
+              const target = event.target as HTMLSelectElement
+              const doc = documents.find(d => d._id === target.value) || null
+              setSelectedDoc(doc)
+            }}
+          >
+            <option value="">Select a document...</option>
+            {Object.keys(typeLabels).map(type => {
+              const docs = groupedDocs[type]
+              if (!docs || docs.length === 0) return null
+              return (
+                <optgroup key={type} label={typeLabels[type]}>
+                  {docs.map(doc => (
+                    <option key={doc._id} value={doc._id}>
+                      {doc.displayTitle} — {doc.translationCount} translation(s)
+                    </option>
+                  ))}
+                </optgroup>
+              )
+            })}
+          </Select>
+        )}
 
         <Button
           text={
@@ -238,10 +263,16 @@ export function TranslateTool() {
         />
 
         <Button
-          text={`Copy fields as-is to ${targetLanguageNames.join(", ")}`}
+          text={
+            missingCopyLanguages.length > 0
+              ? `Copy fields to ${missingCopyLanguageNames.join(", ")}`
+              : "All fields copied"
+          }
           tone="neutral"
           onClick={handleCopyFields}
-          disabled={!selectedDoc || isCopying || isTranslating}
+          disabled={
+            !selectedDoc || isCopying || isTranslating || missingCopyLanguages.length === 0
+          }
           icon={isCopying ? Spinner : undefined}
         />
 
