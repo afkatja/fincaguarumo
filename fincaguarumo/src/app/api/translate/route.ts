@@ -1,12 +1,26 @@
 import { createClient } from "next-sanity"
 import { NextResponse } from "next/server"
 import { locales } from "../../../config"
-import translateText from "../../../sanity/lib/translateText"
+import {
+  translateWithRetry,
+  getDefaultOptions,
+  validateProviderOptions,
+} from "../../../sanity/lib/translateText"
 import {
   isPortableText,
   plainToPortableText,
   portableTextToPlain,
 } from "../../../sanity/lib/portableTextHelper"
+import { getTranslatableFields } from "../../../config/translatable-fields"
+import type {
+  TranslateRequest,
+  TranslateResponse,
+  TranslateResult,
+  TranslateError,
+  TranslatableDocType,
+  Locale,
+} from "../../../types/translate"
+import type { TranslationOptions } from "../../../sanity/lib/translateText"
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
@@ -16,22 +30,19 @@ const client = createClient({
   apiVersion: process.env.SANITY_STUDIO_API_VERSION,
 })
 
-const TRANSLATABLE_FIELDS = {
-  faq: ["question", "answer"],
-  page: ["title", "subtitle", "description", "body"],
-  post: ["title", "body"],
-  tour: ["title", "description", "body"],
-  home: [
-    "title",
-    "hero_title",
-    "hero_slogan",
-    "hero_body",
-    "subtitle",
-    "description",
-    "intro_body",
-    "featured_content_title",
-    "featured_blog_title",
-  ],
+// Helper to get translation options with optional per-request provider override.
+// Overrides are merged before provider validation so the effective provider
+// (and its required credentials) is always validated.
+function getTranslationOptions(overrideProvider?: string): TranslationOptions {
+  const defaultOptions = getDefaultOptions()
+  const merged = overrideProvider
+    ? {
+        ...defaultOptions,
+        provider: overrideProvider as TranslationOptions["provider"],
+      }
+    : defaultOptions
+  validateProviderOptions(merged)
+  return merged
 }
 
 export async function POST(request: Request) {
@@ -40,31 +51,27 @@ export async function POST(request: Request) {
     docType,
     sourceLanguage = "en",
     targetLanguages = locales.filter(lang => lang !== sourceLanguage),
-  }: {
-    docId: string
-    docType: keyof typeof TRANSLATABLE_FIELDS
-    sourceLanguage?: string
-    targetLanguages?: string[]
-  } = await request.json()
+    provider, // Optional provider override
+  }: TranslateRequest & { provider?: string } = await request.json()
 
   try {
     // Validate input
     if (!docId || !docType) {
       return NextResponse.json(
         { error: "Missing required fields: docId, docType" },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     // Remove duplicates and filter out source language
     const uniqueTargetLanguages = [...new Set(targetLanguages)].filter(
-      lang => lang !== sourceLanguage
+      lang => lang !== sourceLanguage,
     )
 
     if (uniqueTargetLanguages.length === 0) {
       return NextResponse.json(
         { error: "No valid target languages specified" },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -78,7 +85,7 @@ export async function POST(request: Request) {
     // Get source document with slug
     const sourceDoc = await client.fetch(
       `*[_type == $docType && _id == $docId][0]`,
-      { docId, docType }
+      { docId, docType },
     )
 
     if (!sourceDoc) {
@@ -86,24 +93,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 })
     }
 
-    const fieldsToTranslate = TRANSLATABLE_FIELDS[docType]
-    if (!fieldsToTranslate) {
+    const fieldsToTranslate = getTranslatableFields(docType)
+    if (!fieldsToTranslate || fieldsToTranslate.length === 0) {
       console.error("No translatable fields configured for type:", docType)
       return NextResponse.json(
         {
           error: `Translation not configured for document type: ${docType}`,
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     const sourceSlug = sourceDoc.slug?.current
-    if (!sourceSlug) {
-      return NextResponse.json(
-        { error: "Source document must have a slug" },
-        { status: 400 }
-      )
-    }
 
     console.log("🔍 Source document:", {
       id: docId,
@@ -111,17 +112,45 @@ export async function POST(request: Request) {
       language: sourceLanguage,
     })
 
-    const results = []
-    const errors = []
+    // Get translation options with optional provider override
+    const translationOptions = getTranslationOptions(provider)
+
+    console.log("🔧 Translation provider:", translationOptions?.provider)
+
+    const results: TranslateResult[] = []
+    const errors: TranslateError[] = []
     const createdDocIds = [docId] // Track all document IDs for translation.metadata
 
     for (const targetLang of uniqueTargetLanguages) {
       try {
-        // Check if translation already exists by slug + language
-        const existingDoc = await client.fetch(
-          `*[_type == $docType && slug.current == $slug && language == $targetLang][0]`,
-          { docType, slug: sourceSlug, targetLang }
-        )
+        // Look up a target-language document linked to the specific source
+        // document, not any document of the same type and language.
+        let existingDoc: Record<string, unknown> | null = null
+        if (sourceSlug) {
+          existingDoc = await client.fetch(
+            `*[_type == $docType && slug.current == $slug && language == $targetLang][0]`,
+            { docType, slug: sourceSlug, targetLang },
+          )
+        } else {
+          const metadata: Record<string, unknown> | null =
+            await client.fetch(
+              `*[_type == "translation.metadata" && $docId in translations[].value._ref][0]`,
+              { docId },
+            )
+          const linkedIds = (metadata?.translations as unknown[])
+            ?.map(
+              (r: unknown) =>
+                (r as { value?: { _ref?: string } })?.value?._ref,
+            )
+            .filter(Boolean) ?? []
+          existingDoc =
+            linkedIds.length > 0
+              ? await client.fetch(
+                  `*[_type == $docType && _id in $ids && language == $targetLang][0]`,
+                  { ids: linkedIds, targetLang },
+                )
+              : null
+        }
 
         // Get base fields (non-translatable fields)
         const baseFields = Object.fromEntries(
@@ -132,33 +161,33 @@ export async function POST(request: Request) {
               key !== "slug" &&
               !fieldsToTranslate.includes(key)
             )
-          })
+          }),
         )
 
         console.log(`🔄 Translating to ${targetLang}...`)
 
         // Translate fields
-        const translatedFields: { [key: string]: any } = {}
+        const translatedFields: { [key: string]: unknown } = {}
         const fieldsToUpdate = existingDoc
           ? fieldsToTranslate.filter(
               field =>
                 !existingDoc[field] ||
                 (Array.isArray(existingDoc[field]) &&
-                  existingDoc[field].length === 0)
+                  existingDoc[field].length === 0),
             )
           : fieldsToTranslate
 
         if (existingDoc && fieldsToUpdate.length === 0) {
           console.log(
-            `⚠️  Translation for ${targetLang} already exists and is complete`
+            `⚠️  Translation for ${targetLang} already exists and is complete`,
           )
           results.push({
             language: targetLang,
             skipped: true,
             reason: "Translation already exists",
-            docId: existingDoc._id,
+            docId: existingDoc._id as string,
           })
-          createdDocIds.push(existingDoc._id)
+          createdDocIds.push(existingDoc._id as string)
           continue
         }
 
@@ -178,20 +207,22 @@ export async function POST(request: Request) {
                   continue
                 }
 
-                const translatedText = await translateText(
+                const { translatedText } = await translateWithRetry(
                   plainText,
                   sourceLanguage,
-                  targetLang
+                  targetLang,
+                  translationOptions,
                 )
                 translatedFields[field] = plainToPortableText(
                   fieldValue,
-                  translatedText
+                  translatedText,
                 )
               } else if (typeof fieldValue === "string") {
-                const translatedText = await translateText(
+                const { translatedText } = await translateWithRetry(
                   fieldValue,
                   sourceLanguage,
-                  targetLang
+                  targetLang,
+                  translationOptions,
                 )
                 translatedFields[field] = translatedText
               } else {
@@ -200,18 +231,20 @@ export async function POST(request: Request) {
               console.log(`✅ Translated ${field}`)
             } catch (error) {
               console.error(`❌ Failed to translate ${field}:`, error)
-              throw new Error(`Failed to translate field: ${field}`)
+              throw new Error(`Failed to translate field: ${field}`, {
+                cause: error,
+              })
             }
           }
         }
 
         if (existingDoc) {
           console.log(
-            `🔄 Updating translation for ${targetLang} with fields: ${Object.keys(translatedFields).join(", ")}`
+            `🔄 Updating translation for ${targetLang} with fields: ${Object.keys(translatedFields).join(", ")}`,
           )
 
           const updatedDoc = await client
-            .patch(existingDoc._id)
+            .patch(existingDoc._id as string)
             .set({
               ...translatedFields,
               _type: docType,
@@ -236,10 +269,9 @@ export async function POST(request: Request) {
           const translatedDoc = await client.create({
             _type: docType,
             language: targetLang,
-            slug: {
-              _type: "slug",
-              current: sourceSlug,
-            },
+            ...(sourceSlug
+              ? { slug: { _type: "slug", current: sourceSlug } }
+              : {}),
             ...baseFields,
             ...translatedFields,
           })
@@ -269,29 +301,51 @@ export async function POST(request: Request) {
         // Check if translation.metadata already exists for this document
         const existingMetadata = await client.fetch(
           `*[_type == "translation.metadata" && $docId in translations[].value._ref][0]`,
-          { docId }
+          { docId },
         )
 
-        const translationRefs = createdDocIds.map(id => ({
-          _key: id,
-          _type: "reference",
-          _ref: id,
-        }))
+        // Successful target references use the value._ref shape to match the
+        // metadata lookup. Merge them with existing references so locales not
+        // requested in this call (including ones that previously failed) are
+        // preserved rather than replaced.
+        const successfulRefs = createdDocIds
+          .filter(Boolean)
+          .map(id => ({
+            _key: id,
+            _type: "reference",
+            value: { _type: "reference", _ref: id },
+          }))
 
         if (existingMetadata) {
+          const existingTranslations = (existingMetadata?.translations as unknown[]) ?? []
+          const existingRefs = existingTranslations.filter(
+            (r: unknown) =>
+              Boolean((r as { value?: { _ref?: string } })?.value?._ref),
+          )
+          const mergedRefs = [
+            ...existingRefs.filter(
+              (r: unknown) =>
+                !successfulRefs.some(
+                  (s) =>
+                    s.value._ref !==
+                    (r as { value?: { _ref?: string } })?.value?._ref,
+                ),
+            ),
+            ...successfulRefs,
+          ]
           // Update existing metadata
           await client
             .patch(existingMetadata._id)
-            .set({ translations: translationRefs })
+            .set({ translations: mergedRefs })
             .commit()
           console.log(
-            `✅ Updated translation.metadata: ${existingMetadata._id}`
+            `✅ Updated translation.metadata: ${existingMetadata._id}`,
           )
         } else {
           // Create new metadata
           const metadata = await client.create({
             _type: "translation.metadata",
-            translations: translationRefs,
+            translations: successfulRefs,
           })
           console.log(`✅ Created translation.metadata: ${metadata._id}`)
         }
@@ -307,7 +361,7 @@ export async function POST(request: Request) {
         translations: results,
         errors: errors.length > 0 ? errors : undefined,
       },
-      { status: 200 }
+      { status: 200 },
     )
   } catch (error) {
     console.error("Translation error:", error)
@@ -315,7 +369,7 @@ export async function POST(request: Request) {
       {
         error: error instanceof Error ? error.message : "Translation failed",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

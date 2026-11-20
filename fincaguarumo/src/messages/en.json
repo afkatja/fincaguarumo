@@ -74,7 +74,6 @@
     "stepDates": "Select Dates",
     "loadingCalendar": "Loading calendar...",
     "checkOutAfterCheckIn": "Check-out must be after check-in",
-    "paymentError": "Failed to initialize payment session. Please try again.",
     "tryAgain": "Try Again",
     "paymentSuccess": "Booking succeeded",
     "paymentFailed": "Your payment was not successful, please try again.",

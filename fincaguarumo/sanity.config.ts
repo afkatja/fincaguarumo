@@ -8,6 +8,7 @@ import { visionTool } from "@sanity/vision"
 import { defineConfig } from "sanity"
 import { structureTool } from "sanity/structure"
 import { presentationTool } from "sanity/presentation"
+import { languageFilter } from "@sanity/language-filter"
 
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
 import { apiVersion, dataset, projectId } from "./src/sanity/env"
@@ -40,6 +41,9 @@ export default defineConfig({
           enable: "/api/draft-mode/enable",
         },
       },
+    }),
+    languageFilter({
+      supportedLanguages: i18n.languages,
     }),
     documentInternationalization({
       supportedLanguages: i18n.languages,
