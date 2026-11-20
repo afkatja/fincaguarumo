@@ -90,6 +90,10 @@ export const getTranslatableDocumentsQuery = `
     ]),
     "translatedLanguages": *[
       _type == ^._type && language != "en" && defined(slug.current) && defined(^.slug.current) && slug.current == ^.slug.current
-    ][].language
+    ]{
+      language,
+      "translatedTitle": coalesce(title, hero_title, question, ""),
+      "translatedBody": coalesce(body, hero_body, answer, intro_body, description, ""),
+    }
   }
 `
