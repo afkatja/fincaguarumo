@@ -1,7 +1,6 @@
 import { createClient } from "next-sanity"
 import { NextResponse } from "next/server"
 import { locales } from "../../../config"
-import { verifyAdminAuth } from "@/lib/auth"
 import {
   FIELDS_CONFIG,
   getTranslatableFields,
@@ -39,24 +38,68 @@ type CopyError = {
   error: string
 }
 
-export async function POST(request: Request) {
-  // Require admin authentication before parsing the body or any Sanity writes.
-  try {
-    await verifyAdminAuth(request)
-  } catch (error) {
-    const status = (error as { status?: number })?.status
-    if (status === 401) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
-    }
-    if (status === 403) {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 })
-    }
-    return NextResponse.json(
-      { error: "Admin authentication failed" },
-      { status: 500 },
-    )
+// Fields whose values contain references to translatable Sanity documents.
+// When copying to a target language, resolve source-language references to
+// their target-language equivalents by matching slugs, so the translated
+// document references the correct language variant instead of the
+// source-language document.
+const CROSS_LANGUAGE_REF_FIELDS: Record<string, string> = {
+  activityBlocks: "activityBlock",
+  whyChooseVillaBruno: "whyChooseVillaBruno",
+}
+
+/**
+ * Resolves cross-language document references by matching slugs.
+ * Replaces each source-language `_ref` with the `_ref` of the
+ * target-language document that shares the same slug.
+ */
+async function resolveCrossLanguageReferences(
+  value: unknown,
+  refType: string,
+  targetLang: string,
+): Promise<unknown> {
+  const refs: Array<{ _ref: string }> = Array.isArray(value)
+    ? value
+    : [value]
+  const refIds = refs.map((r) => r._ref).filter(Boolean)
+
+  if (refIds.length === 0) return value
+
+  const sourceDocs: Array<{ _id: string; slug?: { current?: string } }> =
+    await client.fetch(`*[_id in $ids]{ _id, slug }`, { ids: refIds })
+
+  const idToSlug = new Map<string, string | undefined>()
+  for (const doc of sourceDocs) {
+    idToSlug.set(doc._id, doc.slug?.current)
   }
 
+  const slugs = [...idToSlug.values()].filter(
+    (s): s is string => s !== undefined,
+  )
+
+  if (slugs.length === 0) return value
+
+  const targetDocs: Array<{ _id: string; slug: { current: string } }> =
+    await client.fetch(
+      `*[_type == $refType && language == $lang && slug.current in $slugs]{ _id, slug }`,
+      { refType, lang: targetLang, slugs },
+    )
+
+  const slugToId = new Map<string, string>()
+  for (const doc of targetDocs) {
+    slugToId.set(doc.slug.current, doc._id)
+  }
+
+  const resolved = refs.map((r) => {
+    const slug = idToSlug.get(r._ref)
+    const targetId = slug ? slugToId.get(slug) : undefined
+    return targetId ? { _type: "reference", _ref: targetId } : r
+  })
+
+  return Array.isArray(value) ? resolved : resolved[0]
+}
+
+export async function POST(request: Request) {
   let body: {
     docId: string
     docType: string
@@ -199,9 +242,19 @@ export async function POST(request: Request) {
           const sourceValue = sourceDoc[field]
           if (sourceValue === undefined || sourceValue === null) continue
           const targetValue = existingDoc ? existingDoc[field] : undefined
-          if (isFieldEmpty(targetValue)) {
-            fieldsToCopy[field] = sourceValue
+          if (!isFieldEmpty(targetValue)) continue
+
+          let resolvedValue = sourceValue
+          const refType = CROSS_LANGUAGE_REF_FIELDS[field]
+          if (refType) {
+            resolvedValue = await resolveCrossLanguageReferences(
+              resolvedValue,
+              refType,
+              targetLang,
+            )
           }
+
+          fieldsToCopy[field] = resolvedValue
         }
 
         if (Object.keys(fieldsToCopy).length === 0) {

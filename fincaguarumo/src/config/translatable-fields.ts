@@ -141,7 +141,12 @@ export const FIELDS_CONFIG = {
     location: "copyAsIs",
     isPublished: "copyAsIs",
     showBookingOptions: "copyAsIs",
+    showBookingDialog: "copyAsIs",
     showFAQ: "copyAsIs",
+    faq: "copyAsIs",
+    displayReviews: "copyAsIs",
+    activityBlocks: "copyAsIs",
+    whyChooseVillaBruno: "copyAsIs",
   },
 }
 
