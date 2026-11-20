@@ -5,7 +5,12 @@ import { languages } from "../src/config.js"
 
 type Lang = (typeof languages)[number]
 
-type TranslateProvider = "google" | "ollama" | "libretranslate" | "huggingface"
+type TranslateProvider =
+  | "google"
+  | "ollama"
+  | "libretranslate"
+  | "huggingface"
+  | "deepl"
 
 interface TranslateOptions {
   provider: TranslateProvider
@@ -14,6 +19,8 @@ interface TranslateOptions {
   libretranslateUrl?: string
   huggingfaceToken?: string
   huggingfaceModel?: string
+  deeplAuthKey?: string
+  deeplFormality?: "more" | "less" | "default"
 }
 
 const DEFAULT_PROVIDER: TranslateProvider = "google"
@@ -34,6 +41,9 @@ function getOptions(): TranslateOptions {
     huggingfaceToken: process.env.HUGGINGFACE_TOKEN,
     huggingfaceModel:
       process.env.HUGGINGFACE_MODEL || "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    deeplAuthKey: process.env.DEEPL_AUTH_KEY,
+    deeplFormality:
+      (process.env.DEEPL_FORMALITY as "more" | "less" | "default") || "default",
   }
 }
 
@@ -135,6 +145,33 @@ async function translateWithHuggingFace(
   }
 }
 
+async function translateWithDeepL(
+  text: string,
+  target: string,
+  options: TranslateOptions,
+): Promise<string | null> {
+  if (!options.deeplAuthKey) {
+    console.warn("DeepL auth key not set")
+    return null
+  }
+
+  const { DeepLClient } = await import("deepl-node")
+  const translator = new DeepLClient(options.deeplAuthKey)
+
+  const translateOptions: { formality?: "more" | "less" } = {}
+  if (options.deeplFormality && options.deeplFormality !== "default") {
+    translateOptions.formality = options.deeplFormality
+  }
+
+  try {
+    const result = await translator.translateText(text, null, target.toUpperCase(), translateOptions)
+    return result.text
+  } catch (err) {
+    console.error("DeepL translation error:", err)
+    return null
+  }
+}
+
 async function autoTranslate(
   text: string,
   target: Lang,
@@ -150,6 +187,8 @@ async function autoTranslate(
       return translateWithLibreTranslate(text, targetLang, options)
     case "huggingface":
       return translateWithHuggingFace(text, targetLang, options)
+    case "deepl":
+      return translateWithDeepL(text, targetLang, options)
     case "google":
     default: {
       // Fall through to google translate
@@ -158,7 +197,7 @@ async function autoTranslate(
         const res = await translate(text, { to: targetLang })
         return res.text
       } catch (err) {
-        console.error("Google translate error:", err)
+        console.error("AI translate error:", err)
         return null
       }
     }
@@ -179,32 +218,32 @@ async function syncObject(
 
   for (const [key, value] of Object.entries(typedEnObj)) {
     if (typeof value === "string") {
-        if (!(key in langObj) || value === null || langObj[key] === null) {
-          const translated = await autoTranslate(value, lang, options)
-          if (translated) {
-            langObj[key] = translated
-            updated = true
-            console.log(
-              `  ✓ ${lang.value}: "${value.substring(0, 50)}..." → "${translated.substring(0, 50)}..."`,
-            )
-          }
-        }
-      } else if (typeof value === "object" && value !== null) {
-        const nestedObj: TranslationObject = value as TranslationObject
-        if (!(key in langObj)) {
-          langObj[key] = Object.create(null) as TranslationObject
+      if (!(key in langObj) || value === null || langObj[key] === null) {
+        const translated = await autoTranslate(value, lang, options)
+        if (translated) {
+          langObj[key] = translated
           updated = true
+          console.log(
+            `  ✓ ${lang.value}: "${value.substring(0, 50)}..." → "${translated.substring(0, 50)}..."`,
+          )
         }
-        const [nested, nestedUpdated] = await syncObject(
-          nestedObj,
-          langObj[key] as TranslationObject,
-          lang,
-          options,
-        )
-        langObj[key] = nested
-        if (nestedUpdated) updated = true
       }
+    } else if (typeof value === "object" && value !== null) {
+      const nestedObj: TranslationObject = value as TranslationObject
+      if (!(key in langObj)) {
+        langObj[key] = Object.create(null) as TranslationObject
+        updated = true
+      }
+      const [nested, nestedUpdated] = await syncObject(
+        nestedObj,
+        langObj[key] as TranslationObject,
+        lang,
+        options,
+      )
+      langObj[key] = nested
+      if (nestedUpdated) updated = true
     }
+  }
 
   return [langObj, updated]
 }
