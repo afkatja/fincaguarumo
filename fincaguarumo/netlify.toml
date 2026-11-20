@@ -33,6 +33,13 @@
   status = 301
   force = true
 
+# Canonicalize www to non-www (consolidates indexing signals for GSC)
+[[redirects]]
+  from = "https://www.fincaguarumo.com/*"
+  to = "https://fincaguarumo.com/:splat"
+  status = 301
+  force = true
+
 
 # Global headers
 [[headers]]
