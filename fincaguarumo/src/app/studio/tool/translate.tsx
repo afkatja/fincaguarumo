@@ -14,7 +14,11 @@ interface TranslatableDoc {
   _updatedAt?: string
   displayTitle: string
   translationCount: number
-  translatedLanguages: string[]
+  translatedLanguages: {
+    language: string
+    translatedTitle?: string
+    translatedBody?: string
+  }[]
 }
 
 const typeLabels: Record<string, string> = {
@@ -48,9 +52,18 @@ export function TranslateTool() {
   })
 
   const missingLanguages = selectedDoc
-    ? targetLanguages.filter(
-        lang => !selectedDoc.translatedLanguages.includes(lang),
-      )
+    ? targetLanguages.filter(lang => {
+        const translated = selectedDoc.translatedLanguages.find(
+          tl => tl.language === lang,
+        )
+        // A language counts as missing when no translation document exists or
+        // when its translated title/body fields are not yet filled.
+        return (
+          !translated ||
+          !translated.translatedTitle?.trim() ||
+          !translated.translatedBody?.trim()
+        )
+      })
     : targetLanguages
 
   const missingLanguageNames = missingLanguages.map(lang => {
