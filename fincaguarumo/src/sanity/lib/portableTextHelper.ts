@@ -67,3 +67,20 @@ export function plainToPortableText(
 export function isPortableText(value: any): boolean {
   return Array.isArray(value) && value.length > 0 && value[0]._type === "block"
 }
+
+/**
+ * Check whether Portable Text blocks contain any non-empty text.
+ * Only inspects content; does not transform or lose markup.
+ */
+export function portableTextHasContent(
+  blocks: PortableTextBlock[] | BlockContent,
+): boolean {
+  if (!blocks || !Array.isArray(blocks)) return false
+
+  return blocks.some(block => {
+    if (block._type !== "block") return false
+    const ptBlock = block as PortableTextBlock
+    if (!Array.isArray(ptBlock.children)) return false
+    return ptBlock.children.some(child => Boolean(child.text?.trim()))
+  })
+}

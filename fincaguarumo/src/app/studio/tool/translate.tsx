@@ -7,6 +7,8 @@ import {
   getTranslatableDocumentsQuery,
   translatableTypes,
 } from "../../../sanity/lib/translationQueries"
+import type { PortableTextBlock } from "@portabletext/types"
+import { portableTextHasContent } from "../../../sanity/lib/portableTextHelper"
 
 interface TranslatableDoc {
   _id: string
@@ -17,7 +19,7 @@ interface TranslatableDoc {
   translatedLanguages: {
     language: string
     translatedTitle?: string
-    translatedBody?: string
+    translatedBody?: PortableTextBlock[]
   }[]
 }
 
@@ -58,10 +60,13 @@ export function TranslateTool() {
         )
         // A language counts as missing when no translation document exists or
         // when its translated title/body fields are not yet filled.
+        // translatedBody is Portable Text (array of blocks), not a plain
+        // string. Check whether it contains any text without converting
+        // away its markup.
+        if (!translated) return true
+        const hasBody = portableTextHasContent(translated.translatedBody ?? [])
         return (
-          !translated ||
-          !translated.translatedTitle?.trim() ||
-          !translated.translatedBody?.trim()
+          !translated.translatedTitle?.trim() || !hasBody
         )
       })
     : targetLanguages
