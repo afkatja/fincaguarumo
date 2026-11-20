@@ -91,7 +91,16 @@ const getLanguageItems = (
                 `_type == $type && (language == $lang${defaultLanguageFilter})`,
               )
               .params({ type: schemaType, lang: lang.id })
-              .apiVersion("v2025-02-19"),
+              .apiVersion("v2025-02-19")
+              // When creating a new document from a language-scoped list, pre-set
+              // the language field so "new page" matches the selected language
+              // instead of being created without one.
+              .initialValueTemplates([
+                S.initialValueTemplateItem(
+                  `${schemaType}-parameterized`,
+                  { languageId: lang.id },
+                ),
+              ]),
           )
       }),
     )
