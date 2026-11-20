@@ -197,7 +197,32 @@
   },
   "villaBruno": {
     "activities": {
-      "title": "Standort & Anfahrt"
+      "title": "Standort & Anfahrt",
+      "featured": "Im Fokus",
+      "transportIncluded": "Transport inbegriffen",
+      "readMore": "Weiterlesen",
+      "readLess": "Weniger anzeigen",
+      "landmark": "Sehenswürdigkeit",
+      "proTips": "Profi-Tipps",
+      "costEstimate": "Geschätzte Kosten",
+      "bookingRequired": "Voranmeldung erforderlich",
+      "stepByStep": "Schritt-für-Schritt-Anleitung",
+      "roadConditions": "Straßenverhältnisse",
+      "googleMaps": "Google Maps",
+      "appleMaps": "Apple Maps",
+      "waze": "Er kam",
+      "openInGoogleMaps": "In Google Maps öffnen",
+      "mapUnavailable": "Für die interaktive Karte ist die Konfiguration eines API-Schlüssels erforderlich",
+      "directionsTitle": "Anfahrtsbeschreibung",
+      "directionsIntro": "Die Villa Bruno liegt auf der Halbinsel Osa, 6 km von Puerto Jiménez entfernt. Wählen Sie Ihren Ausgangspunkt für eine detaillierte Wegbeschreibung.",
+      "localTransportTitle": "Nahverkehrsangebote",
+      "nearbyAttractionsTitle": "Sehenswürdigkeiten in der Umgebung",
+      "noDirections": "Anfahrtsbeschreibung nicht verfügbar",
+      "noTransport": "Es sind keine Nahverkehrsverbindungen aufgeführt",
+      "noAttractions": "Es sind keine Sehenswürdigkeiten in der Nähe aufgeführt",
+      "contactTitle": "Adresse und Kontaktdaten",
+      "mapTitle": "Wo wir sind",
+      "website": "Website"
     },
     "whyChoose": {
       "keyDifferentiators": "Was uns unterscheidet",
@@ -210,8 +235,27 @@
       "otherVacationRentals": "Andere Ferienunterkünfte",
       "keyDifferentiator": "★",
       "idealFor": "Ideal für",
-      "lessSuitableFor": "Weniger geeignet für"
+      "lessSuitableFor": "Weniger geeignet für",
+      "sustainability": "Nachhaltigkeit",
+      "experience": "Erfahrung",
+      "comfort": "Komfort & Ausstattung",
+      "location": "Lage & Anfahrt",
+      "value": "Wert",
+      "readMore": "Weiterlesen",
+      "readLess": "Weniger anzeigen"
     }
   },
-  "logistics": {}
+  "logistics": {
+    "checkInTime": "Check-in-Zeit",
+    "checkOutTime": "Abreisezeit",
+    "earlyCheckIn": "Früher Check-in möglich",
+    "earlyCheckInFee": "Gebühr für vorzeitigen Check-in",
+    "lateCheckOut": "Später Check-out möglich",
+    "lateCheckOutFee": "Gebühr für verspäteten Check-out",
+    "instructions": "Anleitung",
+    "address": "Adresse",
+    "distance": "Entfernung",
+    "contactInfo": "Kontaktdaten",
+    "important": "Wichtig"
+  }
 }
