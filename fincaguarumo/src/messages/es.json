@@ -121,7 +121,9 @@
       "stay": "¡Hola! Estoy aquí para ayudarte a reservar {propertyTitle}. ¿Qué te gustaría saber?",
       "other": "¡Hola! ¿Cómo puedo ayudarte hoy?"
     },
-    "moreReviews": "Más reseñas"
+    "moreReviews": "Más reseñas",
+    "logistics": "Logística",
+    "thingsToDo": "Cosas que hacer"
   },
   "map": {
     "location": "Ubicación"
@@ -201,7 +203,65 @@
   },
   "villaBruno": {
     "activities": {
-      "title": "Ubicación y direcciones"
+      "title": "Ubicación y direcciones",
+      "featured": "Presentado",
+      "transportIncluded": "Transporte incluido",
+      "readMore": "Leer más",
+      "readLess": "Leer menos",
+      "landmark": "Marca",
+      "proTips": "Consejos profesionales",
+      "costEstimate": "Costo estimado",
+      "bookingRequired": "Se requiere reserva anticipada",
+      "stepByStep": "Instrucciones paso a paso",
+      "roadConditions": "Condiciones de la carretera",
+      "googleMaps": "mapas de google",
+      "appleMaps": "Mapas de Apple",
+      "waze": "waze",
+      "openInGoogleMaps": "Abrir en Google Maps",
+      "mapUnavailable": "El mapa interactivo requiere configuración de clave API",
+      "directionsTitle": "Cómo llegar aquí",
+      "directionsIntro": "Villa Bruno está ubicada en la Península de Osa, a 6 km de Puerto Jiménez. Elija su punto de partida para obtener instrucciones detalladas.",
+      "localTransportTitle": "Opciones de transporte local",
+      "nearbyAttractionsTitle": "Atracciones cercanas",
+      "noDirections": "Direcciones no disponibles",
+      "noTransport": "No hay opciones de transporte local en la lista.",
+      "noAttractions": "No hay atracciones cercanas en la lista",
+      "contactTitle": "Dirección y contacto",
+      "mapTitle": "donde estamos",
+      "website": "Sitio web"
+    },
+    "whyChoose": {
+      "keyDifferentiators": "Lo que nos hace diferentes",
+      "comparisonTable": "Cómo nos comparamos",
+      "feature": "Característica",
+      "villaBruno": "Villa Bruno en Finca Guarumo",
+      "largeEcoResorts": "Grandes Eco-Resorts",
+      "corcovadoLodges": "Alojamiento en Corcovado",
+      "traditionalHotels": "Hoteles Tradicionales",
+      "otherVacationRentals": "Otros alquileres vacacionales",
+      "keyDifferentiator": "★",
+      "idealFor": "Ideal para",
+      "lessSuitableFor": "Menos adecuado para",
+      "sustainability": "Sostenibilidad",
+      "experience": "Experiencia",
+      "comfort": "Comodidad y comodidades",
+      "location": "Ubicación y acceso",
+      "value": "Valor",
+      "readMore": "Leer más",
+      "readLess": "Leer menos"
     }
+  },
+  "logistics": {
+    "checkInTime": "Hora de entrada",
+    "checkOutTime": "Hora de salida",
+    "earlyCheckIn": "Registro anticipado disponible",
+    "earlyCheckInFee": "Cargo por check-in anticipado",
+    "lateCheckOut": "Salida tardía disponible",
+    "lateCheckOutFee": "Cargo por salida tardía",
+    "instructions": "Instrucciones",
+    "address": "DIRECCIÓN",
+    "distance": "Distancia",
+    "contactInfo": "Información del contacto",
+    "important": "Importante"
   }
 }

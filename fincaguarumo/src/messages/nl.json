@@ -121,7 +121,9 @@
       "stay": "Hoi! Ik ben hier om u te helpen bij het boeken van {propertyTitle}. Wat zou je willen weten?",
       "other": "Hallo! Hoe kan ik u vandaag helpen?"
     },
-    "moreReviews": "Meer beoordelingen"
+    "moreReviews": "Meer beoordelingen",
+    "logistics": "Logistiek",
+    "thingsToDo": "Dingen om te doen"
   },
   "map": {
     "location": "Locatie"
@@ -201,7 +203,65 @@
   },
   "villaBruno": {
     "activities": {
-      "title": "Locatie & route"
+      "title": "Locatie & route",
+      "featured": "Uitgelicht",
+      "transportIncluded": "Transport inbegrepen",
+      "readMore": "Lees meer",
+      "readLess": "Lees minder",
+      "landmark": "Oriëntatiepunt",
+      "proTips": "Professionele tips",
+      "costEstimate": "Geschatte kosten",
+      "bookingRequired": "Vooraf reserveren vereist",
+      "stepByStep": "Stapsgewijze instructies",
+      "roadConditions": "Wegomstandigheden",
+      "googleMaps": "Google Maps",
+      "appleMaps": "Apple-kaarten",
+      "waze": "Waze",
+      "openInGoogleMaps": "Openen in Google Maps",
+      "mapUnavailable": "Interactieve kaart vereist API-sleutelconfiguratie",
+      "directionsTitle": "Hoe kom je hier?",
+      "directionsIntro": "Villa Bruno ligt op het schiereiland Osa, op 6 km van Puerto Jiménez. Kies uw startpunt voor een gedetailleerde routebeschrijving.",
+      "localTransportTitle": "Lokale transportmogelijkheden",
+      "nearbyAttractionsTitle": "Attracties in de buurt",
+      "noDirections": "Routebeschrijving niet beschikbaar",
+      "noTransport": "Er zijn geen lokale transportopties vermeld",
+      "noAttractions": "Geen nabijgelegen attracties vermeld",
+      "contactTitle": "Adres & Contact",
+      "mapTitle": "Waar we zijn",
+      "website": "Website"
+    },
+    "whyChoose": {
+      "keyDifferentiators": "Wat ons anders maakt",
+      "comparisonTable": "Hoe we vergelijken",
+      "feature": "Functie",
+      "villaBruno": "Villa Bruno op Finca Guarumo",
+      "largeEcoResorts": "Grote Eco-resorts",
+      "corcovadoLodges": "Corcovado-loges",
+      "traditionalHotels": "Traditionele hotels",
+      "otherVacationRentals": "Andere vakantiewoningen",
+      "keyDifferentiator": "★",
+      "idealFor": "Ideaal voor",
+      "lessSuitableFor": "Minder geschikt voor",
+      "sustainability": "Duurzaamheid",
+      "experience": "Ervaring",
+      "comfort": "Comfort en voorzieningen",
+      "location": "Locatie en toegang",
+      "value": "Waarde",
+      "readMore": "Lees meer",
+      "readLess": "Lees minder"
     }
+  },
+  "logistics": {
+    "checkInTime": "Inchecken tijd",
+    "checkOutTime": "Uitchecktijd",
+    "earlyCheckIn": "Vroeg inchecken mogelijk",
+    "earlyCheckInFee": "Toeslag voor vroeg inchecken",
+    "lateCheckOut": "Laat uitchecken mogelijk",
+    "lateCheckOutFee": "Toeslag voor laat uitchecken",
+    "instructions": "Instructies",
+    "address": "Adres",
+    "distance": "Afstand",
+    "contactInfo": "Contactgegevens",
+    "important": "Belangrijk"
   }
 }

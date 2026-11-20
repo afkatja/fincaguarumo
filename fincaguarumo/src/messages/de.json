@@ -115,7 +115,9 @@
       "stay": "Hallo! Ich bin hier, um Ihnen bei der Buchung von {propertyTitle} zu helfen. Was möchten Sie wissen?",
       "other": "Hallo! Wie kann ich Ihnen heute helfen?"
     },
-    "moreReviews": "Mehr Bewertungen"
+    "moreReviews": "Mehr Bewertungen",
+    "logistics": "Logistik",
+    "thingsToDo": "Dinge zu tun"
   },
   "map": {
     "location": "Standort"
@@ -196,6 +198,20 @@
   "villaBruno": {
     "activities": {
       "title": "Standort & Anfahrt"
+    },
+    "whyChoose": {
+      "keyDifferentiators": "Was uns unterscheidet",
+      "comparisonTable": "Wie wir vergleichen",
+      "feature": "Besonderheit",
+      "villaBruno": "Villa Bruno auf der Finca Guarumo",
+      "largeEcoResorts": "Große Öko-Resorts",
+      "corcovadoLodges": "Corcovado Lodges",
+      "traditionalHotels": "Traditionelle Hotels",
+      "otherVacationRentals": "Andere Ferienunterkünfte",
+      "keyDifferentiator": "★",
+      "idealFor": "Ideal für",
+      "lessSuitableFor": "Weniger geeignet für"
     }
-  }
+  },
+  "logistics": {}
 }
