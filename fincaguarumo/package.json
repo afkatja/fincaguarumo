@@ -15,7 +15,7 @@
     "i18n:run": "npm run i18n:build",
     "i18n:watch": "nodemon --watch src/messages/en.json --exec \"npm run i18n:run\"",
     "i18n:check": "tsx scripts/check-translations.ts",
-    "i18n:ai": "tsx scripts/translate-ai.ts",
+    "i18n:ai": "tsx translate/sync-json.ts",
     "translate:sanity-ai": "tsx --tsconfig tsconfig.scripts.json scripts/translate-sanity-ai.ts",
     "prepare": "husky",
     "translate": "npm run i18n:run",
