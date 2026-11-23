@@ -15,32 +15,6 @@ export const hasTranslationQuery = `(
 )`
 
 /**
- * Query to count existing translations for a document
- *
- * Counts distinct counterpart documents (slug-matched targets plus documents
- * referenced through translation.metadata), excluding the metadata container
- * itself. Slugless documents cannot match.
- */
-export const translationCountQuery = `count(*[
-  _type != "translation.metadata" && _id in (
-    *[_type == ^._type && language != "en" && defined(slug.current) && defined(^.slug.current) && slug.current == ^.slug.current]._id
-    +
-    *[_type == "translation.metadata" && ^._id in translations[].value._ref].translations[].value._ref
-  )
-])`
-
-/**
- * Query to check if a document has no translations
- */
-export const hasNoTranslationsQuery = `!defined(*[
-  _type != "translation.metadata" && _id in (
-    *[_type == ^._type && language != "en" && defined(slug.current) && defined(^.slug.current) && slug.current == ^.slug.current]._id
-    +
-    *[_type == "translation.metadata" && ^._id in translations[].value._ref].translations[].value._ref
-  )
-][0]._id)`
-
-/**
  * Types that can be translated
  */
 export const translatableTypes = [
@@ -81,15 +55,17 @@ export const getTranslatableDocumentsQuery = `
       question, 
       "Untitled"
     ),
-    "translationCount": count(*[
-      _type != "translation.metadata" && _id in (
-        *[_type == ^._type && language != "en" && defined(slug.current) && defined(^.slug.current) && slug.current == ^.slug.current]._id
-        +
-        *[_type == "translation.metadata" && ^._id in translations[].value._ref].translations[].value._ref
-      )
-    ]),
+    "translationCount": coalesce(length(
+      *[_type == ^._type && language != "en" && (
+        (!defined(^.slug.current) && !defined(slug.current)) ||
+        (defined(^.slug.current) && defined(slug.current) && slug.current == ^.slug.current)
+      )]
+    ), 0),
     "translatedLanguages": *[
-      _type == ^._type && language != "en" && defined(slug.current) && defined(^.slug.current) && slug.current == ^.slug.current
+      _type == ^._type && language != "en" && (
+        (!defined(^.slug.current) && !defined(slug.current)) ||
+        (defined(^.slug.current) && defined(slug.current) && slug.current == ^.slug.current)
+      )
     ]{
       language,
       "translatedTitle": coalesce(title, hero_title, question, ""),
