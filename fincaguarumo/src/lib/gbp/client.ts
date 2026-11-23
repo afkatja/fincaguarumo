@@ -48,8 +48,9 @@ function getServiceAccountJWT(): JWT {
 function createOAuth2Client(): OAuth2Client {
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID
   const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET
+  const env = process.env
   const redirectUri =
-    process.env.GOOGLE_OAUTH_REDIRECT_URI ||
+    env.GOOGLE_OAUTH_REDIRECT_URI ||
     "https://localhost:3000/api/auth/google/callback"
 
   if (!clientId || !clientSecret) {

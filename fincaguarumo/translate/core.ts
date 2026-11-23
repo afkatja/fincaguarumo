@@ -148,9 +148,8 @@ export function makeGlossary(terms?: string[]): Glossary {
 }
 
 export function getProviderName(): TranslateProvider {
-  return (
-    (process.env.TRANSLATION_PROVIDER as TranslateProvider) || DEFAULT_PROVIDER
-  )
+  const env = process.env
+  return (env.TRANSLATION_PROVIDER || DEFAULT_PROVIDER) as TranslateProvider
 }
 
 export function getOptions(): TranslateOptions {

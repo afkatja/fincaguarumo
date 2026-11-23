@@ -42,8 +42,8 @@ export class NonRetryableError extends Error {
 }
 
 export function getDefaultOptions(): TranslationOptions {
-  const provider =
-    (process.env.TRANSLATION_PROVIDER as TranslationProvider) || "google-cloud"
+  const env = process.env
+  const provider = (env.TRANSLATION_PROVIDER || "google-cloud") as TranslationProvider
 
   const options: TranslationOptions = {
     provider,
