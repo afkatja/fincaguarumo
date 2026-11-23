@@ -5,6 +5,8 @@
 [build.environment]
   # Set these in Netlify dashboard for production
   NODE_VERSION = "22"
+  # Increase Node heap limit to avoid OOM during next build type checking
+  NODE_OPTIONS = "--max-old-space-size=4096"
   # Per-deploy site origin used by Supabase auth redirects.
   # Netlify provides $DEPLOY_URL automatically: https://docs.netlify.com/configure-builds/environment-variables/#deploy-urls-and-metadata
   NEXT_PUBLIC_SITE_URL = "$DEPLOY_URL"
