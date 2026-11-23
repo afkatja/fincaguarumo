@@ -1,8 +1,8 @@
 import "dotenv/config"
-import { translateWithOllama } from "./providers/ollama.js"
-import { translateWithDeepL, translateWithDeepLBatch } from "./providers/deepl.js"
-import { translateWithGoogle } from "./providers/google.js"
-import { translateWithLibreTranslate } from "./providers/libretranslate.js"
+import { translateWithOllama } from "./providers/ollama"
+import { translateWithDeepL, translateWithDeepLBatch } from "./providers/deepl"
+import { translateWithGoogle } from "./providers/google"
+import { translateWithLibreTranslate } from "./providers/libretranslate"
 
 export type LangRef = { code: string; title: string }
 
@@ -67,14 +67,17 @@ export function escapeRegExp(value: string): string {
  * alter them. Placeholders are intentionally left in place so core can verify
  * they survive translation.
  */
-export function protectText(text: string, glossaryTerms: string[]): ProtectedText {
+export function protectText(
+  text: string,
+  glossaryTerms: string[],
+): ProtectedText {
   const glossary: string[] = []
   let result = text
 
   const terms = [...glossaryTerms].sort((a, b) => b.length - a.length)
   if (terms.length > 0) {
     const re = new RegExp(terms.map(escapeRegExp).join("|"), "gi")
-    result = result.replace(re, (match) => {
+    result = result.replace(re, match => {
       glossary.push(match)
       return `__GL_${glossary.length - 1}__`
     })
@@ -87,7 +90,10 @@ export function protectText(text: string, glossaryTerms: string[]): ProtectedTex
  * Restore glossary tokens to their original spelling. Restores in reverse
  * order so earlier substitutions are not clobbered by later ones.
  */
-export function restoreText(text: string, protectedText: ProtectedText): string {
+export function restoreText(
+  text: string,
+  protectedText: ProtectedText,
+): string {
   let result = text
   for (let i = protectedText.glossary.length - 1; i >= 0; i--) {
     result = result.split(`__GL_${i}__`).join(protectedText.glossary[i])
@@ -113,7 +119,10 @@ export function extractPlaceholders(text: string): string[] {
  * guard: a mismatch means the MT mangled markup and the result is treated as
  * failed (null).
  */
-export function placeholdersPreserved(source: string, translation: string): boolean {
+export function placeholdersPreserved(
+  source: string,
+  translation: string,
+): boolean {
   const sourceTokens = extractPlaceholders(source)
   if (sourceTokens.length === 0) return true
 
@@ -140,7 +149,7 @@ export function makeGlossary(terms?: string[]): Glossary {
 
 export function getProviderName(): TranslateProvider {
   return (
-    ((process.env.TRANSLATION_PROVIDER as TranslateProvider) || DEFAULT_PROVIDER)
+    (process.env.TRANSLATION_PROVIDER as TranslateProvider) || DEFAULT_PROVIDER
   )
 }
 
@@ -154,13 +163,14 @@ export function getOptions(): TranslateOptions {
     libretranslateApiKey: process.env.LIBRETRANSLATE_API_KEY,
     deeplAuthKey: process.env.DEEPL_AUTH_KEY,
     deeplFormality:
-      ((process.env.DEEPL_FORMALITY as "more" | "less" | "default") ||
-        "default"),
+      (process.env.DEEPL_FORMALITY as "more" | "less" | "default") || "default",
     deeplGlossaryId: process.env.DEEPL_GLOSSARY_ID,
     deeplTagHandling:
-      ((process.env.DEEPL_TAG_HANDLING as "html" | "xml") || "xml"),
+      (process.env.DEEPL_TAG_HANDLING as "html" | "xml") || "xml",
     glossaryTerms: process.env.TRANSLATION_GLOSSARY
-      ? process.env.TRANSLATION_GLOSSARY.split(",").map((t) => t.trim()).filter(Boolean)
+      ? process.env.TRANSLATION_GLOSSARY.split(",")
+          .map(t => t.trim())
+          .filter(Boolean)
       : undefined,
     concurrency: process.env.TRANSLATION_CONCURRENCY
       ? Number(process.env.TRANSLATION_CONCURRENCY)
@@ -255,10 +265,13 @@ function pLimit<T>(concurrency: number) {
     while (running < concurrency && queue.length > 0) {
       const item = queue.shift()!
       running += 1
-      item.fn().then(item.resolve, item.reject).finally(() => {
-        running -= 1
-        processQueue()
-      })
+      item
+        .fn()
+        .then(item.resolve, item.reject)
+        .finally(() => {
+          running -= 1
+          processQueue()
+        })
     }
   }
 
@@ -284,18 +297,20 @@ export async function translateBatch(
       ? []
       : glossary.terms
 
-  const protectedTexts = texts.map((t) =>
+  const protectedTexts = texts.map(t =>
     t === "" ? { text: "", glossary: [] } : protectText(t, termsToProtect),
   )
-  const toTranslate = protectedTexts.map((p) => p.text)
+  const toTranslate = protectedTexts.map(p => p.text)
 
   let translated: (string | null)[]
   if (options.provider === "deepl") {
     translated = await translateWithDeepLBatch(toTranslate, from, to, options)
   } else {
-    const limit = pLimit<string | null>(options.concurrency ?? DEFAULT_CONCURRENCY)
+    const limit = pLimit<string | null>(
+      options.concurrency ?? DEFAULT_CONCURRENCY,
+    )
     translated = await Promise.all(
-      toTranslate.map((t) =>
+      toTranslate.map(t =>
         limit(() => getProvider(options)(t, from, to, options)),
       ),
     )

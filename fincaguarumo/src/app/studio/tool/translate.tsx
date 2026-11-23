@@ -61,9 +61,7 @@ export function TranslateTool() {
         // away its markup.
         if (!translated) return true
         const hasBody = portableTextHasContent(translated.translatedBody ?? [])
-        return (
-          !translated.translatedTitle?.trim() || !hasBody
-        )
+        return !translated.translatedTitle?.trim() || !hasBody
       })
     : targetLanguages
 
@@ -76,7 +74,8 @@ export function TranslateTool() {
   // fields still need to be copied to.
   const missingCopyLanguages = selectedDoc
     ? targetLanguages.filter(
-        lang => !selectedDoc.translatedLanguages.some(tl => tl.language === lang),
+        lang =>
+          !selectedDoc.translatedLanguages.some(tl => tl.language === lang),
       )
     : targetLanguages
 
@@ -107,7 +106,9 @@ export function TranslateTool() {
     })
     setDocuments(docs)
     if (selectedDoc) {
-      const refreshed = docs.find((d: TranslatableDoc) => d._id === selectedDoc._id)
+      const refreshed = docs.find(
+        (d: TranslatableDoc) => d._id === selectedDoc._id,
+      )
       if (refreshed) setSelectedDoc(refreshed)
     }
   }
@@ -257,7 +258,10 @@ export function TranslateTool() {
           tone="primary"
           onClick={handleTranslate}
           disabled={
-            !selectedDoc || isTranslating || isCopying || missingLanguages.length === 0
+            !selectedDoc ||
+            isTranslating ||
+            isCopying ||
+            missingLanguages.length === 0
           }
           icon={isTranslating ? Spinner : undefined}
         />
@@ -271,7 +275,10 @@ export function TranslateTool() {
           tone="neutral"
           onClick={handleCopyFields}
           disabled={
-            !selectedDoc || isCopying || isTranslating || missingCopyLanguages.length === 0
+            !selectedDoc ||
+            isCopying ||
+            isTranslating ||
+            missingCopyLanguages.length === 0
           }
           icon={isCopying ? Spinner : undefined}
         />
@@ -279,7 +286,11 @@ export function TranslateTool() {
         {message && (
           <Text
             size={1}
-            className={message.includes("Error") ? "text-red-500 dark:text-red-400" : "text-green-500 dark:text-green-400"}
+            className={
+              message.includes("Error")
+                ? "text-red-500 dark:text-red-400"
+                : "text-green-500 dark:text-green-400"
+            }
           >
             {message}
           </Text>
@@ -288,7 +299,11 @@ export function TranslateTool() {
         {copyMessage && (
           <Text
             size={1}
-            className={copyMessage.includes("Error") ? "text-red-500 dark:text-red-400" : "text-green-500 dark:text-green-400"}
+            className={
+              copyMessage.includes("Error")
+                ? "text-red-500 dark:text-red-400"
+                : "text-green-500 dark:text-green-400"
+            }
           >
             {copyMessage}
           </Text>

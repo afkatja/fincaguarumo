@@ -12,6 +12,12 @@ import {
   portableTextToPlain,
 } from "../../../sanity/lib/portableTextHelper"
 import { getTranslatableFields } from "../../../config/translatable-fields"
+import type { PortableTextBlock } from "@portabletext/types"
+import { translateDocumentFields } from "../../../../translate/sanity"
+import {
+  getOptions,
+  type TranslateOptions as CoreTranslateOptions,
+} from "../../../../translate/core"
 import type {
   TranslateRequest,
   TranslateResponse,
@@ -43,6 +49,109 @@ function getTranslationOptions(overrideProvider?: string): TranslationOptions {
     : defaultOptions
   validateProviderOptions(merged)
   return merged
+}
+
+// Map the route's TranslationOptions onto core's TranslateOptions so
+// translateDocumentFields can apply core's placeholder/glossary guards
+// identically to the JSON sync path. Providers only available in the route
+// (google-cloud, huggingface) have no core equivalent and return null, which
+// signals the caller to fall back to translateWithRetry.
+function toCoreOptions(
+  translationOptions: TranslationOptions,
+): CoreTranslateOptions | null {
+  const providerMap: Record<string, CoreTranslateOptions["provider"] | null> = {
+    "google-cloud": null,
+    "google-free": "google",
+    ollama: "ollama",
+    libretranslate: "libretranslate",
+    huggingface: null,
+    deepl: "deepl",
+  }
+  const coreProvider = providerMap[translationOptions.provider]
+  if (!coreProvider) return null
+
+  // Start from core's env-resolved options (credentials, glossary, concurrency,
+  // tag handling, ...) and override the provider with the per-request value.
+  return { ...getOptions(), provider: coreProvider }
+}
+
+/**
+ * Translate the fields that need updating for one target language.
+ *
+ * Uses translateDocumentFields (core's autoTranslate) when the provider is
+ * supported there, falling back to the route's per-field translateWithRetry for
+ * route-only providers. Returns only the translated fields; fields whose
+ * translation failed are left as their source value rather than dropped.
+ */
+async function translateFields(
+  sourceDoc: Record<string, unknown>,
+  fieldsToUpdate: string[],
+  docType: string,
+  sourceLanguage: string,
+  targetLang: string,
+  translationOptions: TranslationOptions,
+): Promise<{ [key: string]: unknown }> {
+  const partialDoc: Record<string, unknown> = {}
+  for (const field of fieldsToUpdate) {
+    const value = sourceDoc[field]
+    if (value !== undefined && value !== null) {
+      partialDoc[field] = value
+    }
+  }
+
+  if (Object.keys(partialDoc).length === 0) return {}
+
+  const coreOptions = toCoreOptions(translationOptions)
+
+  if (coreOptions) {
+    const translated = await translateDocumentFields(partialDoc, docType, {
+      sourceLang: { code: sourceLanguage, title: sourceLanguage },
+      targetLang: { code: targetLang, title: targetLang },
+      options: coreOptions,
+    })
+    const translatedFields: { [key: string]: unknown } = {}
+    for (const field of fieldsToUpdate) {
+      if (field in translated) {
+        translatedFields[field] = translated[field]
+      }
+    }
+    return translatedFields
+  }
+
+  // Fallback path for providers without a core equivalent (google-cloud,
+  // huggingface): preserve the route's existing per-field behaviour.
+  const translatedFields: { [key: string]: unknown } = {}
+  for (const field of fieldsToUpdate) {
+    const fieldValue = sourceDoc[field]
+    if (!fieldValue) continue
+
+    if (isPortableText(fieldValue)) {
+      const blocks = fieldValue as PortableTextBlock[]
+      const plainText = portableTextToPlain(blocks)
+      if (!plainText.trim()) {
+        translatedFields[field] = fieldValue
+        continue
+      }
+      const { translatedText } = await translateWithRetry(
+        plainText,
+        sourceLanguage,
+        targetLang,
+        translationOptions,
+      )
+      translatedFields[field] = plainToPortableText(blocks, translatedText)
+    } else if (typeof fieldValue === "string") {
+      const { translatedText } = await translateWithRetry(
+        fieldValue,
+        sourceLanguage,
+        targetLang,
+        translationOptions,
+      )
+      translatedFields[field] = translatedText
+    } else {
+      translatedFields[field] = fieldValue
+    }
+  }
+  return translatedFields
 }
 
 export async function POST(request: Request) {
@@ -132,17 +241,17 @@ export async function POST(request: Request) {
             { docType, slug: sourceSlug, targetLang },
           )
         } else {
-          const metadata: Record<string, unknown> | null =
-            await client.fetch(
-              `*[_type == "translation.metadata" && $docId in translations[].value._ref][0]`,
-              { docId },
-            )
-          const linkedIds = (metadata?.translations as unknown[])
-            ?.map(
-              (r: unknown) =>
-                (r as { value?: { _ref?: string } })?.value?._ref,
-            )
-            .filter(Boolean) ?? []
+          const metadata: Record<string, unknown> | null = await client.fetch(
+            `*[_type == "translation.metadata" && $docId in translations[].value._ref][0]`,
+            { docId },
+          )
+          const linkedIds =
+            (metadata?.translations as unknown[])
+              ?.map(
+                (r: unknown) =>
+                  (r as { value?: { _ref?: string } })?.value?._ref,
+              )
+              .filter(Boolean) ?? []
           existingDoc =
             linkedIds.length > 0
               ? await client.fetch(
@@ -167,7 +276,7 @@ export async function POST(request: Request) {
         console.log(`🔄 Translating to ${targetLang}...`)
 
         // Translate fields
-        const translatedFields: { [key: string]: unknown } = {}
+        let translatedFields: { [key: string]: unknown } = {}
         const fieldsToUpdate = existingDoc
           ? fieldsToTranslate.filter(
               field =>
@@ -191,52 +300,18 @@ export async function POST(request: Request) {
           continue
         }
 
-        // Translate required fields
-        for (const field of fieldsToUpdate) {
-          if (sourceDoc[field]) {
-            try {
-              const fieldValue = sourceDoc[field]
-
-              if (isPortableText(fieldValue)) {
-                console.log(`📝 Translating Portable Text field: ${field}`)
-                const plainText = portableTextToPlain(fieldValue)
-
-                if (!plainText.trim()) {
-                  console.log(`⚠️  ${field} is empty, copying original`)
-                  translatedFields[field] = fieldValue
-                  continue
-                }
-
-                const { translatedText } = await translateWithRetry(
-                  plainText,
-                  sourceLanguage,
-                  targetLang,
-                  translationOptions,
-                )
-                translatedFields[field] = plainToPortableText(
-                  fieldValue,
-                  translatedText,
-                )
-              } else if (typeof fieldValue === "string") {
-                const { translatedText } = await translateWithRetry(
-                  fieldValue,
-                  sourceLanguage,
-                  targetLang,
-                  translationOptions,
-                )
-                translatedFields[field] = translatedText
-              } else {
-                translatedFields[field] = fieldValue
-              }
-              console.log(`✅ Translated ${field}`)
-            } catch (error) {
-              console.error(`❌ Failed to translate ${field}:`, error)
-              throw new Error(`Failed to translate field: ${field}`, {
-                cause: error,
-              })
-            }
-          }
-        }
+        // Translate required fields via the shared document walker so
+        // placeholder/glossary guards apply identically to the JSON sync path.
+        // Providers without a core equivalent (google-cloud, huggingface) fall
+        // back to the route's per-field translateWithRetry.
+        translatedFields = await translateFields(
+          sourceDoc,
+          fieldsToUpdate,
+          docType,
+          sourceLanguage,
+          targetLang,
+          translationOptions,
+        )
 
         if (existingDoc) {
           console.log(
@@ -308,25 +383,23 @@ export async function POST(request: Request) {
         // metadata lookup. Merge them with existing references so locales not
         // requested in this call (including ones that previously failed) are
         // preserved rather than replaced.
-        const successfulRefs = createdDocIds
-          .filter(Boolean)
-          .map(id => ({
-            _key: id,
-            _type: "reference",
-            value: { _type: "reference", _ref: id },
-          }))
+        const successfulRefs = createdDocIds.filter(Boolean).map(id => ({
+          _key: id,
+          _type: "reference",
+          value: { _type: "reference", _ref: id },
+        }))
 
         if (existingMetadata) {
-          const existingTranslations = (existingMetadata?.translations as unknown[]) ?? []
-          const existingRefs = existingTranslations.filter(
-            (r: unknown) =>
-              Boolean((r as { value?: { _ref?: string } })?.value?._ref),
+          const existingTranslations =
+            (existingMetadata?.translations as unknown[]) ?? []
+          const existingRefs = existingTranslations.filter((r: unknown) =>
+            Boolean((r as { value?: { _ref?: string } })?.value?._ref),
           )
           const mergedRefs = [
             ...existingRefs.filter(
               (r: unknown) =>
                 !successfulRefs.some(
-                  (s) =>
+                  s =>
                     s.value._ref !==
                     (r as { value?: { _ref?: string } })?.value?._ref,
                 ),
