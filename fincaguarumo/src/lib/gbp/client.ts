@@ -46,9 +46,9 @@ function getServiceAccountJWT(): JWT {
  * @throws Error if required OAuth2 credentials are not configured
  */
 function createOAuth2Client(): OAuth2Client {
-  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID
-  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET
   const env = process.env
+  const clientId = env.GOOGLE_OAUTH_CLIENT_ID
+  const clientSecret = env.GOOGLE_OAUTH_CLIENT_SECRET
   const redirectUri =
     env.GOOGLE_OAUTH_REDIRECT_URI ||
     "https://localhost:3000/api/auth/google/callback"
