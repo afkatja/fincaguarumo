@@ -1,0 +1,44 @@
+import { FIELDS_CONFIG } from "../config/translatable-fields"
+import { locales } from "../config"
+import type { TranslationProvider } from "../sanity/lib/translateText"
+
+export type TranslatableDocType = keyof typeof FIELDS_CONFIG
+export type Locale = (typeof locales)[number]
+
+export interface TranslateRequest {
+  docId: string
+  docType: TranslatableDocType
+  sourceLanguage?: Locale
+  targetLanguages?: Locale[]
+  provider?: TranslationProvider
+}
+
+export interface TranslateResult {
+  language: Locale
+  docId?: string
+  success?: boolean
+  updated?: boolean
+  skipped?: boolean
+  reason?: string
+  doc?: SanityDocument
+}
+
+export interface TranslateError {
+  language: Locale
+  error: string
+}
+
+export interface TranslateResponse {
+  success: boolean
+  translations: TranslateResult[]
+  errors?: TranslateError[]
+}
+
+export interface SanityDocument {
+  _id: string
+  _type: string
+  _rev: string
+  _createdAt: string
+  _updatedAt: string
+  [key: string]: unknown
+}

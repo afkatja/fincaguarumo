@@ -92,8 +92,14 @@ const getLanguageItems = (
               )
               .params({ type: schemaType, lang: lang.id })
               .apiVersion("v2025-02-19")
+              // When creating a new document from a language-scoped list, pre-set
+              // the language field so "new page" matches the selected language
+              // instead of being created without one.
               .initialValueTemplates([
-                S.initialValueTemplateItem(`${schemaType}-${lang.id}`),
+                S.initialValueTemplateItem(
+                  `${schemaType}-parameterized`,
+                  { languageId: lang.id },
+                ),
               ]),
           )
       }),
@@ -104,10 +110,9 @@ export const structure: StructureResolver = S => {
   const list = S.list()
     .title("Content")
     .items([
-      // Document-level translations
       S.listItem()
         .title("Homepage")
-        .child(getTranslationItems(S, "home", "Home", "standalone")),
+        .child(getLanguageItems(S, "home", "Home")),
       S.listItem()
         .title("Pages")
         .child(getLanguageItems(S, "page", "Pages")),

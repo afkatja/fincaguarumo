@@ -121,7 +121,9 @@
       "stay": "Привет! Я здесь, чтобы помочь вам забронировать {propertyTitle}. Что бы вы хотели знать?",
       "other": "Привет! Как я могу помочь вам сегодня?"
     },
-    "moreReviews": "Больше отзывов"
+    "moreReviews": "Больше отзывов",
+    "logistics": "Логистика",
+    "thingsToDo": "Чем заняться"
   },
   "map": {
     "location": "Расположение"
@@ -201,7 +203,65 @@
   },
   "villaBruno": {
     "activities": {
-      "title": "Местоположение и проезд"
+      "title": "Местоположение и проезд",
+      "featured": "Рекомендуемые",
+      "transportIncluded": "Транспорт включен",
+      "readMore": "Читать далее",
+      "readLess": "Читать меньше",
+      "landmark": "Ориентир",
+      "proTips": "Советы профессионалов",
+      "costEstimate": "Ориентировочная стоимость",
+      "bookingRequired": "Требуется предварительное бронирование",
+      "stepByStep": "Пошаговые инструкции",
+      "roadConditions": "Дорожные условия",
+      "googleMaps": "Карты Google",
+      "appleMaps": "Карты Apple",
+      "waze": "Вейз",
+      "openInGoogleMaps": "Открыть в Google Картах",
+      "mapUnavailable": "Интерактивная карта требует настройки ключа API",
+      "directionsTitle": "Как сюда добраться",
+      "directionsIntro": "Вилла Bruno расположена на полуострове Оса, в 6 км от Пуэрто-Хименес. Выберите отправную точку для получения подробных указаний.",
+      "localTransportTitle": "Местный транспорт",
+      "nearbyAttractionsTitle": "Близлежащие достопримечательности",
+      "noDirections": "Маршруты недоступны",
+      "noTransport": "Варианты местного транспорта не указаны.",
+      "noAttractions": "Ближайшие достопримечательности не указаны",
+      "contactTitle": "Адрес и контакты",
+      "mapTitle": "Где мы находимся",
+      "website": "Веб-сайт"
+    },
+    "whyChoose": {
+      "keyDifferentiators": "Что отличает нас",
+      "comparisonTable": "Как мы сравниваем",
+      "feature": "Особенность",
+      "villaBruno": "Вилла Бруно в Финка Гуарумо",
+      "largeEcoResorts": "Большие эко-курорты",
+      "corcovadoLodges": "Лоджи: Корковадо",
+      "traditionalHotels": "Традиционные отели",
+      "otherVacationRentals": "Другое жилье для отпуска",
+      "keyDifferentiator": "★",
+      "idealFor": "Идеально подходит для",
+      "lessSuitableFor": "Менее подходит для",
+      "sustainability": "Устойчивое развитие",
+      "experience": "Опыт",
+      "comfort": "Комфорт и удобства",
+      "location": "Местоположение и доступ",
+      "value": "Ценить",
+      "readMore": "Читать далее",
+      "readLess": "Читать меньше"
     }
+  },
+  "logistics": {
+    "checkInTime": "Время заезда",
+    "checkOutTime": "Время выезда",
+    "earlyCheckIn": "Возможна ранняя регистрация заезда",
+    "earlyCheckInFee": "Плата за ранний заезд",
+    "lateCheckOut": "Возможен поздний выезд",
+    "lateCheckOutFee": "Плата за поздний выезд",
+    "instructions": "Инструкции",
+    "address": "Адрес",
+    "distance": "Расстояние",
+    "contactInfo": "Контактная информация",
+    "important": "Важный"
   }
 }

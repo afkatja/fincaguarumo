@@ -13,7 +13,7 @@
     }
   },
 
-  "include": ["src/**/*.ts", "scripts/**/*"],
+  "include": ["src/**/*.ts", "scripts/**/*", "translate/**/*"],
   "exclude": [
     "node_modules",
     "dist",

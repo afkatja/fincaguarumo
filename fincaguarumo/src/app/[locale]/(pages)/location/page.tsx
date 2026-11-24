@@ -157,7 +157,6 @@ const LocationPage = async ({
     params: { slug, language: locale },
     revalidate: 0,
   })
-  console.log({ content })
 
   if (!content?.isPublished) notFound()
 
