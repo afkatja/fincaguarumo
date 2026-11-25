@@ -6,7 +6,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { RemoveScroll } from "react-remove-scroll"
-import ProgressiveBookingForm from "@/components/booking/ProgressiveBookingForm"
+import dynamic from "next/dynamic"
+const ProgressiveBookingForm = dynamic(() => import("@/components/booking/ProgressiveBookingForm"))
 import Payment from "../[locale]/(pages)/(payment)/Payment"
 import { useBookingCore } from "./BookingCoreProvider"
 import { useDialog } from "./DialogProvider"

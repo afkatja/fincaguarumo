@@ -3,7 +3,8 @@ import { createNavigation } from "next-intl/navigation"
 import { useTranslations } from "next-intl"
 import RichText from "@/components/RichText"
 import { Content } from "./page"
-import FAQ from "@/components/FAQ"
+import dynamic from "next/dynamic"
+const FAQ = dynamic(() => import("@/components/FAQ"))
 import Title from "@/components/Title"
 import Icon from "../../../../components/Icon"
 

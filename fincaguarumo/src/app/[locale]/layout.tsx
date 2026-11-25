@@ -22,7 +22,8 @@ import { i18n } from "../../../languages"
 import Header from "../../components/header"
 import { cn } from "../../lib/utils"
 
-import BookingDialog from "./(pages)/BookingDialog"
+import dynamic from "next/dynamic"
+const BookingDialog = dynamic(() => import("./(pages)/BookingDialog"))
 
 export { generateMetadata }
 

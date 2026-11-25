@@ -8,7 +8,8 @@ import PagesLayout from "../../(pages)/pagesLayout"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
 import Icon from "../../../../components/Icon"
-import FAQ from "../../../../components/FAQ"
+import dynamic from "next/dynamic"
+const FAQ = dynamic(() => import("../../../../components/FAQ"))
 
 /**
  * Render a post page using PagesLayout, optionally including breadcrumbs and the post body.
